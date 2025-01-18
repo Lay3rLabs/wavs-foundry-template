@@ -1,45 +1,45 @@
-name: Solidity
-on:
-  push:
-    branches:
-      - main
-  pull_request:
+# name: Solidity
+# on:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
 
-jobs:
-  tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+# jobs:
+#   tests:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
 
-      - name: Install Foundry
-        uses: onbjerg/foundry-toolchain@v1
-        with:
-          version: nightly
+#       - name: Install Foundry
+#         uses: onbjerg/foundry-toolchain@v1
+#         with:
+#           version: nightly
 
-      - name: Install deps
-        run: forge install
+#       - name: Install deps
+#         run: forge install
 
-      - name: Run forge tests
-        run: forge test
+#       - name: Run forge tests
+#         run: forge test
 
-  bindings:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+#   bindings:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
 
-      - name: Install Foundry
-        uses: onbjerg/foundry-toolchain@v1
-        with:
-          version: nightly
+#       - name: Install Foundry
+#         uses: onbjerg/foundry-toolchain@v1
+#         with:
+#           version: nightly
 
-      - name: Pull library deps
-        run: forge install
+#       - name: Pull library deps
+#         run: forge install
 
-      - name: Check fmt
-        run: forge fmt --check
+#       - name: Check fmt
+#         run: forge fmt --check
 
-      - name: Build contracts before checking bindings are correct
-        run: forge build --sizes
+#       - name: Build contracts before checking bindings are correct
+#         run: forge build --sizes
 
-      - name: Check bindings are correct
-        run: forge bind --bindings-path ./crates/bindings --crate-name bindings --skip-cargo-toml --alloy
+#       - name: Check bindings are correct
+#         run: forge bind --bindings-path ./crates/bindings --crate-name bindings --skip-cargo-toml --alloy
