@@ -18,7 +18,7 @@ async fn main() -> Result<()> {
     let contract_address = "0x851356ae760d987e095750cceb3bc6014560891c".parse::<Address>()?;
     let contract = WavsServiceManager::new(contract_address, provider.clone());
 
-    let resp = contract.signedDataByTriggerId(1).call().await?;
+    let resp = contract.getData(1).call().await?;
 
     let hex = resp.data;
     println!("Weather Response Hex: {:?}\n", hex);
