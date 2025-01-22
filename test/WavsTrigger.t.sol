@@ -1,25 +1,23 @@
 pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
-import {WavsTrigger, ILayerTrigger} from "../src/WavsTrigger.sol";
+import {SimpleTrigger, ISimpleTrigger} from "../src/WavsTrigger.sol";
 
-contract LayerTriggerTest is Test {
-    WavsTrigger t;
+contract TriggerTest is Test {
+    SimpleTrigger simpleTrigger;
 
     function setUp() public {
-        t = new WavsTrigger();
+        simpleTrigger = new SimpleTrigger();
     }
 
     function testTrigger() public {
-        t.addTrigger("service-1", "workflow-1", "data1");
+        simpleTrigger.addTrigger("data1");
 
-        ILayerTrigger.TriggerId triggerId = ILayerTrigger.TriggerId.wrap(1);
-        ILayerTrigger.TriggerResponse memory trigger = t.getTrigger(triggerId);
+        ISimpleTrigger.TriggerId triggerId = ISimpleTrigger.TriggerId.wrap(1);
+        ISimpleTrigger.TriggerInfo memory trigger = simpleTrigger.getTrigger(triggerId);
 
-        assertEq(trigger.serviceId, "service-1");
-        assertEq(trigger.workflowId, "workflow-1");
         assertEq(trigger.creator, address(this));
         assertEq(trigger.data, "data1");
-        assertEq(ILayerTrigger.TriggerId.unwrap(trigger.triggerId), ILayerTrigger.TriggerId.unwrap(triggerId));
+        assertEq(ISimpleTrigger.TriggerId.unwrap(trigger.triggerId), ISimpleTrigger.TriggerId.unwrap(triggerId));
     }
 }

@@ -56,7 +56,7 @@ services:
     depends_on: ["wavs", "anvil", "aggregator"]
     restart: "no"
     env_file: "./.env"
-    command: ["wavs-cli", "deploy-core"]
+    command: ["wavs-cli", "deploy-eigen-core"]
     volumes:
       - "./lib/WAVS/packages/cli:/wavs"
       - "./.docker/cli:/root/wavs/cli/"

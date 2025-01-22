@@ -96,7 +96,7 @@ export CLI_EIGEN_CORE_REWARDS_COORDINATOR=`${docker_cmd}  'jq -r .eigen_core.loc
 export CLI_EIGEN_CORE_AVS_DIRECTORY=`${docker_cmd}  'jq -r .eigen_core.local.avs_directory ~/wavs/cli/deployments.json' | tr -d '\r'`
 export FOUNDRY_ANVIL_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 
-forge script ./script/WavsServiceManager.s.sol --rpc-url http://localhost:8545 --broadcast
+forge script ./script/WavsServiceManager.s.sol --rpc-url http://localhost:8545 --broadcast --via-ir
 ```
 
 Build WAVS WASI component(s)

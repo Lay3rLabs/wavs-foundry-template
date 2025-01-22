@@ -1,67 +1,61 @@
-// SPDX-License-Identifier Apache-2.0
 pragma solidity ^0.8.0;
 
-import {ILayerTrigger} from "wavs/interfaces/ILayerTrigger.sol";
+import {ISimpleTrigger} from "./interfaces/ISimpleTrigger.sol";
 
-contract WavsTrigger {
+contract SimpleTrigger {
     // Data structures
     struct Trigger {
-        string serviceId;
-        string workflowId;
         address creator;
         bytes data;
     }
 
     // Storage
 
-    mapping(ILayerTrigger.TriggerId => Trigger) public triggersById;
+    mapping(ISimpleTrigger.TriggerId => Trigger) public triggersById;
 
-    mapping(address => ILayerTrigger.TriggerId[]) public triggerIdsByCreator;
+    mapping(address => ISimpleTrigger.TriggerId[]) public triggerIdsByCreator;
 
     // Events
-    event NewTrigger(string serviceId, string workflowId, ILayerTrigger.TriggerId indexed triggerId);
+    event NewTrigger(bytes);
 
     // Global vars
-    ILayerTrigger.TriggerId public nextTriggerId;
+    ISimpleTrigger.TriggerId public nextTriggerId;
 
     // Functions
 
     /**
      * @notice Add a new trigger.
-     * @param serviceId The service identifier (string).
      * @param data The request data (bytes).
      */
-    function addTrigger(string memory serviceId, string memory workflowId, bytes memory data) public {
+    function addTrigger(bytes memory data) public {
         // Get the next trigger id
-        nextTriggerId = ILayerTrigger.TriggerId.wrap(ILayerTrigger.TriggerId.unwrap(nextTriggerId) + 1);
-        ILayerTrigger.TriggerId triggerId = nextTriggerId;
+        nextTriggerId = ISimpleTrigger.TriggerId.wrap(ISimpleTrigger.TriggerId.unwrap(nextTriggerId) + 1);
+        ISimpleTrigger.TriggerId triggerId = nextTriggerId;
 
         // Create the trigger
-        Trigger memory trigger =
-            Trigger({serviceId: serviceId, workflowId: workflowId, creator: msg.sender, data: data});
+        Trigger memory trigger = Trigger({creator: msg.sender, data: data});
 
         // update storages
         triggersById[triggerId] = trigger;
 
         triggerIdsByCreator[msg.sender].push(triggerId);
 
-        // emit event
-        emit NewTrigger(serviceId, workflowId, triggerId);
+        // emit the id directly in an event
+
+        // now be layer-compatible
+        ISimpleTrigger.TriggerInfo memory triggerInfo =
+            ISimpleTrigger.TriggerInfo({triggerId: triggerId, creator: trigger.creator, data: trigger.data});
+
+        emit NewTrigger(abi.encode(triggerInfo));
     }
 
     /**
      * @notice Get a single trigger by triggerId.
      * @param triggerId The identifier of the trigger.
      */
-    function getTrigger(ILayerTrigger.TriggerId triggerId) public view returns (ILayerTrigger.TriggerResponse memory) {
+    function getTrigger(ISimpleTrigger.TriggerId triggerId) public view returns (ISimpleTrigger.TriggerInfo memory) {
         Trigger storage trigger = triggersById[triggerId];
 
-        return ILayerTrigger.TriggerResponse({
-            triggerId: triggerId,
-            workflowId: trigger.workflowId,
-            serviceId: trigger.serviceId,
-            creator: trigger.creator,
-            data: trigger.data
-        });
+        return ISimpleTrigger.TriggerInfo({triggerId: triggerId, creator: trigger.creator, data: trigger.data});
     }
 }

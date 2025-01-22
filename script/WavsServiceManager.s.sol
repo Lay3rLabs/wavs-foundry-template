@@ -9,7 +9,7 @@ import {IDelegationManager} from
 import {Quorum, StrategyParams} from "@eigenlayer/middleware/src/interfaces/IECDSAStakeRegistryEventsAndErrors.sol";
 import {IStrategy} from "@eigenlayer/middleware/lib/eigenlayer-contracts/src/contracts/interfaces/IStrategy.sol";
 
-// forge script ./script/WavsServiceManager.s.sol --rpc-url http://localhost:8545 --broadcast
+// forge script ./script/WavsServiceManager.s.sol --rpc-url http://localhost:8545 --broadcast --var-ir
 contract WavsServiceManagerScript is Script {
     address public delegation_manager = vm.envAddress("CLI_EIGEN_CORE_DELEGATION_MANAGER");
     address public rewards_coordinator = vm.envAddress("CLI_EIGEN_CORE_REWARDS_COORDINATOR");

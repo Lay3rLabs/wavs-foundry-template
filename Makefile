@@ -10,7 +10,7 @@ CARGO=cargo
 bindings:
 # Generate new bindings
 	@forge bind --bindings-path ./crates/bindings --crate-name bindings --overwrite \
-		--alloy --alloy-version v0.9.2
+		--via-ir --alloy --alloy-version v0.9.2
 
 ## build: building the project
 build: bindings
@@ -45,7 +45,7 @@ fmt:
 
 ## test: running forge and rust tests
 test:
-	@forge test
+	@forge test --via-ir
 	@$(CARGO) test
 
 ## setup: installing forge dependencies
