@@ -1,6 +1,7 @@
 // Helpers to work with "trigger id" flows - which our example components do
 use alloy_sol_types::SolValue;
 use anyhow::Result;
+use layer_climb::proto::Message;
 // use example_submit::DataWithId;
 // use example_trigger::{NewTrigger, SimpleTrigger, TriggerInfo};
 use layer_wasi::{
@@ -22,6 +23,10 @@ pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>)>
         TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
             let event: NewTrigger = layer_wasi::ethereum::decode_event_log_data(log)?;
             let trigger_info = TriggerInfo::abi_decode(&event._0, false)?;
+            Ok((trigger_info.triggerId, trigger_info.data.to_vec()))
+        }
+        TriggerData::Raw(data) => {
+            let trigger_info = TriggerInfo::abi_decode(&data, false)?;
             Ok((trigger_info.triggerId, trigger_info.data.to_vec()))
         }
         _ => Err(anyhow::anyhow!("Unsupported trigger data type")),
