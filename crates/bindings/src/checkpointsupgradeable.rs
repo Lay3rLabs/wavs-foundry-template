@@ -22,22 +22,22 @@ pub mod CheckpointsUpgradeable {
     /// The creation / init bytecode of the contract.
     ///
     /// ```text
-    ///0x60556032600b8282823980515f1a607314602657634e487b7160e01b5f525f60045260245ffd5b305f52607381538281f3fe730000000000000000000000000000000000000000301460806040525f80fdfea26469706673582212208c7702f49c666c31216a5efb186ab87897652b8418dc34b2a21f99218c2f476c64736f6c634300081a0033
+    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea264697066735822122031bcd1780b52ccc37391f08b5096cb7b0cb0cdf457d47f49ea47b9a065e29a7264736f6c634300081a0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"`U`2`\x0B\x82\x82\x829\x80Q_\x1A`s\x14`&WcNH{q`\xE0\x1B_R_`\x04R`$_\xFD[0_R`s\x81S\x82\x81\xF3\xFEs\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x000\x14`\x80`@R_\x80\xFD\xFE\xA2dipfsX\"\x12 \x8Cw\x02\xF4\x9Cfl1!j^\xFB\x18j\xB8x\x97e+\x84\x18\xDC4\xB2\xA2\x1F\x99!\x8C/GldsolcC\0\x08\x1A\x003",
+        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 1\xBC\xD1x\x0BR\xCC\xC3s\x91\xF0\x8BP\x96\xCB{\x0C\xB0\xCD\xF4W\xD4\x7FI\xEAG\xB9\xA0e\xE2\x9ArdsolcC\0\x08\x1A\x003",
     );
     /// The runtime bytecode of the contract, as deployed on the network.
     ///
     /// ```text
-    ///0x730000000000000000000000000000000000000000301460806040525f80fdfea26469706673582212208c7702f49c666c31216a5efb186ab87897652b8418dc34b2a21f99218c2f476c64736f6c634300081a0033
+    ///0x5f80fdfea264697066735822122031bcd1780b52ccc37391f08b5096cb7b0cb0cdf457d47f49ea47b9a065e29a7264736f6c634300081a0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static DEPLOYED_BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"s\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x000\x14`\x80`@R_\x80\xFD\xFE\xA2dipfsX\"\x12 \x8Cw\x02\xF4\x9Cfl1!j^\xFB\x18j\xB8x\x97e+\x84\x18\xDC4\xB2\xA2\x1F\x99!\x8C/GldsolcC\0\x08\x1A\x003",
+        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 1\xBC\xD1x\x0BR\xCC\xC3s\x91\xF0\x8BP\x96\xCB{\x0C\xB0\xCD\xF4W\xD4\x7FI\xEAG\xB9\xA0e\xE2\x9ArdsolcC\0\x08\x1A\x003",
     );
     use alloy::contract as alloy_contract;
     /**Creates a new wrapper around an on-chain [`CheckpointsUpgradeable`](self) contract instance.
