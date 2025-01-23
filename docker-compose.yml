@@ -1,7 +1,7 @@
 # FROM: github.com/Lay3rLabs/wavs @ ebf8cf6bc001d8292696ef6883d55d749c41bdd9
 # .env files copied over from the WAVS packages
 #
-# docker compose up [--build]
+# docker compose up
 #
 # docker exec -it wavs bash
 #
@@ -20,8 +20,8 @@ services:
   # The main instance all WAVS interaction will happen from
   wavs:
     build:
-      context: .
-      dockerfile: ./lib/WAVS/Dockerfile
+      context: ./lib/WAVS
+      dockerfile: Dockerfile
     image: "ghcr.io/lay3rlabs/wavs:local"
     container_name: "wavs"
     stop_signal: SIGKILL

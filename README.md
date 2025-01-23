@@ -122,4 +122,7 @@ wavs-cli deploy-service --data ./.docker/cli --component $(pwd)/compiled/eth_tri
   --service-config '{"fuelLimit":100000000,"maxGas":5000000,"hostEnvs":["WAVS_ENV_OPEN_WEATHER_API_KEY"],"kv":[],"workflowId":"default","componentId":"default"}'
 
 wavs-cli add-task --input "Nashville,TN" --data ./.docker/cli --service-id <Service-ID>
+
+hex_bytes=$(cast decode-abi "getData(uint64)(bytes)" `cast call 0x2bdcc0de6be1f7d2ee689a0342d76f52e8efaba3 "getData(uint64)" 1`)
+echo `cast --to-ascii $hex_bytes`
 ```
