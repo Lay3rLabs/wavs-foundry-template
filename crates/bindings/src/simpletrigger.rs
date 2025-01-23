@@ -27,34 +27,27 @@ pub mod ISimpleTrigger {
             #[inline]
             fn stv_to_tokens(
                 &self,
-            ) -> <alloy::sol_types::sol_data::Uint<
-                64,
-            > as alloy_sol_types::SolType>::Token<'_> {
+            ) -> <alloy::sol_types::sol_data::Uint<64> as alloy_sol_types::SolType>::Token<'_>
+            {
                 alloy_sol_types::private::SolTypeValue::<
                     alloy::sol_types::sol_data::Uint<64>,
                 >::stv_to_tokens(self)
             }
             #[inline]
             fn stv_eip712_data_word(&self) -> alloy_sol_types::Word {
-                <alloy::sol_types::sol_data::Uint<
-                    64,
-                > as alloy_sol_types::SolType>::tokenize(self)
-                    .0
+                <alloy::sol_types::sol_data::Uint<64> as alloy_sol_types::SolType>::tokenize(self).0
             }
             #[inline]
-            fn stv_abi_encode_packed_to(
-                &self,
-                out: &mut alloy_sol_types::private::Vec<u8>,
-            ) {
+            fn stv_abi_encode_packed_to(&self, out: &mut alloy_sol_types::private::Vec<u8>) {
                 <alloy::sol_types::sol_data::Uint<
                     64,
                 > as alloy_sol_types::SolType>::abi_encode_packed_to(self, out)
             }
             #[inline]
             fn stv_abi_packed_encoded_size(&self) -> usize {
-                <alloy::sol_types::sol_data::Uint<
-                    64,
-                > as alloy_sol_types::SolType>::abi_encoded_size(self)
+                <alloy::sol_types::sol_data::Uint<64> as alloy_sol_types::SolType>::abi_encoded_size(
+                    self,
+                )
             }
         }
         #[automatically_derived]
@@ -87,13 +80,11 @@ pub mod ISimpleTrigger {
         #[automatically_derived]
         impl alloy_sol_types::SolType for TriggerId {
             type RustType = u64;
-            type Token<'a> = <alloy::sol_types::sol_data::Uint<
-                64,
-            > as alloy_sol_types::SolType>::Token<'a>;
+            type Token<'a> =
+                <alloy::sol_types::sol_data::Uint<64> as alloy_sol_types::SolType>::Token<'a>;
             const SOL_NAME: &'static str = Self::NAME;
-            const ENCODED_SIZE: Option<usize> = <alloy::sol_types::sol_data::Uint<
-                64,
-            > as alloy_sol_types::SolType>::ENCODED_SIZE;
+            const ENCODED_SIZE: Option<usize> =
+                <alloy::sol_types::sol_data::Uint<64> as alloy_sol_types::SolType>::ENCODED_SIZE;
             const PACKED_ENCODED_SIZE: Option<usize> = <alloy::sol_types::sol_data::Uint<
                 64,
             > as alloy_sol_types::SolType>::PACKED_ENCODED_SIZE;
@@ -103,15 +94,15 @@ pub mod ISimpleTrigger {
             }
             #[inline]
             fn type_check(token: &Self::Token<'_>) -> alloy_sol_types::Result<()> {
-                <alloy::sol_types::sol_data::Uint<
-                    64,
-                > as alloy_sol_types::SolType>::type_check(token)
+                <alloy::sol_types::sol_data::Uint<64> as alloy_sol_types::SolType>::type_check(
+                    token,
+                )
             }
             #[inline]
             fn detokenize(token: Self::Token<'_>) -> Self::RustType {
-                <alloy::sol_types::sol_data::Uint<
-                    64,
-                > as alloy_sol_types::SolType>::detokenize(token)
+                <alloy::sol_types::sol_data::Uint<64> as alloy_sol_types::SolType>::detokenize(
+                    token,
+                )
             }
         }
         #[automatically_derived]
@@ -132,18 +123,16 @@ pub mod ISimpleTrigger {
                 > as alloy_sol_types::EventTopic>::encode_topic_preimage(rust, out)
             }
             #[inline]
-            fn encode_topic(
-                rust: &Self::RustType,
-            ) -> alloy_sol_types::abi::token::WordToken {
-                <alloy::sol_types::sol_data::Uint<
-                    64,
-                > as alloy_sol_types::EventTopic>::encode_topic(rust)
+            fn encode_topic(rust: &Self::RustType) -> alloy_sol_types::abi::token::WordToken {
+                <alloy::sol_types::sol_data::Uint<64> as alloy_sol_types::EventTopic>::encode_topic(
+                    rust,
+                )
             }
         }
     };
     /**```solidity
-struct TriggerInfo { TriggerId triggerId; address creator; bytes data; }
-```*/
+    struct TriggerInfo { TriggerId triggerId; address creator; bytes data; }
+    ```*/
     #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
     #[derive(Clone)]
     pub struct TriggerInfo {
@@ -151,20 +140,12 @@ struct TriggerInfo { TriggerId triggerId; address creator; bytes data; }
         pub creator: alloy::sol_types::private::Address,
         pub data: alloy::sol_types::private::Bytes,
     }
-    #[allow(
-        non_camel_case_types,
-        non_snake_case,
-        clippy::pub_underscore_fields,
-        clippy::style
-    )]
+    #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields, clippy::style)]
     const _: () = {
         use alloy::sol_types as alloy_sol_types;
         #[doc(hidden)]
-        type UnderlyingSolTuple<'a> = (
-            TriggerId,
-            alloy::sol_types::sol_data::Address,
-            alloy::sol_types::sol_data::Bytes,
-        );
+        type UnderlyingSolTuple<'a> =
+            (TriggerId, alloy::sol_types::sol_data::Address, alloy::sol_types::sol_data::Bytes);
         #[doc(hidden)]
         type UnderlyingRustTuple<'a> = (
             <TriggerId as alloy::sol_types::SolType>::RustType,
@@ -173,9 +154,7 @@ struct TriggerInfo { TriggerId triggerId; address creator; bytes data; }
         );
         #[cfg(test)]
         #[allow(dead_code, unreachable_patterns)]
-        fn _type_assertion(
-            _t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>,
-        ) {
+        fn _type_assertion(_t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>) {
             match _t {
                 alloy_sol_types::private::AssertTypeEq::<
                     <UnderlyingSolTuple as alloy_sol_types::SolType>::RustType,
@@ -193,11 +172,7 @@ struct TriggerInfo { TriggerId triggerId; address creator; bytes data; }
         #[doc(hidden)]
         impl ::core::convert::From<UnderlyingRustTuple<'_>> for TriggerInfo {
             fn from(tuple: UnderlyingRustTuple<'_>) -> Self {
-                Self {
-                    triggerId: tuple.0,
-                    creator: tuple.1,
-                    data: tuple.2,
-                }
+                Self { triggerId: tuple.0, creator: tuple.1, data: tuple.2 }
             }
         }
         #[automatically_derived]
@@ -223,64 +198,50 @@ struct TriggerInfo { TriggerId triggerId; address creator; bytes data; }
                 if let Some(size) = <Self as alloy_sol_types::SolType>::ENCODED_SIZE {
                     return size;
                 }
-                let tuple = <UnderlyingRustTuple<
-                    '_,
-                > as ::core::convert::From<Self>>::from(self.clone());
-                <UnderlyingSolTuple<
-                    '_,
-                > as alloy_sol_types::SolType>::abi_encoded_size(&tuple)
+                let tuple =
+                    <UnderlyingRustTuple<'_> as ::core::convert::From<Self>>::from(self.clone());
+                <UnderlyingSolTuple<'_> as alloy_sol_types::SolType>::abi_encoded_size(&tuple)
             }
             #[inline]
             fn stv_eip712_data_word(&self) -> alloy_sol_types::Word {
                 <Self as alloy_sol_types::SolStruct>::eip712_hash_struct(self)
             }
             #[inline]
-            fn stv_abi_encode_packed_to(
-                &self,
-                out: &mut alloy_sol_types::private::Vec<u8>,
-            ) {
-                let tuple = <UnderlyingRustTuple<
-                    '_,
-                > as ::core::convert::From<Self>>::from(self.clone());
-                <UnderlyingSolTuple<
-                    '_,
-                > as alloy_sol_types::SolType>::abi_encode_packed_to(&tuple, out)
+            fn stv_abi_encode_packed_to(&self, out: &mut alloy_sol_types::private::Vec<u8>) {
+                let tuple =
+                    <UnderlyingRustTuple<'_> as ::core::convert::From<Self>>::from(self.clone());
+                <UnderlyingSolTuple<'_> as alloy_sol_types::SolType>::abi_encode_packed_to(
+                    &tuple, out,
+                )
             }
             #[inline]
             fn stv_abi_packed_encoded_size(&self) -> usize {
                 if let Some(size) = <Self as alloy_sol_types::SolType>::PACKED_ENCODED_SIZE {
                     return size;
                 }
-                let tuple = <UnderlyingRustTuple<
-                    '_,
-                > as ::core::convert::From<Self>>::from(self.clone());
-                <UnderlyingSolTuple<
-                    '_,
-                > as alloy_sol_types::SolType>::abi_packed_encoded_size(&tuple)
+                let tuple =
+                    <UnderlyingRustTuple<'_> as ::core::convert::From<Self>>::from(self.clone());
+                <UnderlyingSolTuple<'_> as alloy_sol_types::SolType>::abi_packed_encoded_size(
+                    &tuple,
+                )
             }
         }
         #[automatically_derived]
         impl alloy_sol_types::SolType for TriggerInfo {
             type RustType = Self;
-            type Token<'a> = <UnderlyingSolTuple<
-                'a,
-            > as alloy_sol_types::SolType>::Token<'a>;
+            type Token<'a> = <UnderlyingSolTuple<'a> as alloy_sol_types::SolType>::Token<'a>;
             const SOL_NAME: &'static str = <Self as alloy_sol_types::SolStruct>::NAME;
-            const ENCODED_SIZE: Option<usize> = <UnderlyingSolTuple<
-                '_,
-            > as alloy_sol_types::SolType>::ENCODED_SIZE;
-            const PACKED_ENCODED_SIZE: Option<usize> = <UnderlyingSolTuple<
-                '_,
-            > as alloy_sol_types::SolType>::PACKED_ENCODED_SIZE;
+            const ENCODED_SIZE: Option<usize> =
+                <UnderlyingSolTuple<'_> as alloy_sol_types::SolType>::ENCODED_SIZE;
+            const PACKED_ENCODED_SIZE: Option<usize> =
+                <UnderlyingSolTuple<'_> as alloy_sol_types::SolType>::PACKED_ENCODED_SIZE;
             #[inline]
             fn valid_token(token: &Self::Token<'_>) -> bool {
                 <UnderlyingSolTuple<'_> as alloy_sol_types::SolType>::valid_token(token)
             }
             #[inline]
             fn detokenize(token: Self::Token<'_>) -> Self::RustType {
-                let tuple = <UnderlyingSolTuple<
-                    '_,
-                > as alloy_sol_types::SolType>::detokenize(token);
+                let tuple = <UnderlyingSolTuple<'_> as alloy_sol_types::SolType>::detokenize(token);
                 <Self as ::core::convert::From<UnderlyingRustTuple<'_>>>::from(tuple)
             }
         }
@@ -294,9 +255,9 @@ struct TriggerInfo { TriggerId triggerId; address creator; bytes data; }
                 )
             }
             #[inline]
-            fn eip712_components() -> alloy_sol_types::private::Vec<
-                alloy_sol_types::private::Cow<'static, str>,
-            > {
+            fn eip712_components(
+            ) -> alloy_sol_types::private::Vec<alloy_sol_types::private::Cow<'static, str>>
+            {
                 alloy_sol_types::private::Vec::new()
             }
             #[inline]
@@ -342,9 +303,7 @@ struct TriggerInfo { TriggerId triggerId; address creator; bytes data; }
                 rust: &Self::RustType,
                 out: &mut alloy_sol_types::private::Vec<u8>,
             ) {
-                out.reserve(
-                    <Self as alloy_sol_types::EventTopic>::topic_preimage_length(rust),
-                );
+                out.reserve(<Self as alloy_sol_types::EventTopic>::topic_preimage_length(rust));
                 <TriggerId as alloy_sol_types::EventTopic>::encode_topic_preimage(
                     &rust.triggerId,
                     out,
@@ -359,24 +318,17 @@ struct TriggerInfo { TriggerId triggerId; address creator; bytes data; }
                 );
             }
             #[inline]
-            fn encode_topic(
-                rust: &Self::RustType,
-            ) -> alloy_sol_types::abi::token::WordToken {
+            fn encode_topic(rust: &Self::RustType) -> alloy_sol_types::abi::token::WordToken {
                 let mut out = alloy_sol_types::private::Vec::new();
-                <Self as alloy_sol_types::EventTopic>::encode_topic_preimage(
-                    rust,
-                    &mut out,
-                );
-                alloy_sol_types::abi::token::WordToken(
-                    alloy_sol_types::private::keccak256(out),
-                )
+                <Self as alloy_sol_types::EventTopic>::encode_topic_preimage(rust, &mut out);
+                alloy_sol_types::abi::token::WordToken(alloy_sol_types::private::keccak256(out))
             }
         }
     };
     use alloy::contract as alloy_contract;
     /**Creates a new wrapper around an on-chain [`ISimpleTrigger`](self) contract instance.
 
-See the [wrapper's documentation](`ISimpleTriggerInstance`) for more details.*/
+    See the [wrapper's documentation](`ISimpleTriggerInstance`) for more details.*/
     #[inline]
     pub const fn new<
         T: alloy_contract::private::Transport + ::core::clone::Clone,
@@ -390,15 +342,15 @@ See the [wrapper's documentation](`ISimpleTriggerInstance`) for more details.*/
     }
     /**A [`ISimpleTrigger`](self) instance.
 
-Contains type-safe methods for interacting with an on-chain instance of the
-[`ISimpleTrigger`](self) contract located at a given `address`, using a given
-provider `P`.
+    Contains type-safe methods for interacting with an on-chain instance of the
+    [`ISimpleTrigger`](self) contract located at a given `address`, using a given
+    provider `P`.
 
-If the contract bytecode is available (see the [`sol!`](alloy_sol_types::sol!)
-documentation on how to provide it), the `deploy` and `deploy_builder` methods can
-be used to deploy a new instance of the contract.
+    If the contract bytecode is available (see the [`sol!`](alloy_sol_types::sol!)
+    documentation on how to provide it), the `deploy` and `deploy_builder` methods can
+    be used to deploy a new instance of the contract.
 
-See the [module-level documentation](self) for all the available methods.*/
+    See the [module-level documentation](self) for all the available methods.*/
     #[derive(Clone)]
     pub struct ISimpleTriggerInstance<T, P, N = alloy_contract::private::Ethereum> {
         address: alloy_sol_types::private::Address,
@@ -415,23 +367,17 @@ See the [module-level documentation](self) for all the available methods.*/
     /// Instantiation and getters/setters.
     #[automatically_derived]
     impl<
-        T: alloy_contract::private::Transport + ::core::clone::Clone,
-        P: alloy_contract::private::Provider<T, N>,
-        N: alloy_contract::private::Network,
-    > ISimpleTriggerInstance<T, P, N> {
+            T: alloy_contract::private::Transport + ::core::clone::Clone,
+            P: alloy_contract::private::Provider<T, N>,
+            N: alloy_contract::private::Network,
+        > ISimpleTriggerInstance<T, P, N>
+    {
         /**Creates a new wrapper around an on-chain [`ISimpleTrigger`](self) contract instance.
 
-See the [wrapper's documentation](`ISimpleTriggerInstance`) for more details.*/
+        See the [wrapper's documentation](`ISimpleTriggerInstance`) for more details.*/
         #[inline]
-        pub const fn new(
-            address: alloy_sol_types::private::Address,
-            provider: P,
-        ) -> Self {
-            Self {
-                address,
-                provider,
-                _network_transport: ::core::marker::PhantomData,
-            }
+        pub const fn new(address: alloy_sol_types::private::Address, provider: P) -> Self {
+            Self { address, provider, _network_transport: ::core::marker::PhantomData }
         }
         /// Returns a reference to the address.
         #[inline]
@@ -468,10 +414,11 @@ See the [wrapper's documentation](`ISimpleTriggerInstance`) for more details.*/
     /// Function calls.
     #[automatically_derived]
     impl<
-        T: alloy_contract::private::Transport + ::core::clone::Clone,
-        P: alloy_contract::private::Provider<T, N>,
-        N: alloy_contract::private::Network,
-    > ISimpleTriggerInstance<T, P, N> {
+            T: alloy_contract::private::Transport + ::core::clone::Clone,
+            P: alloy_contract::private::Provider<T, N>,
+            N: alloy_contract::private::Network,
+        > ISimpleTriggerInstance<T, P, N>
+    {
         /// Creates a new call builder using this contract instance's provider and address.
         ///
         /// Note that the call can be any function call, not just those defined in this
@@ -486,10 +433,11 @@ See the [wrapper's documentation](`ISimpleTriggerInstance`) for more details.*/
     /// Event filters.
     #[automatically_derived]
     impl<
-        T: alloy_contract::private::Transport + ::core::clone::Clone,
-        P: alloy_contract::private::Provider<T, N>,
-        N: alloy_contract::private::Network,
-    > ISimpleTriggerInstance<T, P, N> {
+            T: alloy_contract::private::Transport + ::core::clone::Clone,
+            P: alloy_contract::private::Provider<T, N>,
+            N: alloy_contract::private::Network,
+        > ISimpleTriggerInstance<T, P, N>
+    {
         /// Creates a new event filter using this contract instance's provider and address.
         ///
         /// Note that the type can be any event, not just those defined in this contract.
@@ -684,70 +632,30 @@ pub mod SimpleTrigger {
         b"`\x80\x80`@R`\x046\x10\x15a\0\x12W_\x80\xFD[_5`\xE0\x1C\x90\x81cB\"\x7F\xA4\x14a\x04\xB3WP\x80c\x91;\x1F\xBF\x14a\x04PW\x80c\xCE(\x96\x12\x14a\x03\xEFW\x80c\xE3\x1E\x07\x88\x14a\0\xE2Wc\xE3(\xEDw\x14a\0SW_\x80\xFD[4a\0\xDEW` 6`\x03\x19\x01\x12a\0\xDEW`\x045`\x01`\x01`@\x1B\x03\x81\x16\x80\x91\x03a\0\xDEWa\0\xDA\x90```@\x80Qa\0\x8B\x81a\x05CV[_\x81R_` \x82\x01R\x01R\x80_R_` Ra\0\xC9`\x01`@_ \x81\x80`\xA0\x1B\x03\x81T\x16`@Q\x94a\0\xBC\x86a\x05CV[\x85R` \x85\x01R\x01a\x05\x7FV[`@\x82\x01R`@Q\x91\x82\x91\x82a\x06^V[\x03\x90\xF3[_\x80\xFD[4a\0\xDEW` 6`\x03\x19\x01\x12a\0\xDEW`\x045`\x01`\x01`@\x1B\x03\x81\x11a\0\xDEW6`#\x82\x01\x12\x15a\0\xDEW\x80`\x04\x015`\x01`\x01`@\x1B\x03\x81\x11a\x03\tW`@Q\x91a\x01:`\x1F\x83\x01`\x1F\x19\x16` \x01\x84a\x05^V[\x81\x83R6`$\x83\x83\x01\x01\x11a\0\xDEW\x81_\x92`$` \x93\x01\x83\x86\x017\x83\x01\x01R`\x02T`\x01`\x01`\x01`@\x1B\x03\x82\x16\x01`\x01`\x01`@\x1B\x03\x81\x11a\x03\xDBW`\x01`\x01`@\x1B\x03\x16\x80\x91`\x01`\x01`@\x1B\x03\x19\x16\x17`\x02U`@Q\x90`@\x82\x01\x82\x81\x10`\x01`\x01`@\x1B\x03\x82\x11\x17a\x03\tW`@R3\x82R` \x82\x01\x92\x83R\x80_R_` R`\x01`@_ \x81\x80`\xA0\x1B\x03\x84Q\x16k\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF`\xA0\x1B\x82T\x16\x17\x81U\x01\x83Q\x80Q\x90`\x01`\x01`@\x1B\x03\x82\x11a\x03\tW\x81\x90a\x02\x04\x84Ta\x05\x0BV[`\x1F\x81\x11a\x03\x8BW[P` \x90`\x1F\x83\x11`\x01\x14a\x03(W_\x92a\x03\x1DW[PP\x81`\x01\x1B\x91_\x19\x90`\x03\x1B\x1C\x19\x16\x17\x90U[3_R`\x01` R`@_ \x90\x81T\x90h\x01\0\0\0\0\0\0\0\0\x82\x10\x15a\x03\tW\x7F\x86\xEA\xCD#a\r\x81pe\x16\xDE\x1E\xD0Gl\x87w/\xDF\x93\x9C|w\x1F\xBB\xD7\xF0#\ra\x9Eh\x94a\x03\x04\x94a\x02\x94\x84a\x02\xE2\x96`\x01a\x02\xF0\x97\x01\x81Ua\x04\xD6V[\x81T\x90`\x03\x1B\x90`\x01`\x01`@\x1B\x03\x86\x83\x1B\x92\x1B\x19\x16\x17\x90U`\x01\x80`\xA0\x1B\x03\x90Q\x16\x90Q\x90`@Q\x92a\x02\xC7\x84a\x05CV[\x83R` \x83\x01R`@\x82\x01R`@Q\x92\x83\x91` \x83\x01a\x06^V[\x03`\x1F\x19\x81\x01\x83R\x82a\x05^V[`@Q\x91\x82\x91` \x83R` \x83\x01\x90a\x06\x1FV[\x03\x90\xA1\0[cNH{q`\xE0\x1B_R`A`\x04R`$_\xFD[\x01Q\x90P\x86\x80a\x02#V[_\x85\x81R\x82\x81 \x93P`\x1F\x19\x85\x16\x90[\x81\x81\x10a\x03sWP\x90\x84`\x01\x95\x94\x93\x92\x10a\x03[W[PPP\x81\x1B\x01\x90Ua\x027V[\x01Q_\x19`\xF8\x84`\x03\x1B\x16\x1C\x19\x16\x90U\x86\x80\x80a\x03NV[\x92\x93` `\x01\x81\x92\x87\x86\x01Q\x81U\x01\x95\x01\x93\x01a\x038V[\x90\x91P\x83_R` _ `\x1F\x84\x01`\x05\x1C\x81\x01\x91` \x85\x10a\x03\xD1W[\x90`\x1F\x85\x94\x93\x92\x01`\x05\x1C\x01\x90[\x81\x81\x10a\x03\xC3WPa\x02\rV[_\x81U\x84\x93P`\x01\x01a\x03\xB6V[\x90\x91P\x81\x90a\x03\xA8V[cNH{q`\xE0\x1B_R`\x11`\x04R`$_\xFD[4a\0\xDEW` 6`\x03\x19\x01\x12a\0\xDEW`\x045`\x01`\x01`@\x1B\x03\x81\x16\x80\x91\x03a\0\xDEW_R_` R`@_ a\x043`\x01\x80\x80`\xA0\x1B\x03\x83T\x16\x92\x01a\x05\x7FV[\x90a\0\xDA`@Q\x92\x83\x92\x83R`@` \x84\x01R`@\x83\x01\x90a\x06\x1FV[4a\0\xDEW`@6`\x03\x19\x01\x12a\0\xDEW`\x045`\x01`\x01`\xA0\x1B\x03\x81\x16\x90\x81\x90\x03a\0\xDEW`$5\x90_R`\x01` R`@_ \x90\x81T\x81\x10\x15a\0\xDEWa\x04\xA3`\x01`\x01`@\x1B\x03\x91` \x93a\x04\xD6V[\x90T\x90`\x03\x1B\x1C\x16`@Q\x90\x81R\xF3[4a\0\xDEW_6`\x03\x19\x01\x12a\0\xDEW` \x90`\x01`\x01`@\x1B\x03`\x02T\x16\x81R\xF3[\x91\x90\x91\x80T\x83\x10\x15a\x04\xF7W_R`\x18` _ \x83`\x02\x1C\x01\x92`\x03\x1B\x16\x90V[cNH{q`\xE0\x1B_R`2`\x04R`$_\xFD[\x90`\x01\x82\x81\x1C\x92\x16\x80\x15a\x059W[` \x83\x10\x14a\x05%WV[cNH{q`\xE0\x1B_R`\"`\x04R`$_\xFD[\x91`\x7F\x16\x91a\x05\x1AV[``\x81\x01\x90\x81\x10`\x01`\x01`@\x1B\x03\x82\x11\x17a\x03\tW`@RV[\x90`\x1F\x80\x19\x91\x01\x16\x81\x01\x90\x81\x10`\x01`\x01`@\x1B\x03\x82\x11\x17a\x03\tW`@RV[\x90`@Q\x91\x82_\x82T\x92a\x05\x92\x84a\x05\x0BV[\x80\x84R\x93`\x01\x81\x16\x90\x81\x15a\x05\xFDWP`\x01\x14a\x05\xB9W[Pa\x05\xB7\x92P\x03\x83a\x05^V[V[\x90P_\x92\x91\x92R` _ \x90_\x91[\x81\x83\x10a\x05\xE1WPP\x90` a\x05\xB7\x92\x82\x01\x01_a\x05\xAAV[` \x91\x93P\x80`\x01\x91T\x83\x85\x89\x01\x01R\x01\x91\x01\x90\x91\x84\x92a\x05\xC8V[\x90P` \x92Pa\x05\xB7\x94\x91P`\xFF\x19\x16\x82\x84\x01R\x15\x15`\x05\x1B\x82\x01\x01_a\x05\xAAV[\x91\x90\x82Q\x92\x83\x82R_[\x84\x81\x10a\x06IWPP\x82_` \x80\x94\x95\x84\x01\x01R`\x1F\x80\x19\x91\x01\x16\x01\x01\x90V[\x80` \x80\x92\x84\x01\x01Q\x82\x82\x86\x01\x01R\x01a\x06)V[`\x80`@a\x06\x9B\x93` \x84R`\x01`\x01`@\x1B\x03\x81Q\x16` \x85\x01R`\x01\x80`\xA0\x1B\x03` \x82\x01Q\x16\x82\x85\x01R\x01Q\x91``\x80\x82\x01R\x01\x90a\x06\x1FV[\x90V\xFE\xA2dipfsX\"\x12 \x9F\xBD\xE8[\x97S#}7\xA7kDE\xB3\xB7\xF1a\xC2+\xFA?\xCD\x91\x1AP\0\xC4?a\t2\xB7dsolcC\0\x08\x1A\x003",
     );
     /**Event with signature `NewTrigger(bytes)` and selector `0x86eacd23610d81706516de1ed0476c87772fdf939c7c771fbbd7f0230d619e68`.
-```solidity
-event NewTrigger(bytes);
-```*/
-    #[allow(
-        non_camel_case_types,
-        non_snake_case,
-        clippy::pub_underscore_fields,
-        clippy::style
-    )]
+    ```solidity
+    event NewTrigger(bytes);
+    ```*/
+    #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields, clippy::style)]
     #[derive(Clone)]
     pub struct NewTrigger {
         #[allow(missing_docs)]
         pub _0: alloy::sol_types::private::Bytes,
     }
-    #[allow(
-        non_camel_case_types,
-        non_snake_case,
-        clippy::pub_underscore_fields,
-        clippy::style
-    )]
+    #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields, clippy::style)]
     const _: () = {
         use alloy::sol_types as alloy_sol_types;
         #[automatically_derived]
         impl alloy_sol_types::SolEvent for NewTrigger {
             type DataTuple<'a> = (alloy::sol_types::sol_data::Bytes,);
-            type DataToken<'a> = <Self::DataTuple<
-                'a,
-            > as alloy_sol_types::SolType>::Token<'a>;
+            type DataToken<'a> = <Self::DataTuple<'a> as alloy_sol_types::SolType>::Token<'a>;
             type TopicList = (alloy_sol_types::sol_data::FixedBytes<32>,);
             const SIGNATURE: &'static str = "NewTrigger(bytes)";
-            const SIGNATURE_HASH: alloy_sol_types::private::B256 = alloy_sol_types::private::B256::new([
-                134u8,
-                234u8,
-                205u8,
-                35u8,
-                97u8,
-                13u8,
-                129u8,
-                112u8,
-                101u8,
-                22u8,
-                222u8,
-                30u8,
-                208u8,
-                71u8,
-                108u8,
-                135u8,
-                119u8,
-                47u8,
-                223u8,
-                147u8,
-                156u8,
-                124u8,
-                119u8,
-                31u8,
-                187u8,
-                215u8,
-                240u8,
-                35u8,
-                13u8,
-                97u8,
-                158u8,
-                104u8,
-            ]);
+            const SIGNATURE_HASH: alloy_sol_types::private::B256 =
+                alloy_sol_types::private::B256::new([
+                    134u8, 234u8, 205u8, 35u8, 97u8, 13u8, 129u8, 112u8, 101u8, 22u8, 222u8, 30u8,
+                    208u8, 71u8, 108u8, 135u8, 119u8, 47u8, 223u8, 147u8, 156u8, 124u8, 119u8,
+                    31u8, 187u8, 215u8, 240u8, 35u8, 13u8, 97u8, 158u8, 104u8,
+                ]);
             const ANONYMOUS: bool = false;
             #[allow(unused_variables)]
             #[inline]
@@ -762,23 +670,19 @@ event NewTrigger(bytes);
                 topics: &<Self::TopicList as alloy_sol_types::SolType>::RustType,
             ) -> alloy_sol_types::Result<()> {
                 if topics.0 != Self::SIGNATURE_HASH {
-                    return Err(
-                        alloy_sol_types::Error::invalid_event_signature_hash(
-                            Self::SIGNATURE,
-                            topics.0,
-                            Self::SIGNATURE_HASH,
-                        ),
-                    );
+                    return Err(alloy_sol_types::Error::invalid_event_signature_hash(
+                        Self::SIGNATURE,
+                        topics.0,
+                        Self::SIGNATURE_HASH,
+                    ));
                 }
                 Ok(())
             }
             #[inline]
             fn tokenize_body(&self) -> Self::DataToken<'_> {
-                (
-                    <alloy::sol_types::sol_data::Bytes as alloy_sol_types::SolType>::tokenize(
-                        &self._0,
-                    ),
-                )
+                (<alloy::sol_types::sol_data::Bytes as alloy_sol_types::SolType>::tokenize(
+                    &self._0,
+                ),)
             }
             #[inline]
             fn topics(&self) -> <Self::TopicList as alloy_sol_types::SolType>::RustType {
@@ -792,9 +696,7 @@ event NewTrigger(bytes);
                 if out.len() < <Self::TopicList as alloy_sol_types::TopicList>::COUNT {
                     return Err(alloy_sol_types::Error::Overrun);
                 }
-                out[0usize] = alloy_sol_types::abi::token::WordToken(
-                    Self::SIGNATURE_HASH,
-                );
+                out[0usize] = alloy_sol_types::abi::token::WordToken(Self::SIGNATURE_HASH);
                 Ok(())
             }
         }
@@ -816,9 +718,9 @@ event NewTrigger(bytes);
         }
     };
     /**Function with signature `addTrigger(bytes)` and selector `0xe31e0788`.
-```solidity
-function addTrigger(bytes memory data) external;
-```*/
+    ```solidity
+    function addTrigger(bytes memory data) external;
+    ```*/
     #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
     #[derive(Clone)]
     pub struct addTriggerCall {
@@ -828,12 +730,7 @@ function addTrigger(bytes memory data) external;
     #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
     #[derive(Clone)]
     pub struct addTriggerReturn {}
-    #[allow(
-        non_camel_case_types,
-        non_snake_case,
-        clippy::pub_underscore_fields,
-        clippy::style
-    )]
+    #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields, clippy::style)]
     const _: () = {
         use alloy::sol_types as alloy_sol_types;
         {
@@ -843,9 +740,7 @@ function addTrigger(bytes memory data) external;
             type UnderlyingRustTuple<'a> = (alloy::sol_types::private::Bytes,);
             #[cfg(test)]
             #[allow(dead_code, unreachable_patterns)]
-            fn _type_assertion(
-                _t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>,
-            ) {
+            fn _type_assertion(_t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>) {
                 match _t {
                     alloy_sol_types::private::AssertTypeEq::<
                         <UnderlyingSolTuple as alloy_sol_types::SolType>::RustType,
@@ -874,9 +769,7 @@ function addTrigger(bytes memory data) external;
             type UnderlyingRustTuple<'a> = ();
             #[cfg(test)]
             #[allow(dead_code, unreachable_patterns)]
-            fn _type_assertion(
-                _t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>,
-            ) {
+            fn _type_assertion(_t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>) {
                 match _t {
                     alloy_sol_types::private::AssertTypeEq::<
                         <UnderlyingSolTuple as alloy_sol_types::SolType>::RustType,
@@ -901,14 +794,10 @@ function addTrigger(bytes memory data) external;
         #[automatically_derived]
         impl alloy_sol_types::SolCall for addTriggerCall {
             type Parameters<'a> = (alloy::sol_types::sol_data::Bytes,);
-            type Token<'a> = <Self::Parameters<
-                'a,
-            > as alloy_sol_types::SolType>::Token<'a>;
+            type Token<'a> = <Self::Parameters<'a> as alloy_sol_types::SolType>::Token<'a>;
             type Return = addTriggerReturn;
             type ReturnTuple<'a> = ();
-            type ReturnToken<'a> = <Self::ReturnTuple<
-                'a,
-            > as alloy_sol_types::SolType>::Token<'a>;
+            type ReturnToken<'a> = <Self::ReturnTuple<'a> as alloy_sol_types::SolType>::Token<'a>;
             const SIGNATURE: &'static str = "addTrigger(bytes)";
             const SELECTOR: [u8; 4] = [227u8, 30u8, 7u8, 136u8];
             #[inline]
@@ -919,28 +808,26 @@ function addTrigger(bytes memory data) external;
             }
             #[inline]
             fn tokenize(&self) -> Self::Token<'_> {
-                (
-                    <alloy::sol_types::sol_data::Bytes as alloy_sol_types::SolType>::tokenize(
-                        &self.data,
-                    ),
-                )
+                (<alloy::sol_types::sol_data::Bytes as alloy_sol_types::SolType>::tokenize(
+                    &self.data,
+                ),)
             }
             #[inline]
             fn abi_decode_returns(
                 data: &[u8],
                 validate: bool,
             ) -> alloy_sol_types::Result<Self::Return> {
-                <Self::ReturnTuple<
-                    '_,
-                > as alloy_sol_types::SolType>::abi_decode_sequence(data, validate)
-                    .map(Into::into)
+                <Self::ReturnTuple<'_> as alloy_sol_types::SolType>::abi_decode_sequence(
+                    data, validate,
+                )
+                .map(Into::into)
             }
         }
     };
     /**Function with signature `getTrigger(uint64)` and selector `0xe328ed77`.
-```solidity
-function getTrigger(ISimpleTrigger.TriggerId triggerId) external view returns (ISimpleTrigger.TriggerInfo memory);
-```*/
+    ```solidity
+    function getTrigger(ISimpleTrigger.TriggerId triggerId) external view returns (ISimpleTrigger.TriggerInfo memory);
+    ```*/
     #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
     #[derive(Clone)]
     pub struct getTriggerCall {
@@ -952,26 +839,18 @@ function getTrigger(ISimpleTrigger.TriggerId triggerId) external view returns (I
     pub struct getTriggerReturn {
         pub _0: <ISimpleTrigger::TriggerInfo as alloy::sol_types::SolType>::RustType,
     }
-    #[allow(
-        non_camel_case_types,
-        non_snake_case,
-        clippy::pub_underscore_fields,
-        clippy::style
-    )]
+    #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields, clippy::style)]
     const _: () = {
         use alloy::sol_types as alloy_sol_types;
         {
             #[doc(hidden)]
             type UnderlyingSolTuple<'a> = (ISimpleTrigger::TriggerId,);
             #[doc(hidden)]
-            type UnderlyingRustTuple<'a> = (
-                <ISimpleTrigger::TriggerId as alloy::sol_types::SolType>::RustType,
-            );
+            type UnderlyingRustTuple<'a> =
+                (<ISimpleTrigger::TriggerId as alloy::sol_types::SolType>::RustType,);
             #[cfg(test)]
             #[allow(dead_code, unreachable_patterns)]
-            fn _type_assertion(
-                _t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>,
-            ) {
+            fn _type_assertion(_t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>) {
                 match _t {
                     alloy_sol_types::private::AssertTypeEq::<
                         <UnderlyingSolTuple as alloy_sol_types::SolType>::RustType,
@@ -997,14 +876,11 @@ function getTrigger(ISimpleTrigger.TriggerId triggerId) external view returns (I
             #[doc(hidden)]
             type UnderlyingSolTuple<'a> = (ISimpleTrigger::TriggerInfo,);
             #[doc(hidden)]
-            type UnderlyingRustTuple<'a> = (
-                <ISimpleTrigger::TriggerInfo as alloy::sol_types::SolType>::RustType,
-            );
+            type UnderlyingRustTuple<'a> =
+                (<ISimpleTrigger::TriggerInfo as alloy::sol_types::SolType>::RustType,);
             #[cfg(test)]
             #[allow(dead_code, unreachable_patterns)]
-            fn _type_assertion(
-                _t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>,
-            ) {
+            fn _type_assertion(_t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>) {
                 match _t {
                     alloy_sol_types::private::AssertTypeEq::<
                         <UnderlyingSolTuple as alloy_sol_types::SolType>::RustType,
@@ -1029,14 +905,10 @@ function getTrigger(ISimpleTrigger.TriggerId triggerId) external view returns (I
         #[automatically_derived]
         impl alloy_sol_types::SolCall for getTriggerCall {
             type Parameters<'a> = (ISimpleTrigger::TriggerId,);
-            type Token<'a> = <Self::Parameters<
-                'a,
-            > as alloy_sol_types::SolType>::Token<'a>;
+            type Token<'a> = <Self::Parameters<'a> as alloy_sol_types::SolType>::Token<'a>;
             type Return = getTriggerReturn;
             type ReturnTuple<'a> = (ISimpleTrigger::TriggerInfo,);
-            type ReturnToken<'a> = <Self::ReturnTuple<
-                'a,
-            > as alloy_sol_types::SolType>::Token<'a>;
+            type ReturnToken<'a> = <Self::ReturnTuple<'a> as alloy_sol_types::SolType>::Token<'a>;
             const SIGNATURE: &'static str = "getTrigger(uint64)";
             const SELECTOR: [u8; 4] = [227u8, 40u8, 237u8, 119u8];
             #[inline]
@@ -1047,28 +919,24 @@ function getTrigger(ISimpleTrigger.TriggerId triggerId) external view returns (I
             }
             #[inline]
             fn tokenize(&self) -> Self::Token<'_> {
-                (
-                    <ISimpleTrigger::TriggerId as alloy_sol_types::SolType>::tokenize(
-                        &self.triggerId,
-                    ),
-                )
+                (<ISimpleTrigger::TriggerId as alloy_sol_types::SolType>::tokenize(&self.triggerId),)
             }
             #[inline]
             fn abi_decode_returns(
                 data: &[u8],
                 validate: bool,
             ) -> alloy_sol_types::Result<Self::Return> {
-                <Self::ReturnTuple<
-                    '_,
-                > as alloy_sol_types::SolType>::abi_decode_sequence(data, validate)
-                    .map(Into::into)
+                <Self::ReturnTuple<'_> as alloy_sol_types::SolType>::abi_decode_sequence(
+                    data, validate,
+                )
+                .map(Into::into)
             }
         }
     };
     /**Function with signature `nextTriggerId()` and selector `0x42227fa4`.
-```solidity
-function nextTriggerId() external view returns (ISimpleTrigger.TriggerId);
-```*/
+    ```solidity
+    function nextTriggerId() external view returns (ISimpleTrigger.TriggerId);
+    ```*/
     #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
     #[derive(Clone)]
     pub struct nextTriggerIdCall {}
@@ -1078,12 +946,7 @@ function nextTriggerId() external view returns (ISimpleTrigger.TriggerId);
     pub struct nextTriggerIdReturn {
         pub _0: <ISimpleTrigger::TriggerId as alloy::sol_types::SolType>::RustType,
     }
-    #[allow(
-        non_camel_case_types,
-        non_snake_case,
-        clippy::pub_underscore_fields,
-        clippy::style
-    )]
+    #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields, clippy::style)]
     const _: () = {
         use alloy::sol_types as alloy_sol_types;
         {
@@ -1093,9 +956,7 @@ function nextTriggerId() external view returns (ISimpleTrigger.TriggerId);
             type UnderlyingRustTuple<'a> = ();
             #[cfg(test)]
             #[allow(dead_code, unreachable_patterns)]
-            fn _type_assertion(
-                _t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>,
-            ) {
+            fn _type_assertion(_t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>) {
                 match _t {
                     alloy_sol_types::private::AssertTypeEq::<
                         <UnderlyingSolTuple as alloy_sol_types::SolType>::RustType,
@@ -1121,14 +982,11 @@ function nextTriggerId() external view returns (ISimpleTrigger.TriggerId);
             #[doc(hidden)]
             type UnderlyingSolTuple<'a> = (ISimpleTrigger::TriggerId,);
             #[doc(hidden)]
-            type UnderlyingRustTuple<'a> = (
-                <ISimpleTrigger::TriggerId as alloy::sol_types::SolType>::RustType,
-            );
+            type UnderlyingRustTuple<'a> =
+                (<ISimpleTrigger::TriggerId as alloy::sol_types::SolType>::RustType,);
             #[cfg(test)]
             #[allow(dead_code, unreachable_patterns)]
-            fn _type_assertion(
-                _t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>,
-            ) {
+            fn _type_assertion(_t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>) {
                 match _t {
                     alloy_sol_types::private::AssertTypeEq::<
                         <UnderlyingSolTuple as alloy_sol_types::SolType>::RustType,
@@ -1153,14 +1011,10 @@ function nextTriggerId() external view returns (ISimpleTrigger.TriggerId);
         #[automatically_derived]
         impl alloy_sol_types::SolCall for nextTriggerIdCall {
             type Parameters<'a> = ();
-            type Token<'a> = <Self::Parameters<
-                'a,
-            > as alloy_sol_types::SolType>::Token<'a>;
+            type Token<'a> = <Self::Parameters<'a> as alloy_sol_types::SolType>::Token<'a>;
             type Return = nextTriggerIdReturn;
             type ReturnTuple<'a> = (ISimpleTrigger::TriggerId,);
-            type ReturnToken<'a> = <Self::ReturnTuple<
-                'a,
-            > as alloy_sol_types::SolType>::Token<'a>;
+            type ReturnToken<'a> = <Self::ReturnTuple<'a> as alloy_sol_types::SolType>::Token<'a>;
             const SIGNATURE: &'static str = "nextTriggerId()";
             const SELECTOR: [u8; 4] = [66u8, 34u8, 127u8, 164u8];
             #[inline]
@@ -1178,17 +1032,17 @@ function nextTriggerId() external view returns (ISimpleTrigger.TriggerId);
                 data: &[u8],
                 validate: bool,
             ) -> alloy_sol_types::Result<Self::Return> {
-                <Self::ReturnTuple<
-                    '_,
-                > as alloy_sol_types::SolType>::abi_decode_sequence(data, validate)
-                    .map(Into::into)
+                <Self::ReturnTuple<'_> as alloy_sol_types::SolType>::abi_decode_sequence(
+                    data, validate,
+                )
+                .map(Into::into)
             }
         }
     };
     /**Function with signature `triggerIdsByCreator(address,uint256)` and selector `0x913b1fbf`.
-```solidity
-function triggerIdsByCreator(address, uint256) external view returns (ISimpleTrigger.TriggerId);
-```*/
+    ```solidity
+    function triggerIdsByCreator(address, uint256) external view returns (ISimpleTrigger.TriggerId);
+    ```*/
     #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
     #[derive(Clone)]
     pub struct triggerIdsByCreatorCall {
@@ -1201,20 +1055,13 @@ function triggerIdsByCreator(address, uint256) external view returns (ISimpleTri
     pub struct triggerIdsByCreatorReturn {
         pub _0: <ISimpleTrigger::TriggerId as alloy::sol_types::SolType>::RustType,
     }
-    #[allow(
-        non_camel_case_types,
-        non_snake_case,
-        clippy::pub_underscore_fields,
-        clippy::style
-    )]
+    #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields, clippy::style)]
     const _: () = {
         use alloy::sol_types as alloy_sol_types;
         {
             #[doc(hidden)]
-            type UnderlyingSolTuple<'a> = (
-                alloy::sol_types::sol_data::Address,
-                alloy::sol_types::sol_data::Uint<256>,
-            );
+            type UnderlyingSolTuple<'a> =
+                (alloy::sol_types::sol_data::Address, alloy::sol_types::sol_data::Uint<256>);
             #[doc(hidden)]
             type UnderlyingRustTuple<'a> = (
                 alloy::sol_types::private::Address,
@@ -1222,9 +1069,7 @@ function triggerIdsByCreator(address, uint256) external view returns (ISimpleTri
             );
             #[cfg(test)]
             #[allow(dead_code, unreachable_patterns)]
-            fn _type_assertion(
-                _t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>,
-            ) {
+            fn _type_assertion(_t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>) {
                 match _t {
                     alloy_sol_types::private::AssertTypeEq::<
                         <UnderlyingSolTuple as alloy_sol_types::SolType>::RustType,
@@ -1233,16 +1078,14 @@ function triggerIdsByCreator(address, uint256) external view returns (ISimpleTri
             }
             #[automatically_derived]
             #[doc(hidden)]
-            impl ::core::convert::From<triggerIdsByCreatorCall>
-            for UnderlyingRustTuple<'_> {
+            impl ::core::convert::From<triggerIdsByCreatorCall> for UnderlyingRustTuple<'_> {
                 fn from(value: triggerIdsByCreatorCall) -> Self {
                     (value._0, value._1)
                 }
             }
             #[automatically_derived]
             #[doc(hidden)]
-            impl ::core::convert::From<UnderlyingRustTuple<'_>>
-            for triggerIdsByCreatorCall {
+            impl ::core::convert::From<UnderlyingRustTuple<'_>> for triggerIdsByCreatorCall {
                 fn from(tuple: UnderlyingRustTuple<'_>) -> Self {
                     Self { _0: tuple.0, _1: tuple.1 }
                 }
@@ -1252,14 +1095,11 @@ function triggerIdsByCreator(address, uint256) external view returns (ISimpleTri
             #[doc(hidden)]
             type UnderlyingSolTuple<'a> = (ISimpleTrigger::TriggerId,);
             #[doc(hidden)]
-            type UnderlyingRustTuple<'a> = (
-                <ISimpleTrigger::TriggerId as alloy::sol_types::SolType>::RustType,
-            );
+            type UnderlyingRustTuple<'a> =
+                (<ISimpleTrigger::TriggerId as alloy::sol_types::SolType>::RustType,);
             #[cfg(test)]
             #[allow(dead_code, unreachable_patterns)]
-            fn _type_assertion(
-                _t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>,
-            ) {
+            fn _type_assertion(_t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>) {
                 match _t {
                     alloy_sol_types::private::AssertTypeEq::<
                         <UnderlyingSolTuple as alloy_sol_types::SolType>::RustType,
@@ -1268,16 +1108,14 @@ function triggerIdsByCreator(address, uint256) external view returns (ISimpleTri
             }
             #[automatically_derived]
             #[doc(hidden)]
-            impl ::core::convert::From<triggerIdsByCreatorReturn>
-            for UnderlyingRustTuple<'_> {
+            impl ::core::convert::From<triggerIdsByCreatorReturn> for UnderlyingRustTuple<'_> {
                 fn from(value: triggerIdsByCreatorReturn) -> Self {
                     (value._0,)
                 }
             }
             #[automatically_derived]
             #[doc(hidden)]
-            impl ::core::convert::From<UnderlyingRustTuple<'_>>
-            for triggerIdsByCreatorReturn {
+            impl ::core::convert::From<UnderlyingRustTuple<'_>> for triggerIdsByCreatorReturn {
                 fn from(tuple: UnderlyingRustTuple<'_>) -> Self {
                     Self { _0: tuple.0 }
                 }
@@ -1285,18 +1123,12 @@ function triggerIdsByCreator(address, uint256) external view returns (ISimpleTri
         }
         #[automatically_derived]
         impl alloy_sol_types::SolCall for triggerIdsByCreatorCall {
-            type Parameters<'a> = (
-                alloy::sol_types::sol_data::Address,
-                alloy::sol_types::sol_data::Uint<256>,
-            );
-            type Token<'a> = <Self::Parameters<
-                'a,
-            > as alloy_sol_types::SolType>::Token<'a>;
+            type Parameters<'a> =
+                (alloy::sol_types::sol_data::Address, alloy::sol_types::sol_data::Uint<256>);
+            type Token<'a> = <Self::Parameters<'a> as alloy_sol_types::SolType>::Token<'a>;
             type Return = triggerIdsByCreatorReturn;
             type ReturnTuple<'a> = (ISimpleTrigger::TriggerId,);
-            type ReturnToken<'a> = <Self::ReturnTuple<
-                'a,
-            > as alloy_sol_types::SolType>::Token<'a>;
+            type ReturnToken<'a> = <Self::ReturnTuple<'a> as alloy_sol_types::SolType>::Token<'a>;
             const SIGNATURE: &'static str = "triggerIdsByCreator(address,uint256)";
             const SELECTOR: [u8; 4] = [145u8, 59u8, 31u8, 191u8];
             #[inline]
@@ -1311,9 +1143,9 @@ function triggerIdsByCreator(address, uint256) external view returns (ISimpleTri
                     <alloy::sol_types::sol_data::Address as alloy_sol_types::SolType>::tokenize(
                         &self._0,
                     ),
-                    <alloy::sol_types::sol_data::Uint<
-                        256,
-                    > as alloy_sol_types::SolType>::tokenize(&self._1),
+                    <alloy::sol_types::sol_data::Uint<256> as alloy_sol_types::SolType>::tokenize(
+                        &self._1,
+                    ),
                 )
             }
             #[inline]
@@ -1321,17 +1153,17 @@ function triggerIdsByCreator(address, uint256) external view returns (ISimpleTri
                 data: &[u8],
                 validate: bool,
             ) -> alloy_sol_types::Result<Self::Return> {
-                <Self::ReturnTuple<
-                    '_,
-                > as alloy_sol_types::SolType>::abi_decode_sequence(data, validate)
-                    .map(Into::into)
+                <Self::ReturnTuple<'_> as alloy_sol_types::SolType>::abi_decode_sequence(
+                    data, validate,
+                )
+                .map(Into::into)
             }
         }
     };
     /**Function with signature `triggersById(uint64)` and selector `0xce289612`.
-```solidity
-function triggersById(ISimpleTrigger.TriggerId) external view returns (address creator, bytes memory data);
-```*/
+    ```solidity
+    function triggersById(ISimpleTrigger.TriggerId) external view returns (address creator, bytes memory data);
+    ```*/
     #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
     #[derive(Clone)]
     pub struct triggersByIdCall {
@@ -1344,26 +1176,18 @@ function triggersById(ISimpleTrigger.TriggerId) external view returns (address c
         pub creator: alloy::sol_types::private::Address,
         pub data: alloy::sol_types::private::Bytes,
     }
-    #[allow(
-        non_camel_case_types,
-        non_snake_case,
-        clippy::pub_underscore_fields,
-        clippy::style
-    )]
+    #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields, clippy::style)]
     const _: () = {
         use alloy::sol_types as alloy_sol_types;
         {
             #[doc(hidden)]
             type UnderlyingSolTuple<'a> = (ISimpleTrigger::TriggerId,);
             #[doc(hidden)]
-            type UnderlyingRustTuple<'a> = (
-                <ISimpleTrigger::TriggerId as alloy::sol_types::SolType>::RustType,
-            );
+            type UnderlyingRustTuple<'a> =
+                (<ISimpleTrigger::TriggerId as alloy::sol_types::SolType>::RustType,);
             #[cfg(test)]
             #[allow(dead_code, unreachable_patterns)]
-            fn _type_assertion(
-                _t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>,
-            ) {
+            fn _type_assertion(_t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>) {
                 match _t {
                     alloy_sol_types::private::AssertTypeEq::<
                         <UnderlyingSolTuple as alloy_sol_types::SolType>::RustType,
@@ -1387,20 +1211,14 @@ function triggersById(ISimpleTrigger.TriggerId) external view returns (address c
         }
         {
             #[doc(hidden)]
-            type UnderlyingSolTuple<'a> = (
-                alloy::sol_types::sol_data::Address,
-                alloy::sol_types::sol_data::Bytes,
-            );
+            type UnderlyingSolTuple<'a> =
+                (alloy::sol_types::sol_data::Address, alloy::sol_types::sol_data::Bytes);
             #[doc(hidden)]
-            type UnderlyingRustTuple<'a> = (
-                alloy::sol_types::private::Address,
-                alloy::sol_types::private::Bytes,
-            );
+            type UnderlyingRustTuple<'a> =
+                (alloy::sol_types::private::Address, alloy::sol_types::private::Bytes);
             #[cfg(test)]
             #[allow(dead_code, unreachable_patterns)]
-            fn _type_assertion(
-                _t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>,
-            ) {
+            fn _type_assertion(_t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>) {
                 match _t {
                     alloy_sol_types::private::AssertTypeEq::<
                         <UnderlyingSolTuple as alloy_sol_types::SolType>::RustType,
@@ -1418,27 +1236,18 @@ function triggersById(ISimpleTrigger.TriggerId) external view returns (address c
             #[doc(hidden)]
             impl ::core::convert::From<UnderlyingRustTuple<'_>> for triggersByIdReturn {
                 fn from(tuple: UnderlyingRustTuple<'_>) -> Self {
-                    Self {
-                        creator: tuple.0,
-                        data: tuple.1,
-                    }
+                    Self { creator: tuple.0, data: tuple.1 }
                 }
             }
         }
         #[automatically_derived]
         impl alloy_sol_types::SolCall for triggersByIdCall {
             type Parameters<'a> = (ISimpleTrigger::TriggerId,);
-            type Token<'a> = <Self::Parameters<
-                'a,
-            > as alloy_sol_types::SolType>::Token<'a>;
+            type Token<'a> = <Self::Parameters<'a> as alloy_sol_types::SolType>::Token<'a>;
             type Return = triggersByIdReturn;
-            type ReturnTuple<'a> = (
-                alloy::sol_types::sol_data::Address,
-                alloy::sol_types::sol_data::Bytes,
-            );
-            type ReturnToken<'a> = <Self::ReturnTuple<
-                'a,
-            > as alloy_sol_types::SolType>::Token<'a>;
+            type ReturnTuple<'a> =
+                (alloy::sol_types::sol_data::Address, alloy::sol_types::sol_data::Bytes);
+            type ReturnToken<'a> = <Self::ReturnTuple<'a> as alloy_sol_types::SolType>::Token<'a>;
             const SIGNATURE: &'static str = "triggersById(uint64)";
             const SELECTOR: [u8; 4] = [206u8, 40u8, 150u8, 18u8];
             #[inline]
@@ -1449,21 +1258,17 @@ function triggersById(ISimpleTrigger.TriggerId) external view returns (address c
             }
             #[inline]
             fn tokenize(&self) -> Self::Token<'_> {
-                (
-                    <ISimpleTrigger::TriggerId as alloy_sol_types::SolType>::tokenize(
-                        &self._0,
-                    ),
-                )
+                (<ISimpleTrigger::TriggerId as alloy_sol_types::SolType>::tokenize(&self._0),)
             }
             #[inline]
             fn abi_decode_returns(
                 data: &[u8],
                 validate: bool,
             ) -> alloy_sol_types::Result<Self::Return> {
-                <Self::ReturnTuple<
-                    '_,
-                > as alloy_sol_types::SolType>::abi_decode_sequence(data, validate)
-                    .map(Into::into)
+                <Self::ReturnTuple<'_> as alloy_sol_types::SolType>::abi_decode_sequence(
+                    data, validate,
+                )
+                .map(Into::into)
             }
         }
     };
@@ -1499,21 +1304,13 @@ function triggersById(ISimpleTrigger.TriggerId) external view returns (address c
         #[inline]
         fn selector(&self) -> [u8; 4] {
             match self {
-                Self::addTrigger(_) => {
-                    <addTriggerCall as alloy_sol_types::SolCall>::SELECTOR
-                }
-                Self::getTrigger(_) => {
-                    <getTriggerCall as alloy_sol_types::SolCall>::SELECTOR
-                }
-                Self::nextTriggerId(_) => {
-                    <nextTriggerIdCall as alloy_sol_types::SolCall>::SELECTOR
-                }
+                Self::addTrigger(_) => <addTriggerCall as alloy_sol_types::SolCall>::SELECTOR,
+                Self::getTrigger(_) => <getTriggerCall as alloy_sol_types::SolCall>::SELECTOR,
+                Self::nextTriggerId(_) => <nextTriggerIdCall as alloy_sol_types::SolCall>::SELECTOR,
                 Self::triggerIdsByCreator(_) => {
                     <triggerIdsByCreatorCall as alloy_sol_types::SolCall>::SELECTOR
                 }
-                Self::triggersById(_) => {
-                    <triggersByIdCall as alloy_sol_types::SolCall>::SELECTOR
-                }
+                Self::triggersById(_) => <triggersByIdCall as alloy_sol_types::SolCall>::SELECTOR,
             }
         }
         #[inline]
@@ -1534,17 +1331,17 @@ function triggersById(ISimpleTrigger.TriggerId) external view returns (address c
             static DECODE_SHIMS: &[fn(
                 &[u8],
                 bool,
-            ) -> alloy_sol_types::Result<SimpleTriggerCalls>] = &[
+            )
+                -> alloy_sol_types::Result<SimpleTriggerCalls>] = &[
                 {
                     fn nextTriggerId(
                         data: &[u8],
                         validate: bool,
                     ) -> alloy_sol_types::Result<SimpleTriggerCalls> {
                         <nextTriggerIdCall as alloy_sol_types::SolCall>::abi_decode_raw(
-                                data,
-                                validate,
-                            )
-                            .map(SimpleTriggerCalls::nextTriggerId)
+                            data, validate,
+                        )
+                        .map(SimpleTriggerCalls::nextTriggerId)
                     }
                     nextTriggerId
                 },
@@ -1554,10 +1351,9 @@ function triggersById(ISimpleTrigger.TriggerId) external view returns (address c
                         validate: bool,
                     ) -> alloy_sol_types::Result<SimpleTriggerCalls> {
                         <triggerIdsByCreatorCall as alloy_sol_types::SolCall>::abi_decode_raw(
-                                data,
-                                validate,
-                            )
-                            .map(SimpleTriggerCalls::triggerIdsByCreator)
+                            data, validate,
+                        )
+                        .map(SimpleTriggerCalls::triggerIdsByCreator)
                     }
                     triggerIdsByCreator
                 },
@@ -1567,10 +1363,9 @@ function triggersById(ISimpleTrigger.TriggerId) external view returns (address c
                         validate: bool,
                     ) -> alloy_sol_types::Result<SimpleTriggerCalls> {
                         <triggersByIdCall as alloy_sol_types::SolCall>::abi_decode_raw(
-                                data,
-                                validate,
-                            )
-                            .map(SimpleTriggerCalls::triggersById)
+                            data, validate,
+                        )
+                        .map(SimpleTriggerCalls::triggersById)
                     }
                     triggersById
                 },
@@ -1579,10 +1374,7 @@ function triggersById(ISimpleTrigger.TriggerId) external view returns (address c
                         data: &[u8],
                         validate: bool,
                     ) -> alloy_sol_types::Result<SimpleTriggerCalls> {
-                        <addTriggerCall as alloy_sol_types::SolCall>::abi_decode_raw(
-                                data,
-                                validate,
-                            )
+                        <addTriggerCall as alloy_sol_types::SolCall>::abi_decode_raw(data, validate)
                             .map(SimpleTriggerCalls::addTrigger)
                     }
                     addTrigger
@@ -1592,22 +1384,17 @@ function triggersById(ISimpleTrigger.TriggerId) external view returns (address c
                         data: &[u8],
                         validate: bool,
                     ) -> alloy_sol_types::Result<SimpleTriggerCalls> {
-                        <getTriggerCall as alloy_sol_types::SolCall>::abi_decode_raw(
-                                data,
-                                validate,
-                            )
+                        <getTriggerCall as alloy_sol_types::SolCall>::abi_decode_raw(data, validate)
                             .map(SimpleTriggerCalls::getTrigger)
                     }
                     getTrigger
                 },
             ];
             let Ok(idx) = Self::SELECTORS.binary_search(&selector) else {
-                return Err(
-                    alloy_sol_types::Error::unknown_selector(
-                        <Self as alloy_sol_types::SolInterface>::NAME,
-                        selector,
-                    ),
-                );
+                return Err(alloy_sol_types::Error::unknown_selector(
+                    <Self as alloy_sol_types::SolInterface>::NAME,
+                    selector,
+                ));
             };
             DECODE_SHIMS[idx](data, validate)
         }
@@ -1621,19 +1408,13 @@ function triggersById(ISimpleTrigger.TriggerId) external view returns (address c
                     <getTriggerCall as alloy_sol_types::SolCall>::abi_encoded_size(inner)
                 }
                 Self::nextTriggerId(inner) => {
-                    <nextTriggerIdCall as alloy_sol_types::SolCall>::abi_encoded_size(
-                        inner,
-                    )
+                    <nextTriggerIdCall as alloy_sol_types::SolCall>::abi_encoded_size(inner)
                 }
                 Self::triggerIdsByCreator(inner) => {
-                    <triggerIdsByCreatorCall as alloy_sol_types::SolCall>::abi_encoded_size(
-                        inner,
-                    )
+                    <triggerIdsByCreatorCall as alloy_sol_types::SolCall>::abi_encoded_size(inner)
                 }
                 Self::triggersById(inner) => {
-                    <triggersByIdCall as alloy_sol_types::SolCall>::abi_encoded_size(
-                        inner,
-                    )
+                    <triggersByIdCall as alloy_sol_types::SolCall>::abi_encoded_size(inner)
                 }
             }
         }
@@ -1641,34 +1422,21 @@ function triggersById(ISimpleTrigger.TriggerId) external view returns (address c
         fn abi_encode_raw(&self, out: &mut alloy_sol_types::private::Vec<u8>) {
             match self {
                 Self::addTrigger(inner) => {
-                    <addTriggerCall as alloy_sol_types::SolCall>::abi_encode_raw(
-                        inner,
-                        out,
-                    )
+                    <addTriggerCall as alloy_sol_types::SolCall>::abi_encode_raw(inner, out)
                 }
                 Self::getTrigger(inner) => {
-                    <getTriggerCall as alloy_sol_types::SolCall>::abi_encode_raw(
-                        inner,
-                        out,
-                    )
+                    <getTriggerCall as alloy_sol_types::SolCall>::abi_encode_raw(inner, out)
                 }
                 Self::nextTriggerId(inner) => {
-                    <nextTriggerIdCall as alloy_sol_types::SolCall>::abi_encode_raw(
-                        inner,
-                        out,
-                    )
+                    <nextTriggerIdCall as alloy_sol_types::SolCall>::abi_encode_raw(inner, out)
                 }
                 Self::triggerIdsByCreator(inner) => {
                     <triggerIdsByCreatorCall as alloy_sol_types::SolCall>::abi_encode_raw(
-                        inner,
-                        out,
+                        inner, out,
                     )
                 }
                 Self::triggersById(inner) => {
-                    <triggersByIdCall as alloy_sol_types::SolCall>::abi_encode_raw(
-                        inner,
-                        out,
-                    )
+                    <triggersByIdCall as alloy_sol_types::SolCall>::abi_encode_raw(inner, out)
                 }
             }
         }
@@ -1685,42 +1453,11 @@ function triggersById(ISimpleTrigger.TriggerId) external view returns (address c
         /// No guarantees are made about the order of the selectors.
         ///
         /// Prefer using `SolInterface` methods instead.
-        pub const SELECTORS: &'static [[u8; 32usize]] = &[
-            [
-                134u8,
-                234u8,
-                205u8,
-                35u8,
-                97u8,
-                13u8,
-                129u8,
-                112u8,
-                101u8,
-                22u8,
-                222u8,
-                30u8,
-                208u8,
-                71u8,
-                108u8,
-                135u8,
-                119u8,
-                47u8,
-                223u8,
-                147u8,
-                156u8,
-                124u8,
-                119u8,
-                31u8,
-                187u8,
-                215u8,
-                240u8,
-                35u8,
-                13u8,
-                97u8,
-                158u8,
-                104u8,
-            ],
-        ];
+        pub const SELECTORS: &'static [[u8; 32usize]] = &[[
+            134u8, 234u8, 205u8, 35u8, 97u8, 13u8, 129u8, 112u8, 101u8, 22u8, 222u8, 30u8, 208u8,
+            71u8, 108u8, 135u8, 119u8, 47u8, 223u8, 147u8, 156u8, 124u8, 119u8, 31u8, 187u8, 215u8,
+            240u8, 35u8, 13u8, 97u8, 158u8, 104u8,
+        ]];
     }
     #[automatically_derived]
     impl alloy_sol_types::SolEventInterface for SimpleTriggerEvents {
@@ -1734,23 +1471,19 @@ function triggersById(ISimpleTrigger.TriggerId) external view returns (address c
             match topics.first().copied() {
                 Some(<NewTrigger as alloy_sol_types::SolEvent>::SIGNATURE_HASH) => {
                     <NewTrigger as alloy_sol_types::SolEvent>::decode_raw_log(
-                            topics,
-                            data,
-                            validate,
-                        )
-                        .map(Self::NewTrigger)
+                        topics, data, validate,
+                    )
+                    .map(Self::NewTrigger)
                 }
-                _ => {
-                    alloy_sol_types::private::Err(alloy_sol_types::Error::InvalidLog {
-                        name: <Self as alloy_sol_types::SolEventInterface>::NAME,
-                        log: alloy_sol_types::private::Box::new(
-                            alloy_sol_types::private::LogData::new_unchecked(
-                                topics.to_vec(),
-                                data.to_vec().into(),
-                            ),
+                _ => alloy_sol_types::private::Err(alloy_sol_types::Error::InvalidLog {
+                    name: <Self as alloy_sol_types::SolEventInterface>::NAME,
+                    log: alloy_sol_types::private::Box::new(
+                        alloy_sol_types::private::LogData::new_unchecked(
+                            topics.to_vec(),
+                            data.to_vec().into(),
                         ),
-                    })
-                }
+                    ),
+                }),
             }
         }
     }
@@ -1774,7 +1507,7 @@ function triggersById(ISimpleTrigger.TriggerId) external view returns (address c
     use alloy::contract as alloy_contract;
     /**Creates a new wrapper around an on-chain [`SimpleTrigger`](self) contract instance.
 
-See the [wrapper's documentation](`SimpleTriggerInstance`) for more details.*/
+    See the [wrapper's documentation](`SimpleTriggerInstance`) for more details.*/
     #[inline]
     pub const fn new<
         T: alloy_contract::private::Transport + ::core::clone::Clone,
@@ -1788,9 +1521,9 @@ See the [wrapper's documentation](`SimpleTriggerInstance`) for more details.*/
     }
     /**Deploys this contract using the given `provider` and constructor arguments, if any.
 
-Returns a new instance of the contract, if the deployment was successful.
+    Returns a new instance of the contract, if the deployment was successful.
 
-For more fine-grained control over the deployment process, use [`deploy_builder`] instead.*/
+    For more fine-grained control over the deployment process, use [`deploy_builder`] instead.*/
     #[inline]
     pub fn deploy<
         T: alloy_contract::private::Transport + ::core::clone::Clone,
@@ -1798,35 +1531,36 @@ For more fine-grained control over the deployment process, use [`deploy_builder`
         N: alloy_contract::private::Network,
     >(
         provider: P,
-    ) -> impl ::core::future::Future<
-        Output = alloy_contract::Result<SimpleTriggerInstance<T, P, N>>,
-    > {
+    ) -> impl ::core::future::Future<Output = alloy_contract::Result<SimpleTriggerInstance<T, P, N>>>
+    {
         SimpleTriggerInstance::<T, P, N>::deploy(provider)
     }
     /**Creates a `RawCallBuilder` for deploying this contract using the given `provider`
-and constructor arguments, if any.
+    and constructor arguments, if any.
 
-This is a simple wrapper around creating a `RawCallBuilder` with the data set to
-the bytecode concatenated with the constructor's ABI-encoded arguments.*/
+    This is a simple wrapper around creating a `RawCallBuilder` with the data set to
+    the bytecode concatenated with the constructor's ABI-encoded arguments.*/
     #[inline]
     pub fn deploy_builder<
         T: alloy_contract::private::Transport + ::core::clone::Clone,
         P: alloy_contract::private::Provider<T, N>,
         N: alloy_contract::private::Network,
-    >(provider: P) -> alloy_contract::RawCallBuilder<T, P, N> {
+    >(
+        provider: P,
+    ) -> alloy_contract::RawCallBuilder<T, P, N> {
         SimpleTriggerInstance::<T, P, N>::deploy_builder(provider)
     }
     /**A [`SimpleTrigger`](self) instance.
 
-Contains type-safe methods for interacting with an on-chain instance of the
-[`SimpleTrigger`](self) contract located at a given `address`, using a given
-provider `P`.
+    Contains type-safe methods for interacting with an on-chain instance of the
+    [`SimpleTrigger`](self) contract located at a given `address`, using a given
+    provider `P`.
 
-If the contract bytecode is available (see the [`sol!`](alloy_sol_types::sol!)
-documentation on how to provide it), the `deploy` and `deploy_builder` methods can
-be used to deploy a new instance of the contract.
+    If the contract bytecode is available (see the [`sol!`](alloy_sol_types::sol!)
+    documentation on how to provide it), the `deploy` and `deploy_builder` methods can
+    be used to deploy a new instance of the contract.
 
-See the [module-level documentation](self) for all the available methods.*/
+    See the [module-level documentation](self) for all the available methods.*/
     #[derive(Clone)]
     pub struct SimpleTriggerInstance<T, P, N = alloy_contract::private::Ethereum> {
         address: alloy_sol_types::private::Address,
@@ -1843,42 +1577,34 @@ See the [module-level documentation](self) for all the available methods.*/
     /// Instantiation and getters/setters.
     #[automatically_derived]
     impl<
-        T: alloy_contract::private::Transport + ::core::clone::Clone,
-        P: alloy_contract::private::Provider<T, N>,
-        N: alloy_contract::private::Network,
-    > SimpleTriggerInstance<T, P, N> {
+            T: alloy_contract::private::Transport + ::core::clone::Clone,
+            P: alloy_contract::private::Provider<T, N>,
+            N: alloy_contract::private::Network,
+        > SimpleTriggerInstance<T, P, N>
+    {
         /**Creates a new wrapper around an on-chain [`SimpleTrigger`](self) contract instance.
 
-See the [wrapper's documentation](`SimpleTriggerInstance`) for more details.*/
+        See the [wrapper's documentation](`SimpleTriggerInstance`) for more details.*/
         #[inline]
-        pub const fn new(
-            address: alloy_sol_types::private::Address,
-            provider: P,
-        ) -> Self {
-            Self {
-                address,
-                provider,
-                _network_transport: ::core::marker::PhantomData,
-            }
+        pub const fn new(address: alloy_sol_types::private::Address, provider: P) -> Self {
+            Self { address, provider, _network_transport: ::core::marker::PhantomData }
         }
         /**Deploys this contract using the given `provider` and constructor arguments, if any.
 
-Returns a new instance of the contract, if the deployment was successful.
+        Returns a new instance of the contract, if the deployment was successful.
 
-For more fine-grained control over the deployment process, use [`deploy_builder`] instead.*/
+        For more fine-grained control over the deployment process, use [`deploy_builder`] instead.*/
         #[inline]
-        pub async fn deploy(
-            provider: P,
-        ) -> alloy_contract::Result<SimpleTriggerInstance<T, P, N>> {
+        pub async fn deploy(provider: P) -> alloy_contract::Result<SimpleTriggerInstance<T, P, N>> {
             let call_builder = Self::deploy_builder(provider);
             let contract_address = call_builder.deploy().await?;
             Ok(Self::new(contract_address, call_builder.provider))
         }
         /**Creates a `RawCallBuilder` for deploying this contract using the given `provider`
-and constructor arguments, if any.
+        and constructor arguments, if any.
 
-This is a simple wrapper around creating a `RawCallBuilder` with the data set to
-the bytecode concatenated with the constructor's ABI-encoded arguments.*/
+        This is a simple wrapper around creating a `RawCallBuilder` with the data set to
+        the bytecode concatenated with the constructor's ABI-encoded arguments.*/
         #[inline]
         pub fn deploy_builder(provider: P) -> alloy_contract::RawCallBuilder<T, P, N> {
             alloy_contract::RawCallBuilder::new_raw_deploy(
@@ -1921,10 +1647,11 @@ the bytecode concatenated with the constructor's ABI-encoded arguments.*/
     /// Function calls.
     #[automatically_derived]
     impl<
-        T: alloy_contract::private::Transport + ::core::clone::Clone,
-        P: alloy_contract::private::Provider<T, N>,
-        N: alloy_contract::private::Network,
-    > SimpleTriggerInstance<T, P, N> {
+            T: alloy_contract::private::Transport + ::core::clone::Clone,
+            P: alloy_contract::private::Provider<T, N>,
+            N: alloy_contract::private::Network,
+        > SimpleTriggerInstance<T, P, N>
+    {
         /// Creates a new call builder using this contract instance's provider and address.
         ///
         /// Note that the call can be any function call, not just those defined in this
@@ -1950,9 +1677,7 @@ the bytecode concatenated with the constructor's ABI-encoded arguments.*/
             self.call_builder(&getTriggerCall { triggerId })
         }
         ///Creates a new call builder for the [`nextTriggerId`] function.
-        pub fn nextTriggerId(
-            &self,
-        ) -> alloy_contract::SolCallBuilder<T, &P, nextTriggerIdCall, N> {
+        pub fn nextTriggerId(&self) -> alloy_contract::SolCallBuilder<T, &P, nextTriggerIdCall, N> {
             self.call_builder(&nextTriggerIdCall {})
         }
         ///Creates a new call builder for the [`triggerIdsByCreator`] function.
@@ -1974,10 +1699,11 @@ the bytecode concatenated with the constructor's ABI-encoded arguments.*/
     /// Event filters.
     #[automatically_derived]
     impl<
-        T: alloy_contract::private::Transport + ::core::clone::Clone,
-        P: alloy_contract::private::Provider<T, N>,
-        N: alloy_contract::private::Network,
-    > SimpleTriggerInstance<T, P, N> {
+            T: alloy_contract::private::Transport + ::core::clone::Clone,
+            P: alloy_contract::private::Provider<T, N>,
+            N: alloy_contract::private::Network,
+        > SimpleTriggerInstance<T, P, N>
+    {
         /// Creates a new event filter using this contract instance's provider and address.
         ///
         /// Note that the type can be any event, not just those defined in this contract.

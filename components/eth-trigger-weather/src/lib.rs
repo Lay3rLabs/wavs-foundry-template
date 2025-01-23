@@ -1,17 +1,19 @@
 mod trigger;
 use layer_wasi::{
     bindings::world::{Guest, TriggerAction},
-    export_layer_trigger_world, wasi::{Request, WasiPollable},
+    export_layer_trigger_world,
+    wasi::{Request, WasiPollable},
 };
-use wstd::runtime::{block_on, Reactor};
-use trigger::{decode_trigger_event, encode_trigger_output};
 use serde::{Deserialize, Serialize};
+use trigger::{decode_trigger_event, encode_trigger_output};
+use wstd::runtime::{block_on, Reactor};
 
 struct Component;
 
 impl Guest for Component {
     fn run(trigger_action: TriggerAction) -> std::result::Result<Vec<u8>, String> {
-        let (trigger_id, req) = decode_trigger_event(trigger_action.data).map_err(|e| e.to_string())?;
+        let (trigger_id, req) =
+            decode_trigger_event(trigger_action.data).map_err(|e| e.to_string())?;
 
         if !req.contains(&b',') {
             return Err("Input must be in the format of City,State".to_string());
@@ -19,10 +21,12 @@ impl Guest for Component {
         let input = std::str::from_utf8(&req).unwrap(); // TODO:
 
         // open weather API, not wavs specific
-        let api_key = std::env::var("WAVS_ENV_OPEN_WEATHER_API_KEY").or(Err("missing env var `WAVS_ENV_OPEN_WEATHER_API_KEY`".to_string()))?;
+        let api_key = std::env::var("WAVS_ENV_OPEN_WEATHER_API_KEY")
+            .or(Err("missing env var `WAVS_ENV_OPEN_WEATHER_API_KEY`".to_string()))?;
 
         let res = block_on(move |reactor| async move {
-            let loc: Result<LocDataNested, String> = get_location(&reactor, api_key.clone(), input).await;
+            let loc: Result<LocDataNested, String> =
+                get_location(&reactor, api_key.clone(), input).await;
 
             let location = match loc {
                 Ok(data) => data,
@@ -47,7 +51,6 @@ impl Guest for Component {
     }
 }
 
-
 async fn get_location(
     reactor: &Reactor,
     app_key: String,
@@ -55,10 +58,7 @@ async fn get_location(
 ) -> Result<LocDataNested, String> {
     let url: &str = "http://api.openweathermap.org/geo/1.0/direct";
     let loc_input_formatted = format!("{},US", loc_input);
-    let params = [
-        ("q", loc_input_formatted.as_str()),
-        ("appid", app_key.as_str()),
-    ];
+    let params = [("q", loc_input_formatted.as_str()), ("appid", app_key.as_str())];
 
     let url_with_params = reqwest::Url::parse_with_params(url, &params).unwrap();
     let mut req = Request::get(url_with_params.as_str())?;
