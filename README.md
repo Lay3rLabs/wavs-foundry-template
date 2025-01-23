@@ -65,7 +65,7 @@ cargo test
 Build the latest solidity:
 
 ```bash
-forge build
+make build
 ```
 
 Install the WAVS CLI:
@@ -116,12 +116,9 @@ source .env
 
 sudo chmod 0666 .docker/cli/deployments.json
 
-v=$(cast sig-event "NewTrigger(bytes)")
-v=${v:2}
+v=$(cast sig-event "NewTrigger(bytes)"); v=${v:2}; echo $v
 wavs-cli deploy-service --data ./.docker/cli --component $(pwd)/compiled/eth_trigger_weather.wasm \
-  --trigger eth-contract-event \
   --trigger-event-name ${v} \
-  --submit simple-eth-contract \
   --service-config '{"fuelLimit":100000000,"maxGas":5000000,"hostEnvs":["WAVS_ENV_OPEN_WEATHER_API_KEY"],"kv":[],"workflowId":"default","componentId":"default"}'
 
 wavs-cli add-task --input "Nashville,TN" --data ./.docker/cli --service-id <Service-ID>
