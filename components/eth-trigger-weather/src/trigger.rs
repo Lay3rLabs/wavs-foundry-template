@@ -2,11 +2,11 @@
 use alloy_sol_types::SolValue;
 use anyhow::Result;
 use layer_wasi::{
-    bindings::compat::{TriggerData, TriggerDataCosmosContractEvent, TriggerDataEthContractEvent},
+    bindings::compat::{TriggerData, TriggerDataEthContractEvent},
     ethereum::WasiProvider,
 };
 use example_submit::ISimpleSubmit::DataWithId;
-use example_trigger::{NewTrigger, SimpleTrigger, TriggerInfo};
+use example_trigger::{NewTrigger, TriggerInfo};
 
 pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>)> {
     match trigger_data {

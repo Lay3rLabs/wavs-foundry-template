@@ -96,7 +96,7 @@ export CLI_EIGEN_CORE_REWARDS_COORDINATOR=`${docker_cmd}  'jq -r .eigen_core.loc
 export CLI_EIGEN_CORE_AVS_DIRECTORY=`${docker_cmd}  'jq -r .eigen_core.local.avs_directory ~/wavs/cli/deployments.json' | tr -d '\r'`
 export FOUNDRY_ANVIL_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 
-forge script ./script/WavsServiceManager.s.sol --rpc-url http://localhost:8545 --broadcast --via-ir
+forge script ./script/WavsServiceManager.s.sol --rpc-url http://localhost:8545 --broadcast
 ```
 
 Build WAVS WASI component(s)
@@ -112,18 +112,17 @@ wavs-cli exec --component $(pwd)/compiled/eth_trigger_weather.wasm --input Nashv
 Deploy service and verify with adding a task
 
 ```bash
-source .env
-
 sudo chmod 0666 .docker/cli/deployments.json
 
 v=$(cast sig-event "NewTrigger(bytes)"); v=${v:2}; echo $v
 wavs-cli deploy-service --data ./.docker/cli --component $(pwd)/compiled/eth_trigger_weather.wasm \
   --trigger-event-name ${v} \
+  --trigger eth-contract-event \
   --service-config '{"fuelLimit":100000000,"maxGas":5000000,"hostEnvs":["WAVS_ENV_OPEN_WEATHER_API_KEY"],"kv":[],"workflowId":"default","componentId":"default"}'
 
 wavs-cli add-task --input "Nashville,TN" --data ./.docker/cli --service-id <Service-ID>
 
 # Where the call address is the service manager in ./.docker/cli/deployments.json
-hex_bytes=$(cast decode-abi "getData(uint64)(bytes)" `cast call 0x70e0ba845a1a0f2da3359c97e0285013525ffc49 "getData(uint64)" 1`)
+hex_bytes=$(cast decode-abi "getData(uint64)(bytes)" `cast call 0x0e801d84fa97b50751dbf25036d067dcf18858bf "getData(uint64)" 1`)
 echo `cast --to-ascii $hex_bytes`
 ```

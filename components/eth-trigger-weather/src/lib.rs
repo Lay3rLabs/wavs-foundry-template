@@ -28,10 +28,8 @@ impl Guest for Component {
                 Ok(data) => data,
                 Err(e) => return Err(e),
             };
-            println!("location: {:?}", location);
 
             let weather_data = get_weather(&reactor, location, api_key).await;
-            println!("weather_data: {:?}", weather_data);
 
             match weather_data {
                 Ok(data) => {
@@ -73,7 +71,6 @@ async fn get_location(
 
     match response {
         Ok(response) => {
-            println!("{:?}", response);
             let finalresp = response.json::<LocationData>().map_err(|e| {
                 let resp_body = response.body;
                 let resp_str = String::from_utf8_lossy(&resp_body);
@@ -82,11 +79,9 @@ async fn get_location(
                     e, resp_str, url_with_params,
                 )
             })?;
-            println!("{:?}", finalresp);
             return Ok(finalresp[0].clone());
         }
         Err(e) => {
-            println!("{:?}", e);
             return Err(e.to_string());
         }
     }
@@ -115,9 +110,7 @@ async fn get_weather(
     let response = reactor.send(req).await;
 
     match response {
-        // print out either option
         Ok(response) => {
-            println!("{:?}", response);
             let finalresp = response.json::<WeatherResponse>().map_err(|e| {
                 let resp_body = response.body;
                 let resp_str = String::from_utf8_lossy(&resp_body);
@@ -126,11 +119,9 @@ async fn get_weather(
                     e, resp_str, url_with_params,
                 )
             })?;
-            println!("{:?}", finalresp.main.temp);
             return Ok(finalresp);
         }
         Err(e) => {
-            println!("{:?}", e);
             return Err(e.to_string());
         }
     }

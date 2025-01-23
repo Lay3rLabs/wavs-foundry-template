@@ -10,7 +10,7 @@ CARGO=cargo
 bindings:
 # Generate new bindings
 	@forge bind --bindings-path ./crates/bindings --crate-name bindings --overwrite \
-		--via-ir --alloy --alloy-version v0.9.2
+		--alloy --alloy-version v0.9.2
 
 ## build: building the project
 build: bindings
@@ -45,7 +45,7 @@ fmt:
 
 ## test: running forge and rust tests
 test:
-	@forge test --via-ir
+	@forge test
 	@$(CARGO) test
 
 ## setup: installing forge dependencies
@@ -54,7 +54,7 @@ setup:
 
 
 # Declare phony targets
-.PHONY: build build-release clean fmt bindings
+.PHONY: build build-release clean fmt bindings test
 
 .PHONY: help
 help: Makefile
