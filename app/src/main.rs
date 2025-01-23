@@ -1,5 +1,7 @@
 use alloy::{
-    hex, primitives::Address, providers::{Provider, ProviderBuilder}
+    hex,
+    primitives::Address,
+    providers::{Provider, ProviderBuilder},
 };
 use bindings::wavsservicemanager::WavsServiceManager;
 use eyre::Result;
@@ -18,16 +20,16 @@ async fn main() -> Result<()> {
     println!("Block: {:?}", block);
 
     // update me before running
-    // let contract_address = "0x851356ae760d987e095750cceb3bc6014560891c".parse::<Address>()?;
-    // let contract = WavsServiceManager::new(contract_address, provider.clone());
+    let contract_address = "0x70e0ba845a1a0f2da3359c97e0285013525ffc49".parse::<Address>()?;
+    let contract = WavsServiceManager::new(contract_address, provider.clone());
 
-    // let resp = contract.getData(1).call().await?;
+    let resp = contract.getData(1).call().await?;
 
-    // let hex = resp.data;
-    // println!("Weather Response Hex: {:?}\n", hex);
+    let hex = resp.data;
+    println!("Weather Response Hex: {:?}\n", hex);
 
-    // let ascii = to_ascii(hex.to_string().as_str())?;
-    // println!("Weather Response ASCII: {:?}", ascii);
+    let ascii = to_ascii(hex.to_string().as_str())?;
+    println!("Weather Response ASCII: {:?}", ascii);
 
     Ok(())
 }

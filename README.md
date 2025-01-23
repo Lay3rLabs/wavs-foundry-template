@@ -123,6 +123,7 @@ wavs-cli deploy-service --data ./.docker/cli --component $(pwd)/compiled/eth_tri
 
 wavs-cli add-task --input "Nashville,TN" --data ./.docker/cli --service-id <Service-ID>
 
-hex_bytes=$(cast decode-abi "getData(uint64)(bytes)" `cast call 0x2bdcc0de6be1f7d2ee689a0342d76f52e8efaba3 "getData(uint64)" 1`)
+# Where the call address is the service manager in ./.docker/cli/deployments.json
+hex_bytes=$(cast decode-abi "getData(uint64)(bytes)" `cast call 0x70e0ba845a1a0f2da3359c97e0285013525ffc49 "getData(uint64)" 1`)
 echo `cast --to-ascii $hex_bytes`
 ```
