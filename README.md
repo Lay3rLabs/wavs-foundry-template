@@ -81,7 +81,7 @@ cp .env.example .env
 # Update the WAVS_ENV_OPEN_WEATHER_API_KEY in the .env file with your key`
 
 cp ./lib/WAVS/packages/wavs/wavs.toml .
-cp ./lib/WAVS/packages/cli/wavs-cli.toml .
+cp ./lib/WAVS/packages/cli/cli.toml .
 
 # start the WAVS network
 docker compose up
