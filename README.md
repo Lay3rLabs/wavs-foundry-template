@@ -73,6 +73,7 @@ make build
 Install the WAVS CLI:
 
 ```bash
+# MacOS: if you get permission errors: eval `ssh-agent -s`; ssh-add
 (cd lib/WAVS; cargo install --path ./packages/cli)
 ```
 
