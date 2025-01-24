@@ -13,8 +13,8 @@ bindings:
 		--alloy --alloy-version v0.9.2
 
 ## build: building the project
-build: bindings
-	@$(CARGO) build
+build: bindings wasi-build
+	@$(CARGO) build --target-dir ./target --manifest-path ./app/Cargo.toml
 
 ## wasi-build: building the WAVS wasi component(s)
 wasi-build:

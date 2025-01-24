@@ -17,7 +17,9 @@ A comprehensive template for developing WAVS (WebAssembly AVS) applications usin
 Create a new project using this template:
 
 ```bash
-forge init --template https://github.com/Lay3rLabs/wavs-foundry-template my-wavs
+# If you don't have forge: `curl -L https://foundry.paradigm.xyz | bash`
+
+forge init --template Lay3rLabs/wavs-foundry-template my-wavs
 ```
 
 ## Testing
