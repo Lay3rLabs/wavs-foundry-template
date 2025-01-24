@@ -115,6 +115,7 @@ Build WAVS WASI component(s)
 
 ```bash
 # build all components/*
+# https://github.com/bytecodealliance/cargo-component#installation / cargo binstall cargo-component
 make wasi-build
 
 # Verify execution works as expected without deploying
