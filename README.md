@@ -85,7 +85,10 @@ cp .env.example .env
 cp ./lib/WAVS/packages/wavs/wavs.toml .
 cp ./lib/WAVS/packages/cli/cli.toml .
 
-# start the WAVS network
+# MacOS Docker:
+# Docker Engine -> Settings -> Resources -> Network -> 'Enable Host Networking'
+# or
+# brew install chipmk/tap/docker-mac-net-connect && sudo brew services start chipmk/tap/docker-mac-net-connect
 docker compose up --build
 ```
 
