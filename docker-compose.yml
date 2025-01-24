@@ -1,7 +1,6 @@
 # FROM: github.com/Lay3rLabs/wavs @ ebf8cf6bc001d8292696ef6883d55d749c41bdd9
 # .env files copied over from the WAVS packages
 #
-# anvil
 # docker compose up
 #
 # docker exec -it wavs bash
