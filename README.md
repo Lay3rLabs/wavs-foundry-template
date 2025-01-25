@@ -77,9 +77,8 @@ make start-all
 # Deploy (override: FOUNDRY_ANVIL_PRIVATE_KEY)
 forge script ./script/WavsServiceManager.s.sol --rpc-url http://localhost:8545 --broadcast
 
-# Grab deployed service manager address by name
-BROADCAST_FILE=./broadcast/WavsServiceManager.s.sol/31337/run-latest.json
-export SERVICE_MANAGER_ADDRESS=`jq -r '.transactions[] | select(.contractName == "WavsServiceManager") | .contractAddress' "${BROADCAST_FILE}"`
+# Grab deployed service manager from script file output
+export SERVICE_MANAGER_ADDRESS=`jq -r '.service_manager' "./.docker/cli/script_deploy.json"`
 echo "Service Manager Address: $SERVICE_MANAGER_ADDRESS"
 ```
 
@@ -102,7 +101,7 @@ make wasi-build
 sudo chmod 0666 .docker/cli/deployments.json
 
 # Contract trigger function signature to listen for
-trigger_event=$(cast sig-event "NewTrigger(bytes)"); echo $trigger_event
+trigger_event=$(cast sig-event "NewTrigger(bytes)"); echo "Trigger Event: $trigger_event"
 
 service_info=`wavs-cli deploy-service --log-level=error --data ./.docker/cli --component $(pwd)/compiled/eth_trigger_weather.wasm \
   --trigger-event-name ${trigger_event:2} \

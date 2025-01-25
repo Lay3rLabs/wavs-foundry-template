@@ -9,16 +9,17 @@ import {IDelegationManager} from
 import {Quorum, StrategyParams} from "@eigenlayer/middleware/src/interfaces/IECDSAStakeRegistryEventsAndErrors.sol";
 import {IStrategy} from "@eigenlayer/middleware/lib/eigenlayer-contracts/src/contracts/interfaces/IStrategy.sol";
 import {stdJson} from "forge-std/StdJson.sol";
+import { Strings } from "@openzeppelin-contracts/utils/Strings.sol";
 
-struct EigenContracts {
-    address delegation_manager;
-    address rewards_coordinator;
-    address avs_directory;
-}
 
-// forge script ./script/WavsServiceManager.s.sol --rpc-url http://localhost:8545 --broadcast --var-ir
+
+// forge script ./script/WavsServiceManager.s.sol --rpc-url http://localhost:8545 --broadcast
 contract WavsServiceManagerScript is Script {
     using stdJson for string;
+
+    string root = vm.projectRoot();
+    string deployments_path = string.concat(root, "/.docker/cli/deployments.json");
+    string script_output_path = string.concat(root, "/.docker/cli/script_deploy.json");
 
     uint256 privateKey = vm.envOr(
         "FOUNDRY_ANVIL_PRIVATE_KEY", uint256(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80)
@@ -29,7 +30,7 @@ contract WavsServiceManagerScript is Script {
     function run() public {
         vm.startBroadcast(privateKey);
 
-        EigenContracts memory eigen = loadEigenContractsFromFS("deployments.json");
+        EigenContracts memory eigen = loadEigenContractsFromFS();
 
         ECDSAStakeRegistry ecdsa_registry = new ECDSAStakeRegistry(IDelegationManager(eigen.delegation_manager));
 
@@ -48,15 +49,17 @@ contract WavsServiceManagerScript is Script {
 
         vm.stopBroadcast();
 
-        console.log("ServiceManager:", address(sm));
-        console.log("ecdssa_registry (deployed):", address(ecdsa_registry));
+        console.log("ecdsa_registry:", address(ecdsa_registry));
+        console.log("service_manager:", address(sm));
+
+        string memory json = "json";
+        json.serialize("service_manager", Strings.toHexString(address(sm)));
+        string memory finalJson = json.serialize("ecdsa_registry", Strings.toHexString(address(ecdsa_registry)));
+        vm.writeFile(script_output_path, finalJson);
     }
 
-    function loadEigenContractsFromFS(string memory fileName) public view returns (EigenContracts memory) {
-        string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/.docker/cli/", fileName);
-        string memory json = vm.readFile(path);
-
+    function loadEigenContractsFromFS() public view returns (EigenContracts memory) {
+        string memory json = vm.readFile(deployments_path);
         address dm = address(uint160(bytes20(json.readBytes(".eigen_core.local.delegation_manager"))));
         address rc = address(uint160(bytes20(json.readBytes(".eigen_core.local.rewards_coordinator"))));
         address avs = address(uint160(bytes20(json.readBytes(".eigen_core.local.avs_directory"))));
@@ -66,4 +69,10 @@ contract WavsServiceManagerScript is Script {
 
         return fixture;
     }
+}
+
+struct EigenContracts {
+    address delegation_manager;
+    address rewards_coordinator;
+    address avs_directory;
 }

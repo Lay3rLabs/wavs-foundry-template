@@ -1,3 +1,4 @@
 @layer-contracts=lib/WAVS/sdk/solidity/contracts/
 @eigenlayer/middleware=lib/WAVS/lib/eigenlayer-middleware/
 @openzeppelin-upgrades/=lib/WAVS/lib/eigenlayer-middleware/lib/openzeppelin-contracts-upgradeable/
+@openzeppelin-contracts=lib/WAVS/lib/eigenlayer-middleware/lib/openzeppelin-contracts/contracts/
