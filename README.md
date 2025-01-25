@@ -18,66 +18,47 @@ Create a new project using this template:
 
 ```bash
 # If you don't have forge: `curl -L https://foundry.paradigm.xyz | bash`
-
 forge init --template Lay3rLabs/wavs-foundry-template my-wavs
 ```
 
-## Testing
-
-Given the repository contains both Solidity and Rust code, there's 2 different
-workflows.
-
-### Setting up the Environment
-
-Initialize the submodule dependencies:
+### Solidity
 
 ```bash
+# Initialize the submodule dependencies
 forge install
-```
 
-Build the contracts:
-
-```bash
+# Build the contracts
 forge build
-```
 
-Run the tests:
-
-```bash
+# Run the solidity tests. alias: `make test`
 forge test
 ```
 
+> You can also use `make build` to build the contracts, bindings, and components.
+
 ## Rust
 
-Rust bindings to the contracts can be generated via `forge bind`, which requires
-first building your contracts:
-
 ```bash
+# Generate new bindings from your contract(s)
 make bindings
-```
 
-Then, you can run the tests:
-
-```bash
-cargo test
+# Run rust tests
+make test
 ```
 
 ## WAVS
 
-Build the latest solidity:
+### Install the WAVS CLI
 
 ```bash
-make build
-```
-
-Install the WAVS CLI:
-
-```bash
-# MacOS: if you get permission errors: eval `ssh-agent -s`; ssh-add
+# MacOS: if you get permission errors: eval `ssh-agent -s` && ssh-add
 (cd lib/WAVS; cargo install --path ./packages/cli)
 ```
 
+### Start Anvil, WAVS, and Deploy Eigenlayer
+
 ```bash
+# copy over the .env file
 cp .env.example .env
 
 # [!] Get your key from: https://openweathermap.org/
@@ -90,7 +71,7 @@ cp .env.example .env
 make start-all
 ```
 
-Upload your WAVS Service contract
+### Upload your WAVS Service Manager
 
 ```bash
 # Deploy (override: FOUNDRY_ANVIL_PRIVATE_KEY)
@@ -102,19 +83,19 @@ export SERVICE_MANAGER_ADDRESS=`jq -r '.transactions[] | select(.contractName ==
 echo "Service Manager Address: $SERVICE_MANAGER_ADDRESS"
 ```
 
-Build WAVS WASI component(s)
+### Build WASI components
+
+> Install `cargo binstall cargo-component` if you have not already. -- https://github.com/bytecodealliance/cargo-component#installation
 
 ```bash
-# build all wasi components/*
-# https://github.com/bytecodealliance/cargo-component#installation / cargo binstall cargo-component
 make wasi-build
 
-# Verify execution works as expected without deploying
 # TODO: currently broken upstream
+# Verify execution works as expected without deploying
 # wavs-cli exec --component $(pwd)/compiled/eth_trigger_weather.wasm --input Nashville,TN
 ```
 
-Deploy service and verify with adding a task
+## Deploy Service and Verify
 
 ```bash
 # add read-write access

@@ -7,14 +7,14 @@ default: build
 CARGO=cargo
 
 ## bindings: generating bindings
-bindings:
+bindings: _build_forge
 # Generate new bindings
 	@forge bind --bindings-path ./crates/bindings --crate-name bindings --overwrite \
 		--alloy --alloy-version v0.9.2
 	@$(CARGO) fmt --manifest-path ./crates/bindings/Cargo.toml
 
 ## build: building the project
-build: bindings wasi-build
+build: _build_forge bindings wasi-build
 	@$(CARGO) build --target-dir ./target --manifest-path ./app/Cargo.toml
 
 ## wasi-build: building the WAVS wasi component(s)
@@ -25,10 +25,6 @@ wasi-build:
 	done
 	@mkdir -p ./compiled
 	@cp ./target/wasm32-wasip1/release/*.wasm ./compiled/
-
-## build-release: building the project in release mode
-build-release: bindings
-	@$(CARGO) build --release
 
 ## update-submodules: update the git submodules
 update-submodules:
@@ -41,7 +37,7 @@ clean: clean-docker
 
 ## clean-docker: remove unused docker containers
 clean-docker:
-	@docker rm -v $(shell docker ps --filter status=exited -q)
+	@docker rm -v $(shell docker ps --filter status=exited -q) || true
 
 ## fmt: formatting solidity and rust code
 fmt:
@@ -51,7 +47,7 @@ fmt:
 ## test: running forge and rust tests
 test:
 	@forge test
-	@$(CARGO) test
+	@$(CARGO) test --manifest-path ./app/Cargo.toml
 
 ## setup: installing forge dependencies
 setup:
@@ -65,8 +61,11 @@ start-all: clean-docker
 	@docker compose up
 	@wait
 
+_build_forge:
+	@forge build
+
 # Declare phony targets
-.PHONY: build build-release clean fmt bindings test
+.PHONY: build clean fmt bindings test
 
 .PHONY: help
 help: Makefile
