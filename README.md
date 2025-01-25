@@ -94,12 +94,13 @@ cp ./lib/WAVS/packages/cli/cli.toml .
 # TODO: this is a temp workaround for MacOS (running anvil out of compose)
 anvil
 
-docker compose up --build
+make clean-docker; docker compose up --build
 ```
 
-Deploy Eigenlayer and upload your WAVS Service contract
+Upload your WAVS Service contract
 
 ```bash
+# Grab Eigenlayer contracts
 docker_cmd="docker exec -it wavs bash -c"
 export CLI_EIGEN_CORE_DELEGATION_MANAGER=`${docker_cmd} 'jq -r .eigen_core.local.delegation_manager ~/wavs/cli/deployments.json' | tr -d '\r'`
 export CLI_EIGEN_CORE_REWARDS_COORDINATOR=`${docker_cmd}  'jq -r .eigen_core.local.rewards_coordinator ~/wavs/cli/deployments.json' | tr -d '\r'`
@@ -108,14 +109,16 @@ export FOUNDRY_ANVIL_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5
 
 forge script ./script/WavsServiceManager.s.sol --rpc-url http://localhost:8545 --broadcast
 
-# set this in the your terminal from the script output
-export SERVICE_MANAGER_ADDRESS=0x851356ae760d987E095750cCeb3bC6014560891C
+# Grab deployed service manager address by name
+BROADCAST_FILE=./broadcast/WavsServiceManager.s.sol/31337/run-latest.json
+export SERVICE_MANAGER_ADDRESS=`jq -r '.transactions[] | select(.contractName == "WavsServiceManager") | .contractAddress' "${BROADCAST_FILE}"`
+echo "Service Manager Address: $SERVICE_MANAGER_ADDRESS"
 ```
 
 Build WAVS WASI component(s)
 
 ```bash
-# build all components/*
+# build all wasi components/*
 # https://github.com/bytecodealliance/cargo-component#installation / cargo binstall cargo-component
 make wasi-build
 
@@ -129,6 +132,7 @@ Deploy service and verify with adding a task
 ```bash
 sudo chmod 0666 .docker/cli/deployments.json
 
+# Contract trigger function signature to listen for
 trigger_event=$(cast sig-event "NewTrigger(bytes)"); echo $trigger_event
 
 service_info=`wavs-cli deploy-service --log-level=error --data ./.docker/cli --component $(pwd)/compiled/eth_trigger_weather.wasm \
@@ -139,10 +143,11 @@ service_info=`wavs-cli deploy-service --log-level=error --data ./.docker/cli --c
 
 echo "Service info: $service_info"
 
+# Submit AVS request -> chain
 SERVICE_ID=`echo $service_info | jq -r .service[0]`; echo "Service ID: $SERVICE_ID"
 wavs-cli add-task --input "Nashville,TN" --data ./.docker/cli --service-id ${SERVICE_ID}
 
-# Where the call address is the service manager in ./.docker/cli/deployments.json
+# Grab data from the contract directly
 hex_bytes=$(cast decode-abi "getData(uint64)(bytes)" `cast call ${SERVICE_MANAGER_ADDRESS} "getData(uint64)" 1`)
 echo `cast --to-ascii $hex_bytes`
 ```

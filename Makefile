@@ -34,9 +34,13 @@ update-submodules:
 	@git submodule update --init --recursive
 
 ## clean: cleaning the project files
-clean:
+clean: clean-docker
 	@forge clean
 	@$(CARGO) clean
+
+## clean-docker: remove unused docker containers
+clean-docker:
+	@docker rm -v $(shell docker ps --filter status=exited -q)
 
 ## fmt: formatting solidity and rust code
 fmt:
