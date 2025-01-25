@@ -1842,6 +1842,7 @@ dependencies = [
  "layer-wasi",
  "reqwest",
  "serde",
+ "serde_derive",
  "serde_json",
  "wit-bindgen-rt 0.37.0",
  "wstd",

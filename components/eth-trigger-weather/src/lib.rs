@@ -20,24 +20,35 @@ impl Guest for Component {
         }
         let input = std::str::from_utf8(&req).unwrap(); // TODO:
 
-        // open weather API, not wavs specific
-        let api_key = std::env::var("WAVS_ENV_OPEN_WEATHER_API_KEY")
-            .or(Err("missing env var `WAVS_ENV_OPEN_WEATHER_API_KEY`".to_string()))?;
+
+        let v = input.split(',').collect::<Vec<&str>>();
+        if v.len() != 2 {
+            return Err("Input must be in the format of City,State".to_string());
+        }
+
+        let (city, state) = (v[0], v[1]);
 
         let res = block_on(move |reactor| async move {
-            let loc: Result<LocDataNested, String> =
-                get_location(&reactor, api_key.clone(), input).await;
+            let loc: Result<Location, String> = get_location(&reactor, city, state).await;
 
             let location = match loc {
                 Ok(data) => data,
                 Err(e) => return Err(e),
             };
 
-            let weather_data = get_weather(&reactor, location, api_key).await;
+            let weather_data = get_weather(&reactor, location.lat, location.lon).await;
 
             match weather_data {
                 Ok(data) => {
-                    let output: Vec<u8> = data.into();
+                    let v = CurrentTemperatureResponse{
+                        latitude: data.latitude,
+                        longitude: data.longitude,
+                        name: location.name,
+                        tempature: data.current.temperature_2m,
+                        time: data.current.time,
+                    };
+
+                    let output: Vec<u8> = v.into();
                     Ok(output)
                 }
                 Err(e) => Err(e),
@@ -53,25 +64,24 @@ impl Guest for Component {
 
 async fn get_location(
     reactor: &Reactor,
-    app_key: String,
-    loc_input: &str,
-) -> Result<LocDataNested, String> {
-    let url: &str = "http://api.openweathermap.org/geo/1.0/direct";
-    let loc_input_formatted = format!("{},US", loc_input);
-    let params = [("q", loc_input_formatted.as_str()), ("appid", app_key.as_str())];
-
+    city: &str,
+    state: &str,
+) -> Result<Location, String> {
+    let url: &str = "https://nominatim.openstreetmap.org/search.php";
+    let params = [("city", city), ("state", state), ("format", "jsonv2")];
     let url_with_params = reqwest::Url::parse_with_params(url, &params).unwrap();
     let mut req = Request::get(url_with_params.as_str())?;
     req.headers = vec![
         ("Accept".to_string(), "application/json".to_string()),
         ("Content-Type".to_string(), "application/json".to_string()),
     ];
+    req.headers.push(("User-Agent".to_string(), "Mozilla/5.0 (Linux; WAVS; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36".to_string()));
 
     let response = reactor.send(req).await;
 
     match response {
         Ok(response) => {
-            let finalresp = response.json::<LocationData>().map_err(|e| {
+            let finalresp = response.json::<Vec<Location>>().map_err(|e| {
                 let resp_body = response.body;
                 let resp_str = String::from_utf8_lossy(&resp_body);
                 format!(
@@ -89,15 +99,14 @@ async fn get_location(
 
 async fn get_weather(
     reactor: &Reactor,
-    location: LocDataNested,
-    app_key: String,
+    lat: String,
+    lon: String,
 ) -> Result<WeatherResponse, String> {
-    let url: &str = "https://api.openweathermap.org/data/2.5/weather";
+    let url: &str = "https://api.open-meteo.com/v1/forecast";
     let params = [
-        ("lat", location.lat.to_string()),
-        ("lon", location.lon.to_string()),
-        ("appid", app_key),
-        ("units", "imperial".to_string()),
+        ("latitude", lat),
+        ("longitude", lon),
+        ("current", "temperature_2m".to_string()),
     ];
 
     let url_with_params = reqwest::Url::parse_with_params(url, &params).unwrap();
@@ -127,99 +136,89 @@ async fn get_weather(
     }
 }
 
-/// -----
-/// Given the JSON response, use an unescape tool like: https://jsonformatter.org/json-unescape
-/// {\"coord\":{\"lon\":-86.7743,\"lat\":36.1623},\"weather\":[{\"id\":804,\"main\":\"Clouds\",\"description\":\"overcast clouds\",\"icon\":\"04d\"}],\"base\":\"stations\",\"main\":{\"temp\":28.13,\"feels_like\":16.21,\"temp_min\":26.17,\"temp_max\":29.34,\"pressure\":1018,\"humidity\":76,\"sea_level\":1018,\"grnd_level\":995},\"visibility\":10000,\"clouds\":{\"all\":100},\"dt\":1736193327,\"sys\":{\"type\":1,\"id\":3477,\"country\":\"US\",\"sunrise\":1736168310,\"sunset\":1736203634},\"timezone\":-21600,\"id\":4644585,\"name\":\"Nashville\",\"cod\":200}
-///
-/// Then put that into a JSON to struct converter: https://transform.tools/json-to-rust-serde
-/// some types will not entirely convert as expected, so you can just ignore them if you get issues or properly convert to the types.
-/// -----
 
-// location based
-pub type LocationData = Vec<LocDataNested>;
+
+// Found by doing a UI search, then press f12 in the browser. network tab. Showcased this query url.
+// https://nominatim.openstreetmap.org/search.php?city=nashville&state=TN&polygon_geojson=1&format=jsonv2
+// Then you can use use a tool like https://transform.tools/json-to-rust-serde to convert the JSON to a struct.
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Location {
+    #[serde(rename = "place_id")]
+    pub place_id: i64,
+    pub licence: String,
+    #[serde(rename = "osm_type")]
+    pub osm_type: String,
+    #[serde(rename = "osm_id")]
+    pub osm_id: i64,
+    pub lat: String,
+    pub lon: String,
+    pub category: String,
+    #[serde(rename = "type")]
+    pub type_field: String,
+    #[serde(rename = "place_rank")]
+    pub place_rank: i64,
+    pub importance: f64,
+    pub addresstype: String,
+    pub name: String,
+    #[serde(rename = "display_name")]
+    pub display_name: String,
+    pub boundingbox: Vec<String>,
+}
+
+// https://api.open-meteo.com/v1/forecast?latitude=36.1622767&longitude=-86.7742984&current=temperature_2m\
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WeatherResponse {
+    pub latitude: f64,
+    pub longitude: f64,
+    #[serde(rename = "generationtime_ms")]
+    pub generationtime_ms: f64,
+    #[serde(rename = "utc_offset_seconds")]
+    pub utc_offset_seconds: i64,
+    pub timezone: String,
+    #[serde(rename = "timezone_abbreviation")]
+    pub timezone_abbreviation: String,
+    pub elevation: i64,
+    #[serde(rename = "current_units")]
+    pub current_units: CurrentUnits,
+    pub current: Current,
+}
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LocDataNested {
+pub struct CurrentUnits {
+    pub time: String,
+    pub interval: String,
+    #[serde(rename = "temperature_2m")]
+    pub temperature_2m: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Current {
+    pub time: String,
+    pub interval: i64,
+    #[serde(rename = "temperature_2m")]
+    pub temperature_2m: f64,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CurrentTemperatureResponse {
     pub name: String,
-    pub lat: f64,
-    pub lon: f64,
-    pub country: String,
-    pub state: String,
+    pub latitude: f64,
+    pub longitude: f64,
+    pub time: String,
+    #[serde(rename = "temperature_2m")]
+    pub tempature: f64,
 }
 
-//
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct WeatherResponse {
-    coord: Coord,
-    weather: Vec<Weather>,
-    base: String,
-    main: Main,
-    visibility: i64,
-    // wind: Wind, // this needs to be a floating point / string
-    clouds: Clouds,
-    dt: i64, // the unix time this was taken, in UTC.
-    sys: Sys,
-    timezone: i64,
-    id: i64,
-    name: String,
-    cod: i64,
-}
-
-// convert WeatherResponse to bytes
-impl Into<Vec<u8>> for WeatherResponse {
-    fn into(self) -> Vec<u8> {
-        let s = serde_json::to_string(&self).unwrap();
-        s.into_bytes()
+impl From<CurrentTemperatureResponse> for Vec<u8> {
+    fn from(response: CurrentTemperatureResponse) -> Vec<u8> {
+        let output = serde_json::to_string(&response).unwrap();
+        output.into_bytes()
     }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Clouds {
-    all: i64,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Coord {
-    lon: f64,
-    lat: f64,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Main {
-    temp: f64,
-    feels_like: f64,
-    temp_min: f64,
-    temp_max: f64,
-    pressure: i64,
-    humidity: i64,
-    sea_level: i64,
-    grnd_level: i64,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Sys {
-    #[serde(rename = "type")]
-    sys_type: i64,
-    id: i64,
-    country: String,
-    sunrise: i64,
-    sunset: i64,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Weather {
-    id: i64,
-    main: String,
-    description: String,
-    icon: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Wind {
-    speed: i64,
-    deg: i64,
 }
 
 export_layer_trigger_world!(Component);

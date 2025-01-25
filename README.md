@@ -135,7 +135,7 @@ service_info=`wavs-cli deploy-service --log-level=error --data ./.docker/cli --c
   --trigger-event-name ${trigger_event:2} \
   --trigger eth-contract-event \
   --submit-address ${SERVICE_MANAGER_ADDRESS} \
-  --service-config '{"fuelLimit":100000000,"maxGas":5000000,"hostEnvs":["WAVS_ENV_OPEN_WEATHER_API_KEY"],"kv":[],"workflowId":"default","componentId":"default"}'`
+  --service-config '{"fuelLimit":100000000,"maxGas":5000000,"hostEnvs":[],"kv":[],"workflowId":"default","componentId":"default"}'`
 
 echo "Service info: $service_info"
 
