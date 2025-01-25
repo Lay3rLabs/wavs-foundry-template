@@ -11,6 +11,7 @@ bindings:
 # Generate new bindings
 	@forge bind --bindings-path ./crates/bindings --crate-name bindings --overwrite \
 		--alloy --alloy-version v0.9.2
+	@$(CARGO) fmt --manifest-path ./crates/bindings/Cargo.toml
 
 ## build: building the project
 build: bindings wasi-build
@@ -56,6 +57,13 @@ test:
 setup:
 	@forge install
 
+## start-all: starting anvil and WAVS with docker compose
+start-all: clean-docker
+	@trap 'kill $(jobs -pr)' EXIT
+# running anvil out of compose is a temp work around for MacOS
+	@anvil &
+	@docker compose up
+	@wait
 
 # Declare phony targets
 .PHONY: build build-release clean fmt bindings test

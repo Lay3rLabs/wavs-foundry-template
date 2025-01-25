@@ -90,11 +90,7 @@ cp ./lib/WAVS/packages/cli/cli.toml .
 # Docker Engine -> Settings -> Resources -> Network -> 'Enable Host Networking'
 # or
 # brew install chipmk/tap/docker-mac-net-connect && sudo brew services start chipmk/tap/docker-mac-net-connect
-
-# TODO: this is a temp workaround for MacOS (running anvil out of compose)
-anvil
-
-make clean-docker; docker compose up --build
+make start-all
 ```
 
 Upload your WAVS Service contract
