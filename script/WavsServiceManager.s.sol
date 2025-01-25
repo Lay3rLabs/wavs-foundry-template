@@ -8,28 +8,38 @@ import {IDelegationManager} from
     "@eigenlayer/middleware/lib/eigenlayer-contracts/src/contracts/interfaces/IDelegationManager.sol";
 import {Quorum, StrategyParams} from "@eigenlayer/middleware/src/interfaces/IECDSAStakeRegistryEventsAndErrors.sol";
 import {IStrategy} from "@eigenlayer/middleware/lib/eigenlayer-contracts/src/contracts/interfaces/IStrategy.sol";
+import {stdJson} from "forge-std/StdJson.sol";
+
+struct EigenContracts {
+    address delegation_manager;
+    address rewards_coordinator;
+    address avs_directory;
+}
 
 // forge script ./script/WavsServiceManager.s.sol --rpc-url http://localhost:8545 --broadcast --var-ir
 contract WavsServiceManagerScript is Script {
-    address public delegation_manager = vm.envAddress("CLI_EIGEN_CORE_DELEGATION_MANAGER");
-    address public rewards_coordinator = vm.envAddress("CLI_EIGEN_CORE_REWARDS_COORDINATOR");
-    address public avs_directory = vm.envAddress("CLI_EIGEN_CORE_AVS_DIRECTORY");
+    using stdJson for string;
 
-    uint256 privateKey = vm.envUint("FOUNDRY_ANVIL_PRIVATE_KEY");
+    uint256 privateKey = vm.envOr(
+        "FOUNDRY_ANVIL_PRIVATE_KEY", uint256(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80)
+    );
 
     function setUp() public {}
 
     function run() public {
         vm.startBroadcast(privateKey);
 
-        ECDSAStakeRegistry ecdsa_registry = new ECDSAStakeRegistry(IDelegationManager(delegation_manager));
+        EigenContracts memory eigen = loadEigenContractsFromFS("deployments.json");
 
-        console.log("delegation_manager:", delegation_manager);
-        console.log("rewards_coordinator:", rewards_coordinator);
-        console.log("avs_directory:", avs_directory);
+        ECDSAStakeRegistry ecdsa_registry = new ECDSAStakeRegistry(IDelegationManager(eigen.delegation_manager));
 
-        WavsServiceManager sm =
-            new WavsServiceManager(avs_directory, address(ecdsa_registry), rewards_coordinator, delegation_manager);
+        console.log("delegation_manager:", eigen.delegation_manager);
+        console.log("rewards_coordinator:", eigen.rewards_coordinator);
+        console.log("avs_directory:", eigen.avs_directory);
+
+        WavsServiceManager sm = new WavsServiceManager(
+            eigen.avs_directory, address(ecdsa_registry), eigen.rewards_coordinator, eigen.delegation_manager
+        );
 
         IStrategy mockStrategy = IStrategy(address(0x1234));
         Quorum memory quorum = Quorum({strategies: new StrategyParams[](1)});
@@ -40,5 +50,20 @@ contract WavsServiceManagerScript is Script {
 
         console.log("ServiceManager:", address(sm));
         console.log("ecdssa_registry (deployed):", address(ecdsa_registry));
+    }
+
+    function loadEigenContractsFromFS(string memory fileName) public view returns (EigenContracts memory) {
+        string memory root = vm.projectRoot();
+        string memory path = string.concat(root, "/.docker/cli/", fileName);
+        string memory json = vm.readFile(path);
+
+        address dm = address(uint160(bytes20(json.readBytes(".eigen_core.local.delegation_manager"))));
+        address rc = address(uint160(bytes20(json.readBytes(".eigen_core.local.rewards_coordinator"))));
+        address avs = address(uint160(bytes20(json.readBytes(".eigen_core.local.avs_directory"))));
+
+        EigenContracts memory fixture =
+            EigenContracts({delegation_manager: dm, rewards_coordinator: rc, avs_directory: avs});
+
+        return fixture;
     }
 }

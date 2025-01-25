@@ -83,9 +83,6 @@ cp .env.example .env
 # [!] Get your key from: https://openweathermap.org/
 # Update the WAVS_ENV_OPEN_WEATHER_API_KEY in the .env file with your key`
 
-cp ./lib/WAVS/packages/wavs/wavs.toml .
-cp ./lib/WAVS/packages/cli/cli.toml .
-
 # MacOS Docker:
 # Docker Engine -> Settings -> Resources -> Network -> 'Enable Host Networking'
 # or
@@ -96,13 +93,7 @@ make start-all
 Upload your WAVS Service contract
 
 ```bash
-# Grab Eigenlayer contracts
-export CLI_EIGEN_CORE_DELEGATION_MANAGER=`jq -r .eigen_core.local.delegation_manager ".docker/cli/deployments.json"`
-export CLI_EIGEN_CORE_REWARDS_COORDINATOR=`jq -r .eigen_core.local.rewards_coordinator ".docker/cli/deployments.json"`
-export CLI_EIGEN_CORE_AVS_DIRECTORY=`jq -r .eigen_core.local.avs_directory ".docker/cli/deployments.json"`
-
-# Deploy
-export FOUNDRY_ANVIL_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+# Deploy (override: FOUNDRY_ANVIL_PRIVATE_KEY)
 forge script ./script/WavsServiceManager.s.sol --rpc-url http://localhost:8545 --broadcast
 
 # Grab deployed service manager address by name
@@ -126,6 +117,7 @@ make wasi-build
 Deploy service and verify with adding a task
 
 ```bash
+# add read-write access
 sudo chmod 0666 .docker/cli/deployments.json
 
 # Contract trigger function signature to listen for
