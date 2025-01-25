@@ -140,7 +140,7 @@ service_info=`wavs-cli deploy-service --log-level=error --data ./.docker/cli --c
 echo "Service info: $service_info"
 
 SERVICE_ID=`echo $service_info | jq -r .service[0]`; echo "Service ID: $SERVICE_ID"
-wavs-cli add-task --input "Nashville,TN" --data ./.docker/cli --service-id ${SERVICE_ID}
+wavs-cli add-task --input "36,-86" --data ./.docker/cli --service-id ${SERVICE_ID}
 
 # Where the call address is the service manager in ./.docker/cli/deployments.json
 hex_bytes=$(cast decode-abi "getData(uint64)(bytes)" `cast call ${SERVICE_MANAGER_ADDRESS} "getData(uint64)" 1`)
