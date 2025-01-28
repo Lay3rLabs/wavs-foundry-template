@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 import {WavsSubmit} from "../src/WavsSubmit.sol";
+import {SimpleTrigger} from "../src/WavsTrigger.sol";
 import {ECDSAStakeRegistry} from "@eigenlayer/middleware/src/unaudited/ECDSAStakeRegistry.sol";
 import {IDelegationManager} from
     "@eigenlayer/middleware/lib/eigenlayer-contracts/src/contracts/interfaces/IDelegationManager.sol";
@@ -42,6 +43,8 @@ contract WavsSubmitScript is Script {
             // eigen.avs_directory, address(ecdsa_registry), eigen.rewards_coordinator, eigen.delegation_manager
         );
 
+        SimpleTrigger trigger = new SimpleTrigger();
+
         IStrategy mockStrategy = IStrategy(address(0x1234));
         Quorum memory quorum = Quorum({strategies: new StrategyParams[](1)});
         quorum.strategies[0] = StrategyParams({strategy: mockStrategy, multiplier: 10_000});
@@ -51,9 +54,11 @@ contract WavsSubmitScript is Script {
 
         console.log("ecdsa_registry:", address(ecdsa_registry));
         console.log("service_handler:", address(submit));
+        console.log("trigger:", address(trigger));
 
         string memory json = "json";
         json.serialize("service_handler", Strings.toHexString(address(submit)));
+        json.serialize("trigger", Strings.toHexString(address(trigger)));
         string memory finalJson = json.serialize("ecdsa_registry", Strings.toHexString(address(ecdsa_registry)));
         vm.writeFile(script_output_path, finalJson);
     }

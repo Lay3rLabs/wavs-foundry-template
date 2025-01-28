@@ -81,8 +81,10 @@ forge script ./script/WavsSubmit.s.sol --rpc-url http://localhost:8545 --broadca
 export SERVICE_HANDLER_ADDR=`jq -r '.service_handler' "./.docker/cli/script_deploy.json"`
 echo "Service Handler Addr: $SERVICE_HANDLER_ADDR"
 
+export TRIGGER_ADDR=`jq -r '.trigger' "./.docker/cli/script_deploy.json"`; echo "Trigger Addr: $TRIGGER_ADDR"
+
 wavs-cli deploy-eigen-service-manager --data ./.docker/cli --service-handler ${SERVICE_HANDLER_ADDR}
-export SERVICE_MANAGER=0x99bba657f2bbc93c02d617f8ba121cb8fc104acf # manually parsing because json output is terrible
+export SERVICE_MANAGER=0xf4b146fba71f41e0592668ffbf264f1d186b2ca8 # manually parsing because json output is terrible
 ```
 
 ### Build WASI components
@@ -113,6 +115,8 @@ service_info=`wavs-cli deploy-service --log-level=error --data ./.docker/cli --c
   --service-config '{"fuelLimit":100000000,"maxGas":5000000,"hostEnvs":["WAVS_ENV_OPEN_WEATHER_API_KEY"],"kv":[],"workflowId":"default","componentId":"default"}'`
 
 echo "Service info: $service_info"
+
+# TODO: inform about the other for security
 
 # Submit AVS request -> chain
 SERVICE_ID=`echo $service_info | jq -r .service[0]`; echo "Service ID: $SERVICE_ID"
