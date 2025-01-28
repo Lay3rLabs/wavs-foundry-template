@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
-import {WavsServiceManager} from "../src/WavsServiceManager.sol";
+import {WavsSubmit} from "../src/WavsSubmit.sol";
 import {ECDSAStakeRegistry} from "@eigenlayer/middleware/src/unaudited/ECDSAStakeRegistry.sol";
 import {IDelegationManager} from
     "@eigenlayer/middleware/lib/eigenlayer-contracts/src/contracts/interfaces/IDelegationManager.sol";
@@ -13,8 +13,8 @@ import { Strings } from "@openzeppelin-contracts/utils/Strings.sol";
 
 
 
-// forge script ./script/WavsServiceManager.s.sol --rpc-url http://localhost:8545 --broadcast
-contract WavsServiceManagerScript is Script {
+// forge script ./script/WavsSubmit.s.sol --rpc-url http://localhost:8545 --broadcast
+contract WavsSubmitScript is Script {
     using stdJson for string;
 
     string root = vm.projectRoot();
@@ -38,22 +38,22 @@ contract WavsServiceManagerScript is Script {
         console.log("rewards_coordinator:", eigen.rewards_coordinator);
         console.log("avs_directory:", eigen.avs_directory);
 
-        WavsServiceManager sm = new WavsServiceManager(
-            eigen.avs_directory, address(ecdsa_registry), eigen.rewards_coordinator, eigen.delegation_manager
+        WavsSubmit submit = new WavsSubmit(
+            // eigen.avs_directory, address(ecdsa_registry), eigen.rewards_coordinator, eigen.delegation_manager
         );
 
         IStrategy mockStrategy = IStrategy(address(0x1234));
         Quorum memory quorum = Quorum({strategies: new StrategyParams[](1)});
         quorum.strategies[0] = StrategyParams({strategy: mockStrategy, multiplier: 10_000});
-        ecdsa_registry.initialize(address(sm), 0, quorum);
+        ecdsa_registry.initialize(address(submit), 0, quorum);
 
         vm.stopBroadcast();
 
         console.log("ecdsa_registry:", address(ecdsa_registry));
-        console.log("service_manager:", address(sm));
+        console.log("service_handler:", address(submit));
 
         string memory json = "json";
-        json.serialize("service_manager", Strings.toHexString(address(sm)));
+        json.serialize("service_handler", Strings.toHexString(address(submit)));
         string memory finalJson = json.serialize("ecdsa_registry", Strings.toHexString(address(ecdsa_registry)));
         vm.writeFile(script_output_path, finalJson);
     }

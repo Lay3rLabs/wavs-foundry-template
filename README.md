@@ -75,11 +75,14 @@ make start-all
 
 ```bash
 # Deploy (override: FOUNDRY_ANVIL_PRIVATE_KEY)
-forge script ./script/WavsServiceManager.s.sol --rpc-url http://localhost:8545 --broadcast
+forge script ./script/WavsSubmit.s.sol --rpc-url http://localhost:8545 --broadcast
 
 # Grab deployed service manager from script file output
-export SERVICE_MANAGER_ADDRESS=`jq -r '.service_manager' "./.docker/cli/script_deploy.json"`
-echo "Service Manager Address: $SERVICE_MANAGER_ADDRESS"
+export SERVICE_HANDLER_ADDR=`jq -r '.service_handler' "./.docker/cli/script_deploy.json"`
+echo "Service Handler Addr: $SERVICE_HANDLER_ADDR"
+
+wavs-cli deploy-eigen-service-manager --data ./.docker/cli --service-handler ${SERVICE_HANDLER_ADDR}
+export SERVICE_MANAGER=0x99bba657f2bbc93c02d617f8ba121cb8fc104acf # manually parsing because json output is terrible
 ```
 
 ### Build WASI components
@@ -106,7 +109,7 @@ trigger_event=$(cast sig-event "NewTrigger(bytes)"); echo "Trigger Event: $trigg
 service_info=`wavs-cli deploy-service --log-level=error --data ./.docker/cli --component $(pwd)/compiled/eth_trigger_weather.wasm \
   --trigger-event-name ${trigger_event:2} \
   --trigger eth-contract-event \
-  --submit-address ${SERVICE_MANAGER_ADDRESS} \
+  --submit-address ${SERVICE_MANAGER} \
   --service-config '{"fuelLimit":100000000,"maxGas":5000000,"hostEnvs":["WAVS_ENV_OPEN_WEATHER_API_KEY"],"kv":[],"workflowId":"default","componentId":"default"}'`
 
 echo "Service info: $service_info"
