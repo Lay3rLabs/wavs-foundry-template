@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "forge-std/Script.sol";
 import {WavsSubmit} from "../src/WavsSubmit.sol";
 import {SimpleTrigger} from "../src/WavsTrigger.sol";
-import {ECDSAStakeRegistry} from "@eigenlayer/middleware/src/unaudited/ECDSAStakeRegistry.sol";
-import {IDelegationManager} from
-    "@eigenlayer/middleware/lib/eigenlayer-contracts/src/contracts/interfaces/IDelegationManager.sol";
-import {Quorum, StrategyParams} from "@eigenlayer/middleware/src/interfaces/IECDSAStakeRegistryEventsAndErrors.sol";
-import {IStrategy} from "@eigenlayer/middleware/lib/eigenlayer-contracts/src/contracts/interfaces/IStrategy.sol";
+
+import "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
-import { Strings } from "@openzeppelin-contracts/utils/Strings.sol";
-
-
+import {IDelegationManager} from "@eigenlayer-contracts/interfaces/IDelegationManager.sol";
+import {IStrategy} from "@eigenlayer-contracts/interfaces/IStrategy.sol";
+import {ECDSAStakeRegistry} from "@eigenlayer-middleware/src/unaudited/ECDSAStakeRegistry.sol";
+import {Quorum, StrategyParams} from "@eigenlayer-middleware/src/interfaces/IECDSAStakeRegistryEventsAndErrors.sol";
+import {Strings} from "@openzeppelin-contracts/utils/Strings.sol";
 
 // forge script ./script/WavsSubmit.s.sol --rpc-url http://localhost:8545 --broadcast
 contract WavsSubmitScript is Script {

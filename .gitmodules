@@ -4,4 +4,4 @@
 [submodule "lib/WAVS"]
 	path = lib/WAVS
 	url = https://github.com/Lay3rLabs/WAVS
-	branch = chain-name-newtype
+	branch = 58b1d93fef05b056cbd02e7c6be3ba76c39eed89
