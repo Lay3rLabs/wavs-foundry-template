@@ -74,7 +74,8 @@ make start-all
 ### Upload your WAVS Service Manager
 
 ```bash
-# Deploy (override: FOUNDRY_ANVIL_PRIVATE_KEY)
+# Deploy
+export FOUNDRY_ANVIL_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 forge script ./script/WavsSubmit.s.sol --rpc-url http://localhost:8545 --broadcast
 
 # Grab deployed service manager from script file output
@@ -84,7 +85,13 @@ echo "Service Handler Addr: $SERVICE_HANDLER_ADDR"
 export TRIGGER_ADDR=`jq -r '.trigger' "./.docker/cli/script_deploy.json"`; echo "Trigger Addr: $TRIGGER_ADDR"
 
 wavs-cli deploy-eigen-service-manager --data ./.docker/cli --service-handler ${SERVICE_HANDLER_ADDR}
-export SERVICE_MANAGER=0xf4b146fba71f41e0592668ffbf264f1d186b2ca8 # manually parsing because json output is terrible
+export SERVICE_MANAGER=0x0e801d84fa97b50751dbf25036d067dcf18858bf
+
+# Set the service manager in the service handler
+# - handleAddPayload can only be called by onlyServiceManager
+# - add-task requires to getServiceManager() from the contract to deploy
+cast send ${SERVICE_HANDLER_ADDR} "setServiceManager(address)" ${SERVICE_MANAGER} --rpc-url http://localhost:8545 --private-key $FOUNDRY_ANVIL_PRIVATE_KEY
+# cast call ${SERVICE_HANDLER_ADDR} "getServiceManager()(address)" --rpc-url http://localhost:8545
 ```
 
 ### Build WASI components
@@ -111,18 +118,17 @@ trigger_event=$(cast sig-event "NewTrigger(bytes)"); echo "Trigger Event: $trigg
 service_info=`wavs-cli deploy-service --log-level=error --data ./.docker/cli --component $(pwd)/compiled/eth_trigger_weather.wasm \
   --trigger-event-name ${trigger_event:2} \
   --trigger eth-contract-event \
+  --trigger-address ${TRIGGER_ADDR} \
   --submit-address ${SERVICE_MANAGER} \
   --service-config '{"fuelLimit":100000000,"maxGas":5000000,"hostEnvs":["WAVS_ENV_OPEN_WEATHER_API_KEY"],"kv":[],"workflowId":"default","componentId":"default"}'`
 
 echo "Service info: $service_info"
-
-# TODO: inform about the other for security
 
 # Submit AVS request -> chain
 SERVICE_ID=`echo $service_info | jq -r .service[0]`; echo "Service ID: $SERVICE_ID"
 wavs-cli add-task --input "Nashville,TN" --data ./.docker/cli --service-id ${SERVICE_ID}
 
 # Grab data from the contract directly
-hex_bytes=$(cast decode-abi "getData(uint64)(bytes)" `cast call ${SERVICE_MANAGER_ADDRESS} "getData(uint64)" 1`)
+hex_bytes=$(cast decode-abi "getData(uint64)(bytes)" `cast call ${SERVICE_HANDLER_ADDR} "getData(uint64)" 1`)
 echo `cast --to-ascii $hex_bytes`
 ```

@@ -35,7 +35,7 @@ contract WavsSubmit is IServiceHandler {
         return serviceManager;
     }
 
-    function handleAddPayload(bytes calldata data, bytes calldata signature) external { // onlyServiceManager
+    function handleAddPayload(bytes calldata data, bytes calldata signature) external onlyServiceManager {
         ISimpleSubmit.DataWithId memory dataWithId = abi.decode(data, (ISimpleSubmit.DataWithId));
 
         signatures[dataWithId.triggerId] = signature;

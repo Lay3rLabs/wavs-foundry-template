@@ -22,22 +22,22 @@ pub mod MathUpgradeable {
     /// The creation / init bytecode of the contract.
     ///
     /// ```text
-    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea264697066735822122051d696cfa1fc2fc6471254abe2735f03f77aa530dbd021996f6495de8a98cd2064736f6c634300081a0033
+    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea264697066735822122069aaac4d221cdba2bcd8f1a9365728a5bc55a9e1b09cfea49b1e29f93b4749da64736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 Q\xD6\x96\xCF\xA1\xFC/\xC6G\x12T\xAB\xE2s_\x03\xF7z\xA50\xDB\xD0!\x99od\x95\xDE\x8A\x98\xCD dsolcC\0\x08\x1A\x003",
+        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 i\xAA\xACM\"\x1C\xDB\xA2\xBC\xD8\xF1\xA96W(\xA5\xBCU\xA9\xE1\xB0\x9C\xFE\xA4\x9B\x1E)\xF9;GI\xDAdsolcC\0\x08\x1C\x003",
     );
     /// The runtime bytecode of the contract, as deployed on the network.
     ///
     /// ```text
-    ///0x5f80fdfea264697066735822122051d696cfa1fc2fc6471254abe2735f03f77aa530dbd021996f6495de8a98cd2064736f6c634300081a0033
+    ///0x5f80fdfea264697066735822122069aaac4d221cdba2bcd8f1a9365728a5bc55a9e1b09cfea49b1e29f93b4749da64736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static DEPLOYED_BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 Q\xD6\x96\xCF\xA1\xFC/\xC6G\x12T\xAB\xE2s_\x03\xF7z\xA50\xDB\xD0!\x99od\x95\xDE\x8A\x98\xCD dsolcC\0\x08\x1A\x003",
+        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 i\xAA\xACM\"\x1C\xDB\xA2\xBC\xD8\xF1\xA96W(\xA5\xBCU\xA9\xE1\xB0\x9C\xFE\xA4\x9B\x1E)\xF9;GI\xDAdsolcC\0\x08\x1C\x003",
     );
     use alloy::contract as alloy_contract;
     /**Creates a new wrapper around an on-chain [`MathUpgradeable`](self) contract instance.
