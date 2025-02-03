@@ -4,3 +4,4 @@
 [submodule "lib/WAVS"]
 	path = lib/WAVS
 	url = https://github.com/Lay3rLabs/WAVS
+	tag = v0.3.0-alpha4
