@@ -1,10 +1,8 @@
 mod trigger;
-use layer_wasi::{
-    bindings::world::{Guest, TriggerAction},
-    export_layer_trigger_world,
-};
-use serde::{Deserialize, Serialize};
 use trigger::{decode_trigger_event, encode_trigger_output};
+pub mod bindings;
+use crate::bindings::{export, Guest, TriggerAction};
+use serde::{Deserialize, Serialize};
 use wstd::{
     http::{Client, Request},
     io::{empty, AsyncRead},
@@ -212,4 +210,4 @@ pub struct Wind {
     deg: i64,
 }
 
-export_layer_trigger_world!(Component);
+export!(Component with_types_in bindings);

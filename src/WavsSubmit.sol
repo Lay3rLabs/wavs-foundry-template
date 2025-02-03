@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {IServiceHandler} from "./interfaces/IWAVSServiceHandler.sol";
+import {IWavsService} from "./interfaces/IWAVSServiceHandler.sol";
 import {ISimpleTrigger} from "./interfaces/ISimpleTrigger.sol";
 import {ISimpleSubmit} from "./interfaces/ISimpleSubmit.sol";
 
-contract WavsSubmit is IServiceHandler {
+contract WavsSubmit is IWavsService {
     address private owner;
     address private serviceManager;
 
@@ -35,7 +35,7 @@ contract WavsSubmit is IServiceHandler {
         return serviceManager;
     }
 
-    function handleAddPayload(bytes calldata data, bytes calldata signature) external onlyServiceManager {
+    function handleSignedData(bytes calldata data, bytes calldata signature) external onlyServiceManager {
         ISimpleSubmit.DataWithId memory dataWithId = abi.decode(data, (ISimpleSubmit.DataWithId));
 
         signatures[dataWithId.triggerId] = signature;

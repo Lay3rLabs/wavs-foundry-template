@@ -4,5 +4,5 @@
 [submodule "lib/WAVS"]
 	path = lib/WAVS
 	url = https://github.com/Lay3rLabs/WAVS
+	commit = f1e33d0efd347bea9d99a546cde774d4372a0bf3
 	# tag = v0.3.0-alpha4
-	commit = 8a49769b4fc5175d3c0193e1db73d7e8f926531e

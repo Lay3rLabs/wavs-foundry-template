@@ -7,8 +7,9 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
-wit-bindgen-rt = { workspace = true }
-layer-wasi = { workspace = true }
+wit-bindgen = { workspace = true }
+wit-bindgen-rt = {workspace = true}
+wavs-wasi-chain = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 reqwest = { version = "0.12.9", features = ["json"] }
@@ -18,6 +19,7 @@ layer-climb = { workspace = true }
 alloy-sol-types = { workspace = true }
 anyhow = { workspace = true }
 alloy-contract = { workspace = true }
+alloy-primitives = {workspace = true}
 
 [lib]
 crate-type = ["cdylib"]
@@ -31,3 +33,4 @@ lto = true
 
 [package.metadata.component]
 package = "component:eth-trigger-weather"
+target = "wavs:worker/layer-trigger-world@0.3.0-alpha1"

@@ -1,17 +1,15 @@
 // Helpers to work with "trigger id" flows - which our example components do
+use crate::bindings::wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent};
 use alloy_sol_types::SolValue;
 use anyhow::Result;
 use example_submit::ISimpleSubmit::DataWithId;
 use example_trigger::{NewTrigger, TriggerInfo};
-use layer_wasi::{
-    bindings::compat::{TriggerData, TriggerDataEthContractEvent},
-    ethereum::WasiProvider,
-};
+use wavs_wasi_chain::decode_event_log_data;
 
 pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>)> {
     match trigger_data {
         TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
-            let event: NewTrigger = layer_wasi::ethereum::decode_event_log_data(log)?;
+            let event: NewTrigger = decode_event_log_data!(log)?;
             let trigger_info = TriggerInfo::abi_decode(&event._0, false)?;
             Ok((trigger_info.triggerId, trigger_info.data.to_vec()))
         }

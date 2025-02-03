@@ -18,12 +18,13 @@ rust-version = "1.80.0"
 [workspace.dependencies]
 bindings = { path = "crates/bindings" }
 wit-bindgen-rt = {version = "0.37.0", features = ["bitflags"]}
+wit-bindgen = "0.37.0"
 wstd = "0.5.1"
 wasi = "0.14.0"
 serde = { version = "1.0.211", features = ["derive"] }
 serde_json = "1.0.127"
-# layer WAVS imports
-layer-wasi = { path = "./lib/WAVS/sdk/wasi" }
+# WAVS imports
+wavs-wasi-chain = { path = "./lib/WAVS/sdk/wasi-chain" }
 alloy-contract = "0.9.2"
 alloy-json-rpc = "0.9.2"
 alloy-primitives = "0.8.15"
@@ -45,4 +46,3 @@ tendermint-rpc = "0.40.1"
 tower-service = "0.3.3"
 url = "2.5.3"
 wasmtime-wasi = { version = "24.0.0", default-features = true }
-wit-bindgen = "0.37.0"
