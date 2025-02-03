@@ -84,6 +84,9 @@ echo "Service Handler Addr: $SERVICE_HANDLER_ADDR"
 
 export TRIGGER_ADDR=`jq -r '.trigger' "./.docker/cli/script_deploy.json"`; echo "Trigger Addr: $TRIGGER_ADDR"
 
+# add read-write access
+sudo chmod 0666 .docker/cli/deployments.json
+
 wavs-cli deploy-eigen-service-manager --data ./.docker/cli --service-handler ${SERVICE_HANDLER_ADDR}
 export SERVICE_MANAGER=0x0e801d84fa97b50751dbf25036d067dcf18858bf
 
@@ -109,9 +112,6 @@ make wasi-build
 ## Deploy Service and Verify
 
 ```bash
-# add read-write access
-sudo chmod 0666 .docker/cli/deployments.json
-
 # Contract trigger function signature to listen for
 trigger_event=$(cast sig-event "NewTrigger(bytes)"); echo "Trigger Event: $trigger_event"
 

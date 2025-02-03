@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [unreleased]
 
+## v0.3.0-alpha.4
+
+### Added
+
+* Support for v0.3.0-alpha.4 of WAVS.
+
 ## v0.3.0-alpha.1
 
 **2024/01/29**
