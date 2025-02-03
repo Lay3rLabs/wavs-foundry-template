@@ -2,11 +2,14 @@ mod trigger;
 use layer_wasi::{
     bindings::world::{Guest, TriggerAction},
     export_layer_trigger_world,
-    wasi::{Request, WasiPollable},
 };
 use serde::{Deserialize, Serialize};
 use trigger::{decode_trigger_event, encode_trigger_output};
-use wstd::runtime::{block_on, Reactor};
+use wstd::{
+    http::{Client, Request},
+    io::{empty, AsyncRead},
+    runtime::block_on,
+};
 
 struct Component;
 
@@ -24,16 +27,15 @@ impl Guest for Component {
         let api_key = std::env::var("WAVS_ENV_OPEN_WEATHER_API_KEY")
             .or(Err("missing env var `WAVS_ENV_OPEN_WEATHER_API_KEY`".to_string()))?;
 
-        let res = block_on(move |reactor| async move {
-            let loc: Result<LocDataNested, String> =
-                get_location(&reactor, api_key.clone(), input).await;
+        let res = block_on(async move {
+            let loc: Result<LocDataNested, String> = get_location(api_key.clone(), input).await;
 
             let location = match loc {
                 Ok(data) => data,
                 Err(e) => return Err(e),
             };
 
-            let weather_data = get_weather(&reactor, location, api_key).await;
+            let weather_data = get_weather(location, api_key).await;
 
             match weather_data {
                 Ok(data) => {
@@ -51,35 +53,29 @@ impl Guest for Component {
     }
 }
 
-async fn get_location(
-    reactor: &Reactor,
-    app_key: String,
-    loc_input: &str,
-) -> Result<LocDataNested, String> {
+async fn get_location(app_key: String, loc_input: &str) -> Result<LocDataNested, String> {
     let url: &str = "http://api.openweathermap.org/geo/1.0/direct";
     let loc_input_formatted = format!("{},US", loc_input);
     let params = [("q", loc_input_formatted.as_str()), ("appid", app_key.as_str())];
 
     let url_with_params = reqwest::Url::parse_with_params(url, &params).unwrap();
-    let mut req = Request::get(url_with_params.as_str())?;
-    req.headers = vec![
-        ("Accept".to_string(), "application/json".to_string()),
-        ("Content-Type".to_string(), "application/json".to_string()),
-    ];
+    let req = Request::get(url_with_params.as_str())
+        .header("Accept", "application/json")
+        .header("Content-Type", "application/json")
+        .body(empty())
+        .unwrap();
 
-    let response = reactor.send(req).await;
+    let response = Client::new().send(req).await;
 
     match response {
-        Ok(response) => {
-            let finalresp = response.json::<LocationData>().map_err(|e| {
-                let resp_body = response.body;
-                let resp_str = String::from_utf8_lossy(&resp_body);
-                format!(
-                    "Error debugging location response to JSON. Error: {:?}. had response: {:?} | using URL: {:?}",
-                    e, resp_str, url_with_params,
-                )
-            })?;
-            return Ok(finalresp[0].clone());
+        Ok(mut response) => {
+            let mut body_buf = Vec::new();
+            response.body_mut().read_to_end(&mut body_buf).await.unwrap();
+
+            let resp = String::from_utf8_lossy(&body_buf);
+            let json: LocationData = serde_json::from_str(&resp).unwrap();
+
+            return Ok(json[0].clone());
         }
         Err(e) => {
             return Err(e.to_string());
@@ -87,11 +83,7 @@ async fn get_location(
     }
 }
 
-async fn get_weather(
-    reactor: &Reactor,
-    location: LocDataNested,
-    app_key: String,
-) -> Result<WeatherResponse, String> {
+async fn get_weather(location: LocDataNested, app_key: String) -> Result<WeatherResponse, String> {
     let url: &str = "https://api.openweathermap.org/data/2.5/weather";
     let params = [
         ("lat", location.lat.to_string()),
@@ -101,25 +93,23 @@ async fn get_weather(
     ];
 
     let url_with_params = reqwest::Url::parse_with_params(url, &params).unwrap();
-    let mut req = Request::get(url_with_params.as_str())?;
-    req.headers = vec![
-        ("Accept".to_string(), "application/json".to_string()),
-        ("Content-Type".to_string(), "application/json".to_string()),
-    ];
+    let req = Request::get(url_with_params.as_str())
+        .header("Accept", "application/json")
+        .header("Content-Type", "application/json")
+        .body(empty())
+        .unwrap();
 
-    let response = reactor.send(req).await;
+    let response = Client::new().send(req).await;
 
     match response {
-        Ok(response) => {
-            let finalresp = response.json::<WeatherResponse>().map_err(|e| {
-                let resp_body = response.body;
-                let resp_str = String::from_utf8_lossy(&resp_body);
-                format!(
-                    "Error debugging weather response to JSON. Error: {:?}. had response: {:?} | using URL: {:?}",
-                    e, resp_str, url_with_params,
-                )
-            })?;
-            return Ok(finalresp);
+        Ok(mut response) => {
+            let mut body_buf = Vec::new();
+            response.body_mut().read_to_end(&mut body_buf).await.unwrap();
+
+            let resp = String::from_utf8_lossy(&body_buf);
+            let json: WeatherResponse = serde_json::from_str(&resp).unwrap();
+
+            return Ok(json);
         }
         Err(e) => {
             return Err(e.to_string());
