@@ -117,21 +117,14 @@ make wasi-build
 # Contract trigger function signature to listen for
 trigger_event=$(cast sig-event "NewTrigger(bytes)"); echo "Trigger Event: $trigger_event"
 
-
-service_info=`wavs-cli deploy-service --log-level=info --quiet-results=false --data ./.docker/cli --component $(pwd)/compiled/eth_trigger_weather.wasm \
+wavs-cli deploy-service --log-level=error --quiet-results=false --data ./.docker/cli --component $(pwd)/compiled/eth_trigger_weather.wasm \
   --trigger-event-name ${trigger_event:2} \
   --trigger eth-contract-event \
   --trigger-address ${TRIGGER_ADDR} \
   --submit-address ${SERVICE_MANAGER} \
-  --service-config '{"fuelLimit":100000000,"maxGas":5000000,"hostEnvs":["WAVS_ENV_OPEN_WEATHER_API_KEY"],"kv":[],"workflowId":"default","componentId":"default"}'`
+  --service-config '{"fuelLimit":100000000,"maxGas":5000000,"hostEnvs":["WAVS_ENV_OPEN_WEATHER_API_KEY"],"kv":[],"workflowId":"default","componentId":"default"}'
 
-echo "Service info: $service_info"
-
-# TODO!: this has regressed. we no longer can parse out the ServiceID easily from JSON output. it is tracing::info'ed
-# https://github.com/Lay3rLabs/WAVS/commit/a97b0eeaa180d406b3f1fc85dc64a539219ed9a3
-#
-# SERVICE_ID=`echo $service_info | jq -r .service[0]`; echo "Service ID: $SERVICE_ID"
-SERVICE_ID=`echo $service_info | grep -o 'name: "[^"]*"' | cut -d'"' -f2`; echo "Service ID: $SERVICE_ID"
+SERVICE_ID=`jq -r '.services | to_entries[-1].value.id' .docker/cli/deployments.json`; echo "Service ID: $SERVICE_ID"
 
 # Submit AVS request -> chain
 wavs-cli add-task --input "Nashville,TN" --data ./.docker/cli --service-id ${SERVICE_ID}
