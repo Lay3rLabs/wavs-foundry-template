@@ -1,20 +1,40 @@
 mod trigger;
-use trigger::{decode_trigger_event, encode_trigger_output};
+use alloy_sol_types::{SolEvent, SolType};
 pub mod bindings;
-use crate::bindings::{export, Guest, TriggerAction};
+use crate::bindings::{
+    export,
+    wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent},
+    Guest, TriggerAction,
+};
 use serde::{Deserialize, Serialize};
 use wstd::{
     http::{Client, Request},
     io::{empty, AsyncRead},
     runtime::block_on,
 };
-
+use alloy_sol_macro::sol;
 struct Component;
+
+sol! {
+    event NewTrigger(bytes data);
+}
 
 impl Guest for Component {
     fn run(trigger_action: TriggerAction) -> std::result::Result<Vec<u8>, String> {
-        let (trigger_id, req) =
-            decode_trigger_event(trigger_action.data).map_err(|e| e.to_string())?;
+        let req: Vec<u8> = match trigger_action.data {
+            TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+                // let event: NewTrigger = decode_event_log_data!(log).map_err(|e| e.to_string())?;
+                // let trigger_info = NewTrigger::abi_decode_data(&event.data, false).map_err(|e| e.to_string())?;
+                // Ok((trigger_info.triggerId, trigger_info.data.to_vec()))
+                let event: NewTrigger = wavs_wasi_chain::decode_event_log_data!(log).map_err(|e| e.to_string())?;
+                event.data.to_vec()
+            }
+            TriggerData::Raw(data) => {
+                // let (trigger_info,) = NewTrigger::abi_decode_data(&data, false).unwrap();
+                data.to_vec()
+            }
+            _ => return Err("expected eth event, got other".to_string()),
+        };
 
         if !req.contains(&b',') {
             return Err("Input must be in the format of City,State".to_string());
@@ -45,7 +65,7 @@ impl Guest for Component {
         });
 
         match res {
-            Ok(data) => Ok(encode_trigger_output(trigger_id, &data)),
+            Ok(data) => Ok(data), // TODO: ABI encode this? (but then it breaks the wavs-cli exec)
             Err(e) => Err(e),
         }
     }

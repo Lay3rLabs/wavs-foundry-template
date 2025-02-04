@@ -52,9 +52,8 @@ make test
 
 ```bash
 # MacOS: if you get permission errors: eval `ssh-agent -s` && ssh-add
-(cd lib/WAVS; cargo install --path ./packages/cli)
-
-(cd lib/WAVS; just docker-build)
+# (cd lib/WAVS; cargo install --path ./packages/cli)
+docker cp $(docker create --name tc ghcr.io/lay3rlabs/wavs:local):/usr/local/bin/wavs-cli ~/.cargo/bin/wavs-cli && docker rm tc
 ```
 
 ### Start Anvil, WAVS, and Deploy Eigenlayer
@@ -106,9 +105,8 @@ cast send ${SERVICE_HANDLER_ADDR} "setServiceManager(address)" ${SERVICE_MANAGER
 ```bash
 make wasi-build
 
-# TODO: currently broken upstream
 # Verify execution works as expected without deploying
-# wavs-cli exec --component $(pwd)/compiled/eth_trigger_weather.wasm --input Nashville,TN
+wavs-cli exec --component $(pwd)/compiled/eth_trigger_weather.wasm --input Nashville,TN
 ```
 
 ## Deploy Service and Verify
@@ -128,8 +126,9 @@ SERVICE_ID=`jq -r '.services | to_entries[-1].value.id' .docker/cli/deployments.
 
 # Submit AVS request -> chain
 wavs-cli add-task --input "Nashville,TN" --data ./.docker/cli --service-id ${SERVICE_ID}
+# cast send ${TRIGGER_ADDR} "addTrigger(string)" `cast format-bytes32-string ` --rpc-url http://localhost:8545 --private-key $FOUNDRY_ANVIL_PRIVATE_KEY
 
 # Grab data from the contract directly
-hex_bytes=$(cast decode-abi "getData(uint64)(bytes)" `cast call ${SERVICE_HANDLER_ADDR} "getData(uint64)" 1`)
+hex_bytes=$(cast decode-abi "getData(uint64)(bytes)" `cast call ${SERVICE_HANDLER_ADDR} "getData(uint64)" 0`)
 echo `cast --to-ascii $hex_bytes`
 ```

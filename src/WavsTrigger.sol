@@ -16,7 +16,7 @@ contract SimpleTrigger {
     mapping(address => ISimpleTrigger.TriggerId[]) public triggerIdsByCreator;
 
     // Events
-    event NewTrigger(bytes);
+    event NewTrigger(bytes data);
 
     // Global vars
     ISimpleTrigger.TriggerId public nextTriggerId;
@@ -43,10 +43,10 @@ contract SimpleTrigger {
         // emit the id directly in an event
 
         // now be layer-compatible
-        ISimpleTrigger.TriggerInfo memory triggerInfo =
-            ISimpleTrigger.TriggerInfo({triggerId: triggerId, creator: trigger.creator, data: trigger.data});
+        // ISimpleTrigger.TriggerInfo memory triggerInfo =
+        //     ISimpleTrigger.TriggerInfo({triggerId: triggerId, creator: trigger.creator, data: trigger.data});
 
-        emit NewTrigger(abi.encode(triggerInfo));
+        emit NewTrigger(trigger.data);
     }
 
     /**
