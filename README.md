@@ -52,7 +52,8 @@ make test
 
 ```bash
 # MacOS: if you get permission errors: eval `ssh-agent -s` && ssh-add
-(cd lib/WAVS; cargo install --path ./packages/cli)
+# (cd lib/WAVS; cargo install --path ./packages/cli)
+docker cp $(docker create --name tc ghcr.io/lay3rlabs/wavs:local):/usr/local/bin/wavs-cli ~/.cargo/bin/wavs-cli && docker rm tc
 
 (cd lib/WAVS; just docker-build)
 ```
