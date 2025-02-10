@@ -1,0 +1,36 @@
+[package]
+name = "eth-price-oracle"
+edition.workspace = true
+version.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+wit-bindgen = { workspace = true }
+wit-bindgen-rt = {workspace = true}
+wavs-wasi-chain = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+reqwest = { version = "0.12.12", features = ["json"] }
+alloy-sol-macro = { workspace = true }
+wstd = { workspace = true }
+layer-climb = { workspace = true }
+alloy-sol-types = { workspace = true }
+anyhow = { workspace = true }
+alloy-contract = { workspace = true }
+alloy-primitives = {workspace = true}
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+codegen-units = 1
+opt-level = "s"
+debug = false
+strip = true
+lto = true
+
+[package.metadata.component]
+package = "component:eth-price-oracle"
+target = "wavs:worker/layer-trigger-world@0.3.0-alpha2"

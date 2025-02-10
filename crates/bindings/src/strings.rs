@@ -53,22 +53,22 @@ pub mod Strings {
     /// The creation / init bytecode of the contract.
     ///
     /// ```text
-    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea26469706673582212201624940cfac90c165899e9f2bd293a99ad58647938455748c4e0bd54260d540564736f6c634300081c0033
+    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea2646970667358221220011a961367da1ca5c6f2e293c427136dc6adeffa989b9823d87e79c63ca66e8564736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 \x16$\x94\x0C\xFA\xC9\x0C\x16X\x99\xE9\xF2\xBD):\x99\xADXdy8EWH\xC4\xE0\xBDT&\rT\x05dsolcC\0\x08\x1C\x003",
+        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 \x01\x1A\x96\x13g\xDA\x1C\xA5\xC6\xF2\xE2\x93\xC4'\x13m\xC6\xAD\xEF\xFA\x98\x9B\x98#\xD8~y\xC6<\xA6n\x85dsolcC\0\x08\x1C\x003",
     );
     /// The runtime bytecode of the contract, as deployed on the network.
     ///
     /// ```text
-    ///0x5f80fdfea26469706673582212201624940cfac90c165899e9f2bd293a99ad58647938455748c4e0bd54260d540564736f6c634300081c0033
+    ///0x5f80fdfea2646970667358221220011a961367da1ca5c6f2e293c427136dc6adeffa989b9823d87e79c63ca66e8564736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static DEPLOYED_BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 \x16$\x94\x0C\xFA\xC9\x0C\x16X\x99\xE9\xF2\xBD):\x99\xADXdy8EWH\xC4\xE0\xBDT&\rT\x05dsolcC\0\x08\x1C\x003",
+        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 \x01\x1A\x96\x13g\xDA\x1C\xA5\xC6\xF2\xE2\x93\xC4'\x13m\xC6\xAD\xEF\xFA\x98\x9B\x98#\xD8~y\xC6<\xA6n\x85dsolcC\0\x08\x1C\x003",
     );
     /**Custom error with signature `StringsInsufficientHexLength(uint256,uint256)` and selector `0xe22e27eb`.
     ```solidity
