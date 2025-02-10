@@ -13,6 +13,8 @@ import {ECDSAStakeRegistry} from "@eigenlayer-middleware/src/unaudited/ECDSAStak
 import {Quorum, StrategyParams} from "@eigenlayer-middleware/src/interfaces/IECDSAStakeRegistryEventsAndErrors.sol";
 import {Strings} from "@openzeppelin-contracts/utils/Strings.sol";
 
+import {ILayerServiceManager} from "@wavs/interfaces/ILayerServiceManager.sol";
+
 // forge script ./script/WavsSubmit.s.sol --rpc-url http://localhost:8545 --broadcast
 contract WavsSubmitScript is Script {
     using stdJson for string;
@@ -27,13 +29,13 @@ contract WavsSubmitScript is Script {
 
     function setUp() public {}
 
-    function run() public {
+    function run(string calldata serviceManagerAddr) public {
         vm.startBroadcast(privateKey);
 
-        address[] memory service_managers = loadServiceManagersFromFS();
-        LayerServiceManager service_manager = LayerServiceManager(service_managers[service_managers.length - 1]);
+        // address[] memory service_managers = loadServiceManagersFromFS();
+        // LayerServiceManager service_manager = LayerServiceManager(service_managers[service_managers.length - 1]);
 
-        SimpleSubmit submit = new SimpleSubmit(service_manager);
+        SimpleSubmit submit = new SimpleSubmit(ILayerServiceManager(vm.parseAddress(serviceManagerAddr)));
         SimpleTrigger trigger = new SimpleTrigger();
 
         vm.stopBroadcast();
@@ -41,7 +43,7 @@ contract WavsSubmitScript is Script {
         string memory json = "json";
         json.serialize("service_handler", Strings.toHexString(address(submit)));
         json.serialize("trigger", Strings.toHexString(address(trigger)));
-        string memory finalJson = json.serialize("service_manager", Strings.toHexString(address(service_manager)));
+        string memory finalJson = json.serialize("service_manager", serviceManagerAddr);
         vm.writeFile(script_output_path, finalJson);
     }
 
