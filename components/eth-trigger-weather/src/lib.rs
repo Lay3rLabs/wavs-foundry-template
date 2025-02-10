@@ -11,6 +11,8 @@ use wstd::{
 
 struct Component;
 
+const API_KEY_KEY: &str = "WAVS_ENV_OPEN_WEATHER_API_KEY";
+
 impl Guest for Component {
     fn run(trigger_action: TriggerAction) -> std::result::Result<Vec<u8>, String> {
         let (trigger_id, req) =
@@ -24,8 +26,12 @@ impl Guest for Component {
         println!("input: {}", input);
 
         // open weather API, not wavs specific
-        let api_key = std::env::var("WAVS_ENV_OPEN_WEATHER_API_KEY")
-            .or(Err("missing env var `WAVS_ENV_OPEN_WEATHER_API_KEY`".to_string()))?;
+        let api_key = std::env::var(API_KEY_KEY)
+            .or(Err(format!("missing env var `{}`", API_KEY_KEY)))?;
+
+        if api_key.chars().all(|c| c == '0') {
+            return Err(format!("missing env var `{}`, it is set as the default placeholder in .env (all 0s)", API_KEY_KEY));
+        }
 
         let res = block_on(async move {
             let loc: Result<LocDataNested, String> = get_location(api_key.clone(), input).await;
