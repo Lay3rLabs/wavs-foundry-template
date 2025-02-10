@@ -26,10 +26,10 @@ async fn main() -> Result<()> {
     let resp = contract.getData(1).call().await?;
 
     let hex = resp.data;
-    println!("Weather Response Hex: {:?}\n", hex);
+    println!("Response Hex: {:?}\n", hex);
 
     let ascii = to_ascii(hex.to_string().as_str())?;
-    println!("Weather Response ASCII: {:?}", ascii);
+    println!("Response ASCII: {:?}", ascii);
 
     Ok(())
 }

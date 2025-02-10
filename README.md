@@ -64,9 +64,6 @@ docker cp $(docker create --name tc ghcr.io/lay3rlabs/wavs:0.3.0-alpha5-amd64):/
 # copy over the .env file
 cp .env.example .env
 
-# [!] Get your key from: https://openweathermap.org/
-# Update the WAVS_ENV_OPEN_WEATHER_API_KEY in the .env file with your key`
-
 # MacOS Docker:
 # Docker Engine -> Settings -> Resources -> Network -> 'Enable Host Networking'
 # or
@@ -82,11 +79,11 @@ sudo chmod 0666 .docker/cli/deployments.json
 wavs-cli deploy-eigen-service-manager --data ./.docker/cli
 export SERVICE_MANAGER=`jq -r '.eigen_service_managers.local | .[-1]' .docker/cli/deployments.json`
 
-# Deploy
+# Deploy contracts
 export FOUNDRY_ANVIL_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 forge script ./script/Deploy.s.sol ${SERVICE_MANAGER} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
 
-# Grab deployed service manager from script file output
+# Get deployed contracts
 export SERVICE_HANDLER_ADDR=`jq -r '.service_handler' "./.docker/cli/script_deploy.json"`
 echo "Service Handler Addr: $SERVICE_HANDLER_ADDR"
 
@@ -102,7 +99,7 @@ make wasi-build
 
 # TODO: currently broken upstream
 # Verify execution works as expected without deploying
-# wavs-cli exec --component $(pwd)/compiled/eth_trigger_weather.wasm --input Nashville,TN
+# wavs-cli exec --component $(pwd)/compiled/eth_price_oracle.wasm --input `cast format-bytes32-string 1`
 ```
 
 ## Deploy Service and Verify
@@ -111,18 +108,16 @@ make wasi-build
 # Contract trigger function signature to listen for
 trigger_event=$(cast sig-event "NewTrigger(bytes)"); echo "Trigger Event: $trigger_event"
 
-wavs-cli deploy-service --log-level=error --quiet-results=false --data ./.docker/cli --component $(pwd)/compiled/eth_trigger_weather.wasm \
+wavs-cli deploy-service --log-level=error --data ./.docker/cli --component $(pwd)/compiled/eth_price_oracle.wasm \
   --trigger-event-name ${trigger_event:2} \
   --trigger eth-contract-event \
   --trigger-address ${TRIGGER_ADDR} \
   --submit-address ${SERVICE_HANDLER_ADDR} \
-  --service-config '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPEN_WEATHER_API_KEY"],"kv":[],"workflow_id":"default","component_id":"default"}'
-
+  --service-config '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv":[],"workflow_id":"default","component_id":"default"}'
 
 # Submit AVS request -> chain
-cast send ${TRIGGER_ADDR} "addTrigger(bytes)" `cast format-bytes32-string Nashville,TN` --rpc-url http://localhost:8545 --private-key $FOUNDRY_ANVIL_PRIVATE_KEY
+cast send ${TRIGGER_ADDR} "addTrigger(bytes)" `cast format-bytes32-string 1` --rpc-url http://localhost:8545 --private-key $FOUNDRY_ANVIL_PRIVATE_KEY
 
-# Grab data from the contract directly
-hex_bytes=$(cast decode-abi "getData(uint64)(bytes)" `cast call ${SERVICE_HANDLER_ADDR} "getData(uint64)" 1`)
-echo `cast --to-ascii $hex_bytes`
+ID=`cast call ${TRIGGER_ADDR} "nextTriggerId()" --rpc-url http://localhost:8545`; echo "ID: $ID"
+cast --to-ascii $(cast decode-abi "getData(uint64)(bytes)" `cast call ${SERVICE_HANDLER_ADDR} "getData(uint64)" $ID`)
 ```

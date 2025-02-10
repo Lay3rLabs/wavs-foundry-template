@@ -38,12 +38,8 @@ contract SimpleTrigger {
 
         // update storages
         triggersById[triggerId] = trigger;
-
         triggerIdsByCreator[msg.sender].push(triggerId);
 
-        // emit the id directly in an event
-
-        // now be layer-compatible
         ISimpleTrigger.TriggerInfo memory triggerInfo =
             ISimpleTrigger.TriggerInfo({triggerId: triggerId, creator: trigger.creator, data: trigger.data});
 
