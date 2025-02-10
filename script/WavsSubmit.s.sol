@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {WavsSubmit} from "../src/WavsSubmit.sol";
+import {SimpleSubmit} from "../src/WavsSubmit.sol";
 import {SimpleTrigger} from "../src/WavsTrigger.sol";
+import {LayerServiceManager} from "../src/LayerServiceManager.sol";
 
 import "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
@@ -29,35 +30,18 @@ contract WavsSubmitScript is Script {
     function run() public {
         vm.startBroadcast(privateKey);
 
-        EigenContracts memory eigen = loadEigenContractsFromFS();
+        address[] memory service_managers = loadServiceManagersFromFS();
+        LayerServiceManager service_manager = LayerServiceManager(service_managers[service_managers.length - 1]);
 
-        ECDSAStakeRegistry ecdsa_registry = new ECDSAStakeRegistry(IDelegationManager(eigen.delegation_manager));
-
-        console.log("delegation_manager:", eigen.delegation_manager);
-        console.log("rewards_coordinator:", eigen.rewards_coordinator);
-        console.log("avs_directory:", eigen.avs_directory);
-
-        WavsSubmit submit = new WavsSubmit(
-            // eigen.avs_directory, address(ecdsa_registry), eigen.rewards_coordinator, eigen.delegation_manager
-        );
-
+        SimpleSubmit submit = new SimpleSubmit(service_manager);
         SimpleTrigger trigger = new SimpleTrigger();
 
-        IStrategy mockStrategy = IStrategy(address(0x1234));
-        Quorum memory quorum = Quorum({strategies: new StrategyParams[](1)});
-        quorum.strategies[0] = StrategyParams({strategy: mockStrategy, multiplier: 10_000});
-        ecdsa_registry.initialize(address(submit), 0, quorum);
-
         vm.stopBroadcast();
-
-        console.log("ecdsa_registry:", address(ecdsa_registry));
-        console.log("service_handler:", address(submit));
-        console.log("trigger:", address(trigger));
 
         string memory json = "json";
         json.serialize("service_handler", Strings.toHexString(address(submit)));
         json.serialize("trigger", Strings.toHexString(address(trigger)));
-        string memory finalJson = json.serialize("ecdsa_registry", Strings.toHexString(address(ecdsa_registry)));
+        string memory finalJson = json.serialize("service_manager", Strings.toHexString(address(service_manager)));
         vm.writeFile(script_output_path, finalJson);
     }
 
@@ -67,10 +51,15 @@ contract WavsSubmitScript is Script {
         address rc = address(uint160(bytes20(json.readBytes(".eigen_core.local.rewards_coordinator"))));
         address avs = address(uint160(bytes20(json.readBytes(".eigen_core.local.avs_directory"))));
 
-        EigenContracts memory fixture =
-            EigenContracts({delegation_manager: dm, rewards_coordinator: rc, avs_directory: avs});
+        EigenContracts memory fixture = EigenContracts({delegation_manager: dm, rewards_coordinator: rc, avs_directory: avs});
 
         return fixture;
+    }
+
+    function loadServiceManagersFromFS() public view returns (address[] memory) {
+        string memory json = vm.readFile(deployments_path);
+        address[] memory service_managers = json.readAddressArray(".eigen_service_managers.local");
+        return service_managers;
     }
 }
 

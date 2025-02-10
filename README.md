@@ -77,6 +77,11 @@ make start-all
 ### Upload your WAVS Service Manager
 
 ```bash
+# Deploy service-manager
+sudo chmod 0666 .docker/cli/deployments.json
+wavs-cli deploy-eigen-service-manager --data ./.docker/cli
+export SERVICE_MANAGER=`jq -r '.eigen_service_managers.local | .[-1]' .docker/cli/deployments.json`
+
 # Deploy
 export FOUNDRY_ANVIL_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 forge script ./script/WavsSubmit.s.sol --rpc-url http://localhost:8545 --broadcast
@@ -86,18 +91,6 @@ export SERVICE_HANDLER_ADDR=`jq -r '.service_handler' "./.docker/cli/script_depl
 echo "Service Handler Addr: $SERVICE_HANDLER_ADDR"
 
 export TRIGGER_ADDR=`jq -r '.trigger' "./.docker/cli/script_deploy.json"`; echo "Trigger Addr: $TRIGGER_ADDR"
-
-# add read-write access
-sudo chmod 0666 .docker/cli/deployments.json
-
-wavs-cli deploy-eigen-service-manager --data ./.docker/cli --service-handler ${SERVICE_HANDLER_ADDR}
-export SERVICE_MANAGER=0x0e801d84fa97b50751dbf25036d067dcf18858bf
-
-# Set the service manager in the service handler
-# - handleAddPayload can only be called by onlyServiceManager
-# - add-task requires to getServiceManager() from the contract to deploy
-cast send ${SERVICE_HANDLER_ADDR} "setServiceManager(address)" ${SERVICE_MANAGER} --rpc-url http://localhost:8545 --private-key $FOUNDRY_ANVIL_PRIVATE_KEY
-# cast call ${SERVICE_HANDLER_ADDR} "getServiceManager()(address)" --rpc-url http://localhost:8545
 ```
 
 ### Build WASI components
@@ -123,12 +116,13 @@ wavs-cli deploy-service --log-level=error --quiet-results=false --data ./.docker
   --trigger eth-contract-event \
   --trigger-address ${TRIGGER_ADDR} \
   --submit-address ${SERVICE_MANAGER} \
-  --service-config '{"fuelLimit":100000000,"maxGas":5000000,"hostEnvs":["WAVS_ENV_OPEN_WEATHER_API_KEY"],"kv":[],"workflowId":"default","componentId":"default"}'
+  --service-config '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPEN_WEATHER_API_KEY"],"kv":[],"workflow_id":"default","component_id":"default"}'
 
 SERVICE_ID=`jq -r '.services | to_entries[-1].value.id' .docker/cli/deployments.json`; echo "Service ID: $SERVICE_ID"
 
 # Submit AVS request -> chain
-wavs-cli add-task --input "Nashville,TN" --data ./.docker/cli --service-id ${SERVICE_ID}
+# wavs-cli add-task --input "Nashville,TN" --data ./.docker/cli --service-id ${SERVICE_ID}
+cast send ${TRIGGER_ADDR} "addTrigger(bytes)" `cast format-bytes32-string Nashville,TN` --rpc-url http://localhost:8545 --private-key $FOUNDRY_ANVIL_PRIVATE_KEY
 
 # Grab data from the contract directly
 hex_bytes=$(cast decode-abi "getData(uint64)(bytes)" `cast call ${SERVICE_HANDLER_ADDR} "getData(uint64)" 1`)
