@@ -33,4 +33,4 @@ lto = true
 
 [package.metadata.component]
 package = "component:eth-trigger-weather"
-target = "wavs:worker/layer-trigger-world@0.3.0-alpha1"
+target = "wavs:worker/layer-trigger-world@0.3.0-alpha2"

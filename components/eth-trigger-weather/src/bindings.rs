@@ -529,6 +529,28 @@ pub mod wavs {
                         .finish()
                 }
             }
+            #[derive(Clone, Copy)]
+            pub enum LogLevel {
+                Error,
+                Warn,
+                Info,
+                Debug,
+                Trace,
+            }
+            impl ::core::fmt::Debug for LogLevel {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
+                    match self {
+                        LogLevel::Error => f.debug_tuple("LogLevel::Error").finish(),
+                        LogLevel::Warn => f.debug_tuple("LogLevel::Warn").finish(),
+                        LogLevel::Info => f.debug_tuple("LogLevel::Info").finish(),
+                        LogLevel::Debug => f.debug_tuple("LogLevel::Debug").finish(),
+                        LogLevel::Trace => f.debug_tuple("LogLevel::Trace").finish(),
+                    }
+                }
+            }
         }
     }
 }
@@ -540,6 +562,7 @@ pub mod host {
     use super::_rt;
     pub type EthChainConfig = super::wavs::worker::layer_types::EthChainConfig;
     pub type CosmosChainConfig = super::wavs::worker::layer_types::CosmosChainConfig;
+    pub type LogLevel = super::wavs::worker::layer_types::LogLevel;
     #[allow(unused_unsafe, clippy::all)]
     pub fn get_eth_chain_config(chain_name: &str) -> Option<EthChainConfig> {
         unsafe {
@@ -727,6 +750,33 @@ pub mod host {
             }
         }
     }
+    #[allow(unused_unsafe, clippy::all)]
+    pub fn log(level: LogLevel, message: &str) {
+        unsafe {
+            use super::wavs::worker::layer_types::LogLevel as V0;
+            let result1 = match level {
+                V0::Error => 0i32,
+                V0::Warn => 1i32,
+                V0::Info => 2i32,
+                V0::Debug => 3i32,
+                V0::Trace => 4i32,
+            };
+            let vec2 = message;
+            let ptr2 = vec2.as_ptr().cast::<u8>();
+            let len2 = vec2.len();
+            #[cfg(target_arch = "wasm32")]
+            #[link(wasm_import_module = "host")]
+            extern "C" {
+                #[link_name = "log"]
+                fn wit_import(_: i32, _: *mut u8, _: usize);
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            fn wit_import(_: i32, _: *mut u8, _: usize) {
+                unreachable!()
+            }
+            wit_import(result1, ptr2.cast_mut(), len2);
+        }
+    }
 }
 mod _rt {
     pub use alloc_crate::string::String;
@@ -789,11 +839,11 @@ macro_rules! __export_layer_trigger_world_impl {
 #[doc(inline)]
 pub(crate) use __export_layer_trigger_world_impl as export;
 #[cfg(target_arch = "wasm32")]
-#[link_section = "component-type:wit-bindgen:0.35.0:wavs:worker@0.3.0-alpha1:layer-trigger-world:encoded world"]
+#[link_section = "component-type:wit-bindgen:0.35.0:wavs:worker@0.3.0-alpha2:layer-trigger-world:encoded world"]
 #[doc(hidden)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 1472] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xb6\x0a\x01A\x02\x01\
-A\x0c\x01B!\x01r\x02\x0bbech32-addrs\x0aprefix-leny\x04\0\x0ecosmos-address\x03\0\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 1591] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xad\x0b\x01A\x02\x01\
+A\x0d\x01B#\x01r\x02\x0bbech32-addrs\x0aprefix-leny\x04\0\x0ecosmos-address\x03\0\
 \0\x01o\x02ss\x01p\x02\x01r\x02\x02tys\x0aattributes\x03\x04\0\x0ccosmos-event\x03\
 \0\x04\x01ks\x01r\x07\x08chain-ids\x0crpc-endpoint\x06\x0dgrpc-endpoint\x06\x11g\
 rpc-web-endpoint\x06\x09gas-pricev\x09gas-denoms\x0dbech32-prefixs\x04\0\x13cosm\
@@ -811,16 +861,19 @@ ontract-event\x03\0\x19\x01r\x04\x10contract-address\x01\x0achain-names\x05event
 \x05\x0cblock-heightw\x04\0\"trigger-data-cosmos-contract-event\x03\0\x1b\x01q\x03\
 \x12eth-contract-event\x01\x1a\0\x15cosmos-contract-event\x01\x1c\0\x03raw\x01\x09\
 \0\x04\0\x0ctrigger-data\x03\0\x1d\x01r\x02\x06config\x18\x04data\x1e\x04\0\x0et\
-rigger-action\x03\0\x1f\x03\0$wavs:worker/layer-types@0.3.0-alpha1\x05\0\x02\x03\
-\0\0\x0etrigger-action\x03\0\x0etrigger-action\x03\0\x01\x02\x03\0\0\x10eth-chai\
-n-config\x02\x03\0\0\x13cosmos-chain-config\x01B\x0a\x02\x03\x02\x01\x03\x04\0\x10\
-eth-chain-config\x03\0\0\x02\x03\x02\x01\x04\x04\0\x13cosmos-chain-config\x03\0\x02\
-\x01k\x01\x01@\x01\x0achain-names\0\x04\x04\0\x14get-eth-chain-config\x01\x05\x01\
-k\x03\x01@\x01\x0achain-names\0\x06\x04\0\x17get-cosmos-chain-config\x01\x07\x03\
-\0\x04host\x05\x05\x01p}\x01j\x01\x06\x01s\x01@\x01\x0etrigger-action\x02\0\x07\x04\
-\0\x03run\x01\x08\x04\0,wavs:worker/layer-trigger-world@0.3.0-alpha1\x04\0\x0b\x19\
-\x01\0\x13layer-trigger-world\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0d\
-wit-component\x070.220.0\x10wit-bindgen-rust\x060.35.0";
+rigger-action\x03\0\x1f\x01q\x05\x05error\0\0\x04warn\0\0\x04info\0\0\x05debug\0\
+\0\x05trace\0\0\x04\0\x09log-level\x03\0!\x03\0$wavs:worker/layer-types@0.3.0-al\
+pha2\x05\0\x02\x03\0\0\x0etrigger-action\x03\0\x0etrigger-action\x03\0\x01\x02\x03\
+\0\0\x10eth-chain-config\x02\x03\0\0\x13cosmos-chain-config\x02\x03\0\0\x09log-l\
+evel\x01B\x0e\x02\x03\x02\x01\x03\x04\0\x10eth-chain-config\x03\0\0\x02\x03\x02\x01\
+\x04\x04\0\x13cosmos-chain-config\x03\0\x02\x02\x03\x02\x01\x05\x04\0\x09log-lev\
+el\x03\0\x04\x01k\x01\x01@\x01\x0achain-names\0\x06\x04\0\x14get-eth-chain-confi\
+g\x01\x07\x01k\x03\x01@\x01\x0achain-names\0\x08\x04\0\x17get-cosmos-chain-confi\
+g\x01\x09\x01@\x02\x05level\x05\x07messages\x01\0\x04\0\x03log\x01\x0a\x03\0\x04\
+host\x05\x06\x01p}\x01j\x01\x07\x01s\x01@\x01\x0etrigger-action\x02\0\x08\x04\0\x03\
+run\x01\x09\x04\0,wavs:worker/layer-trigger-world@0.3.0-alpha2\x04\0\x0b\x19\x01\
+\0\x13layer-trigger-world\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit\
+-component\x070.220.0\x10wit-bindgen-rust\x060.35.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {
