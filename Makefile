@@ -10,7 +10,7 @@ CARGO=cargo
 bindings: _build_forge
 # Generate new bindings
 	@forge bind --bindings-path ./crates/bindings --crate-name bindings --overwrite \
-		--alloy --alloy-version v0.9.2
+		--alloy --alloy-version v0.11.0
 	@$(CARGO) fmt --manifest-path ./crates/bindings/Cargo.toml
 
 ## build: building the project
