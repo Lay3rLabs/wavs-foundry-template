@@ -24,8 +24,8 @@ forge init --template Lay3rLabs/wavs-foundry-template my-wavs
 ### Solidity
 
 ```bash
-# Initialize the submodule dependencies
-forge install
+# Initialize the dependencies
+forge install && npm install
 
 # Build the contracts
 forge build
@@ -61,8 +61,6 @@ docker cp $(docker create --name tc ghcr.io/lay3rlabs/wavs:0.3.0-alpha5-amd64):/
 ### Start Anvil, WAVS, and Deploy Eigenlayer
 
 ```bash
-npm install
-
 # copy over the .env file
 cp .env.example .env
 
