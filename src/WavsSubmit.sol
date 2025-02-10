@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// import {ILayerServiceHandler} from "./interfaces/ILayerServiceHandler.sol";
-// import {ILayerServiceManager} from "./interfaces/ILayerServiceManager.sol";
 import {ILayerServiceManager} from "@wavs/interfaces/ILayerServiceManager.sol";
 import {ILayerServiceHandler} from "@wavs/interfaces/ILayerServiceHandler.sol";
 
