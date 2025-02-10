@@ -55,7 +55,7 @@ make test
 # (cd lib/WAVS; cargo install --path ./packages/cli)
 # (cd lib/WAVS; just docker-build)
 
-docker cp $(docker create --name tc ghcr.io/lay3rlabs/wavs:local):/usr/local/bin/wavs-cli ~/.cargo/bin/wavs-cli && docker rm tc
+docker cp $(docker create --name tc ghcr.io/lay3rlabs/wavs:0.3.0-alpha5-amd64):/usr/local/bin/wavs-cli ~/.cargo/bin/wavs-cli && docker rm tc
 ```
 
 ### Start Anvil, WAVS, and Deploy Eigenlayer
