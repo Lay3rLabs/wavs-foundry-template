@@ -89,7 +89,7 @@ async fn get_price_feed(id: u64) -> Result<PriceFeedData, String> {
 pub struct PriceFeedData {
     symbol: String,
     timestamp: String,
-    pub price: f64,
+    price: f64,
 }
 
 /// -----
