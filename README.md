@@ -66,10 +66,10 @@ make start-all
 ```bash
 # Required for `forge script`
 sudo chmod 0666 .docker/cli/deployments.json
-alias wavs-cli="docker run --network host --env-file ./.env -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.3.0-alpha5 wavs-cli"
+alias wavs-cli="docker exec -it --env-file ./.env wavs wavs-cli"
 
 # Deploy service-manager
-wavs-cli deploy-eigen-service-manager --data /data/.docker/cli --home /data
+wavs-cli deploy-eigen-service-manager --data .docker/cli
 
 # Deploy contracts
 export SERVICE_MANAGER=`jq -r '.eigen_service_managers.local | .[-1]' .docker/cli/deployments.json`
@@ -99,8 +99,8 @@ make wasi-build
 # Contract trigger function signature to listen for
 trigger_event=$(cast sig-event "NewTrigger(bytes)"); echo "Trigger Event: $trigger_event"
 
-wavs-cli deploy-service --log-level=error --data /data/.docker/cli --home /data \
-    --component /data/compiled/eth_price_oracle.wasm \
+wavs-cli deploy-service --log-level=error --data .docker/cli \
+    --component ./compiled/eth_price_oracle.wasm \
     --trigger-event-name ${trigger_event:2} \
     --trigger eth-contract-event \
     --trigger-address ${TRIGGER_ADDR} \
