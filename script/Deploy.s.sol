@@ -1,22 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {SimpleSubmit} from "../src/WavsSubmit.sol";
-import {SimpleTrigger} from "../src/WavsTrigger.sol";
-import {LayerServiceManager} from "../src/LayerServiceManager.sol";
-
 import "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
-import {IDelegationManager} from "@eigenlayer-contracts/interfaces/IDelegationManager.sol";
-import {IStrategy} from "@eigenlayer-contracts/interfaces/IStrategy.sol";
-import {ECDSAStakeRegistry} from "@eigenlayer-middleware/src/unaudited/ECDSAStakeRegistry.sol";
-import {Quorum, StrategyParams} from "@eigenlayer-middleware/src/interfaces/IECDSAStakeRegistryEventsAndErrors.sol";
 import {Strings} from "@openzeppelin-contracts/utils/Strings.sol";
 
 import {ILayerServiceManager} from "@wavs/interfaces/ILayerServiceManager.sol";
 
-// forge script ./script/WavsSubmit.s.sol --rpc-url http://localhost:8545 --broadcast
-contract WavsSubmitScript is Script {
+import {SimpleSubmit} from "../src/WavsSubmit.sol";
+import {SimpleTrigger} from "../src/WavsTrigger.sol";
+
+// forge script ./script/Deploy.s.sol ${SERVICE_MANAGER} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
+contract DeployScript is Script {
     using stdJson for string;
 
     string root = vm.projectRoot();
@@ -31,9 +26,6 @@ contract WavsSubmitScript is Script {
 
     function run(string calldata serviceManagerAddr) public {
         vm.startBroadcast(privateKey);
-
-        // address[] memory service_managers = loadServiceManagersFromFS();
-        // LayerServiceManager service_manager = LayerServiceManager(service_managers[service_managers.length - 1]);
 
         SimpleSubmit submit = new SimpleSubmit(ILayerServiceManager(vm.parseAddress(serviceManagerAddr)));
         SimpleTrigger trigger = new SimpleTrigger();
@@ -53,7 +45,8 @@ contract WavsSubmitScript is Script {
         address rc = address(uint160(bytes20(json.readBytes(".eigen_core.local.rewards_coordinator"))));
         address avs = address(uint160(bytes20(json.readBytes(".eigen_core.local.avs_directory"))));
 
-        EigenContracts memory fixture = EigenContracts({delegation_manager: dm, rewards_coordinator: rc, avs_directory: avs});
+        EigenContracts memory fixture =
+            EigenContracts({delegation_manager: dm, rewards_coordinator: rc, avs_directory: avs});
 
         return fixture;
     }

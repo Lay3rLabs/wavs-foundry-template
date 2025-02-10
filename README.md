@@ -53,9 +53,9 @@ make test
 ```bash
 # MacOS: if you get permission errors: eval `ssh-agent -s` && ssh-add
 # (cd lib/WAVS; cargo install --path ./packages/cli)
-docker cp $(docker create --name tc ghcr.io/lay3rlabs/wavs:local):/usr/local/bin/wavs-cli ~/.cargo/bin/wavs-cli && docker rm tc
+# (cd lib/WAVS; just docker-build)
 
-(cd lib/WAVS; just docker-build)
+docker cp $(docker create --name tc ghcr.io/lay3rlabs/wavs:local):/usr/local/bin/wavs-cli ~/.cargo/bin/wavs-cli && docker rm tc
 ```
 
 ### Start Anvil, WAVS, and Deploy Eigenlayer
@@ -122,8 +122,6 @@ wavs-cli deploy-service --log-level=error --quiet-results=false --data ./.docker
 
 
 # Submit AVS request -> chain
-# SERVICE_ID=`jq -r '.services | to_entries[-1].value.id' .docker/cli/deployments.json`; echo "Service ID: $SERVICE_ID"
-# wavs-cli add-task --input "Nashville,TN" --data ./.docker/cli --service-id ${SERVICE_ID}
 cast send ${TRIGGER_ADDR} "addTrigger(bytes)" `cast format-bytes32-string Nashville,TN` --rpc-url http://localhost:8545 --private-key $FOUNDRY_ANVIL_PRIVATE_KEY
 
 # Grab data from the contract directly
