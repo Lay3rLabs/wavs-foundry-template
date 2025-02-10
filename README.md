@@ -66,23 +66,19 @@ make start-all
 ```bash
 # Required for `forge script`
 sudo chmod 0666 .docker/cli/deployments.json
-
 alias wavs-cli="docker run --network host --env-file ./.env -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.3.0-alpha5 wavs-cli"
 
 # Deploy service-manager
 wavs-cli deploy-eigen-service-manager --data /data/.docker/cli --home /data
 
-export SERVICE_MANAGER=`jq -r '.eigen_service_managers.local | .[-1]' .docker/cli/deployments.json`
-
 # Deploy contracts
+export SERVICE_MANAGER=`jq -r '.eigen_service_managers.local | .[-1]' .docker/cli/deployments.json`
 export FOUNDRY_ANVIL_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 forge script ./script/Deploy.s.sol ${SERVICE_MANAGER} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
 
 # Get deployed contracts
 export SERVICE_HANDLER_ADDR=`jq -r '.service_handler' "./.docker/cli/script_deploy.json"`
-echo "Service Handler Addr: $SERVICE_HANDLER_ADDR"
-
-export TRIGGER_ADDR=`jq -r '.trigger' "./.docker/cli/script_deploy.json"`; echo "Trigger Addr: $TRIGGER_ADDR"
+export TRIGGER_ADDR=`jq -r '.trigger' "./.docker/cli/script_deploy.json"`
 ```
 
 ### Build WASI components
