@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// https://github.com/Lay3rLabs/WAVS/blob/f1e33d0efd347bea9d99a546cde774d4372a0bf3/sdk/contracts/solidity/interfaces/ILayerService.sol
-interface IWavsService {
+interface ILayerServiceHandler {
     /**
      * @param data The arbitrary data that was signed.
      * @param signature The signature of the data.
