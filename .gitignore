@@ -5,3 +5,4 @@ broadcast/
 compiled/*.wasm
 .docker/cli/*.json
 .env
+node_modules/

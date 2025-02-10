@@ -61,6 +61,8 @@ docker cp $(docker create --name tc ghcr.io/lay3rlabs/wavs:local):/usr/local/bin
 ### Start Anvil, WAVS, and Deploy Eigenlayer
 
 ```bash
+npm install
+
 # copy over the .env file
 cp .env.example .env
 

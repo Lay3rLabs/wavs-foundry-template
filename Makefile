@@ -34,6 +34,9 @@ update-submodules:
 clean: clean-docker
 	@forge clean
 	@$(CARGO) clean
+	@rm -rf cache
+	@rm -rf out
+	@rm -rf broadcast
 
 ## clean-docker: remove unused docker containers
 clean-docker:
