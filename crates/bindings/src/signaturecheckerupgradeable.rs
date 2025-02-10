@@ -22,22 +22,22 @@ pub mod SignatureCheckerUpgradeable {
     /// The creation / init bytecode of the contract.
     ///
     /// ```text
-    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea2646970667358221220d62b881f7b9b3ca4a0709d46018f7b1fbece9005ed093ec1df6960fcc488b9ad64736f6c634300081c0033
+    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea26469706673582212208fca962dab4653aea9ba70e1e1f0ec2b1c94c092185e4f5eb1b976eb82ee20aa64736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 \xD6+\x88\x1F{\x9B<\xA4\xA0p\x9DF\x01\x8F{\x1F\xBE\xCE\x90\x05\xED\t>\xC1\xDFi`\xFC\xC4\x88\xB9\xADdsolcC\0\x08\x1C\x003",
+        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 \x8F\xCA\x96-\xABFS\xAE\xA9\xBAp\xE1\xE1\xF0\xEC+\x1C\x94\xC0\x92\x18^O^\xB1\xB9v\xEB\x82\xEE \xAAdsolcC\0\x08\x1C\x003",
     );
     /// The runtime bytecode of the contract, as deployed on the network.
     ///
     /// ```text
-    ///0x5f80fdfea2646970667358221220d62b881f7b9b3ca4a0709d46018f7b1fbece9005ed093ec1df6960fcc488b9ad64736f6c634300081c0033
+    ///0x5f80fdfea26469706673582212208fca962dab4653aea9ba70e1e1f0ec2b1c94c092185e4f5eb1b976eb82ee20aa64736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static DEPLOYED_BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 \xD6+\x88\x1F{\x9B<\xA4\xA0p\x9DF\x01\x8F{\x1F\xBE\xCE\x90\x05\xED\t>\xC1\xDFi`\xFC\xC4\x88\xB9\xADdsolcC\0\x08\x1C\x003",
+        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 \x8F\xCA\x96-\xABFS\xAE\xA9\xBAp\xE1\xE1\xF0\xEC+\x1C\x94\xC0\x92\x18^O^\xB1\xB9v\xEB\x82\xEE \xAAdsolcC\0\x08\x1C\x003",
     );
     use alloy::contract as alloy_contract;
     /**Creates a new wrapper around an on-chain [`SignatureCheckerUpgradeable`](self) contract instance.

@@ -22,22 +22,22 @@ pub mod StringsUpgradeable {
     /// The creation / init bytecode of the contract.
     ///
     /// ```text
-    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea264697066735822122069b0b36119c6508696f8873a38d1697f3acfedea891e6a80426ff3024a80434964736f6c634300081c0033
+    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea2646970667358221220b072bd866d08360aa5b20528c4b417da26f4fa50f7c6f192f90fc77fc190a34f64736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 i\xB0\xB3a\x19\xC6P\x86\x96\xF8\x87:8\xD1i\x7F:\xCF\xED\xEA\x89\x1Ej\x80Bo\xF3\x02J\x80CIdsolcC\0\x08\x1C\x003",
+        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 \xB0r\xBD\x86m\x086\n\xA5\xB2\x05(\xC4\xB4\x17\xDA&\xF4\xFAP\xF7\xC6\xF1\x92\xF9\x0F\xC7\x7F\xC1\x90\xA3OdsolcC\0\x08\x1C\x003",
     );
     /// The runtime bytecode of the contract, as deployed on the network.
     ///
     /// ```text
-    ///0x5f80fdfea264697066735822122069b0b36119c6508696f8873a38d1697f3acfedea891e6a80426ff3024a80434964736f6c634300081c0033
+    ///0x5f80fdfea2646970667358221220b072bd866d08360aa5b20528c4b417da26f4fa50f7c6f192f90fc77fc190a34f64736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static DEPLOYED_BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 i\xB0\xB3a\x19\xC6P\x86\x96\xF8\x87:8\xD1i\x7F:\xCF\xED\xEA\x89\x1Ej\x80Bo\xF3\x02J\x80CIdsolcC\0\x08\x1C\x003",
+        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 \xB0r\xBD\x86m\x086\n\xA5\xB2\x05(\xC4\xB4\x17\xDA&\xF4\xFAP\xF7\xC6\xF1\x92\xF9\x0F\xC7\x7F\xC1\x90\xA3OdsolcC\0\x08\x1C\x003",
     );
     use alloy::contract as alloy_contract;
     /**Creates a new wrapper around an on-chain [`StringsUpgradeable`](self) contract instance.

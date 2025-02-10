@@ -22,22 +22,22 @@ pub mod CheckpointsUpgradeable {
     /// The creation / init bytecode of the contract.
     ///
     /// ```text
-    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea2646970667358221220581ee11bcb79bbd879067fe281465f3e3f592729d467110ca1aff5dad8d7b5c064736f6c634300081c0033
+    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea2646970667358221220c2b4e6693d191b6aebc25e9e6a9e92ea18a6afbda1a4af9e5490cd4fa452e0ac64736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 X\x1E\xE1\x1B\xCBy\xBB\xD8y\x06\x7F\xE2\x81F_>?Y')\xD4g\x11\x0C\xA1\xAF\xF5\xDA\xD8\xD7\xB5\xC0dsolcC\0\x08\x1C\x003",
+        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 \xC2\xB4\xE6i=\x19\x1Bj\xEB\xC2^\x9Ej\x9E\x92\xEA\x18\xA6\xAF\xBD\xA1\xA4\xAF\x9ET\x90\xCDO\xA4R\xE0\xACdsolcC\0\x08\x1C\x003",
     );
     /// The runtime bytecode of the contract, as deployed on the network.
     ///
     /// ```text
-    ///0x5f80fdfea2646970667358221220581ee11bcb79bbd879067fe281465f3e3f592729d467110ca1aff5dad8d7b5c064736f6c634300081c0033
+    ///0x5f80fdfea2646970667358221220c2b4e6693d191b6aebc25e9e6a9e92ea18a6afbda1a4af9e5490cd4fa452e0ac64736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static DEPLOYED_BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 X\x1E\xE1\x1B\xCBy\xBB\xD8y\x06\x7F\xE2\x81F_>?Y')\xD4g\x11\x0C\xA1\xAF\xF5\xDA\xD8\xD7\xB5\xC0dsolcC\0\x08\x1C\x003",
+        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 \xC2\xB4\xE6i=\x19\x1Bj\xEB\xC2^\x9Ej\x9E\x92\xEA\x18\xA6\xAF\xBD\xA1\xA4\xAF\x9ET\x90\xCDO\xA4R\xE0\xACdsolcC\0\x08\x1C\x003",
     );
     use alloy::contract as alloy_contract;
     /**Creates a new wrapper around an on-chain [`CheckpointsUpgradeable`](self) contract instance.
