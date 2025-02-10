@@ -22,22 +22,22 @@ pub mod MathUpgradeable {
     /// The creation / init bytecode of the contract.
     ///
     /// ```text
-    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea264697066735822122095bcd4b723b466ce8d2d0c8932aac60f5d3b9900890b216e5493cb785be5dd6364736f6c634300081c0033
+    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea2646970667358221220e8e3f727bc0661194aef2e67f868f81f0bed30ea3c32082d4d244ba30368935664736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 \x95\xBC\xD4\xB7#\xB4f\xCE\x8D-\x0C\x892\xAA\xC6\x0F];\x99\0\x89\x0B!nT\x93\xCBx[\xE5\xDDcdsolcC\0\x08\x1C\x003",
+        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 \xE8\xE3\xF7'\xBC\x06a\x19J\xEF.g\xF8h\xF8\x1F\x0B\xED0\xEA<2\x08-M$K\xA3\x03h\x93VdsolcC\0\x08\x1C\x003",
     );
     /// The runtime bytecode of the contract, as deployed on the network.
     ///
     /// ```text
-    ///0x5f80fdfea264697066735822122095bcd4b723b466ce8d2d0c8932aac60f5d3b9900890b216e5493cb785be5dd6364736f6c634300081c0033
+    ///0x5f80fdfea2646970667358221220e8e3f727bc0661194aef2e67f868f81f0bed30ea3c32082d4d244ba30368935664736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static DEPLOYED_BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 \x95\xBC\xD4\xB7#\xB4f\xCE\x8D-\x0C\x892\xAA\xC6\x0F];\x99\0\x89\x0B!nT\x93\xCBx[\xE5\xDDcdsolcC\0\x08\x1C\x003",
+        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 \xE8\xE3\xF7'\xBC\x06a\x19J\xEF.g\xF8h\xF8\x1F\x0B\xED0\xEA<2\x08-M$K\xA3\x03h\x93VdsolcC\0\x08\x1C\x003",
     );
     use alloy::contract as alloy_contract;
     /**Creates a new wrapper around an on-chain [`MathUpgradeable`](self) contract instance.

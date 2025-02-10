@@ -22,22 +22,22 @@ pub mod ECDSAUpgradeable {
     /// The creation / init bytecode of the contract.
     ///
     /// ```text
-    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea26469706673582212204c410ed829a7243ff10887e6a1ebcf797a08d1eea9bd4462bfed820a0d1a73b864736f6c634300081c0033
+    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea2646970667358221220ba72e85e45ebfdb397565dc2b404a64955e434299ad26cd4e1fe66d422e00e8e64736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 LA\x0E\xD8)\xA7$?\xF1\x08\x87\xE6\xA1\xEB\xCFyz\x08\xD1\xEE\xA9\xBDDb\xBF\xED\x82\n\r\x1As\xB8dsolcC\0\x08\x1C\x003",
+        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 \xBAr\xE8^E\xEB\xFD\xB3\x97V]\xC2\xB4\x04\xA6IU\xE44)\x9A\xD2l\xD4\xE1\xFEf\xD4\"\xE0\x0E\x8EdsolcC\0\x08\x1C\x003",
     );
     /// The runtime bytecode of the contract, as deployed on the network.
     ///
     /// ```text
-    ///0x5f80fdfea26469706673582212204c410ed829a7243ff10887e6a1ebcf797a08d1eea9bd4462bfed820a0d1a73b864736f6c634300081c0033
+    ///0x5f80fdfea2646970667358221220ba72e85e45ebfdb397565dc2b404a64955e434299ad26cd4e1fe66d422e00e8e64736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static DEPLOYED_BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 LA\x0E\xD8)\xA7$?\xF1\x08\x87\xE6\xA1\xEB\xCFyz\x08\xD1\xEE\xA9\xBDDb\xBF\xED\x82\n\r\x1As\xB8dsolcC\0\x08\x1C\x003",
+        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 \xBAr\xE8^E\xEB\xFD\xB3\x97V]\xC2\xB4\x04\xA6IU\xE44)\x9A\xD2l\xD4\xE1\xFEf\xD4\"\xE0\x0E\x8EdsolcC\0\x08\x1C\x003",
     );
     use alloy::contract as alloy_contract;
     /**Creates a new wrapper around an on-chain [`ECDSAUpgradeable`](self) contract instance.

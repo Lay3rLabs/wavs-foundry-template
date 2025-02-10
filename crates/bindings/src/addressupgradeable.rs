@@ -22,22 +22,22 @@ pub mod AddressUpgradeable {
     /// The creation / init bytecode of the contract.
     ///
     /// ```text
-    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea26469706673582212206cb4a8d96bd925e504843b69ec50435eb9d4d11feac21ee1ad2aa3b78ba9fccc64736f6c634300081c0033
+    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea264697066735822122038e3649928c93deaeb1cf97865b82b084670535124d3d0c4a9fd169f17fb6c5864736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 l\xB4\xA8\xD9k\xD9%\xE5\x04\x84;i\xECPC^\xB9\xD4\xD1\x1F\xEA\xC2\x1E\xE1\xAD*\xA3\xB7\x8B\xA9\xFC\xCCdsolcC\0\x08\x1C\x003",
+        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 8\xE3d\x99(\xC9=\xEA\xEB\x1C\xF9xe\xB8+\x08FpSQ$\xD3\xD0\xC4\xA9\xFD\x16\x9F\x17\xFBlXdsolcC\0\x08\x1C\x003",
     );
     /// The runtime bytecode of the contract, as deployed on the network.
     ///
     /// ```text
-    ///0x5f80fdfea26469706673582212206cb4a8d96bd925e504843b69ec50435eb9d4d11feac21ee1ad2aa3b78ba9fccc64736f6c634300081c0033
+    ///0x5f80fdfea264697066735822122038e3649928c93deaeb1cf97865b82b084670535124d3d0c4a9fd169f17fb6c5864736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static DEPLOYED_BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 l\xB4\xA8\xD9k\xD9%\xE5\x04\x84;i\xECPC^\xB9\xD4\xD1\x1F\xEA\xC2\x1E\xE1\xAD*\xA3\xB7\x8B\xA9\xFC\xCCdsolcC\0\x08\x1C\x003",
+        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 8\xE3d\x99(\xC9=\xEA\xEB\x1C\xF9xe\xB8+\x08FpSQ$\xD3\xD0\xC4\xA9\xFD\x16\x9F\x17\xFBlXdsolcC\0\x08\x1C\x003",
     );
     use alloy::contract as alloy_contract;
     /**Creates a new wrapper around an on-chain [`AddressUpgradeable`](self) contract instance.

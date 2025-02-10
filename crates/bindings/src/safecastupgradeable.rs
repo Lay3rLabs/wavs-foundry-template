@@ -22,22 +22,22 @@ pub mod SafeCastUpgradeable {
     /// The creation / init bytecode of the contract.
     ///
     /// ```text
-    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea2646970667358221220ecba14a4ec9414ff971dc5c06cfba3ff76b9347acd5e50e871367760799f2dc964736f6c634300081c0033
+    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea2646970667358221220ada39193bbc984e6fda1623303bd9d53790a16751c9b34fca21267530897af6464736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 \xEC\xBA\x14\xA4\xEC\x94\x14\xFF\x97\x1D\xC5\xC0l\xFB\xA3\xFFv\xB94z\xCD^P\xE8q6w`y\x9F-\xC9dsolcC\0\x08\x1C\x003",
+        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 \xAD\xA3\x91\x93\xBB\xC9\x84\xE6\xFD\xA1b3\x03\xBD\x9DSy\n\x16u\x1C\x9B4\xFC\xA2\x12gS\x08\x97\xAFddsolcC\0\x08\x1C\x003",
     );
     /// The runtime bytecode of the contract, as deployed on the network.
     ///
     /// ```text
-    ///0x5f80fdfea2646970667358221220ecba14a4ec9414ff971dc5c06cfba3ff76b9347acd5e50e871367760799f2dc964736f6c634300081c0033
+    ///0x5f80fdfea2646970667358221220ada39193bbc984e6fda1623303bd9d53790a16751c9b34fca21267530897af6464736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static DEPLOYED_BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 \xEC\xBA\x14\xA4\xEC\x94\x14\xFF\x97\x1D\xC5\xC0l\xFB\xA3\xFFv\xB94z\xCD^P\xE8q6w`y\x9F-\xC9dsolcC\0\x08\x1C\x003",
+        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 \xAD\xA3\x91\x93\xBB\xC9\x84\xE6\xFD\xA1b3\x03\xBD\x9DSy\n\x16u\x1C\x9B4\xFC\xA2\x12gS\x08\x97\xAFddsolcC\0\x08\x1C\x003",
     );
     use alloy::contract as alloy_contract;
     /**Creates a new wrapper around an on-chain [`SafeCastUpgradeable`](self) contract instance.

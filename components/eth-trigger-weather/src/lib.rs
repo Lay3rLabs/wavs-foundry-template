@@ -13,41 +13,46 @@ struct Component;
 
 impl Guest for Component {
     fn run(trigger_action: TriggerAction) -> std::result::Result<Vec<u8>, String> {
-        let (trigger_id, req) =
-            decode_trigger_event(trigger_action.data).map_err(|e| e.to_string())?;
+        // let (trigger_id, req) =
+        //     decode_trigger_event(trigger_action.data).map_err(|e| e.to_string())?;
 
-        if !req.contains(&b',') {
-            return Err("Input must be in the format of City,State".to_string());
-        }
-        let input = std::str::from_utf8(&req).unwrap(); // TODO:
+        // if !req.contains(&b',') {
+            // return Err("Input must be in the format of City,State".to_string());
+        // }
+        // let input = std::str::from_utf8(&req).unwrap();
 
-        // open weather API, not wavs specific
-        let api_key = std::env::var("WAVS_ENV_OPEN_WEATHER_API_KEY")
-            .or(Err("missing env var `WAVS_ENV_OPEN_WEATHER_API_KEY`".to_string()))?;
+        // // open weather API, not wavs specific
+        // let api_key = std::env::var("WAVS_ENV_OPEN_WEATHER_API_KEY")
+        //     .or(Err("missing env var `WAVS_ENV_OPEN_WEATHER_API_KEY`".to_string()))?;
 
-        let res = block_on(async move {
-            let loc: Result<LocDataNested, String> = get_location(api_key.clone(), input).await;
+        let test = "just a test";
+        let test_to_bytes = test.as_bytes();
 
-            let location = match loc {
-                Ok(data) => data,
-                Err(e) => return Err(e),
-            };
+        Ok(encode_trigger_output(1, test_to_bytes))
 
-            let weather_data = get_weather(location, api_key).await;
+        // let res = block_on(async move {
+        //     let loc: Result<LocDataNested, String> = get_location(api_key.clone(), input).await;
 
-            match weather_data {
-                Ok(data) => {
-                    let output: Vec<u8> = data.into();
-                    Ok(output)
-                }
-                Err(e) => Err(e),
-            }
-        });
+        //     let location = match loc {
+        //         Ok(data) => data,
+        //         Err(e) => return Err(e),
+        //     };
 
-        match res {
-            Ok(data) => Ok(encode_trigger_output(trigger_id, &data)),
-            Err(e) => Err(e),
-        }
+        //     let weather_data = get_weather(location, api_key).await;
+
+        //     match weather_data {
+        //         Ok(data) => {
+        //             let output: Vec<u8> = data.into();
+        //             Ok(output)
+        //         }
+        //         Err(e) => Err(e),
+        //     }
+        // });
+
+        // match res {
+        //     Ok(data) => Ok(encode_trigger_output(trigger_id, &data)),
+        //     Err(e) => Err(e),
+        // }
     }
 }
 
