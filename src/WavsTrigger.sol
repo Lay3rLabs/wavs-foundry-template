@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import {ISimpleTrigger} from "./interfaces/ISimpleTrigger.sol";
@@ -33,7 +34,10 @@ contract SimpleTrigger {
         ISimpleTrigger.TriggerId triggerId = nextTriggerId;
 
         // Create the trigger
-        Trigger memory trigger = Trigger({creator: msg.sender, data: data});
+        Trigger memory trigger = Trigger({
+            creator: msg.sender,
+            data: data
+        });
 
         // update storages
         triggersById[triggerId] = trigger;
@@ -43,8 +47,11 @@ contract SimpleTrigger {
         // emit the id directly in an event
 
         // now be layer-compatible
-        ISimpleTrigger.TriggerInfo memory triggerInfo =
-            ISimpleTrigger.TriggerInfo({triggerId: triggerId, creator: trigger.creator, data: trigger.data});
+        ISimpleTrigger.TriggerInfo memory triggerInfo = ISimpleTrigger.TriggerInfo({
+            triggerId: triggerId,
+            creator: trigger.creator,
+            data: trigger.data
+        });
 
         emit NewTrigger(abi.encode(triggerInfo));
     }
@@ -56,6 +63,11 @@ contract SimpleTrigger {
     function getTrigger(ISimpleTrigger.TriggerId triggerId) public view returns (ISimpleTrigger.TriggerInfo memory) {
         Trigger storage trigger = triggersById[triggerId];
 
-        return ISimpleTrigger.TriggerInfo({triggerId: triggerId, creator: trigger.creator, data: trigger.data});
+        return ISimpleTrigger.TriggerInfo({
+            triggerId: triggerId,
+            creator: trigger.creator,
+            data: trigger.data
+        });
     }
+
 }
