@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@openzeppelin/contracts": "^5.2.0",
-    "@wavs/solidity": "^0.3.0-alpha2"
+    "@wavs/solidity": "^0.3.0-alpha2",
+    "forge-std": "github:foundry-rs/forge-std#v1.9.6"
   }
 }
