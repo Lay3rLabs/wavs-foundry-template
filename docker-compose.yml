@@ -61,3 +61,17 @@ services:
       - "./:/wavs"
       - "./.docker/cli:/root/wavs/cli/"
     network_mode: "host"
+
+  deploy-eigenlayer-service-manager:
+    image: "ghcr.io/lay3rlabs/wavs:0.3.0-alpha5"
+    container_name: "wavs-deploy-service-manager"
+    depends_on:
+      deploy-eigenlayer:
+        condition: service_completed_successfully
+    restart: "no"
+    env_file: "./.env"
+    command: ["wavs-cli", "deploy-eigen-service-manager"]
+    volumes:
+      - "./:/wavs"
+      - "./.docker/cli:/root/wavs/cli/"
+    network_mode: "host"
