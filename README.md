@@ -90,7 +90,7 @@ make wasi-build
 # wavs-cli exec --component $(pwd)/compiled/eth_price_oracle.wasm --input `cast format-bytes32-string 1`
 ```
 
-## Deploy Service and Verify
+## Deploy Service
 
 ```bash
 # Contract trigger function signature to listen for
@@ -103,10 +103,15 @@ wavs-cli deploy-service --log-level=error --data /data/.docker/cli --home /data 
     --trigger-address ${TRIGGER_ADDR} \
     --submit-address ${SERVICE_HANDLER_ADDR} \
     --service-config '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv":[],"workflow_id":"default","component_id":"default"}'
+```
 
-# Submit AVS request -> chain
+## Submit Request and Verify
+
+```bash
+# Submit request -> chain
 cast send ${TRIGGER_ADDR} "addTrigger(bytes)" `cast format-bytes32-string 1` --rpc-url http://localhost:8545 --private-key $FOUNDRY_ANVIL_PRIVATE_KEY
 
+# Verify
 ID=`cast call ${TRIGGER_ADDR} "nextTriggerId()" --rpc-url http://localhost:8545`; echo "ID: $ID"
 cast --to-ascii $(cast decode-abi "getData(uint64)(bytes)" `cast call ${SERVICE_HANDLER_ADDR} "getData(uint64)" $ID`)
 ```
