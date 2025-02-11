@@ -30,21 +30,23 @@ make setup
 # Build the contracts
 forge build
 
-# Run the solidity tests. alias: `make test`
+# Run the solidity tests.
 forge test
 ```
 
-> You can also use `make build` to build the contracts, bindings, and components.
+### Build WASI components
 
-## Rust
+> Install `cargo binstall cargo-component` if you have not already. -- https://github.com/bytecodealliance/cargo-component#installation
 
 ```bash
-# Generate new bindings from your contract(s) alias: `make build`
-make bindings
+make wasi-build
 
-# Run rust tests
-make test
+# TODO: currently broken upstream
+# Verify execution works as expected without deploying
+# wavs-cli exec --component $(pwd)/compiled/eth_price_oracle.wasm --input `cast format-bytes32-string 1`
 ```
+
+> You can also use `make build` to build the contracts and components in one command
 
 ## WAVS
 
@@ -75,17 +77,6 @@ export SERVICE_HANDLER_ADDR=`make get-service-handler-from-deploy`
 export TRIGGER_ADDR=`make get-trigger-from-deploy`
 ```
 
-### Build WASI components
-
-> Install `cargo binstall cargo-component` if you have not already. -- https://github.com/bytecodealliance/cargo-component#installation
-
-```bash
-make wasi-build
-
-# TODO: currently broken upstream
-# Verify execution works as expected without deploying
-# wavs-cli exec --component $(pwd)/compiled/eth_price_oracle.wasm --input `cast format-bytes32-string 1`
-```
 
 ## Deploy Service
 
