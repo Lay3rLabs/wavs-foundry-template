@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.22;
 
-interface ISimpleTrigger {
+interface ITypes {
+    struct DataWithId {
+        TriggerId triggerId;
+        bytes data;
+    }
+
     struct TriggerInfo {
         TriggerId triggerId;
         address creator;
         bytes data;
     }
 
-    type TriggerId is uint64;
+    event NewTrigger(bytes);
 
-    function getTrigger(TriggerId triggerId) external view returns (TriggerInfo memory);
+    type TriggerId is uint64;
 }
