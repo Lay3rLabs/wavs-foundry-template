@@ -7,16 +7,8 @@ default: build
 CARGO=cargo
 WAVS_CMD ?= docker run --network host --env-file ./.env -v $(shell pwd):/data ghcr.io/lay3rlabs/wavs:0.3.0-alpha5 wavs-cli
 
-## bindings: generating bindings
-bindings: _build_forge
-# Generate new bindings
-	@forge bind --bindings-path ./crates/bindings --crate-name bindings --overwrite \
-		--alloy --alloy-version v0.11.0
-	@$(CARGO) fmt --manifest-path ./crates/bindings/Cargo.toml
-
 ## build: building the project
-build: _build_forge bindings wasi-build
-	@$(CARGO) build --target-dir ./target --manifest-path ./app/Cargo.toml
+build: _build_forge wasi-build
 
 ## wasi-build: building the WAVS wasi component(s)
 wasi-build:
@@ -48,10 +40,9 @@ fmt:
 	@forge fmt --check
 	@$(CARGO) fmt
 
-## test: running forge and rust tests
+## test: running tests
 test:
 	@forge test
-	@$(CARGO) test --manifest-path ./app/Cargo.toml
 
 ## setup: install initial dependencies
 setup:
