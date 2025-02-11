@@ -52,9 +52,10 @@ test:
 	@forge test
 	@$(CARGO) test --manifest-path ./app/Cargo.toml
 
-## setup: installing forge dependencies
+## setup: install initial dependencies
 setup:
 	@forge install
+	@npm install
 
 ## start-all: starting anvil and WAVS with docker compose
 start-all: clean-docker
@@ -64,6 +65,21 @@ start-all: clean-docker
 	@anvil &
 	@docker compose up
 	@wait
+
+## deploy-contracts: deploying contracts with forge script | ANVIL_PRIVATE_KEY, RPC_URL, SERVICE_MANAGER
+ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+RPC_URL?=http://localhost:8545
+SERVICE_MANAGER?=`jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json`
+deploy-contracts:
+	@forge script ./script/Deploy.s.sol ${SERVICE_MANAGER} --sig "run(string)" --rpc-url $(RPC_URL) --broadcast
+
+## get-service-handler: getting the service handler address from the script deploy
+get-service-handler-from-deploy:
+	@jq -r '.service_handler' "./.docker/script_deploy.json"
+
+## get-trigger: getting the trigger address from the script deploy
+get-trigger-from-deploy:
+	@jq -r '.trigger' "./.docker/script_deploy.json"
 
 _build_forge:
 	@forge build

@@ -24,8 +24,8 @@ forge init --template Lay3rLabs/wavs-foundry-template my-wavs
 ### Solidity
 
 ```bash
-# Initialize the dependencies
-forge install && npm install
+# Install initial dependencies
+make setup
 
 # Build the contracts
 forge build
@@ -64,18 +64,16 @@ make start-all
 ### Upload your WAVS Service Manager
 
 ```bash
-# Required for `forge script`
+# Required for `deploy-contracts` (forge script)
 sudo chmod 0666 .docker/deployments.json
 alias wavs-cli="docker run --network host --env-file ./.env -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.3.0-alpha5 wavs-cli"
 
-# Deploy contracts
-export SERVICE_MANAGER=`jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json`
-export ANVIL_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-forge script ./script/Deploy.s.sol ${SERVICE_MANAGER} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
+# Deploy submission and trigger contract's from a forge script
+make deploy-contracts
 
 # Get deployed contracts
-export SERVICE_HANDLER_ADDR=`jq -r '.service_handler' "./.docker/script_deploy.json"`
-export TRIGGER_ADDR=`jq -r '.trigger' "./.docker/script_deploy.json"`
+export SERVICE_HANDLER_ADDR=`make get-service-handler-from-deploy`
+export TRIGGER_ADDR=`make get-trigger-from-deploy`
 ```
 
 ### Build WASI components
