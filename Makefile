@@ -5,6 +5,7 @@ default: build
 
 # Define variables
 CARGO=cargo
+WAVS_CMD ?= docker run --network host --env-file ./.env -v $(shell pwd):/data ghcr.io/lay3rlabs/wavs:0.3.0-alpha5 wavs-cli
 
 ## bindings: generating bindings
 bindings: _build_forge
@@ -71,6 +72,7 @@ ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f
 RPC_URL?=http://localhost:8545
 SERVICE_MANAGER?=`jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json`
 deploy-contracts:
+# `sudo chmod 0666 .docker/deployments.json`
 	@forge script ./script/Deploy.s.sol ${SERVICE_MANAGER} --sig "run(string)" --rpc-url $(RPC_URL) --broadcast
 
 ## get-service-handler: getting the service handler address from the script deploy
@@ -80,6 +82,19 @@ get-service-handler-from-deploy:
 ## get-trigger: getting the trigger address from the script deploy
 get-trigger-from-deploy:
 	@jq -r '.trigger' "./.docker/script_deploy.json"
+
+wavs-cli:
+	@$(WAVS_CMD) $(filter-out $@,$(MAKECMDGOALS))
+
+## deploy-service: deploying the service | WAVS_CLI_DATA, WAVS_CLI_HOME, WAVS_CLI_COMPONENT, TRIGGER_EVENT, TRIGGER_ADDR, SERVICE_HANDLER_ADDR, WAVS_SERVICE_CONFIG
+deploy-service:
+	@$(WAVS_CMD) deploy-service --log-level=info --data $(WAVS_CLI_DATA) --home $(WAVS_CLI_HOME) \
+--component $(WAVS_CLI_COMPONENT) \
+--trigger-event-name $(TRIGGER_EVENT) \
+--trigger eth-contract-event \
+--trigger-address $(TRIGGER_ADDR) \
+--submit-address $(SERVICE_HANDLER_ADDR) \
+--service-config='$(WAVS_SERVICE_CONFIG)'
 
 _build_forge:
 	@forge build
