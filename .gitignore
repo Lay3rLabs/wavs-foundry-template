@@ -3,6 +3,6 @@ out/
 cache/
 broadcast/
 compiled/*.wasm
-.docker/cli/*.json
+.docker/*.json
 .env
 node_modules/

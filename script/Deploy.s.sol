@@ -15,11 +15,11 @@ contract DeployScript is Script {
     using stdJson for string;
 
     string root = vm.projectRoot();
-    string deployments_path = string.concat(root, "/.docker/cli/deployments.json");
-    string script_output_path = string.concat(root, "/.docker/cli/script_deploy.json");
+    string deployments_path = string.concat(root, "/.docker/deployments.json");
+    string script_output_path = string.concat(root, "/.docker/script_deploy.json");
 
     uint256 privateKey = vm.envOr(
-        "FOUNDRY_ANVIL_PRIVATE_KEY", uint256(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80)
+        "ANVIL_PRIVATE_KEY", uint256(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80)
     );
 
     function setUp() public {}

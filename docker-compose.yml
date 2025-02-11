@@ -35,7 +35,7 @@ services:
     command: ["wavs"]
     volumes:
       - "./:/wavs"
-      - "./.docker/cli:/root/wavs/cli/"
+      - "./.docker:/root/wavs/cli/"
 
   aggregator:
     image: "ghcr.io/lay3rlabs/wavs:0.3.0-alpha5"
@@ -59,7 +59,7 @@ services:
     command: ["wavs-cli", "deploy-eigen-core"]
     volumes:
       - "./:/wavs"
-      - "./.docker/cli:/root/wavs/cli/"
+      - "./.docker:/root/wavs/cli/"
     network_mode: "host"
 
   deploy-eigenlayer-service-manager:
@@ -73,5 +73,5 @@ services:
     command: ["wavs-cli", "deploy-eigen-service-manager"]
     volumes:
       - "./:/wavs"
-      - "./.docker/cli:/root/wavs/cli/"
+      - "./.docker:/root/wavs/cli/"
     network_mode: "host"

@@ -58,7 +58,7 @@ setup:
 
 ## start-all: starting anvil and WAVS with docker compose
 start-all: clean-docker
-	@rm .docker/cli/*.json || true
+	@rm .docker/*.json || true
 	@trap 'kill $(jobs -pr)' EXIT
 # running anvil out of compose is a temp work around for MacOS
 	@anvil &
