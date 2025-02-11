@@ -96,12 +96,9 @@ make wasi-build
 ## Deploy Service and Verify
 
 ```bash
-# Contract trigger function signature to listen for
-trigger_event=$(cast sig-event "NewTrigger(bytes)"); echo "Trigger Event: $trigger_event"
-
 wavs-cli deploy-service --log-level=error --data /data/.docker/cli --home /data \
     --component /data/compiled/eth_price_oracle.wasm \
-    --trigger-event-name ${trigger_event:2} \
+    --trigger-event-name "event NewTrigger(bytes)" \
     --trigger eth-contract-event \
     --trigger-address ${TRIGGER_ADDR} \
     --submit-address ${SERVICE_HANDLER_ADDR} \

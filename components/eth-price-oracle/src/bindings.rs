@@ -2,7 +2,8 @@ pub type TriggerAction = wavs::worker::layer_types::TriggerAction;
 #[doc(hidden)]
 #[allow(non_snake_case)]
 pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
-    #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
+    #[cfg(target_arch = "wasm32")]
+    _rt::run_ctors_once();
     let l0 = *arg0.add(0).cast::<*mut u8>();
     let l1 = *arg0.add(4).cast::<usize>();
     let len2 = l1;
@@ -252,7 +253,8 @@ pub mod wavs {
         pub mod layer_types {
             #[used]
             #[doc(hidden)]
-            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
+            static __FORCE_SECTION_REF: fn() =
+                super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
             #[derive(Clone)]
             pub struct CosmosAddress {
@@ -261,10 +263,7 @@ pub mod wavs {
                 pub prefix_len: u32,
             }
             impl ::core::fmt::Debug for CosmosAddress {
-                fn fmt(
-                    &self,
-                    f: &mut ::core::fmt::Formatter<'_>,
-                ) -> ::core::fmt::Result {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     f.debug_struct("CosmosAddress")
                         .field("bech32-addr", &self.bech32_addr)
                         .field("prefix-len", &self.prefix_len)
@@ -277,10 +276,7 @@ pub mod wavs {
                 pub attributes: _rt::Vec<(_rt::String, _rt::String)>,
             }
             impl ::core::fmt::Debug for CosmosEvent {
-                fn fmt(
-                    &self,
-                    f: &mut ::core::fmt::Formatter<'_>,
-                ) -> ::core::fmt::Result {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     f.debug_struct("CosmosEvent")
                         .field("ty", &self.ty)
                         .field("attributes", &self.attributes)
@@ -298,10 +294,7 @@ pub mod wavs {
                 pub bech32_prefix: _rt::String,
             }
             impl ::core::fmt::Debug for CosmosChainConfig {
-                fn fmt(
-                    &self,
-                    f: &mut ::core::fmt::Formatter<'_>,
-                ) -> ::core::fmt::Result {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     f.debug_struct("CosmosChainConfig")
                         .field("chain-id", &self.chain_id)
                         .field("rpc-endpoint", &self.rpc_endpoint)
@@ -318,13 +311,8 @@ pub mod wavs {
                 pub raw_bytes: _rt::Vec<u8>,
             }
             impl ::core::fmt::Debug for EthAddress {
-                fn fmt(
-                    &self,
-                    f: &mut ::core::fmt::Formatter<'_>,
-                ) -> ::core::fmt::Result {
-                    f.debug_struct("EthAddress")
-                        .field("raw-bytes", &self.raw_bytes)
-                        .finish()
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    f.debug_struct("EthAddress").field("raw-bytes", &self.raw_bytes).finish()
                 }
             }
             #[derive(Clone)]
@@ -335,10 +323,7 @@ pub mod wavs {
                 pub data: _rt::Vec<u8>,
             }
             impl ::core::fmt::Debug for EthEventLogData {
-                fn fmt(
-                    &self,
-                    f: &mut ::core::fmt::Formatter<'_>,
-                ) -> ::core::fmt::Result {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     f.debug_struct("EthEventLogData")
                         .field("topics", &self.topics)
                         .field("data", &self.data)
@@ -352,10 +337,7 @@ pub mod wavs {
                 pub http_endpoint: Option<_rt::String>,
             }
             impl ::core::fmt::Debug for EthChainConfig {
-                fn fmt(
-                    &self,
-                    f: &mut ::core::fmt::Formatter<'_>,
-                ) -> ::core::fmt::Result {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     f.debug_struct("EthChainConfig")
                         .field("chain-id", &self.chain_id)
                         .field("ws-endpoint", &self.ws_endpoint)
@@ -370,10 +352,7 @@ pub mod wavs {
                 pub event_hash: _rt::Vec<u8>,
             }
             impl ::core::fmt::Debug for TriggerSourceEthContractEvent {
-                fn fmt(
-                    &self,
-                    f: &mut ::core::fmt::Formatter<'_>,
-                ) -> ::core::fmt::Result {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     f.debug_struct("TriggerSourceEthContractEvent")
                         .field("address", &self.address)
                         .field("chain-name", &self.chain_name)
@@ -388,10 +367,7 @@ pub mod wavs {
                 pub event_type: _rt::String,
             }
             impl ::core::fmt::Debug for TriggerSourceCosmosContractEvent {
-                fn fmt(
-                    &self,
-                    f: &mut ::core::fmt::Formatter<'_>,
-                ) -> ::core::fmt::Result {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     f.debug_struct("TriggerSourceCosmosContractEvent")
                         .field("address", &self.address)
                         .field("chain-name", &self.chain_name)
@@ -406,24 +382,15 @@ pub mod wavs {
                 Manual,
             }
             impl ::core::fmt::Debug for TriggerSource {
-                fn fmt(
-                    &self,
-                    f: &mut ::core::fmt::Formatter<'_>,
-                ) -> ::core::fmt::Result {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     match self {
                         TriggerSource::EthContractEvent(e) => {
-                            f.debug_tuple("TriggerSource::EthContractEvent")
-                                .field(e)
-                                .finish()
+                            f.debug_tuple("TriggerSource::EthContractEvent").field(e).finish()
                         }
                         TriggerSource::CosmosContractEvent(e) => {
-                            f.debug_tuple("TriggerSource::CosmosContractEvent")
-                                .field(e)
-                                .finish()
+                            f.debug_tuple("TriggerSource::CosmosContractEvent").field(e).finish()
                         }
-                        TriggerSource::Manual => {
-                            f.debug_tuple("TriggerSource::Manual").finish()
-                        }
+                        TriggerSource::Manual => f.debug_tuple("TriggerSource::Manual").finish(),
                     }
                 }
             }
@@ -434,10 +401,7 @@ pub mod wavs {
                 pub trigger_source: TriggerSource,
             }
             impl ::core::fmt::Debug for TriggerConfig {
-                fn fmt(
-                    &self,
-                    f: &mut ::core::fmt::Formatter<'_>,
-                ) -> ::core::fmt::Result {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     f.debug_struct("TriggerConfig")
                         .field("service-id", &self.service_id)
                         .field("workflow-id", &self.workflow_id)
@@ -453,10 +417,7 @@ pub mod wavs {
                 pub block_height: u64,
             }
             impl ::core::fmt::Debug for TriggerDataEthContractEvent {
-                fn fmt(
-                    &self,
-                    f: &mut ::core::fmt::Formatter<'_>,
-                ) -> ::core::fmt::Result {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     f.debug_struct("TriggerDataEthContractEvent")
                         .field("contract-address", &self.contract_address)
                         .field("chain-name", &self.chain_name)
@@ -473,10 +434,7 @@ pub mod wavs {
                 pub block_height: u64,
             }
             impl ::core::fmt::Debug for TriggerDataCosmosContractEvent {
-                fn fmt(
-                    &self,
-                    f: &mut ::core::fmt::Formatter<'_>,
-                ) -> ::core::fmt::Result {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     f.debug_struct("TriggerDataCosmosContractEvent")
                         .field("contract-address", &self.contract_address)
                         .field("chain-name", &self.chain_name)
@@ -492,24 +450,15 @@ pub mod wavs {
                 Raw(_rt::Vec<u8>),
             }
             impl ::core::fmt::Debug for TriggerData {
-                fn fmt(
-                    &self,
-                    f: &mut ::core::fmt::Formatter<'_>,
-                ) -> ::core::fmt::Result {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     match self {
                         TriggerData::EthContractEvent(e) => {
-                            f.debug_tuple("TriggerData::EthContractEvent")
-                                .field(e)
-                                .finish()
+                            f.debug_tuple("TriggerData::EthContractEvent").field(e).finish()
                         }
                         TriggerData::CosmosContractEvent(e) => {
-                            f.debug_tuple("TriggerData::CosmosContractEvent")
-                                .field(e)
-                                .finish()
+                            f.debug_tuple("TriggerData::CosmosContractEvent").field(e).finish()
                         }
-                        TriggerData::Raw(e) => {
-                            f.debug_tuple("TriggerData::Raw").field(e).finish()
-                        }
+                        TriggerData::Raw(e) => f.debug_tuple("TriggerData::Raw").field(e).finish(),
                     }
                 }
             }
@@ -519,10 +468,7 @@ pub mod wavs {
                 pub data: TriggerData,
             }
             impl ::core::fmt::Debug for TriggerAction {
-                fn fmt(
-                    &self,
-                    f: &mut ::core::fmt::Formatter<'_>,
-                ) -> ::core::fmt::Result {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     f.debug_struct("TriggerAction")
                         .field("config", &self.config)
                         .field("data", &self.data)
@@ -538,10 +484,7 @@ pub mod wavs {
                 Trace,
             }
             impl ::core::fmt::Debug for LogLevel {
-                fn fmt(
-                    &self,
-                    f: &mut ::core::fmt::Formatter<'_>,
-                ) -> ::core::fmt::Result {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     match self {
                         LogLevel::Error => f.debug_tuple("LogLevel::Error").finish(),
                         LogLevel::Warn => f.debug_tuple("LogLevel::Warn").finish(),
@@ -604,11 +547,8 @@ pub mod host {
                                         let l7 = *ptr1.add(16).cast::<*mut u8>();
                                         let l8 = *ptr1.add(20).cast::<usize>();
                                         let len9 = l8;
-                                        let bytes9 = _rt::Vec::from_raw_parts(
-                                            l7.cast(),
-                                            len9,
-                                            len9,
-                                        );
+                                        let bytes9 =
+                                            _rt::Vec::from_raw_parts(l7.cast(), len9, len9);
                                         _rt::string_lift(bytes9)
                                     };
                                     Some(e)
@@ -622,11 +562,8 @@ pub mod host {
                                         let l11 = *ptr1.add(28).cast::<*mut u8>();
                                         let l12 = *ptr1.add(32).cast::<usize>();
                                         let len13 = l12;
-                                        let bytes13 = _rt::Vec::from_raw_parts(
-                                            l11.cast(),
-                                            len13,
-                                            len13,
-                                        );
+                                        let bytes13 =
+                                            _rt::Vec::from_raw_parts(l11.cast(), len13, len13);
                                         _rt::string_lift(bytes13)
                                     };
                                     Some(e)
@@ -692,11 +629,8 @@ pub mod host {
                                         let l7 = *ptr1.add(16).cast::<*mut u8>();
                                         let l8 = *ptr1.add(20).cast::<usize>();
                                         let len9 = l8;
-                                        let bytes9 = _rt::Vec::from_raw_parts(
-                                            l7.cast(),
-                                            len9,
-                                            len9,
-                                        );
+                                        let bytes9 =
+                                            _rt::Vec::from_raw_parts(l7.cast(), len9, len9);
                                         _rt::string_lift(bytes9)
                                     };
                                     Some(e)
@@ -710,11 +644,8 @@ pub mod host {
                                         let l11 = *ptr1.add(28).cast::<*mut u8>();
                                         let l12 = *ptr1.add(32).cast::<usize>();
                                         let len13 = l12;
-                                        let bytes13 = _rt::Vec::from_raw_parts(
-                                            l11.cast(),
-                                            len13,
-                                            len13,
-                                        );
+                                        let bytes13 =
+                                            _rt::Vec::from_raw_parts(l11.cast(), len13, len13);
                                         _rt::string_lift(bytes13)
                                     };
                                     Some(e)
@@ -728,11 +659,8 @@ pub mod host {
                                         let l15 = *ptr1.add(40).cast::<*mut u8>();
                                         let l16 = *ptr1.add(44).cast::<usize>();
                                         let len17 = l16;
-                                        let bytes17 = _rt::Vec::from_raw_parts(
-                                            l15.cast(),
-                                            len17,
-                                            len17,
-                                        );
+                                        let bytes17 =
+                                            _rt::Vec::from_raw_parts(l15.cast(), len17, len17);
                                         _rt::string_lift(bytes17)
                                     };
                                     Some(e)

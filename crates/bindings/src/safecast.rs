@@ -82,22 +82,22 @@ pub mod SafeCast {
     /// The creation / init bytecode of the contract.
     ///
     /// ```text
-    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea26469706673582212206ca714e80d76c264021dcab055725136472138d2379c8eebb95262b1f35f78a664736f6c634300081c0033
+    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea26469706673582212207a04b2d2db77b7c5eed92c4ef50fd07d3a2113b010dc0ee8e5fa3a382ce4de1964736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 l\xA7\x14\xE8\rv\xC2d\x02\x1D\xCA\xB0UrQ6G!8\xD27\x9C\x8E\xEB\xB9Rb\xB1\xF3_x\xA6dsolcC\0\x08\x1C\x003",
+        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 z\x04\xB2\xD2\xDBw\xB7\xC5\xEE\xD9,N\xF5\x0F\xD0}:!\x13\xB0\x10\xDC\x0E\xE8\xE5\xFA:8,\xE4\xDE\x19dsolcC\0\x08\x1C\x003",
     );
     /// The runtime bytecode of the contract, as deployed on the network.
     ///
     /// ```text
-    ///0x5f80fdfea26469706673582212206ca714e80d76c264021dcab055725136472138d2379c8eebb95262b1f35f78a664736f6c634300081c0033
+    ///0x5f80fdfea26469706673582212207a04b2d2db77b7c5eed92c4ef50fd07d3a2113b010dc0ee8e5fa3a382ce4de1964736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static DEPLOYED_BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 l\xA7\x14\xE8\rv\xC2d\x02\x1D\xCA\xB0UrQ6G!8\xD27\x9C\x8E\xEB\xB9Rb\xB1\xF3_x\xA6dsolcC\0\x08\x1C\x003",
+        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 z\x04\xB2\xD2\xDBw\xB7\xC5\xEE\xD9,N\xF5\x0F\xD0}:!\x13\xB0\x10\xDC\x0E\xE8\xE5\xFA:8,\xE4\xDE\x19dsolcC\0\x08\x1C\x003",
     );
     /**Custom error with signature `SafeCastOverflowedIntDowncast(uint8,int256)` and selector `0x327269a7`.
     ```solidity

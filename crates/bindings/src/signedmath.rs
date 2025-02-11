@@ -22,22 +22,22 @@ pub mod SignedMath {
     /// The creation / init bytecode of the contract.
     ///
     /// ```text
-    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea26469706673582212202115231be05177f42700f62368c94089484048bbc25e75868e7ef4dbff6df15664736f6c634300081c0033
+    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea264697066735822122055144f4a6bc18352d7726fd4656e689bc5c320d80abf245ca544b32a80cee98764736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 !\x15#\x1B\xE0Qw\xF4'\0\xF6#h\xC9@\x89H@H\xBB\xC2^u\x86\x8E~\xF4\xDB\xFFm\xF1VdsolcC\0\x08\x1C\x003",
+        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 U\x14OJk\xC1\x83R\xD7ro\xD4enh\x9B\xC5\xC3 \xD8\n\xBF$\\\xA5D\xB3*\x80\xCE\xE9\x87dsolcC\0\x08\x1C\x003",
     );
     /// The runtime bytecode of the contract, as deployed on the network.
     ///
     /// ```text
-    ///0x5f80fdfea26469706673582212202115231be05177f42700f62368c94089484048bbc25e75868e7ef4dbff6df15664736f6c634300081c0033
+    ///0x5f80fdfea264697066735822122055144f4a6bc18352d7726fd4656e689bc5c320d80abf245ca544b32a80cee98764736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static DEPLOYED_BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 !\x15#\x1B\xE0Qw\xF4'\0\xF6#h\xC9@\x89H@H\xBB\xC2^u\x86\x8E~\xF4\xDB\xFFm\xF1VdsolcC\0\x08\x1C\x003",
+        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 U\x14OJk\xC1\x83R\xD7ro\xD4enh\x9B\xC5\xC3 \xD8\n\xBF$\\\xA5D\xB3*\x80\xCE\xE9\x87dsolcC\0\x08\x1C\x003",
     );
     use alloy::contract as alloy_contract;
     /**Creates a new wrapper around an on-chain [`SignedMath`](self) contract instance.

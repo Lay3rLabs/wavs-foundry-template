@@ -22,22 +22,22 @@ pub mod Panic {
     /// The creation / init bytecode of the contract.
     ///
     /// ```text
-    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea264697066735822122059f6e0f07f88140412cef12d2d78c6dc56f5ce0ca3f59431758693663ee2319f64736f6c634300081c0033
+    ///0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea2646970667358221220ab4a22fdbd2442ba6298be6340604b7cfb7f62d700b826be259e7cc215ea107964736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 Y\xF6\xE0\xF0\x7F\x88\x14\x04\x12\xCE\xF1--x\xC6\xDCV\xF5\xCE\x0C\xA3\xF5\x941u\x86\x93f>\xE21\x9FdsolcC\0\x08\x1C\x003",
+        b"`\x80\x80`@R4`\x17W`9\x90\x81`\x1C\x8290\x81PP\xF3[_\x80\xFD\xFE_\x80\xFD\xFE\xA2dipfsX\"\x12 \xABJ\"\xFD\xBD$B\xBAb\x98\xBEc@`K|\xFB\x7Fb\xD7\0\xB8&\xBE%\x9E|\xC2\x15\xEA\x10ydsolcC\0\x08\x1C\x003",
     );
     /// The runtime bytecode of the contract, as deployed on the network.
     ///
     /// ```text
-    ///0x5f80fdfea264697066735822122059f6e0f07f88140412cef12d2d78c6dc56f5ce0ca3f59431758693663ee2319f64736f6c634300081c0033
+    ///0x5f80fdfea2646970667358221220ab4a22fdbd2442ba6298be6340604b7cfb7f62d700b826be259e7cc215ea107964736f6c634300081c0033
     /// ```
     #[rustfmt::skip]
     #[allow(clippy::all)]
     pub static DEPLOYED_BYTECODE: alloy_sol_types::private::Bytes = alloy_sol_types::private::Bytes::from_static(
-        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 Y\xF6\xE0\xF0\x7F\x88\x14\x04\x12\xCE\xF1--x\xC6\xDCV\xF5\xCE\x0C\xA3\xF5\x941u\x86\x93f>\xE21\x9FdsolcC\0\x08\x1C\x003",
+        b"_\x80\xFD\xFE\xA2dipfsX\"\x12 \xABJ\"\xFD\xBD$B\xBAb\x98\xBEc@`K|\xFB\x7Fb\xD7\0\xB8&\xBE%\x9E|\xC2\x15\xEA\x10ydsolcC\0\x08\x1C\x003",
     );
     use alloy::contract as alloy_contract;
     /**Creates a new wrapper around an on-chain [`Panic`](self) contract instance.
