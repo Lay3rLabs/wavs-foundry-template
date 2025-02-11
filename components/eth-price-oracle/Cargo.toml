@@ -7,19 +7,14 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
-wit-bindgen = { workspace = true }
 wit-bindgen-rt = {workspace = true}
 wavs-wasi-chain = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-reqwest = { version = "0.12.12", features = ["json"] }
 alloy-sol-macro = { workspace = true }
 wstd = { workspace = true }
-layer-climb = { workspace = true }
 alloy-sol-types = { workspace = true }
 anyhow = { workspace = true }
-alloy-contract = { workspace = true }
-alloy-primitives = {workspace = true}
 
 [lib]
 crate-type = ["cdylib"]
