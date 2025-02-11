@@ -83,10 +83,11 @@ get-service-handler-from-deploy:
 get-trigger-from-deploy:
 	@jq -r '.trigger' "./.docker/script_deploy.json"
 
+## wavs-cli: running wavs-cli in docker
 wavs-cli:
 	@$(WAVS_CMD) $(filter-out $@,$(MAKECMDGOALS))
 
-## deploy-service: deploying the service | WAVS_CLI_DATA, WAVS_CLI_HOME, WAVS_CLI_COMPONENT, TRIGGER_EVENT, TRIGGER_ADDR, SERVICE_HANDLER_ADDR, WAVS_SERVICE_CONFIG
+## deploy-service: deploying the WAVS component service | WAVS_CLI_DATA, WAVS_CLI_HOME, WAVS_CLI_COMPONENT, TRIGGER_EVENT, TRIGGER_ADDR, SERVICE_HANDLER_ADDR, WAVS_SERVICE_CONFIG
 deploy-service:
 	@$(WAVS_CMD) deploy-service --log-level=info --data $(WAVS_CLI_DATA) --home $(WAVS_CLI_HOME) \
 --component $(WAVS_CLI_COMPONENT) \
