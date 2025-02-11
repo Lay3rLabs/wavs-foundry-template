@@ -102,7 +102,6 @@ trigger_event=$(cast sig-event "NewTrigger(bytes)"); echo "Trigger Event: $trigg
 wavs-cli deploy-service --log-level=error --data /data/.docker/cli --home /data \
     --component /data/compiled/eth_price_oracle.wasm \
     --trigger-event-name ${trigger_event:2} \
-    --trigger eth-contract-event \
     --trigger-address ${TRIGGER_ADDR} \
     --submit-address ${SERVICE_HANDLER_ADDR} \
     --service-config '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv":[],"workflow_id":"default","component_id":"default"}'
