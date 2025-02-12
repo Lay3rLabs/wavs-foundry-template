@@ -16,6 +16,7 @@ RPC_URL?=http://localhost:8545
 SERVICE_MANAGER_ADDR?=`jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json`
 SERVICE_TRIGGER_ADDR?=`jq -r '.trigger' "./.docker/script_deploy.json"`
 SERVICE_SUBMISSION_ADDR?=`jq -r '.service_handler' "./.docker/script_deploy.json"`
+COIN_MARKET_CAP_ID?=1
 
 ## build: building the project
 build: _build_forge wasi-build
@@ -29,10 +30,11 @@ wasi-build:
 	@mkdir -p ./compiled
 	@cp ./target/wasm32-wasip1/release/*.wasm ./compiled/
 
+## wasi-exec: executing the WAVS wasi component(s) | COMPONENT_FILENAME, COIN_MARKET_CAP_ID
 wasi-exec:
 	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
 	--component "/data/compiled/${COMPONENT_FILENAME}" \
-	--input `cast format-bytes32-string 1`
+	--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)`
 
 ## update-submodules: update the git submodules
 update-submodules:
@@ -100,7 +102,6 @@ deploy-service:
 	--service-config ${SERVICE_CONFIG}
 
 ## trigger-service: triggering the service | SERVICE_TRIGGER_ADDR, COIN_MARKET_CAP_ID, RPC_URL
-COIN_MARKET_CAP_ID?=1
 trigger-service:
 	@forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig "run(string,string)" --rpc-url $(RPC_URL) --broadcast -v 4
 
