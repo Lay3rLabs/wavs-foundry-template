@@ -70,7 +70,9 @@ make start-all
 make deploy-contracts
 ```
 
+>
 > You can see the deployed trigger address with `make get-trigger-from-deploy`
+>
 > You can see the deployed submission address with `make get-service-handler-from-deploy`
 
 ## Deploy Service
