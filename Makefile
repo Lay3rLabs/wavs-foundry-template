@@ -68,6 +68,7 @@ start-all: clean-docker
 	@docker compose up
 	@wait
 
+## deploy-contracts: deploying the contracts | SERVICE_MANAGER_ADDR, RPC_URL
 deploy-contracts:
 # `sudo chmod 0666 .docker/deployments.json`
 	@forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url $(RPC_URL) --broadcast
@@ -84,7 +85,7 @@ get-trigger-from-deploy:
 wavs-cli:
 	@$(WAVS_CMD) $(filter-out $@,$(MAKECMDGOALS))
 
-## deploy-service: deploying the WAVS component service | WAVS_CLI_DATA, WAVS_CLI_HOME, WAVS_CLI_COMPONENT, TRIGGER_EVENT, TRIGGER_ADDR, SERVICE_HANDLER_ADDR, WAVS_SERVICE_CONFIG
+## deploy-service: deploying the WAVS component service | COMPONENT_FILENAME, TRIGGER_EVENT, SERVICE_TRIGGER_ADDR, SERVICE_SUBMISSION_ADDR, SERVICE_CONFIG
 deploy-service:
 	@$(WAVS_CMD) deploy-service --log-level=info --data /data/.docker --home /data \
 	--component "/data/compiled/${COMPONENT_FILENAME}" \
@@ -93,9 +94,12 @@ deploy-service:
 	--submit-address "${SERVICE_SUBMISSION_ADDR}" \
 	--service-config ${SERVICE_CONFIG}
 
+## trigger-service: triggering the service | SERVICE_TRIGGER_ADDR, COIN_MARKET_CAP_ID, RPC_URL
+COIN_MARKET_CAP_ID?=1
 trigger-service:
-	@forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} --sig "run(string)" --rpc-url $(RPC_URL) --broadcast -v 4
+	@forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig "run(string,string)" --rpc-url $(RPC_URL) --broadcast -v 4
 
+## show-result: showing the result | SERVICE_TRIGGER_ADDR, SERVICE_SUBMISSION_ADDR, RPC_URL
 show-result:
 	@forge script ./script/ShowResult.s.sol ${SERVICE_TRIGGER_ADDR} ${SERVICE_SUBMISSION_ADDR} --sig "run(string,string)" --rpc-url $(RPC_URL) --broadcast -v 4
 

@@ -85,7 +85,7 @@ make deploy-service
 
 ```bash
 # Trigger contract via `script/Trigger.s.sol`
-make trigger-service
+COIN_MARKET_CAP_ID=1 make trigger-service
 ```
 
 ## Show the result

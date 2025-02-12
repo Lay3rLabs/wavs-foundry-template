@@ -12,11 +12,11 @@ contract TriggerScript is Script {
 
     function setUp() public {}
 
-    function run(string calldata serviceTriggerAddr) public {
+    function run(string calldata serviceTriggerAddr, string calldata coinMarketCapID) public {
         vm.startBroadcast(privateKey);
         SimpleTrigger trigger = SimpleTrigger(vm.parseAddress(serviceTriggerAddr));
 
-        trigger.addTrigger(abi.encodePacked(bytes32("1")));
+        trigger.addTrigger(abi.encodePacked(coinMarketCapID));
         ITypes.TriggerId triggerId = trigger.nextTriggerId();
         console.log("triggerId:", ITypes.TriggerId.unwrap(triggerId));
         vm.stopBroadcast();
