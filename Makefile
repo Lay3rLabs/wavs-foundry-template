@@ -62,10 +62,10 @@ setup:
 ## start-all: starting anvil and WAVS with docker compose
 start-all: clean-docker
 	@rm .docker/*.json || true
-	@trap 'kill $(jobs -pr)' EXIT
 # running anvil out of compose is a temp work around for MacOS
 	@anvil &
 	@docker compose up
+	@trap 'killall -9 anvil' EXIT
 	@wait
 
 ## deploy-contracts: deploying the contracts | SERVICE_MANAGER_ADDR, RPC_URL
