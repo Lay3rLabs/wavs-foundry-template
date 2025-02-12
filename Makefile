@@ -3,9 +3,19 @@
 # Default target is build
 default: build
 
-# Define variables
+# Customize these variables
+COMPONENT_FILENAME=eth_price_oracle.wasm
+TRIGGER_EVENT="NewTrigger(bytes)"
+SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv":[],"workflow_id":"default","component_id":"default"}'
+
+# Define common variables
 CARGO=cargo
-WAVS_CMD ?= docker run --network host --env-file ./.env -v $(shell pwd):/data ghcr.io/lay3rlabs/wavs:0.3.0-alpha5 wavs-cli
+WAVS_CMD ?= docker run --network host --env-file ./.env -v $(shell pwd):/data ghcr.io/lay3rlabs/wavs:0.3.0-alpha6 wavs-cli
+ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+RPC_URL?=http://localhost:8545
+SERVICE_MANAGER_ADDR?=`jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json`
+SERVICE_TRIGGER_ADDR?=`jq -r '.trigger' "./.docker/script_deploy.json"`
+SERVICE_SUBMISSION_ADDR?=`jq -r '.service_handler' "./.docker/script_deploy.json"`
 
 ## build: building the project
 build: _build_forge wasi-build
@@ -58,13 +68,9 @@ start-all: clean-docker
 	@docker compose up
 	@wait
 
-## deploy-contracts: deploying contracts with forge script | ANVIL_PRIVATE_KEY, RPC_URL, SERVICE_MANAGER
-ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-RPC_URL?=http://localhost:8545
-SERVICE_MANAGER?=`jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json`
 deploy-contracts:
 # `sudo chmod 0666 .docker/deployments.json`
-	@forge script ./script/Deploy.s.sol ${SERVICE_MANAGER} --sig "run(string)" --rpc-url $(RPC_URL) --broadcast
+	@forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url $(RPC_URL) --broadcast
 
 ## get-service-handler: getting the service handler address from the script deploy
 get-service-handler-from-deploy:
@@ -80,13 +86,18 @@ wavs-cli:
 
 ## deploy-service: deploying the WAVS component service | WAVS_CLI_DATA, WAVS_CLI_HOME, WAVS_CLI_COMPONENT, TRIGGER_EVENT, TRIGGER_ADDR, SERVICE_HANDLER_ADDR, WAVS_SERVICE_CONFIG
 deploy-service:
-	@$(WAVS_CMD) deploy-service --log-level=info --data $(WAVS_CLI_DATA) --home $(WAVS_CLI_HOME) \
---component $(WAVS_CLI_COMPONENT) \
---trigger-event-name $(TRIGGER_EVENT) \
---trigger eth-contract-event \
---trigger-address $(TRIGGER_ADDR) \
---submit-address $(SERVICE_HANDLER_ADDR) \
---service-config='$(WAVS_SERVICE_CONFIG)'
+	$(WAVS_CMD) deploy-service --log-level=info --data /data/.docker --home /data \
+	--component "/data/compiled/${COMPONENT_FILENAME}" \
+	--trigger-event-name ${TRIGGER_EVENT} \
+	--trigger-address "${SERVICE_TRIGGER_ADDR}" \
+	--submit-address "${SERVICE_SUBMISSION_ADDR}" \
+	--service-config ${SERVICE_CONFIG}
+
+trigger-service:
+	@forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} --sig "run(string)" --rpc-url $(RPC_URL) --broadcast -v 4
+
+show-result:
+	@forge script ./script/ShowResult.s.sol ${SERVICE_TRIGGER_ADDR} ${SERVICE_SUBMISSION_ADDR} --sig "run(string,string)" --rpc-url $(RPC_URL) --broadcast -v 4
 
 _build_forge:
 	@forge build

@@ -63,41 +63,32 @@ cp .env.example .env
 make start-all
 ```
 
-### Upload your WAVS Service Manager
+### Upload your Service's Trigger and Submission contracts
 
 ```bash
-alias wavs-cli="make wavs-cli"
-
 # Deploy submission and trigger contract's from `script/Deploy.s.sol`
-export ANVIL_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 make deploy-contracts
-
-# Get deployed contracts
-export SERVICE_HANDLER_ADDR=`make get-service-handler-from-deploy`
-export TRIGGER_ADDR=`make get-trigger-from-deploy`
 ```
 
+> You can see the deployed trigger address with `make get-trigger-from-deploy`
+> You can see the deployed submission address with `make get-service-handler-from-deploy`
 
 ## Deploy Service
 
 ```bash
-# Contract trigger function signature to listen for
-export TRIGGER_EVENT=$(cast sig-event "NewTrigger(bytes)");
-export WAVS_CLI_HOME=/data
-export WAVS_CLI_DATA=/data/.docker
-export WAVS_CLI_COMPONENT=/data/compiled/eth_price_oracle.wasm
-export WAVS_SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv":[],"workflow_id":"default","component_id":"default"}'
-
 make deploy-service
 ```
 
-## Submit Request and Verify
+## Trigger the Service
 
 ```bash
-# Submit request -> chain
-cast send ${TRIGGER_ADDR} "addTrigger(bytes)" `cast format-bytes32-string 1` --rpc-url http://localhost:8545 --private-key $ANVIL_PRIVATE_KEY
+# Trigger contract via `script/Trigger.s.sol`
+make trigger-service
+```
 
-# Verify
-ID=`cast call ${TRIGGER_ADDR} "nextTriggerId()" --rpc-url http://localhost:8545`; echo "ID: $ID"
-cast --to-ascii $(cast decode-abi "getData(uint64)(bytes)" `cast call ${SERVICE_HANDLER_ADDR} "getData(uint64)" $ID`)
+## Show the result
+
+```bash
+# Get the latest TriggerId and show the result via `script/ShowResult.s.sol`
+make show-result
 ```
