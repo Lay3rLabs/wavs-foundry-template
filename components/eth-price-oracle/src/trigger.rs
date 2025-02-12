@@ -19,14 +19,13 @@ pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>)>
 }
 
 pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> Vec<u8> {
-    solidity::DataWithId { triggerId: trigger_id, data: output.as_ref().to_vec().into() }.abi_encode()
+    solidity::DataWithId { triggerId: trigger_id, data: output.as_ref().to_vec().into() }
+        .abi_encode()
 }
 
 mod solidity {
     use alloy_sol_macro::sol;
     pub use ITypes::*;
 
-    sol!(
-        "../../src/interfaces/ITypes.sol"
-    );
+    sol!("../../src/interfaces/ITypes.sol");
 }
