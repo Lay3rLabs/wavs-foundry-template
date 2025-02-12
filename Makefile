@@ -86,7 +86,7 @@ wavs-cli:
 
 ## deploy-service: deploying the WAVS component service | WAVS_CLI_DATA, WAVS_CLI_HOME, WAVS_CLI_COMPONENT, TRIGGER_EVENT, TRIGGER_ADDR, SERVICE_HANDLER_ADDR, WAVS_SERVICE_CONFIG
 deploy-service:
-	$(WAVS_CMD) deploy-service --log-level=info --data /data/.docker --home /data \
+	@$(WAVS_CMD) deploy-service --log-level=info --data /data/.docker --home /data \
 	--component "/data/compiled/${COMPONENT_FILENAME}" \
 	--trigger-event-name ${TRIGGER_EVENT} \
 	--trigger-address "${SERVICE_TRIGGER_ADDR}" \
