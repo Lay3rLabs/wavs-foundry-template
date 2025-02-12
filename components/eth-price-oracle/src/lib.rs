@@ -1,4 +1,5 @@
 mod trigger;
+use bindings::wavs::worker::layer_types::{TriggerData, TriggerSource};
 use trigger::{decode_trigger_event, encode_trigger_output};
 pub mod bindings;
 use crate::bindings::{export, Guest, TriggerAction};
@@ -14,8 +15,21 @@ export!(Component with_types_in bindings);
 
 impl Guest for Component {
     fn run(trigger_action: TriggerAction) -> std::result::Result<Vec<u8>, String> {
-        let (trigger_id, req) =
-            decode_trigger_event(trigger_action.data).map_err(|e| e.to_string())?;
+        enum Destination {
+            Ethereum,
+            CliOutput
+        }
+        let ((trigger_id, req), dest) = match &trigger_action.data {
+            // When the trigger comes from WAVS, it's from an ethereum contract event
+            TriggerData::EthContractEvent(_) => {
+                (decode_trigger_event(trigger_action.data).map_err(|e| e.to_string())?, Destination::Ethereum)
+            },
+            // When we test in a CLI exec command, it's just raw bytes (we can make-up the trigger_id)
+            TriggerData::Raw(data) => ((0, data.clone()), Destination::CliOutput),
+            TriggerData::CosmosContractEvent(_) => {
+                return Err("Unsupported trigger data type".to_string());
+            },
+        };
 
         // Convert bytes to string and parse first char as u64
         let input = std::str::from_utf8(&req).map_err(|e| e.to_string())?;
@@ -38,7 +52,12 @@ impl Guest for Component {
         });
 
         match res {
-            Ok(data) => Ok(encode_trigger_output(trigger_id, &data)),
+            Ok(data) => match dest {
+                Destination::Ethereum => {
+                    Ok(encode_trigger_output(trigger_id, &data))
+                },
+                Destination::CliOutput => Ok(data),
+            },
             Err(e) => Err(e),
         }
     }

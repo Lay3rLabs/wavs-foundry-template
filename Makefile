@@ -29,6 +29,11 @@ wasi-build:
 	@mkdir -p ./compiled
 	@cp ./target/wasm32-wasip1/release/*.wasm ./compiled/
 
+wasi-exec:
+	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
+	--component "/data/compiled/${COMPONENT_FILENAME}" \
+	--input `cast format-bytes32-string 1`
+
 ## update-submodules: update the git submodules
 update-submodules:
 	@git submodule update --init --recursive
