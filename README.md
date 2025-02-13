@@ -61,7 +61,7 @@ rustup target add wasm32-wasip2
 <details>
 <summary>Cargo Components</summary>
 
-## Install Cargo Component and WKG
+## Install Cargo Components
 
 ```bash
 # Install required cargo components
