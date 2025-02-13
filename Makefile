@@ -1,5 +1,8 @@
 #!/usr/bin/make -f
 
+# Check if user is in docker group to determine if sudo is needed
+SUDO := $(shell if groups | grep -q docker; then echo ''; else echo 'sudo'; fi)
+
 # Default target is build
 default: build
 
@@ -10,7 +13,7 @@ SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv":[]
 
 # Define common variables
 CARGO=cargo
-WAVS_CMD ?= docker run --network host --env-file ./.env -v $(shell pwd):/data ghcr.io/lay3rlabs/wavs:0.3.0-alpha6 wavs-cli
+WAVS_CMD ?= $(SUDO) docker run --network host --env-file ./.env -v $(shell pwd):/data ghcr.io/lay3rlabs/wavs:0.3.0-alpha6 wavs-cli
 ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 RPC_URL?=http://localhost:8545
 SERVICE_MANAGER_ADDR?=`jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json`
@@ -50,7 +53,7 @@ clean: clean-docker
 
 ## clean-docker: remove unused docker containers
 clean-docker:
-	@docker rm -v $(shell docker ps --filter status=exited -q) || true
+	@$(SUDO) docker rm -v $(shell $(SUDO) docker ps --filter status=exited -q) || true
 
 ## fmt: formatting solidity and rust code
 fmt:
@@ -72,7 +75,7 @@ start-all: clean-docker
 	@trap 'kill $(jobs -pr)' EXIT
 # running anvil out of compose is a temp work around for MacOS
 	@anvil &
-	@docker compose up
+	@$(SUDO) docker compose up
 	@wait
 
 ## deploy-contracts: deploying the contracts | SERVICE_MANAGER_ADDR, RPC_URL
