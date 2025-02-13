@@ -8,6 +8,45 @@
   https://img.shields.io/endpoint?color=neon&style=flat-square&url=https%3A%2F%2Ftg.sumanjay.workers.dev%2Ffoundry_rs
 [tg-url]: https://t.me/foundry_rs -->
 
+## Base Required
+- [docker](https://docs.docker.com/get-started/get-docker/)
+  - MacOS: `brew install --cask docker`
+  - Ubuntu: `sudo apt -y install docker.io`
+- compose
+  - Linux: `sudo apt-get install docker-compose-v2`
+  - MacOS: already installed with docker installer
+- [jq](https://jqlang.org/download/)
+  - MacOS: `brew install jq`
+  - Ubuntu: `sudo apt -y install jq`
+- [Node v21+](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating)
+
+
+## Rust v1.84+
+- rust
+  - `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+
+### Upgrade Rust
+```
+rustup target remove wasm32-wasi
+rustup target remove wasm32-wasip1
+
+# everyone will need this
+rustup update stable
+rustup target add wasm32-wasip2
+```
+
+## Carggo Components / wa.dev
+- cargo install warg-cli wkg
+- wkg config --default-registry wa.dev
+
+
+## Specific
+- [forge](https://github.com/foundry-rs/foundry)
+  - `curl -L https://foundry.paradigm.xyz | bash`
+
+
+
+
 **Template for quickly getting started with developing WAVS Rust applications**
 
 A comprehensive template for developing WAVS (WebAssembly AVS) applications using Rust and Solidity. This template provides a pre-configured development environment with integrated testing frameworks for both Rust and Solidity components.
