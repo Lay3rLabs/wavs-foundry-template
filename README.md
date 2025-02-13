@@ -1,62 +1,82 @@
 # WAVS Monorepo Template
 
-<!-- ![Rust](https://github.com/gakonst/foundry-rust-template/workflows/Rust/badge.svg)
-![Solidity](https://github.com/gakonst/foundry-rust-template/workflows/Solidity/badge.svg)
-[![Telegram Chat][tg-badge]][tg-url]
-
-[tg-badge]:
-  https://img.shields.io/endpoint?color=neon&style=flat-square&url=https%3A%2F%2Ftg.sumanjay.workers.dev%2Ffoundry_rs
-[tg-url]: https://t.me/foundry_rs -->
-
-## Base Required
-- [docker](https://docs.docker.com/get-started/get-docker/)
-  - MacOS: `brew install --cask docker`
-  - Ubuntu: `sudo apt -y install docker.io`
-- compose
-  - Linux: `sudo apt-get install docker-compose-v2`
-  - MacOS: already installed with docker installer
-- [jq](https://jqlang.org/download/)
-  - MacOS: `brew install jq`
-  - Ubuntu: `sudo apt -y install jq`
-- [Node v21+](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating)
-
-
-## Rust v1.84+
-- rust
-  - `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
-
-### Upgrade Rust
-```
-rustup target remove wasm32-wasi
-rustup target remove wasm32-wasip1
-
-# everyone will need this
-rustup update stable
-rustup target add wasm32-wasip2
-```
-
-## Carggo Components / wa.dev
-- cargo install warg-cli wkg
-- wkg config --default-registry wa.dev
-
-
-## Specific
-- [forge](https://github.com/foundry-rs/foundry)
-  - `curl -L https://foundry.paradigm.xyz | bash`
-
-
-
-
 **Template for quickly getting started with developing WAVS Rust applications**
 
 A comprehensive template for developing WAVS (WebAssembly AVS) applications using Rust and Solidity. This template provides a pre-configured development environment with integrated testing frameworks for both Rust and Solidity components.
 
-## Installation
+## Developer Tools Installation
+
+<details>
+<summary>System Requirements (Docker, Compose, Make, JQ, NodeJS v21+)</summary>
+
+### Docker
+- **MacOS**: `brew install --cask docker`
+- **Ubuntu**: `sudo apt -y install docker.io`
+- [Docker Documentation](https://docs.docker.com/get-started/get-docker/)
+
+### Docker Compose
+- **Linux**: `sudo apt-get install docker-compose-v2`
+- **MacOS**: Already installed with Docker installer
+- [Compose Documentation](https://docs.docker.com/compose/)
+
+### Make
+- **Linux**: `sudo apt -y install make`
+- **MacOS**: `brew install make`
+- [Make Documentation](https://www.gnu.org/software/make/manual/make.html)
+
+### JQ
+- **MacOS**: `brew install jq`
+- **Ubuntu**: `sudo apt -y install jq`
+- [JQ Documentation](https://jqlang.org/download/)
+
+### Node.js
+- **Required Version**: v21+
+- [Installation via NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating)
+</details>
+
+<details>
+
+<summary>Rust v1.84+</summary>
+
+### Initial Installation
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+### Upgrade Process
+
+```bash
+# Remove old targets
+rustup target remove wasm32-wasi
+rustup target remove wasm32-wasip1
+
+# Update and add required target
+rustup update stable
+rustup target add wasm32-wasip2
+```
+
+</details>
+
+<details>
+<summary>Cargo Components & wa.dev</summary>
+
+```bash
+# Install required cargo components
+cargo install warg-cli wkg
+
+# Configure default registry
+wkg config --default-registry wa.dev
+```
+
+</details>
+
+## New Project
 
 Create a new project using this template:
 
 ```bash
-# If you don't have forge: `curl -L https://foundry.paradigm.xyz | bash`
+# If you don't have foundry or forge: `curl -L https://foundry.paradigm.xyz | bash`
 forge init --template Lay3rLabs/wavs-foundry-template my-wavs
 ```
 
