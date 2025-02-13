@@ -106,7 +106,7 @@ make start-all
 
 > The `start-all` command must remain running in your terminal. Use another terminal to run other commands.
 >
-> You can stop the services with `ctrl+c`.
+> You can stop the services with `ctrl+c`. Some MacOS terminals require pressing this twice.
 
 ### Upload your Service's Trigger and Submission contracts
 
