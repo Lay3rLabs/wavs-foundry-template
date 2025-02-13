@@ -70,13 +70,10 @@ setup:
 	@npm install
 
 ## start-all: starting anvil and WAVS with docker compose
+# running anvil out of compose is a temp work around for MacOS
 start-all: clean-docker
 	@rm .docker/*.json || true
-	@trap 'kill $(jobs -pr)' EXIT
-# running anvil out of compose is a temp work around for MacOS
-	@anvil &
-	@$(SUDO) docker compose up
-	@wait
+	@bash -ec 'anvil & anvil_pid=$$!; trap "kill -9 $$anvil_pid 2>/dev/null" EXIT; $(SUDO) docker compose up; wait'
 
 ## deploy-contracts: deploying the contracts | SERVICE_MANAGER_ADDR, RPC_URL
 deploy-contracts:
