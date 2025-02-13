@@ -81,10 +81,12 @@ wkg config --default-registry wa.dev
 forge init --template Lay3rLabs/wavs-foundry-template my-wavs
 ```
 
+> Run `make help` to seel all available commands and environment variable overrides.
+
 ### Solidity
 
 ```bash
-# Install initial dependencies
+# Install dependencies
 make setup
 
 # Build the contracts
@@ -103,8 +105,6 @@ make wasi-build
 > You can also use `make build` to build the contracts and components in one command
 
 ### Execute WASI component directly
-
-Component not found error? Review the installation documentation [here](#install-cargo-components)
 
 ```bash
 make wasi-exec
@@ -144,7 +144,7 @@ make deploy-contracts
 ## Deploy Service
 
 ```bash
-make deploy-service
+TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
 ```
 
 ## Trigger the Service
