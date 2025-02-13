@@ -36,7 +36,7 @@ forge test
 
 ### Build WASI components
 
-> Install `cargo binstall cargo-component` if you have not already. -- https://github.com/bytecodealliance/cargo-component#installation
+> Install [`cargo install cargo-component --locked`](https://github.com/bytecodealliance/cargo-component#installation) if you have not already.
 
 ```bash
 make wasi-build
@@ -64,6 +64,10 @@ cp .env.example .env
 # brew install chipmk/tap/docker-mac-net-connect && sudo brew services start chipmk/tap/docker-mac-net-connect
 make start-all
 ```
+
+> The `start-all` command must remain running in your terminal. Use another terminal to run other commands.
+>
+> You can stop the services with `ctrl+c`.
 
 ### Upload your Service's Trigger and Submission contracts
 
