@@ -4,10 +4,10 @@
 
 A comprehensive template for developing WAVS (WebAssembly AVS) applications using Rust and Solidity. This template provides a pre-configured development environment with integrated testing frameworks for both Rust and Solidity components.
 
-## Developer Tools Installation
+## System Requirements
 
 <details>
-<summary>System (Docker, Compose, Make, JQ, NodeJS v21+)</summary>
+<summary>Core (Docker, Compose, Make, JQ, NodeJS v21+)</summary>
 
 ### Docker
 - **MacOS**: `brew install --cask docker`
@@ -59,7 +59,7 @@ rustup target add wasm32-wasip2
 </details>
 
 <details>
-<summary>Cargo Components & wa.dev</summary>
+<summary>Cargo Components</summary>
 
 ## Install Cargo Component and WKG
 
