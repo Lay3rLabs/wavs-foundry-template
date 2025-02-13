@@ -7,7 +7,7 @@ A comprehensive template for developing WAVS (WebAssembly AVS) applications usin
 ## Developer Tools Installation
 
 <details>
-<summary>System Requirements (Docker, Compose, Make, JQ, NodeJS v21+)</summary>
+<summary>System (Docker, Compose, Make, JQ, NodeJS v21+)</summary>
 
 ### Docker
 - **MacOS**: `brew install --cask docker`
@@ -15,13 +15,13 @@ A comprehensive template for developing WAVS (WebAssembly AVS) applications usin
 - [Docker Documentation](https://docs.docker.com/get-started/get-docker/)
 
 ### Docker Compose
-- **Linux**: `sudo apt-get install docker-compose-v2`
 - **MacOS**: Already installed with Docker installer
+- **Linux**: `sudo apt-get install docker-compose-v2`
 - [Compose Documentation](https://docs.docker.com/compose/)
 
 ### Make
-- **Linux**: `sudo apt -y install make`
 - **MacOS**: `brew install make`
+- **Linux**: `sudo apt -y install make`
 - [Make Documentation](https://www.gnu.org/software/make/manual/make.html)
 
 ### JQ
@@ -38,13 +38,13 @@ A comprehensive template for developing WAVS (WebAssembly AVS) applications usin
 
 <summary>Rust v1.84+</summary>
 
-### Initial Installation
+### Rust Installation
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-### Upgrade Process
+### Upgrade Rust
 
 ```bash
 # Remove old targets
@@ -61,9 +61,12 @@ rustup target add wasm32-wasip2
 <details>
 <summary>Cargo Components & wa.dev</summary>
 
+## Install Cargo Component and WKG
+
 ```bash
 # Install required cargo components
-cargo install warg-cli wkg
+# https://github.com/bytecodealliance/cargo-component#installation
+cargo install cargo-component warg-cli wkg --locked
 
 # Configure default registry
 wkg config --default-registry wa.dev
@@ -71,12 +74,10 @@ wkg config --default-registry wa.dev
 
 </details>
 
-## New Project
-
-Create a new project using this template:
+## Create Project
 
 ```bash
-# If you don't have foundry or forge: `curl -L https://foundry.paradigm.xyz | bash`
+# If you don't have foundry: `curl -L https://foundry.paradigm.xyz | bash`
 forge init --template Lay3rLabs/wavs-foundry-template my-wavs
 ```
 
@@ -95,8 +96,6 @@ forge test
 
 ### Build WASI components
 
-> Install [`cargo install cargo-component --locked`](https://github.com/bytecodealliance/cargo-component#installation) if you have not already.
-
 ```bash
 make wasi-build
 ```
@@ -104,6 +103,8 @@ make wasi-build
 > You can also use `make build` to build the contracts and components in one command
 
 ### Execute WASI component directly
+
+Component not found error? Review the installation documentation [here](#install-cargo-components)
 
 ```bash
 make wasi-exec
