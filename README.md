@@ -51,6 +51,26 @@ make test
 ### Start Anvil, WAVS, and Deploy Eigenlayer
 
 ```bash
+cd lib/dev-workspace
+docker-compose build 
+cp example.env .env
+```
+Add a private key and etherscan api key to the .env 
+
+```bash 
+docker compose up 
+```
+Wait until the eigenlayer-setup container emits a transaction hash for signature validation 
+Should look like 
+
+```
+eigenlayer_setup  | 2025-02-14T19:07:56.312446Z  INFO eigen_logging::tracing_logger: Signature verification completed with tx hash 0x9bc377a976a445b504989055cc8e64c10570e1ca4ebb8a855b72df577e1851ea [""]
+``` 
+Open a new terminal at the root level of the repo 
+
+Go to `lib/dev-workspace/.nodes/operator_mnemonic1`
+and copy the mnemonic to the `WAVS_SUBMISSION_MNEMONIC` and `WAVS_AGGREGATOR_MNEMONIC` variables in `.env`
+```bash
 # copy over the .env file
 cp .env.example .env
 
@@ -58,28 +78,28 @@ cp .env.example .env
 # Docker Engine -> Settings -> Resources -> Network -> 'Enable Host Networking'
 # or
 # brew install chipmk/tap/docker-mac-net-connect && sudo brew services start chipmk/tap/docker-mac-net-connect
-make start-all
+rm .docker/cli/*.json || true 
+docker compose up 
 ```
 
 ### Upload your WAVS Service Manager
-
+Open a new terminal 
 ```bash
 # Required for `forge script`
 sudo chmod 0666 .docker/cli/deployments.json
 alias wavs-cli="docker run --network host --env-file ./.env -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.3.0-alpha5 wavs-cli"
 
-# Deploy service-manager
-wavs-cli deploy-eigen-service-manager --data /data/.docker/cli --home /data
 
 # Deploy contracts
-export SERVICE_MANAGER=`jq -r '.eigen_service_managers.local | .[-1]' .docker/cli/deployments.json`
+export SERVICE_MANAGER=`jq -r '.addresses.layerServiceManager' lib/dev-workspace/.nodes/avs_deploy.json`
 export FOUNDRY_ANVIL_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 forge script ./script/Deploy.s.sol ${SERVICE_MANAGER} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
 
 # Get deployed contracts
-export SERVICE_HANDLER_ADDR=`jq -r '.service_handler' "./.docker/cli/script_deploy.json"`
 export TRIGGER_ADDR=`jq -r '.trigger' "./.docker/cli/script_deploy.json"`
+export SERVICE_HANDLER_ADDR=`jq -r '.service_handler' "./.docker/cli/script_deploy.json"`
 ```
+
 
 ### Build WASI components
 
@@ -99,6 +119,7 @@ make wasi-build
 # Contract trigger function signature to listen for
 trigger_event=$(cast sig-event "NewTrigger(bytes)"); echo "Trigger Event: $trigger_event"
 
+# you may have to forgo the alias to make this work 
 wavs-cli deploy-service --log-level=error --data /data/.docker/cli --home /data \
     --component /data/compiled/eth_price_oracle.wasm \
     --trigger-event-name ${trigger_event:2} \
