@@ -5,7 +5,7 @@ import "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 import {Strings} from "@openzeppelin-contracts/utils/Strings.sol";
 
-import {ILayerServiceManager} from "@wavs/interfaces/ILayerServiceManager.sol";
+import {IWavsServiceManager} from "@wavs/interfaces/IWavsServiceManager.sol";
 
 import {SimpleSubmit} from "../src/WavsSubmit.sol";
 import {SimpleTrigger} from "../src/WavsTrigger.sol";
@@ -27,7 +27,7 @@ contract DeployScript is Script {
     function run(string calldata serviceManagerAddr) public {
         vm.startBroadcast(privateKey);
 
-        SimpleSubmit submit = new SimpleSubmit(ILayerServiceManager(vm.parseAddress(serviceManagerAddr)));
+        SimpleSubmit submit = new SimpleSubmit(IWavsServiceManager(vm.parseAddress(serviceManagerAddr)));
         SimpleTrigger trigger = new SimpleTrigger();
 
         vm.stopBroadcast();

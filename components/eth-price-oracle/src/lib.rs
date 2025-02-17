@@ -1,13 +1,10 @@
 mod trigger;
 use trigger::{decode_trigger_event, encode_trigger_output, Destination};
+use wavs_wasi_chain::http::{fetch_json, http_request_get};
 pub mod bindings;
 use crate::bindings::{export, Guest, TriggerAction};
 use serde::{Deserialize, Serialize};
-use wstd::{
-    http::{Client, Request},
-    io::{empty, AsyncRead},
-    runtime::block_on,
-};
+use wstd::{http::HeaderValue, runtime::block_on};
 
 struct Component;
 export!(Component with_types_in bindings);
@@ -55,37 +52,23 @@ async fn get_price_feed(id: u64) -> Result<PriceFeedData, String> {
 
     let current_time = std::time::SystemTime::now().elapsed().unwrap().as_secs();
 
-    let req = Request::get(url)
-        .header("Accept", "application/json")
-        .header("Content-Type", "application/json")
-        .header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36")
-        .header("Cookie", format!("myrandom_cookie={}", current_time))
-        .body(empty())
-        .unwrap();
+    let mut req = http_request_get(&url).map_err(|e| e.to_string())?;
+    req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
+    req.headers_mut().insert("Content-Type", HeaderValue::from_static("application/json"));
+    req.headers_mut()
+        .insert("User-Agent", HeaderValue::from_static("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"));
+    req.headers_mut().insert(
+        "Cookie",
+        HeaderValue::from_str(&format!("myrandom_cookie={}", current_time)).unwrap(),
+    );
 
-    let response = Client::new().send(req).await;
+    let json: Root = fetch_json(req).await.map_err(|e| e.to_string())?;
 
-    // print out response
-    println!("response: {:?}", response);
-
-    match response {
-        Ok(mut response) => {
-            let mut body_buf = Vec::new();
-            response.body_mut().read_to_end(&mut body_buf).await.unwrap();
-
-            let resp = String::from_utf8_lossy(&body_buf);
-            let json: Root = serde_json::from_str(format!(r#"{}"#, resp).as_str()).unwrap();
-
-            return Ok(PriceFeedData {
-                symbol: json.data.symbol,
-                price: json.data.statistics.price,
-                timestamp: json.status.timestamp,
-            });
-        }
-        Err(e) => {
-            return Err(e.to_string());
-        }
-    }
+    Ok(PriceFeedData {
+        symbol: json.data.symbol,
+        price: json.data.statistics.price,
+        timestamp: json.status.timestamp,
+    })
 }
 
 #[derive(Debug, Serialize, Deserialize)]

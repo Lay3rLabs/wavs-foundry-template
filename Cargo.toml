@@ -14,17 +14,17 @@ rust-version = "1.80.0"
 
 [workspace.dependencies]
 # WASI
-wit-bindgen-rt = {version = "0.38.0", features = ["bitflags"]}
-wit-bindgen = "0.38.0"
-wstd = "0.5.0"
-wasi = "0.13.3"
-wavs-wasi-chain = "0.3.0-alpha4"
+wit-bindgen-rt = {version = "0.39.0", features = ["bitflags"]}
+wit-bindgen = "0.39.0"
+wstd = "0.5.1"
+wasi = "0.14.1"
+wavs-wasi-chain = "0.3.0-alpha5"
 
 # Other
-serde = { version = "1.0.211", features = ["derive"] }
-serde_json = "1.0.127"
-anyhow = "1.0.90"
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.138"
+anyhow = "1.0.95"
 
 ## Alloy
-alloy-sol-macro = { version = "0.8.15", features = ["json"]}
-alloy-sol-types = "0.8.20"
+alloy-sol-macro = { version = "0.8.13", features = ["json"]}
+alloy-sol-types = "0.8.13"
