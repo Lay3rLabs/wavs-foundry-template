@@ -28,4 +28,4 @@ lto = true
 
 [package.metadata.component]
 package = "component:eth-price-oracle"
-target = "wavs:worker/layer-trigger-world@0.3.0-alpha2"
+target = "wavs:worker/layer-trigger-world@0.3.0-beta"
