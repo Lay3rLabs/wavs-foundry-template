@@ -118,6 +118,29 @@ make wasi-exec
 ### Start Anvil, WAVS, and Deploy Eigenlayer
 
 ```bash
+cd lib/dev-workspace
+cp example.env .env
+docker compose build
+```
+
+Add a private key and etherscan api key to the .env
+
+```bash
+docker compose up
+```
+
+Wait until the eigenlayer-setup container emits a transaction hash for signature validation Should look like
+
+```
+eigenlayer_setup  | 2025-02-14T19:07:56.312446Z  INFO eigen_logging::tracing_logger: Signature verification completed with tx hash 0x9bc377a976a445b504989055cc8e64c10570e1ca4ebb8a855b72df577e1851ea [""]
+```
+
+Open a new terminal at the root level of the repo
+
+Go to `lib/dev-workspace/.nodes/operator_mnemonic1`
+and copy the mnemonic to the `WAVS_SUBMISSION_MNEMONIC` and `WAVS_AGGREGATOR_MNEMONIC` variables in `.env`
+
+```bash
 # copy over the .env file
 cp .env.example .env
 
@@ -125,6 +148,8 @@ cp .env.example .env
 # Docker Engine -> Settings -> Resources -> Network -> 'Enable Host Networking'
 # or
 # brew install chipmk/tap/docker-mac-net-connect && sudo brew services start chipmk/tap/docker-mac-net-connect
+
+# TODO: merge all of the above into 1 compose file here at the root
 make start-all
 ```
 
