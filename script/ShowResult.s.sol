@@ -1,28 +1,25 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity 0.8.22;
 
-import "forge-std/Script.sol";
-import {SimpleTrigger} from "../src/WavsTrigger.sol";
-import {SimpleSubmit} from "../src/WavsSubmit.sol";
-import {ITypes} from "../src/interfaces/ITypes.sol";
+import {SimpleTrigger} from "contracts/WavsTrigger.sol";
+import {SimpleSubmit} from "contracts/WavsSubmit.sol";
+import {ITypes} from "interfaces/ITypes.sol";
+import {Common} from "script/Common.s.sol";
+import {console} from "forge-std/console.sol";
 
-contract TriggerScript is Script {
-    uint256 privateKey = vm.envOr(
-        "ANVIL_PRIVATE_KEY", uint256(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80)
-    );
-
-    function setUp() public {}
-
+/// @dev Script to show the result of a trigger
+contract ShowResult is Common {
     function run(string calldata serviceTriggerAddr, string calldata serviceHandlerAddr) public {
-        vm.startBroadcast(privateKey);
+        vm.startBroadcast(_privateKey);
         SimpleTrigger trigger = SimpleTrigger(vm.parseAddress(serviceTriggerAddr));
         SimpleSubmit submit = SimpleSubmit(vm.parseAddress(serviceHandlerAddr));
 
         ITypes.TriggerId triggerId = trigger.nextTriggerId();
-        console.log("getting data for triggerId", ITypes.TriggerId.unwrap(triggerId));
+        console.log("Fetching data for TriggerId", ITypes.TriggerId.unwrap(triggerId));
 
         bytes memory data = submit.getData(triggerId);
-        console.log("data:", string(data));
+        console.log("Data:", string(data));
+
         vm.stopBroadcast();
     }
 }

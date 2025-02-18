@@ -1,7 +1,33 @@
 {
+  "name": "wavs-foundry-template",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "build": "forge build",
+    "coverage": "forge coverage --report summary --report lcov --match-path 'test/unit/*'",
+    "deploy:local": "forge script Deploy ${SERVICE_MANAGER} --sig 'run(string)' --rpc-url http://localhost:8545 --broadcast -vvvvv",
+    "lint:check": "yarn lint:sol && forge fmt --check",
+    "lint:fix": "sort-package-json && forge fmt && yarn lint:sol --fix",
+    "lint:natspec": "npx @defi-wonderland/natspec-smells --config natspec-smells.config.js",
+    "lint:sol": "solhint 'src/**/*.sol' 'script/**/*.sol' 'test/**/*.sol'",
+    "test": "forge test -vvv",
+    "test:integration": "forge test --match-contract Integration -vvv",
+    "test:unit": "forge test --match-contract Unit -vvv"
+  },
+  "lint-staged": {
+    "*.{js,css,md,ts,sol}": "forge fmt",
+    "(src|test|script)/**/*.sol": "yarn lint:sol",
+    "package.json": "sort-package-json"
+  },
   "dependencies": {
+    "@commitlint/cli": "19.3.0",
+    "@commitlint/config-conventional": "19.2.2",
+    "@defi-wonderland/natspec-smells": "1.1.6",
     "@openzeppelin/contracts": "^5.2.0",
     "@wavs/solidity": "^0.3.0-beta",
-    "forge-std": "github:foundry-rs/forge-std#v1.9.6"
+    "forge-std": "github:foundry-rs/forge-std#v1.9.6",
+    "lint-staged": ">=10",
+    "solhint-community": "4.0.0",
+    "sort-package-json": "2.10.0"
   }
 }

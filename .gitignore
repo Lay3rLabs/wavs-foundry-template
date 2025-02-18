@@ -6,3 +6,4 @@ compiled/*.wasm
 .docker/*.json
 .env
 node_modules/
+lcov.info

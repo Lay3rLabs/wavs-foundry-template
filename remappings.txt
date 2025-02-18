@@ -1,3 +1,6 @@
 @openzeppelin-contracts=node_modules/@openzeppelin/contracts/
 @wavs/=node_modules/@wavs/solidity
 forge-std=node_modules/forge-std/src
+
+contracts/=src/contracts
+interfaces/=src/interfaces

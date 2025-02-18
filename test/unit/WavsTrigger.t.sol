@@ -1,11 +1,12 @@
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.22;
 
 import {Test} from "forge-std/Test.sol";
-import {SimpleTrigger} from "../src/WavsTrigger.sol";
-import {ITypes} from "../src/interfaces/ITypes.sol";
+import {SimpleTrigger} from "contracts/WavsTrigger.sol";
+import {ITypes} from "interfaces/ITypes.sol";
 
 contract TriggerTest is Test {
-    SimpleTrigger simpleTrigger;
+    SimpleTrigger public simpleTrigger;
 
     function setUp() public {
         simpleTrigger = new SimpleTrigger();

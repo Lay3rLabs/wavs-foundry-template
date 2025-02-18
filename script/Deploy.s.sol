@@ -1,65 +1,66 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity 0.8.22;
 
-import "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 import {Strings} from "@openzeppelin-contracts/utils/Strings.sol";
-
 import {IWavsServiceManager} from "@wavs/interfaces/IWavsServiceManager.sol";
+import {SimpleSubmit} from "contracts/WavsSubmit.sol";
+import {SimpleTrigger} from "contracts/WavsTrigger.sol";
+import {Common, EigenContracts} from "script/Common.s.sol";
 
-import {SimpleSubmit} from "../src/WavsSubmit.sol";
-import {SimpleTrigger} from "../src/WavsTrigger.sol";
-
-// forge script ./script/Deploy.s.sol ${SERVICE_MANAGER} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
-contract DeployScript is Script {
+/// @dev Deployment script for SimpleSubmit and SimpleTrigger contracts
+contract Deploy is Common {
     using stdJson for string;
 
-    string root = vm.projectRoot();
-    string deployments_path = string.concat(root, "/.docker/deployments.json");
-    string script_output_path = string.concat(root, "/.docker/script_deploy.json");
+    string public root = vm.projectRoot();
+    string public deployments_path = string.concat(root, "/.docker/deployments.json");
+    string public script_output_path = string.concat(root, "/.docker/script_deploy.json");
 
-    uint256 privateKey = vm.envOr(
-        "ANVIL_PRIVATE_KEY", uint256(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80)
-    );
-
-    function setUp() public {}
-
-    function run(string calldata serviceManagerAddr) public {
-        vm.startBroadcast(privateKey);
-
-        SimpleSubmit submit = new SimpleSubmit(IWavsServiceManager(vm.parseAddress(serviceManagerAddr)));
-        SimpleTrigger trigger = new SimpleTrigger();
-
+    /**
+     * @dev Deploys the SimpleSubmit and SimpleTrigger contracts and writes the results to a JSON file
+     * @param _serviceManagerAddr The address of the service manager
+     */
+    function run(string calldata _serviceManagerAddr) public {
+        vm.startBroadcast(_privateKey);
+        SimpleSubmit _submit = new SimpleSubmit(IWavsServiceManager(vm.parseAddress(_serviceManagerAddr)));
+        SimpleTrigger _trigger = new SimpleTrigger();
         vm.stopBroadcast();
 
-        string memory json = "json";
-        json.serialize("service_handler", Strings.toHexString(address(submit)));
-        json.serialize("trigger", Strings.toHexString(address(trigger)));
-        string memory finalJson = json.serialize("service_manager", serviceManagerAddr);
-        vm.writeFile(script_output_path, finalJson);
+        string memory _json = "json";
+        _json.serialize("service_handler", Strings.toHexString(address(_submit)));
+        _json.serialize("trigger", Strings.toHexString(address(_trigger)));
+        string memory _finalJson = _json.serialize("service_manager", _serviceManagerAddr);
+        vm.writeFile(script_output_path, _finalJson);
     }
 
-    function loadEigenContractsFromFS() public view returns (EigenContracts memory) {
-        string memory json = vm.readFile(deployments_path);
-        address dm = address(uint160(bytes20(json.readBytes(".eigen_core.local.delegation_manager"))));
-        address rc = address(uint160(bytes20(json.readBytes(".eigen_core.local.rewards_coordinator"))));
-        address avs = address(uint160(bytes20(json.readBytes(".eigen_core.local.avs_directory"))));
+    /**
+     * @dev Loads the Eigen contracts from the deployments.json file
+     * @return _fixture The Eigen contracts
+     */
+    function loadEigenContractsFromFS() public view returns (EigenContracts memory _fixture) {
+        address _dm = _jsonBytesToAddress(".eigen_core.local.delegation_manager");
+        address _rc = _jsonBytesToAddress(".eigen_core.local.rewards_coordinator");
+        address _avs = _jsonBytesToAddress(".eigen_core.local.avs_directory");
 
-        EigenContracts memory fixture =
-            EigenContracts({delegation_manager: dm, rewards_coordinator: rc, avs_directory: avs});
-
-        return fixture;
+        _fixture = EigenContracts({delegation_manager: _dm, rewards_coordinator: _rc, avs_directory: _avs});
     }
 
-    function loadServiceManagersFromFS() public view returns (address[] memory) {
-        string memory json = vm.readFile(deployments_path);
-        address[] memory service_managers = json.readAddressArray(".eigen_service_managers.local");
-        return service_managers;
+    /**
+     * @dev Loads the service managers from the deployments.json file
+     * @return _service_managers The list of service managers
+     */
+    function loadServiceManagersFromFS() public view returns (address[] memory _service_managers) {
+        _service_managers = vm.readFile(deployments_path).readAddressArray(".eigen_service_managers.local");
     }
-}
 
-struct EigenContracts {
-    address delegation_manager;
-    address rewards_coordinator;
-    address avs_directory;
+    // --- Internal Utils ---
+
+    /**
+     * @dev Converts a string to an address
+     * @param _byteString The string to convert
+     * @return _address The address
+     */
+    function _jsonBytesToAddress(string memory _byteString) internal view returns (address _address) {
+        _address = address(uint160(bytes20(vm.readFile(deployments_path).readBytes(_byteString))));
+    }
 }
