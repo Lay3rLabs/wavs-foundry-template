@@ -1,3 +1,4 @@
 [submodule "lib/dev-workspace"]
 	path = lib/dev-workspace
 	url = git@github.com:BreadchainCoop/wavs-el-env
+	commit = 388c7b24fd6683acde3df4c57c5c43a80aeb826e
