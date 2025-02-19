@@ -1,5 +1,7 @@
 name: E2E
 
+# based on https://docs.wavs.xyz/ & this repos README.md
+
 on:
   pull_request:
   workflow_dispatch:
@@ -30,7 +32,7 @@ jobs:
 
     - name: Install rust wasm32 + component packages
       run: |
-        rustup target add wasm32-wasi
+        rustup target add wasm32-wasip2
         cargo install cargo-component warg-cli wkg --locked
         wkg config --default-registry wa.dev
 
