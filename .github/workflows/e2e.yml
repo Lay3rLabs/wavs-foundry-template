@@ -1,11 +1,11 @@
-name: Check WAVS Image Version
+name: E2E
 
 on:
   pull_request:
   workflow_dispatch:
 
 jobs:
-  script:
+  run:
     runs-on: ubuntu-latest
     env:
       DEBUGGING: true
