@@ -1,0 +1,21 @@
+name: Check WAVS Image Version
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  script:
+    runs-on: ubuntu-latest
+    env:
+      DEBUGGING: true
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Make script executable
+      run: chmod +x .github/single-wavs-image-verifier.sh
+
+    - name: Run script
+      run: sh .github/single-wavs-image-verifier.sh
