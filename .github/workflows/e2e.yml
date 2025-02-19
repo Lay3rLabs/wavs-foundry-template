@@ -60,4 +60,25 @@ jobs:
         make wasi-exec
 
     # TODO: https://github.com/peter-evans/docker-compose-actions-workflow
+    # modified version of `make start-all`
+    - name: Build the stack
+      run: |
+        anvil --host 0.0.0.0 &
+        docker compose up -d
 
+    - name: Run tests
+      run: |
+        make deploy-contracts
+        sleep 2
+        TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
+        sleep 2
+        COIN_MARKET_CAP_ID=1 make trigger-service
+        sleep 2
+
+    - name: Run show result
+      run: make show-result
+
+    - name: Stop the stack
+      run: |
+        killall anvil
+        docker compose down
