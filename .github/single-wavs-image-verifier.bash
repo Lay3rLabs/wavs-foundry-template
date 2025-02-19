@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Define the pattern
 # Updated to handle semantic versions with suffixes (like -beta, -alpha, etc.)
@@ -15,7 +15,7 @@ main() {
         if [[ $file == lib/* ]]; then
             continue
         fi
-        if [[ $file == *$(basename $0)* ]]; then
+        if [[ $file == *$(basename $0) ]]; then
             continue
         fi
 

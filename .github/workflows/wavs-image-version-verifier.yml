@@ -14,8 +14,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Install bash
+      run: sudo apt-get install bash
+
     - name: Make script executable
-      run: chmod +x .github/single-wavs-image-verifier.sh
+      run: chmod +x .github/single-wavs-image-verifier.bash
 
     - name: Run script
-      run: sh .github/single-wavs-image-verifier.sh
+      run: bash .github/single-wavs-image-verifier.bash
