@@ -1,0 +1,52 @@
+name: Check WAVS Image Version
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  script:
+    runs-on: ubuntu-latest
+    env:
+      DEBUGGING: true
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Ubuntu Deps
+      run: sudo apt-get install bash make jq
+
+    - name: Install toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-on-failure: true
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 21
+
+    - name: Install rust wasm32 + component packages
+      run: |
+        rustup target add wasm32-wasi
+        cargo install cargo-component warg-cli wkg --locked
+        wkg config --default-registry wa.dev
+
+    - name: Install Foundry
+      uses: onbjerg/foundry-toolchain@v1
+      with:
+        version: nightly
+
+    - name: Install contract deps
+      run: make setup
+
+    - name: build contracts
+      run: forge build
+
+    - name: wasi build and local exec
+      run: |
+        make wasi-build
+        make wasi-exec
+
