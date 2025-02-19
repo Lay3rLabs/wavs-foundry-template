@@ -59,7 +59,6 @@ jobs:
         make wasi-build
         make wasi-exec
 
-    # TODO: https://github.com/peter-evans/docker-compose-actions-workflow
     # modified version of `make start-all`
     - name: Build the stack
       run: |
