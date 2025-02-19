@@ -16,32 +16,39 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Install Ubuntu Deps
+    - name: Install Ubuntu packages
       run: sudo apt-get install bash make jq
 
-    - name: Install toolchain
-      uses: dtolnay/rust-toolchain@stable
-
-    - uses: Swatinem/rust-cache@v2
-      with:
-        cache-on-failure: true
-
     - uses: actions/setup-node@v4
+      name: Install Node.js
       with:
         node-version: 21
 
-    - name: Install rust wasm32 + component packages
-      run: |
-        rustup target add wasm32-wasip2
-        cargo install cargo-component warg-cli wkg --locked
-        wkg config --default-registry wa.dev
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - uses: Swatinem/rust-cache@v2
+      name: Cache Cargo dependencies
+      with:
+        cache-on-failure: true
 
     - name: Install Foundry
       uses: onbjerg/foundry-toolchain@v1
       with:
         version: nightly
 
-    - name: Install contract deps
+    - name: Install rust wasm32-wasip2
+      run: |
+        rustup update stable
+        rustup target add wasm32-wasip2
+
+    # move to `- uses: cargo-bins/cargo-binstall@main` ?
+    - name: Install wasi components
+      run: |
+        cargo install cargo-component warg-cli wkg --locked
+        wkg config --default-registry wa.dev
+
+    - name: Install forge deps
       run: make setup
 
     - name: build contracts
@@ -51,4 +58,6 @@ jobs:
       run: |
         make wasi-build
         make wasi-exec
+
+    # TODO: https://github.com/peter-evans/docker-compose-actions-workflow
 
