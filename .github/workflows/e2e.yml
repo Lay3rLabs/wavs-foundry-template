@@ -29,13 +29,26 @@ jobs:
       with:
         node-version: 21
 
-    - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@stable
-
-    - uses: Swatinem/rust-cache@v2
-      name: Cache Cargo dependencies
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
       with:
-        cache-on-failure: true
+        profile: minimal
+        toolchain: stable
+        override: true
+
+    - name: Cache Rust target
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.rustup/toolchains
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-rust-wasm32-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-rust-wasm32-
 
     - uses: cargo-bins/cargo-binstall@main
       name: Install cargo-binstall
@@ -48,9 +61,7 @@ jobs:
         version: nightly
 
     - name: Install rust wasm32-wasip2
-      run: |
-        rustup update stable
-        rustup target add wasm32-wasip2
+      run: rustup target add wasm32-wasip2
 
     - name: Install wasi components
       run: |
