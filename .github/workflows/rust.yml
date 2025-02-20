@@ -1,37 +1,59 @@
-# on:
-#   push:
-#     branches:
-#       - main
-#   pull_request:
+name: Rust
 
-# name: Rust
+on:
+  pull_request:
 
-# jobs:
-#   tests-stable:
-#     name: Tests (Stable)
-#     runs-on: ubuntu-latest
-#     env:
-#       ETH_RPC_URL: https://eth-mainnet.alchemyapi.io/v2/Lc7oIGYeL_QvInzI0Wiu_pOZZDEKBrdf
-#     steps:
-#       - name: Checkout sources
-#         uses: actions/checkout@v3
+jobs:
+  tests-stable:
+    name: Tests (Stable)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
 
-#       - name: Install toolchain
-#         uses: dtolnay/rust-toolchain@stable
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@stable
 
-#       - uses: Swatinem/rust-cache@v2
-#         with:
-#           cache-on-failure: true
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
 
-#       - name: cargo test
-#         run: cargo test --workspace --all-features
+      - name: cargo test
+        run: cargo test --workspace --all-features
+
+  docs:
+    name: docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rust-docs
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: doc
+        run: cargo doc --workspace --all-features --no-deps --document-private-items
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+
+  fmt:
+    name: fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: fmt --check
+        run: cargo fmt --all --check
 
 #   clippy:
 #     name: clippy
 #     runs-on: ubuntu-latest
 #     steps:
-#       - uses: actions/checkout@v3
-#       - uses: dtolnay/rust-toolchain@nightly
+#       - uses: actions/checkout@v4
+#       - uses: dtolnay/rust-toolchain@stable
 #         with:
 #           components: clippy
 #       - uses: Swatinem/rust-cache@v2
@@ -39,28 +61,3 @@
 #         run: cargo clippy --workspace --tests --all-features
 #         env:
 #           RUSTFLAGS: "-D warnings"
-
-#   docs:
-#     name: docs
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v3
-#       - uses: dtolnay/rust-toolchain@nightly
-#         with:
-#           components: rust-docs
-#       - uses: Swatinem/rust-cache@v2
-#       - name: doc
-#         run: cargo doc --workspace --all-features --no-deps --document-private-items
-#         env:
-#           RUSTDOCFLAGS: "-D warnings"
-
-#   fmt:
-#     name: fmt
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v3
-#       - uses: dtolnay/rust-toolchain@nightly
-#         with:
-#           components: rustfmt
-#       - name: fmt --check
-#         run: cargo fmt --all --check
