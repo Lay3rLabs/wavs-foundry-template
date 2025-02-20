@@ -121,8 +121,10 @@ make wasi-exec
 >
 > Configure networking:
 > - Docker Desktop: Settings -> Resources -> Network -> 'Enable Host Networking'
+>
 > or
-> - `brew install chipmk/tap/docker-mac-net-connect && sudo brew services start chipmk/tap/docker-mac-net-connect` is an alternative to the docker desktop host networking option.
+>
+> - `brew install chipmk/tap/docker-mac-net-connect && sudo brew services start chipmk/tap/docker-mac-net-connect`
 
 ### Start Anvil, WAVS, and Deploy Eigenlayer
 
