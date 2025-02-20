@@ -13,8 +13,13 @@ jobs:
         with:
           version: stable
 
+      - uses: actions/setup-node@v4
+        name: Install Node.js
+        with:
+          node-version: 21
+
       - name: Install deps
-        run: forge install
+        run: make setup
 
       - name: Run forge tests
         run: forge test
