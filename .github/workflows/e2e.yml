@@ -89,11 +89,11 @@ jobs:
     - name: Run tests
       run: |
         make deploy-contracts
-        sleep 2
+        sleep 1
         TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
-        sleep 2
+        sleep 1
         COIN_MARKET_CAP_ID=1 make trigger-service
-        sleep 2
+        sleep 1
 
     - name: Run show result
       run: make show-result
