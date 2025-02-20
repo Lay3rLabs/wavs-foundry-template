@@ -1,13 +1,13 @@
-# WAVS Monorepo Template
+# [WAVS](https://docs.wavs.xyz) Monorepo Template
 
-**Template for quickly getting started with developing WAVS Rust applications**
+**Template for getting started with developing WAVS applications**
 
-A comprehensive template for developing WAVS (WebAssembly AVS) applications using Rust and Solidity on Linux and MacOS. This template provides a pre-configured development environment with integrated testing frameworks for both Rust and Solidity components.
+A template for developing WebAssembly AVS applications using Rust and Solidity, configured for Linux and MacOS.
 
 ## System Requirements
 
 <details>
-<summary>Core (Docker, Compose, Make, JQ, NodeJS v21+)</summary>
+<summary>Core (Docker, Compose, Make, JQ, Node v21+)</summary>
 
 ### Docker
 - **MacOS**: `brew install --cask docker`
@@ -64,7 +64,7 @@ rustup target add wasm32-wasip2
 <details>
 <summary>Cargo Components</summary>
 
-## Install Cargo Components
+### Install Cargo Components
 
 ```bash
 # Install required cargo components
@@ -84,6 +84,7 @@ wkg config --default-registry wa.dev
 forge init --template Lay3rLabs/wavs-foundry-template my-wavs
 ```
 
+> [!TIP]
 > Run `make help` to see all available commands and environment variable overrides.
 
 ### Solidity
@@ -105,6 +106,7 @@ forge test
 make wasi-build
 ```
 
+> [!TIP]
 > You can also use `make build` to build the contracts and components in one command
 
 ### Execute WASI component directly
@@ -115,19 +117,27 @@ make wasi-exec
 
 ## WAVS
 
+> [!NOTE]
+> If you are running on a Mac with an ARM chip, you will need to do the following:
+> - Set up Rosetta: `softwareupdate --install-rosetta`
+> - Enable Rosetta (Docker Desktop: Settings -> General -> enable "Use Rosetta for x86_64/amd64 emulation on Apple Silicon")
+>
+> Configure networking:
+> - Docker Desktop: Settings -> Resources -> Network -> 'Enable Host Networking'
+> or
+> - `brew install chipmk/tap/docker-mac-net-connect && sudo brew services start chipmk/tap/docker-mac-net-connect` is an alternative to the docker desktop host networking option.
+
 ### Start Anvil, WAVS, and Deploy Eigenlayer
 
 ```bash
 # copy over the .env file
 cp .env.example .env
 
-# MacOS Docker:
-# Docker Engine -> Settings -> Resources -> Network -> 'Enable Host Networking'
-# or
-# brew install chipmk/tap/docker-mac-net-connect && sudo brew services start chipmk/tap/docker-mac-net-connect
+# start the entire backend stack
 make start-all
 ```
 
+> [!NOTE]
 > The `start-all` command must remain running in your terminal. Use another terminal to run other commands.
 >
 > You can stop the services with `ctrl+c`. Some MacOS terminals require pressing this twice.
@@ -139,7 +149,7 @@ make start-all
 make deploy-contracts
 ```
 
->
+> [!TIP]
 > You can see the deployed trigger address with `make get-trigger-from-deploy`
 >
 > You can see the deployed submission address with `make get-service-handler-from-deploy`
