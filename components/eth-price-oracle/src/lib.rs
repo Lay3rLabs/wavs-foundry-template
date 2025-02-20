@@ -79,8 +79,8 @@ pub struct PriceFeedData {
 }
 
 /// -----
-/// https://transform.tools/json-to-rust-serde
-/// Generated from https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id=1&range=1h
+/// <https://transform.tools/json-to-rust-serde>
+/// Generated from <https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id=1&range=1h>
 /// -----
 ///
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
