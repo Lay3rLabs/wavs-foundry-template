@@ -32,6 +32,11 @@ jobs:
       with:
         cache-on-failure: true
 
+    - uses: cargo-bins/cargo-binstall@main
+      name: Install cargo-binstall
+      with:
+        version: latest
+
     - name: Install Foundry
       uses: onbjerg/foundry-toolchain@v1
       with:
@@ -45,7 +50,7 @@ jobs:
     # move to `- uses: cargo-bins/cargo-binstall@main` ?
     - name: Install wasi components
       run: |
-        cargo install cargo-component warg-cli wkg --locked
+        cargo binstall cargo-component warg-cli wkg --locked --no-confirm
         wkg config --default-registry wa.dev
 
     - name: Install forge deps
