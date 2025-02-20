@@ -21,5 +21,8 @@ jobs:
       - name: Install deps
         run: make setup
 
+      - name: Run forge build
+        run: forge build -vvv
+
       - name: Run forge tests
-        run: forge test
+        run: forge test -vvv
