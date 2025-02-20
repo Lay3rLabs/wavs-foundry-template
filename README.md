@@ -103,11 +103,8 @@ forge test
 ### Build WASI components
 
 ```bash
-make wasi-build
+make wasi-build # or `make build` to include solidity compile
 ```
-
-> [!TIP]
-> You can also use `make build` to build the contracts and components in one command
 
 ### Execute WASI component directly
 
@@ -133,14 +130,11 @@ make wasi-exec
 # copy over the .env file
 cp .env.example .env
 
-# start the entire backend stack
+# Start the backend
+# This must remain running in your terminal. Use another terminal to run other commands.
+# You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
 make start-all
 ```
-
-> [!NOTE]
-> The `start-all` command must remain running in your terminal. Use another terminal to run other commands.
->
-> You can stop the services with `ctrl+c`. Some MacOS terminals require pressing this twice.
 
 ### Upload your Service's Trigger and Submission contracts
 
