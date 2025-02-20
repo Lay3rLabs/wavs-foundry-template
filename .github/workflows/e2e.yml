@@ -77,10 +77,11 @@ jobs:
     - name: build contracts
       run: forge build
 
+    # `strings | grep BTC` verifies the output contains BTC from the price oracle example
     - name: wasi build and local exec
       run: |
         make wasi-build
-        make wasi-exec
+        make wasi-exec | strings | grep BTC
 
     # modified version of `make start-all`
     - name: Build the stack
@@ -98,8 +99,10 @@ jobs:
         COIN_MARKET_CAP_ID=1 make trigger-service
         sleep 1
 
+    # `strings | grep BTC` verifies the output contains BTC from the price oracle example
     - name: Run show result
-      run: make show-result
+      run: |
+        make show-result | strings | grep BTC
 
     - name: Stop the stack
       run: |
