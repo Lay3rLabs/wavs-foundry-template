@@ -62,6 +62,7 @@ jobs:
     # modified version of `make start-all`
     - name: Build the stack
       run: |
+        cp .env.example .env
         anvil --host 0.0.0.0 &
         docker compose up -d
 
