@@ -125,11 +125,8 @@ COIN_MARKET_CAP_ID=1 make wasi-exec
 > - Set up Rosetta: `softwareupdate --install-rosetta`
 > - Enable Rosetta (Docker Desktop: Settings -> General -> enable "Use Rosetta for x86_64/amd64 emulation on Apple Silicon")
 >
-> Configure networking:
+> Configure one of the following networking:
 > - Docker Desktop: Settings -> Resources -> Network -> 'Enable Host Networking'
->
-> or
->
 > - `brew install chipmk/tap/docker-mac-net-connect && sudo brew services start chipmk/tap/docker-mac-net-connect`
 
 ### Start Environment
