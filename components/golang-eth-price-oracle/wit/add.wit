@@ -1,8 +1,0 @@
-package example:component@0.1.0;
-
-world example {
-    include wasi:cli/imports@0.2.0;
-
-    // TODO: why is the return not working?
-    export add: func(x: s32, y: s32) -> s32;
-}
