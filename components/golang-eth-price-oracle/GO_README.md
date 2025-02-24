@@ -1,4 +1,14 @@
 ```bash
+wkg get wasi:cli@0.2.0
+# move it into wit/deps/NAME-version/package.wit
+
+wkg get wasi:filesystem@0.2.0
+wkg get wasi:sockets@0.2.0
+wkg get wasi:random@0.2.0
+```
+
+
+```bash
 git clone git@github.com:bytecodealliance/go-modules.git
 cd go-modules
 go install ./cmd/wit-bindgen-go
@@ -25,25 +35,18 @@ wasm-tools -V
 # TOTO: ensure wkg is installed
 
 cd /home/reece/Desktop/Programming/Rust/wavs/sdk/
-
 wkg wit build
+
+
 
 cd components/golang-eth-price-oracle
 
 # cp /home/reece/Desktop/Programming/Rust/wavs/sdk/wavs:worker@0.3.0-beta.wasm .
 
-go get go.bytecodealliance.org/cmd/wit-bindgen-go
-go run go.bytecodealliance.org/cmd/wit-bindgen-go generate -o internal/ ./example:component@0.1.0.wasm
-
-# TODO: i had to manually modify the internal/example/component to return an int32 ?? why
-tinygo build -target=wasip2 -o add.wasm --wit-package wit/ --wit-world example main.go
+wit-bindgen-go generate -o internal/ /home/reece/Desktop/Programming/Rust/wavs/sdk/wavs:worker@0.3.0-beta.wasm
 
 
-# this is only for testing, we will use the wavs-cli wasi-exec command as the real impl vs this
-git clone git@github.com:bytecodealliance/component-docs.git
-cd component-docs/component-model/examples/example-host
-cargo run --release -- 1 2 /home/reece/Desktop/Programming/Rust/wavs-foundry-template/components/golang-eth-price-oracle/add.wasm
+tinygo build -target=wasip2 -o ../../compiled/golang-wavs-example.wasm --wit-package /home/reece/Desktop/Programming/Rust/wavs/sdk/wavs:worker@0.3.0-beta.wasm --wit-world wavs:worker/layer-trigger-world main.go
 
-
-
+(cd ../../; make wasi-exec COMPONENT_FILENAME=golang-wavs-example.wasm)
 ```
