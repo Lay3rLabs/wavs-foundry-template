@@ -6,7 +6,7 @@ resolver = "2"
 
 [workspace.package]
 edition = "2021"
-version = "0.3.0-beta"
+version = "0.3.0-rc1"
 license = "MIT"
 authors = ["Lay3r Labs Team"]
 repository = "https://github.com/Lay3rLabs/wavs"
@@ -18,7 +18,7 @@ wit-bindgen-rt = {version = "0.39.0", features = ["bitflags"]}
 wit-bindgen = "0.39.0"
 wstd = "0.5.1"
 wasi = "0.14.1"
-wavs-wasi-chain = "0.3.0-beta"
+wavs-wasi-chain = "0.3.0-rc1"
 
 # Other
 serde = { version = "1.0.217", features = ["derive"] }

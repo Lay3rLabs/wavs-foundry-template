@@ -10,7 +10,7 @@ struct Component;
 export!(Component with_types_in bindings);
 
 impl Guest for Component {
-    fn run(action: TriggerAction) -> std::result::Result<Vec<u8>, String> {
+    fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
         let (trigger_id, req, dest) =
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
 
@@ -22,25 +22,16 @@ impl Guest for Component {
         let id = id.to_digit(16).ok_or("Invalid hex digit")? as u64;
 
         let res = block_on(async move {
-            let resp_data = get_price_feed(id).await;
+            let resp_data = get_price_feed(id).await?;
             println!("resp_data: {:?}", resp_data);
+            serde_json::to_vec(&resp_data).map_err(|e| e.to_string())
+        })?;
 
-            match resp_data {
-                Ok(resp) => {
-                    let output: Vec<u8> = serde_json::to_vec(&resp).unwrap();
-                    Ok(output)
-                }
-                Err(e) => Err(e),
-            }
-        });
-
-        match res {
-            Ok(data) => match dest {
-                Destination::Ethereum => Ok(encode_trigger_output(trigger_id, &data)),
-                Destination::CliOutput => Ok(data),
-            },
-            Err(e) => Err(e),
-        }
+        let output = match dest {
+            Destination::Ethereum => Some(encode_trigger_output(trigger_id, &res)),
+            Destination::CliOutput => Some(res),
+        };
+        Ok(output)
     }
 }
 
