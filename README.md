@@ -123,7 +123,7 @@ make wasi-build # or `make build` to include solidity compilation.
 Test run the component locally to validate the business logic works. An ID of 1 is Bitcoin. Nothing will be saved on-chain, just the output of the component is shown.
 
 ```bash
-COIN_MARKET_CAP_ID=1 make wasi-exec
+make wasi-exec COMPONENT_FILENAME=golang-wavs-example.wasm
 ```
 
 ## WAVS
