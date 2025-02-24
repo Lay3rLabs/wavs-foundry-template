@@ -7,3 +7,4 @@ compiled/*.wasm
 .env
 node_modules/
 lcov.info
+internal/
