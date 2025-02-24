@@ -1,21 +1,21 @@
 package main
 
-// go run go.bytecodealliance.org/cmd/wit-bindgen-go generate -o internal/ ./docs:adder@0.1.0.wasm
 import (
-	adder "github.com/Lay3rLabs/wavs-foundry-template/components/golang-eth-price-oracle/internal/example/component/example"
+	"fmt"
+
+	wavs "github.com/Lay3rLabs/wavs-foundry-template/components/golang-eth-price-oracle/internal/wavs/worker/layer-trigger-world"
+	"go.bytecodealliance.org/cm"
 )
 
-// Exports represents the caller-defined exports from "docs:adder/adder@0.1.0".
-// var Exports struct {
-// 	// Add represents the caller-defined, exported function "add".
-// 	//
-// 	//	add: func(x: s32, y: s32)
-// 	Add func(x int32, y int32)
-// }
-
 func init() {
-	adder.Exports.Add = func(x int32, y int32) int32 {
-		return x + y
+	wavs.Exports.Run = func(triggerAction wavs.TriggerAction) (result cm.Result[cm.List[uint8], cm.List[uint8], string]) {
+		output := "golang output!"
+		outputBytes := []uint8(output)
+
+		fmt.Println("This is an example print statement")
+
+		successData := cm.NewList(&outputBytes[0], len(outputBytes))
+		return cm.OK[cm.Result[cm.List[uint8], cm.List[uint8], string]](successData)
 	}
 }
 
