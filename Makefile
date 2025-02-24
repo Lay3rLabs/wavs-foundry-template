@@ -36,7 +36,7 @@ wasi-build:
 ## wasi-exec: executing the WAVS wasi component(s) | COMPONENT_FILENAME, COIN_MARKET_CAP_ID
 wasi-exec:
 	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
-	--component "/data/compiled/${COMPONENT_FILENAME}" \
+	--component "/data/compiled/$(COMPONENT_FILENAME)" \
 	--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)`
 
 ## update-submodules: update the git submodules
@@ -95,8 +95,8 @@ wavs-cli:
 ## deploy-service: deploying the WAVS component service | COMPONENT_FILENAME, TRIGGER_EVENT, SERVICE_TRIGGER_ADDR, SERVICE_SUBMISSION_ADDR, SERVICE_CONFIG
 deploy-service:
 	@$(WAVS_CMD) deploy-service --log-level=info --data /data/.docker --home /data \
-	--component "/data/compiled/${COMPONENT_FILENAME}" \
-	--trigger-event-name ${TRIGGER_EVENT} \
+	--component "/data/compiled/$(COMPONENT_FILENAME)" \
+	--trigger-event-name $(TRIGGER_EVENT) \
 	--trigger-address "${SERVICE_TRIGGER_ADDR}" \
 	--submit-address "${SERVICE_SUBMISSION_ADDR}" \
 	--service-config ${SERVICE_CONFIG}

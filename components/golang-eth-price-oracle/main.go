@@ -14,6 +14,8 @@ func init() {
 
 		fmt.Println("This is an example print statement")
 
+		// if the trigger action is from ethereum, the output must be decoded / encoded
+
 		successData := cm.NewList(&outputBytes[0], len(outputBytes))
 		return cm.OK[cm.Result[cm.List[uint8], cm.List[uint8], string]](successData)
 	}

@@ -115,7 +115,7 @@ make wasi-build # or `make build` to include solidity compilation.
 Test run the component locally to validate the business logic works. An ID of 1 is Bitcoin. Nothing will be saved on-chain, just the output of the component is shown.
 
 ```bash
-COIN_MARKET_CAP_ID=1 make wasi-exec
+make wasi-exec COMPONENT_FILENAME=golang-wavs-example.wasm
 ```
 
 ## WAVS
@@ -161,7 +161,7 @@ make deploy-contracts
 Deploy the compiled component with the contracts from the previous steps. Review the [makefile](./Makefile) for more details and configuration options.`TRIGGER_EVENT` is the event that the trigger contract emits and WAVS watches for. By altering `SERVICE_TRIGGER_ADDR` you can watch events for contracts others have deployed.
 
 ```bash
-TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
+TRIGGER_EVENT="NewTrigger(yuh)" make deploy-service COMPONENT_FILENAME="golang-wavs-example.wasm"
 ```
 
 ## Trigger the Service
