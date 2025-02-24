@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "components/*",
+    "components/eth-price-oracle",
+    "components/golang-eth-price-oracle/component-docs/component-model/examples/example-host",
 ]
 resolver = "2"
 
