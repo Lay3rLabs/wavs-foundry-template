@@ -43,10 +43,27 @@ cd components/golang-eth-price-oracle
 
 # cp /home/reece/Desktop/Programming/Rust/wavs/sdk/wavs:worker@0.3.0-beta.wasm .
 
+# TODO: we should also include these in the release process so that we can just curl down?
 wit-bindgen-go generate -o internal/ /home/reece/Desktop/Programming/Rust/wavs/sdk/wavs:worker@0.3.0-beta.wasm
 
 
 tinygo build -target=wasip2 -o ../../compiled/golang-wavs-example.wasm --wit-package /home/reece/Desktop/Programming/Rust/wavs/sdk/wavs:worker@0.3.0-beta.wasm --wit-world wavs:worker/layer-trigger-world main.go
 
+go build
+
 (cd ../../; make wasi-exec COMPONENT_FILENAME=golang-wavs-example.wasm)
+
+
+# solc --abi ../../src/interfaces/ITypes.sol
+# abigen --abi ../../out/ITypes.sol/ITypes.json --pkg main --out ./abi.go
+
+
+(cd ../../; solc --abi src/interfaces/ITypes.sol --bin -o ./components/golang-eth-price-oracle/output_dir/)
+
+mkdir -p submit
+abigen --abi output_dir/src_interfaces_ITypes_sol_ITypes.abi --pkg submitcontract --type SubmitContract --out submit/contract.go
+
+solc --abi ../../src/interfaces/ITypes.sol| awk '/JSON ABI/{x=1;next}x' > Store.abi
+solc --bin ../../src/interfaces/ITypes.sol | awk '/Binary:/{x=1;next}x' > Store.bin
+abigen --bin=Store.bin --abi=Store.abi --pkg=store --out=Store.go
 ```
