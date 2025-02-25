@@ -193,12 +193,20 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
     match result68 {
         Ok(e) => {
             *ptr69.add(0).cast::<u8>() = (0i32) as u8;
-            let vec70 = (e).into_boxed_slice();
-            let ptr70 = vec70.as_ptr().cast::<u8>();
-            let len70 = vec70.len();
-            ::core::mem::forget(vec70);
-            *ptr69.add(8).cast::<usize>() = len70;
-            *ptr69.add(4).cast::<*mut u8>() = ptr70.cast_mut();
+            match e {
+                Some(e) => {
+                    *ptr69.add(4).cast::<u8>() = (1i32) as u8;
+                    let vec70 = (e).into_boxed_slice();
+                    let ptr70 = vec70.as_ptr().cast::<u8>();
+                    let len70 = vec70.len();
+                    ::core::mem::forget(vec70);
+                    *ptr69.add(12).cast::<usize>() = len70;
+                    *ptr69.add(8).cast::<*mut u8>() = ptr70.cast_mut();
+                }
+                None => {
+                    *ptr69.add(4).cast::<u8>() = (0i32) as u8;
+                }
+            };
         }
         Err(e) => {
             *ptr69.add(0).cast::<u8>() = (1i32) as u8;
@@ -218,21 +226,27 @@ pub unsafe fn __post_return_run<T: Guest>(arg0: *mut u8) {
     let l0 = i32::from(*arg0.add(0).cast::<u8>());
     match l0 {
         0 => {
-            let l1 = *arg0.add(4).cast::<*mut u8>();
-            let l2 = *arg0.add(8).cast::<usize>();
-            let base3 = l1;
-            let len3 = l2;
-            _rt::cabi_dealloc(base3, len3 * 1, 1);
+            let l1 = i32::from(*arg0.add(4).cast::<u8>());
+            match l1 {
+                0 => {}
+                _ => {
+                    let l2 = *arg0.add(8).cast::<*mut u8>();
+                    let l3 = *arg0.add(12).cast::<usize>();
+                    let base4 = l2;
+                    let len4 = l3;
+                    _rt::cabi_dealloc(base4, len4 * 1, 1);
+                }
+            }
         }
         _ => {
-            let l4 = *arg0.add(4).cast::<*mut u8>();
-            let l5 = *arg0.add(8).cast::<usize>();
-            _rt::cabi_dealloc(l4, l5, 1);
+            let l5 = *arg0.add(4).cast::<*mut u8>();
+            let l6 = *arg0.add(8).cast::<usize>();
+            _rt::cabi_dealloc(l5, l6, 1);
         }
     }
 }
 pub trait Guest {
-    fn run(trigger_action: TriggerAction) -> Result<_rt::Vec<u8>, _rt::String>;
+    fn run(trigger_action: TriggerAction) -> Result<Option<_rt::Vec<u8>>, _rt::String>;
 }
 #[doc(hidden)]
 macro_rules! __export_world_layer_trigger_world_cabi {
@@ -246,8 +260,8 @@ macro_rules! __export_world_layer_trigger_world_cabi {
 #[doc(hidden)]
 pub(crate) use __export_world_layer_trigger_world_cabi;
 #[repr(align(4))]
-struct _RetArea([::core::mem::MaybeUninit<u8>; 12]);
-static mut _RET_AREA: _RetArea = _RetArea([::core::mem::MaybeUninit::uninit(); 12]);
+struct _RetArea([::core::mem::MaybeUninit<u8>; 16]);
+static mut _RET_AREA: _RetArea = _RetArea([::core::mem::MaybeUninit::uninit(); 16]);
 #[rustfmt::skip]
 #[allow(dead_code, clippy::all)]
 pub mod wavs {
@@ -829,11 +843,11 @@ macro_rules! __export_layer_trigger_world_impl {
 #[doc(inline)]
 pub(crate) use __export_layer_trigger_world_impl as export;
 #[cfg(target_arch = "wasm32")]
-#[link_section = "component-type:wit-bindgen:0.36.0:wavs:worker@0.3.0-beta:layer-trigger-world:encoded world"]
+#[link_section = "component-type:wit-bindgen:0.36.0:wavs:worker@0.3.0-rc1:layer-trigger-world:encoded world"]
 #[doc(hidden)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 1587] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xa9\x0b\x01A\x02\x01\
-A\x0d\x01B#\x01r\x02\x0bbech32-addrs\x0aprefix-leny\x04\0\x0ecosmos-address\x03\0\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 1588] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xaa\x0b\x01A\x02\x01\
+A\x0e\x01B#\x01r\x02\x0bbech32-addrs\x0aprefix-leny\x04\0\x0ecosmos-address\x03\0\
 \0\x01o\x02ss\x01p\x02\x01r\x02\x02tys\x0aattributes\x03\x04\0\x0ccosmos-event\x03\
 \0\x04\x01ks\x01r\x07\x08chain-ids\x0crpc-endpoint\x06\x0dgrpc-endpoint\x06\x11g\
 rpc-web-endpoint\x06\x09gas-pricev\x09gas-denoms\x0dbech32-prefixs\x04\0\x13cosm\
@@ -852,18 +866,18 @@ ontract-event\x03\0\x19\x01r\x04\x10contract-address\x01\x0achain-names\x05event
 \x12eth-contract-event\x01\x1a\0\x15cosmos-contract-event\x01\x1c\0\x03raw\x01\x09\
 \0\x04\0\x0ctrigger-data\x03\0\x1d\x01r\x02\x06config\x18\x04data\x1e\x04\0\x0et\
 rigger-action\x03\0\x1f\x01q\x05\x05error\0\0\x04warn\0\0\x04info\0\0\x05debug\0\
-\0\x05trace\0\0\x04\0\x09log-level\x03\0!\x03\0\"wavs:worker/layer-types@0.3.0-b\
-eta\x05\0\x02\x03\0\0\x0etrigger-action\x03\0\x0etrigger-action\x03\0\x01\x02\x03\
-\0\0\x10eth-chain-config\x02\x03\0\0\x13cosmos-chain-config\x02\x03\0\0\x09log-l\
-evel\x01B\x0e\x02\x03\x02\x01\x03\x04\0\x10eth-chain-config\x03\0\0\x02\x03\x02\x01\
+\0\x05trace\0\0\x04\0\x09log-level\x03\0!\x03\0!wavs:worker/layer-types@0.3.0-rc\
+1\x05\0\x02\x03\0\0\x0etrigger-action\x03\0\x0etrigger-action\x03\0\x01\x02\x03\0\
+\0\x10eth-chain-config\x02\x03\0\0\x13cosmos-chain-config\x02\x03\0\0\x09log-lev\
+el\x01B\x0e\x02\x03\x02\x01\x03\x04\0\x10eth-chain-config\x03\0\0\x02\x03\x02\x01\
 \x04\x04\0\x13cosmos-chain-config\x03\0\x02\x02\x03\x02\x01\x05\x04\0\x09log-lev\
 el\x03\0\x04\x01k\x01\x01@\x01\x0achain-names\0\x06\x04\0\x14get-eth-chain-confi\
 g\x01\x07\x01k\x03\x01@\x01\x0achain-names\0\x08\x04\0\x17get-cosmos-chain-confi\
 g\x01\x09\x01@\x02\x05level\x05\x07messages\x01\0\x04\0\x03log\x01\x0a\x03\0\x04\
-host\x05\x06\x01p}\x01j\x01\x07\x01s\x01@\x01\x0etrigger-action\x02\0\x08\x04\0\x03\
-run\x01\x09\x04\0*wavs:worker/layer-trigger-world@0.3.0-beta\x04\0\x0b\x19\x01\0\
-\x13layer-trigger-world\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-c\
-omponent\x070.220.0\x10wit-bindgen-rust\x060.36.0";
+host\x05\x06\x01p}\x01k\x07\x01j\x01\x08\x01s\x01@\x01\x0etrigger-action\x02\0\x09\
+\x04\0\x03run\x01\x0a\x04\0)wavs:worker/layer-trigger-world@0.3.0-rc1\x04\0\x0b\x19\
+\x01\0\x13layer-trigger-world\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0d\
+wit-component\x070.220.0\x10wit-bindgen-rust\x060.36.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

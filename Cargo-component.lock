@@ -6,6 +6,6 @@ version = 1
 name = "wavs:worker"
 
 [[package.version]]
-requirement = "^0.3.0-beta"
-version = "0.3.0-beta"
-digest = "sha256:06d48547710cb1855dd9b96fbccfa4267321aa9faa1c818b5c0abeb3b0e930fc"
+requirement = "^0.3.0-rc1"
+version = "0.3.0-rc1"
+digest = "sha256:cad11f743910e2986109351e11e40e1711d6908383774a3e7f1a5c14daa0add7"
