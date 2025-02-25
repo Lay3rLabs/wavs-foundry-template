@@ -2,6 +2,11 @@ module github.com/Lay3rLabs/wavs-foundry-template/components/golang-eth-price-or
 
 go 1.23.1
 
+// builds off of v1.14.13 but removes any references to github.com/gorilla/websocket (lazily)
+// https://github.com/Reecepbcups/go-ethereum/pull/1
+// replace github.com/ethereum/go-ethereum => github.com/reecepbcups/go-ethereum v1.14.14-0.20250225180615-656acb9d2a26
+replace github.com/ethereum/go-ethereum => /home/reece/Desktop/Programming/Go/go-ethereum
+
 require (
 	github.com/ethereum/go-ethereum v1.14.13
 	go.bytecodealliance.org/cm v0.1.1-0.20250218151459-e57ac0139b6f
@@ -22,7 +27,6 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
-	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/holiman/uint256 v1.3.1 // indirect
 	github.com/mmcloughlin/addchain v0.4.0 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
