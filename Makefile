@@ -22,7 +22,7 @@ SERVICE_SUBMISSION_ADDR?=`jq -r '.service_handler' "./.docker/script_deploy.json
 COIN_MARKET_CAP_ID?=1
 
 ## check-requirements: verify system requirements are installed
-check-requirements: check-node check-jq check-cargo check-wkg
+check-requirements: check-node check-jq check-cargo
 
 ## build: building the project
 build: _build_forge wasi-build
@@ -69,7 +69,6 @@ test:
 
 ## setup: install initial dependencies
 setup: check-requirements
-	@wkg config --default-registry wa.dev
 	@forge install
 	@npm install
 
@@ -146,7 +145,6 @@ check-command:
 
 .PHONY: check-node
 check-node:
-	@echo "Checking Node.js version..."
 	@$(call check-command,node)
 	@NODE_VERSION=$$(node --version); \
 	MAJOR_VERSION=$$(echo $$NODE_VERSION | sed 's/^v\([0-9]*\)\..*/\1/'); \
@@ -155,7 +153,6 @@ check-node:
 		echo "Please upgrade Node.js to v21 or higher."; \
 		exit 1; \
 	fi
-	@echo "Success: Node.js $$(node --version) meets the minimum version requirement (v21+)."
 
 # verify jq is installed
 .PHONY: check-jq
@@ -165,7 +162,3 @@ check-jq:
 .PHONY: check-cargo
 check-cargo:
 	@$(call check-command,cargo)
-
-.PHONY: check-wkg
-check-wkg:
-	@$(call check-command,wkg)
