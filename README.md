@@ -108,6 +108,11 @@ forge test
 
 Now build the WASI rust components into the `compiled` output directory.
 
+> [!WARNING]
+> If you get: `error: no registry configured for namespace "wavs"`
+>
+> run, `wkg config --default-registry wa.dev`
+
 ```bash
 make wasi-build # or `make build` to include solidity compilation.
 ```

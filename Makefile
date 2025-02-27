@@ -154,7 +154,6 @@ check-node:
 		exit 1; \
 	fi
 
-# verify jq is installed
 .PHONY: check-jq
 check-jq:
 	@$(call check-command,jq)
