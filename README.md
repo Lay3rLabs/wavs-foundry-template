@@ -2,7 +2,7 @@
 
 **Template for getting started with developing WAVS applications**
 
-A template for developing WebAssembly AVS applications using Rust and Solidity, configured for Linux and MacOS. The sample oracle service fetches the current price of a cryptocurrency from [CoinMarketCap](https://coinmarketcap.com) and saves it on chain.
+A template for developing WebAssembly AVS applications using Rust and Solidity, configured for Windows *WSL*, Linux, and MacOS. The sample oracle service fetches the current price of a cryptocurrency from [CoinMarketCap](https://coinmarketcap.com) and saves it on chain.
 
 ## System Requirements
 
@@ -11,22 +11,23 @@ A template for developing WebAssembly AVS applications using Rust and Solidity, 
 
 ### Docker
 - **MacOS**: `brew install --cask docker`
-- **Ubuntu**: `sudo apt -y install docker.io`
+- **Linux**: `sudo apt -y install docker.io`
+- **Windows WSL**: [docker desktop wsl](https://docs.docker.com/desktop/wsl/#turn-on-docker-desktop-wsl-2) & `sudo chmod 666 /var/run/docker.sock`
 - [Docker Documentation](https://docs.docker.com/get-started/get-docker/)
 
 ### Docker Compose
 - **MacOS**: Already installed with Docker installer
-- **Linux**: `sudo apt-get install docker-compose-v2`
+- **Linux + Windows WSL**: `sudo apt-get install docker-compose-v2`
 - [Compose Documentation](https://docs.docker.com/compose/)
 
 ### Make
 - **MacOS**: `brew install make`
-- **Linux**: `sudo apt -y install make`
+- **Linux + Windows WSL**: `sudo apt -y install make`
 - [Make Documentation](https://www.gnu.org/software/make/manual/make.html)
 
 ### JQ
 - **MacOS**: `brew install jq`
-- **Ubuntu**: `sudo apt -y install jq`
+- **Linux + Windows WSL**: `sudo apt -y install jq`
 - [JQ Documentation](https://jqlang.org/download/)
 
 ### Node.js
@@ -69,7 +70,8 @@ rustup target add wasm32-wasip2
 ```bash
 # Install required cargo components
 # https://github.com/bytecodealliance/cargo-component#installation
-cargo install cargo-component warg-cli wkg --locked
+cargo install cargo-binstall
+cargo binstall cargo-component warg-cli wkg --locked --no-confirm
 
 # Configure default registry
 wkg config --default-registry wa.dev
@@ -80,7 +82,7 @@ wkg config --default-registry wa.dev
 ## Create Project
 
 ```bash
-# If you don't have foundry: `curl -L https://foundry.paradigm.xyz | bash`
+# If you don't have foundry: `curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup`
 forge init --template Lay3rLabs/wavs-foundry-template my-wavs
 ```
 
