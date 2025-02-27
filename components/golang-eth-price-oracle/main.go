@@ -54,21 +54,27 @@ func init() {
 		fmt.Println("This is an example print statement")
 
 		trigger_id, req, dest := decode_trigger_event(triggerAction.Data)
+		_ = trigger_id
+		_ = req
 
 		// output := fmt.Sprintf("Golang output: trigger_id: %d", trigger_id)
 		// outputBytes := []uint8(output)
 		// outputBytes := []uint8("testing 123")
 
-		bz := req.Slice()
-		fmt.Println("req bz as string:", string(bz)) // TODO: figure this out
+		// bz := req.Slice()
+		// fmt.Println("req bz as string:", string(bz)) // TODO: figure this out
+		// bz := []byte("testoutput")
+		bz := []uint8{0x01} // or 0x1? or 0x000000031?
 
 		switch dest {
 		case Ethereum:
 			fmt.Println("Ethereum")
 
 			bz := encode_trigger_output(trigger_id, bz) // TODO: change to the actual request output
-			fmt.Println("encode_trigger_output", bz)
 			fmt.Println("encode_trigger_output", string(bz))
+
+			// fmt.Println("encode_trigger_output", bz)
+			// fmt.Println("encode_trigger_output", string(bz))
 			successData := cm.NewList(&bz[0], len(bz))
 			return cm.OK[cm.Result[cm.List[uint8], cm.List[uint8], string]](successData)
 		case CliOutput:
@@ -138,12 +144,32 @@ func decode_trigger_event(triggerAction wavstypes.TriggerData) (trigger_id uint6
 		return 0, *triggerAction.Raw(), CliOutput
 	}
 
+	// get the TriggerSourceEthContractEvent_ of the event
+
+	// print out all of the information about triggerAction and return something early
+	// fmt.Println("triggerAction", triggerAction)
+	// return 0, cm.List[uint8]{}, ""
+
 	//! TODO: I need a triggerAction that is a NewTriggerEvent yea? how does this work for? or at least how to get more info than I can currently
 
 	if triggerAction.EthContractEvent() != nil {
 		fmt.Println("EthContractEvent")
 		ethEvent := triggerAction.EthContractEvent()
-		logTopics := ethEvent.Log.Topics.Data().Slice()
+
+		var triggerData wavstypes.TriggerData = wavstypes.TriggerDataEthContractEvent_(*triggerAction.EthContractEvent())
+		fmt.Println("triggerData", triggerData.EthContractEvent().ContractAddress)
+		fmt.Println("triggerAction.EthContractEvent", ethEvent.ContractAddress)
+
+		// logTopics := ethEvent.Log.Topics.Data().Slice()
+
+		allTopics := ethEvent.Log.Topics.Slice()
+		topics := []types.Hash{}
+		for _, t := range allTopics {
+			topics = append(topics, types.MustHashFromBytes(t.Slice(), types.PadNone))
+		}
+		for _, t := range topics {
+			fmt.Println("topic", t)
+		}
 
 		// ethEvent.Log has Topics and Data. Decode data into the trigger struct
 
@@ -161,9 +187,9 @@ func decode_trigger_event(triggerAction wavstypes.TriggerData) (trigger_id uint6
 		// TODO: decode event log data -> NewTrigger type here
 		// TODO::::::::::::::::::::::::::::::::::::::::::::::::::::: This is only gettin the calldata and not actually decoding the entire thing, not enbough input?
 		var triggerEvent NewTriggerEvent
-		if err := NewTriggerEventABI.DecodeValues([]types.Hash{types.MustHashFromBytes(logTopics, types.PadNone)}, ethEvent.Log.Data.Slice(), &triggerEvent.TriggerInfo); err != nil {
+		if err := NewTriggerEventABI.DecodeValues(topics, ethEvent.Log.Data.Slice(), &triggerEvent.TriggerInfo); err != nil {
 			fmt.Printf("Error decoding trigger event: %v\n", err)
-			return
+			return 0, cm.List[uint8]{}, ""
 		}
 
 		fmt.Println("ti raw", triggerEvent)
@@ -172,42 +198,17 @@ func decode_trigger_event(triggerAction wavstypes.TriggerData) (trigger_id uint6
 		var triggerInfo TriggerInfo
 		if err := abi.DecodeValue(TriggerInfoTypeABI, triggerEvent.TriggerInfo, &triggerInfo); err != nil {
 			fmt.Printf("Error decoding trigger info: %v\n", err)
-			return
+			return 0, cm.List[uint8]{}, ""
 		}
 
-		// Now you can use the decoded triggerInfo
-		fmt.Printf("Trigger ID: %x\n", triggerInfo.TriggerID)
-		fmt.Printf("Creator: %s\n", triggerInfo.Creator.String())
-		fmt.Printf("Data: %x\n", triggerInfo.Data)
-
-		// panic(7777)
-
-		// submitcontract.SubmitContractNewTrigger
-		// var trigger submitcontract.SubmitContractNewTrigger
-		// we want to get TriggerInfo out of the ethEvent Log data
-		// decode the triggerAction.EthContractEvent().Log into this
-
-		// ethEvent.Log.Data
-
-		// tokenAbi, err := abi.JSON(strings.NewReader(string(submitcontract.SubmitContractABI)))
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
-
-		// fmt.Println("tokenAbi", tokenAbi)
-
-		// // convert ethEvent.Log.Data to bytes
-		// data := ethEvent.Log.Data.Slice()
-		// if err := tokenAbi.UnpackIntoInterface(&trigger, "NewTrigger", data); err != nil {
-		// 	log.Fatal(err)
-		// }
-
-		// // print out data
-		// fmt.Println("trigger & data", trigger, data)
+		// // Now you can use the decoded triggerInfo
+		// fmt.Printf("Trigger ID: %x\n", triggerInfo.TriggerID)
+		// fmt.Printf("Creator: %s\n", triggerInfo.Creator.String())
+		// fmt.Printf("Data: %x\n", triggerInfo.Data)
 
 		// decode event log data
-		// decode trigger info
-		return triggerInfo.TriggerID.Uint64(), triggerAction.EthContractEvent().Log.Data, Ethereum
+		// return triggerInfo.TriggerID.Uint64(), triggerAction.EthContractEvent().Log.Data, Ethereum
+		return uint64(1), triggerAction.EthContractEvent().Log.Data, Ethereum
 	} else {
 		// TODO: cosmos support
 		panic("Unsupported trigger data type")
