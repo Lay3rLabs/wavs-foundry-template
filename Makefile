@@ -71,8 +71,8 @@ setup:
 
 ## start-all: starting anvil and WAVS with docker compose
 # running anvil out of compose is a temp work around for MacOS
-start-all: clean-docker
-	@rm .docker/*.json || true
+start-all: clean-docker setup-env
+	@rm --interactive=never .docker/*.json || true
 	@bash -ec 'anvil & anvil_pid=$$!; trap "kill -9 $$anvil_pid 2>/dev/null" EXIT; $(SUDO) docker compose up; wait'
 
 ## deploy-contracts: deploying the contracts | SERVICE_MANAGER_ADDR, RPC_URL
@@ -122,3 +122,15 @@ help: Makefile
 	@echo
 	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
 	@echo
+
+# helpers
+
+.PHONY: setup-env
+setup-env:
+	@if [ ! -f .env ]; then \
+		if [ -f .env.example ]; then \
+			echo "Creating .env file from .env.example..."; \
+			cp .env.example .env; \
+			echo ".env file created successfully!"; \
+		fi; \
+	fi
