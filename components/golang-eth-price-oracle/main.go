@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -137,7 +138,7 @@ func decodeTriggerInfo(rawLog []byte) TriggerInfo {
 
 	// TriggerID from section 4 (last byte)
 	triggerIdSection := sections[3]
-	triggerInfo.TriggerID = big.NewInt(int64(triggerIdSection[31])) // TODO: fix me
+	triggerInfo.TriggerID = big.NewInt(int64(binary.BigEndian.Uint32(triggerIdSection[len(triggerIdSection)-4:])))
 
 	// Creator address from section 5
 	creatorSection := sections[4]
