@@ -43,10 +43,14 @@ cd components/golang-eth-price-oracle
 
 # cp /home/reece/Desktop/Programming/Rust/wavs/sdk/wavs:worker@0.3.0-beta.wasm .
 
+# TODO: we should also include these in the release process so that we can just curl down?
 wit-bindgen-go generate -o internal/ /home/reece/Desktop/Programming/Rust/wavs/sdk/wavs:worker@0.3.0-beta.wasm
 
 
+go mod tidy
 tinygo build -target=wasip2 -o ../../compiled/golang-wavs-example.wasm --wit-package /home/reece/Desktop/Programming/Rust/wavs/sdk/wavs:worker@0.3.0-beta.wasm --wit-world wavs:worker/layer-trigger-world main.go
+
+go build
 
 (cd ../../; make wasi-exec COMPONENT_FILENAME=golang-wavs-example.wasm)
 ```
