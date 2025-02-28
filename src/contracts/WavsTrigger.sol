@@ -15,8 +15,8 @@ contract SimpleTrigger is ISimpleTrigger {
     /// @inheritdoc ISimpleTrigger
     function addTrigger(bytes memory _data) external {
         // Get the next trigger id
-        // nextTriggerId = uint64.wrap(uint64.unwrap(nextTriggerId) + 1);
-        uint64 _triggerId = nextTriggerId + 1;
+        // nextTriggerId = TriggerId.wrap(TriggerId.unwrap(nextTriggerId) + 1);
+        uint64 _triggerId = nextTriggerId;
 
         // Create the trigger
         Trigger memory _trigger = Trigger({creator: msg.sender, data: _data});
