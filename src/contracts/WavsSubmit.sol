@@ -7,11 +7,11 @@ import {ISimpleSubmit} from "interfaces/IWavsSubmit.sol";
 
 contract SimpleSubmit is ISimpleSubmit, IWavsServiceHandler {
     /// @notice Mapping of valid triggers
-    mapping(TriggerId _triggerId => bool _isValid) internal _validTriggers;
+    mapping(uint64 _triggerId => bool _isValid) internal _validTriggers;
     /// @notice Mapping of trigger data
-    mapping(TriggerId _triggerId => bytes _data) internal _datas;
+    mapping(uint64 _triggerId => bytes _data) internal _datas;
     /// @notice Mapping of trigger signatures
-    mapping(TriggerId _triggerId => bytes _signature) internal _signatures;
+    mapping(uint64 _triggerId => bytes _signature) internal _signatures;
 
     /// @notice Service manager instance
     IWavsServiceManager private _serviceManager;
@@ -36,17 +36,17 @@ contract SimpleSubmit is ISimpleSubmit, IWavsServiceHandler {
     }
 
     /// @inheritdoc ISimpleSubmit
-    function isValidTriggerId(TriggerId _triggerId) external view returns (bool _isValid) {
+    function isValidTriggerId(uint64 _triggerId) external view returns (bool _isValid) {
         _isValid = _validTriggers[_triggerId];
     }
 
     /// @inheritdoc ISimpleSubmit
-    function getSignature(TriggerId _triggerId) external view returns (bytes memory _signature) {
+    function getSignature(uint64 _triggerId) external view returns (bytes memory _signature) {
         _signature = _signatures[_triggerId];
     }
 
     /// @inheritdoc ISimpleSubmit
-    function getData(TriggerId _triggerId) external view returns (bytes memory _data) {
+    function getData(uint64 _triggerId) external view returns (bytes memory _data) {
         _data = _datas[_triggerId];
     }
 }

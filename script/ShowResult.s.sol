@@ -14,8 +14,8 @@ contract ShowResult is Common {
         SimpleTrigger trigger = SimpleTrigger(vm.parseAddress(serviceTriggerAddr));
         SimpleSubmit submit = SimpleSubmit(vm.parseAddress(serviceHandlerAddr));
 
-        ITypes.TriggerId triggerId = trigger.nextTriggerId();
-        console.log("Fetching data for TriggerId", ITypes.TriggerId.unwrap(triggerId));
+        uint64 triggerId = trigger.nextTriggerId();
+        console.log("Fetching data for TriggerId", triggerId);
 
         bytes memory data = submit.getData(triggerId);
         console.log("Data:", string(data));

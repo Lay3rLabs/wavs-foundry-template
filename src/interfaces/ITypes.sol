@@ -8,7 +8,7 @@ interface ITypes {
      * @param data Data associated with the triggerId
      */
     struct DataWithId {
-        TriggerId triggerId;
+        uint64 triggerId;
         bytes data;
     }
 
@@ -19,7 +19,7 @@ interface ITypes {
      * @param data Data associated with the trigger
      */
     struct TriggerInfo {
-        TriggerId triggerId;
+        uint64 triggerId;
         address creator;
         bytes data;
     }
@@ -31,5 +31,5 @@ interface ITypes {
     event NewTrigger(bytes _triggerInfo);
 
     /// @notice TriggerId is a unique identifier for a trigger
-    type TriggerId is uint64;
+    // type TriggerId is uint64;
 }
