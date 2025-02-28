@@ -31,5 +31,5 @@ interface ITypes {
     event NewTrigger(bytes _triggerInfo);
 
     /// @notice TriggerId is a unique identifier for a trigger
-    // type TriggerId is uint64;
+    type TriggerId is uint64;
 }
