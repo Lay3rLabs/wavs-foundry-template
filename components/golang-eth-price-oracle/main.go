@@ -44,15 +44,15 @@ type DataWithID struct {
 // }
 
 var (
-	DataWithIdABI      = abi.MustParseStruct(`struct DataWithId { uint64 triggerId; bytes data; }`) // ITypes.sol
-	TriggerInfoTypeABI = abi.MustParseStruct("struct TriggerInfo { uint64 triggerId; address creator; bytes data; }")
+	DataWithIdABI      = abi.MustParseStruct(`struct DataWithId { uint256 triggerId; bytes data; }`) // ITypes.sol
+	TriggerInfoTypeABI = abi.MustParseStruct("struct TriggerInfo { uint256 triggerId; address creator; bytes data; }")
 	NewTriggerEventABI = abi.MustParseEvent("event NewTrigger(bytes _triggerInfo)")
 )
 
 func init() {
 	// Add custom type.
 	// abi.Default.Types["TriggerID"] = abi.MustParseType("uint256")
-	abi.Default.Types["DataWithID"] = abi.MustParseStruct(`struct DataWithId { uint64 triggerId; bytes data; }`)
+	abi.Default.Types["DataWithID"] = abi.MustParseStruct(`struct DataWithId { uint256 triggerId; bytes data; }`)
 
 	wavs.Exports.Run = func(triggerAction wavs.TriggerAction) (result cm.Result[cm.List[uint8], cm.List[uint8], string]) {
 		fmt.Println("This is an example print statement")
@@ -61,12 +61,12 @@ func init() {
 		_ = trigger_id
 		_ = req
 
-		if trigger_id == 0 && dest != CliOutput {
-			// not fully ready yet, return nothing
-			fmt.Println("trigger_id == 0 && dest != CliOutput")
-			nothing := []uint8{0x00}
-			return cm.OK[cm.Result[cm.List[uint8], cm.List[uint8], string]](cm.NewList(&nothing[0], 0))
-		}
+		// if trigger_id == 0 && dest != CliOutput {
+		// 	// not fully ready yet, return nothing
+		// 	fmt.Println("trigger_id == 0 && dest != CliOutput")
+		// 	nothing := []uint8{0x00}
+		// 	return cm.OK[cm.Result[cm.List[uint8], cm.List[uint8], string]](cm.NewList(&nothing[0], 0))
+		// }
 
 		// output := fmt.Sprintf("Golang output: trigger_id: %d", trigger_id)
 		// outputBytes := []uint8(output)
@@ -156,7 +156,7 @@ func decode_trigger_event(triggerAction wavstypes.TriggerData) (trigger_id uint6
 
 	// Now decode the TriggerInfo struct from the encoded bytes
 	var triggerInfo TriggerInfo
-	if err := abi.DecodeValue(TriggerInfoTypeABI, triggerEvent.TriggerInfo, &triggerInfo); err != nil {
+	if err := abi.DecodeValue(TriggerInfoTypeABI, ethEvent.Log.Data.Slice(), &triggerInfo); err != nil {
 		println(fmt.Printf("err triggerInfo: %+v\n", triggerInfo))
 		panic(fmt.Sprintf("TriggerInfo decode error: %v", err))
 	}
@@ -167,7 +167,9 @@ func decode_trigger_event(triggerAction wavstypes.TriggerData) (trigger_id uint6
 
 	// TODO: return back out if valid
 	d := triggerInfo.Data
-	return triggerInfo.TriggerID.Uint64(), cm.NewList(&d[0], len(d)), Ethereum
+	// triggerID := triggerInfo.TriggerID.Uint64()
+	triggerId := uint64(0)
+	return triggerId, cm.NewList(&d[0], len(d)), Ethereum
 
 }
 
