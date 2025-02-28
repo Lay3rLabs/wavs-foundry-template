@@ -53,25 +53,4 @@ tinygo build -target=wasip2 -o ../../compiled/golang-wavs-example.wasm --wit-pac
 go build
 
 (cd ../../; make wasi-exec COMPONENT_FILENAME=golang-wavs-example.wasm)
-
-
-# solc --abi ../../src/interfaces/ITypes.sol
-# abigen --abi ../../out/ITypes.sol/ITypes.json --pkg main --out ./abi.go
-
-
-# ! TODO: fork go-ethereum
-# 1) just pull over the common/ and abi/ packages without anything WS related?
-# 2) fix the upstream to support wasm with https://github.com/coder/websocket | https://godoc.org/nhooyr.io/websocket#hdr-Wasm
-#
-# ../../../../../../.gvm/pkgsets/go1.23.1/global/pkg/mod/github.com/gorilla/websocket@v1.4.2/client.go:16:2: package net/http/httptrace is not in std (/home/reece/.cache/tinygo/goroot-ef1d5cacd8081d4a638fc91d6f688024fdfc368b55b569b858b4e97acf58cf33/src/net/http/httptrace)
-
-(cd ../../; solc --abi src/interfaces/ITypes.sol --bin -o ./components/golang-eth-price-oracle/output_dir/)
-
-
-mkdir -p submit
-abigen --abi output_dir/src_interfaces_ITypes_sol_ITypes.abi --pkg submitcontract --type SubmitContract --out submit/contract.go
-
-solc --abi ../../src/interfaces/ITypes.sol| awk '/JSON ABI/{x=1;next}x' > Store.abi
-solc --bin ../../src/interfaces/ITypes.sol | awk '/Binary:/{x=1;next}x' > Store.bin
-abigen --bin=Store.bin --abi=Store.abi --pkg=store --out=Store.go
 ```

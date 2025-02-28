@@ -1,14 +1,13 @@
 package main
 
 import (
-	"encoding/hex"
 	"fmt"
 	"math/big"
+	"strconv"
 
 	wavs "github.com/Lay3rLabs/wavs-foundry-template/components/golang-eth-price-oracle/internal/wavs/worker/layer-trigger-world"
 	wavstypes "github.com/Lay3rLabs/wavs-foundry-template/components/golang-eth-price-oracle/internal/wavs/worker/layer-types"
 
-	// _ "github.com/umbracle/ethgo" // TODO: just so it stays loaded
 	"github.com/defiweb/go-eth/abi"
 	types "github.com/defiweb/go-eth/types"
 	"go.bytecodealliance.org/cm"
@@ -21,11 +20,6 @@ const (
 	CliOutput Destination = "CliOutput"
 )
 
-type NewTriggerEvent struct {
-	TriggerInfo []byte `abi:"_triggerInfo"`
-	// Add any other fields you need
-}
-
 type TriggerInfo struct {
 	TriggerID *big.Int      `abi:"triggerId"`
 	Creator   types.Address `abi:"creator"`
@@ -33,70 +27,58 @@ type TriggerInfo struct {
 }
 
 // ITypes.sol
+var DataWithIdABI = abi.MustParseStruct(`struct DataWithId { uint256 triggerId; bytes data; }`)
+
 type DataWithID struct {
 	TriggerID *big.Int `abi:"triggerId"`
 	Data      []byte   `abi:"data"`
 }
 
-// [{"type":"event","name":"NewTrigger","inputs":[{"name":"_triggerInfo","type":"bytes","indexed":false,"internalType":"bytes"}],"anonymous":false}]
-// type NewTriggerEvent struct {
-// 	TriggerInfo []byte `abi:"_triggerInfo"` // TriggerInfo is the underlying i think? or is it bytes
-// }
+func doComputation(inputReq []uint8, dest Destination) ([]byte, error) {
+	// if dest is CliOuput, remove right padded bytes (0s)
+	if dest == CliOutput {
+		for i := len(inputReq) - 1; i >= 0; i-- {
+			if inputReq[i] != 0 {
+				inputReq = inputReq[:i+1]
+				break
+			}
+		}
+	}
 
-var (
-	DataWithIdABI      = abi.MustParseStruct(`struct DataWithId { uint256 triggerId; bytes data; }`) // ITypes.sol
-	TriggerInfoTypeABI = abi.MustParseStruct("struct TriggerInfo { uint256 triggerId; address creator; bytes data; }")
-	NewTriggerEventABI = abi.MustParseEvent("event NewTrigger(bytes _triggerInfo)")
-)
+	v, err := strconv.Atoi(string(inputReq))
+	if err != nil {
+		return nil, err
+	}
+
+	v = v * 2
+
+	output := []byte(fmt.Sprintf("%d", v))
+	return output, nil
+}
 
 func init() {
-	// Add custom type.
-	// abi.Default.Types["TriggerID"] = abi.MustParseType("uint256")
-	abi.Default.Types["DataWithID"] = abi.MustParseStruct(`struct DataWithId { uint256 triggerId; bytes data; }`)
+	type TriggerResult = cm.Result[cm.List[uint8], cm.List[uint8], string]
 
-	wavs.Exports.Run = func(triggerAction wavs.TriggerAction) (result cm.Result[cm.List[uint8], cm.List[uint8], string]) {
+	wavs.Exports.Run = func(triggerAction wavs.TriggerAction) TriggerResult {
 		fmt.Println("This is an example print statement")
 
 		trigger_id, req, dest := decode_trigger_event(triggerAction.Data)
-		_ = trigger_id
-		_ = req
+		reqInput := req.Slice()
 
-		// if trigger_id == 0 && dest != CliOutput {
-		// 	// not fully ready yet, return nothing
-		// 	fmt.Println("trigger_id == 0 && dest != CliOutput")
-		// 	nothing := []uint8{0x00}
-		// 	return cm.OK[cm.Result[cm.List[uint8], cm.List[uint8], string]](cm.NewList(&nothing[0], 0))
-		// }
-
-		// output := fmt.Sprintf("Golang output: trigger_id: %d", trigger_id)
-		// outputBytes := []uint8(output)
-		// outputBytes := []uint8("testing 123")
-
-		// bz := req.Slice()
-		// fmt.Println("req bz as string:", string(bz)) // TODO: figure this out
-		// bz := []byte("testoutput")
-		bz := req.Slice()
+		result, err := doComputation(reqInput, dest)
+		if err != nil {
+			return cm.Err[TriggerResult](err.Error())
+		}
 
 		switch dest {
 		case Ethereum:
-			fmt.Println("Ethereum")
-
-			bz := encode_trigger_output(trigger_id, bz) // TODO: change to the actual request output
-			fmt.Println("encode_trigger_output", string(bz))
-
-			// fmt.Println("encode_trigger_output", bz)
-			// fmt.Println("encode_trigger_output", string(bz))
-			successData := cm.NewList(&bz[0], len(bz))
-			return cm.OK[cm.Result[cm.List[uint8], cm.List[uint8], string]](successData)
+			bz := encode_trigger_output(trigger_id, result)
+			return cm.OK[TriggerResult](cm.NewList(&bz[0], len(bz)))
 		case CliOutput:
-			fmt.Println("CliOutput")
-			successData := cm.NewList(&bz[0], len(bz))
-			return cm.OK[cm.Result[cm.List[uint8], cm.List[uint8], string]](successData)
+			return cm.OK[TriggerResult](cm.NewList(&reqInput[0], len(reqInput)))
+		default:
+			panic("unknown destination, not supported")
 		}
-
-		// if the trigger action is from ethereum, the output must be decoded / encoded
-
-		return cm.OK[cm.Result[cm.List[uint8], cm.List[uint8], string]](cm.NewList(&bz[0], len(bz)))
 	}
 }
 
@@ -109,87 +91,61 @@ func encode_trigger_output(trigger_id uint64, output []byte) []byte {
 
 func decode_trigger_event(triggerAction wavstypes.TriggerData) (trigger_id uint64, req cm.List[uint8], dest Destination) {
 	if triggerAction.Raw() != nil {
-		fmt.Println("Raw")
 		return 0, *triggerAction.Raw(), CliOutput
 	}
-
-	// get the TriggerSourceEthContractEvent_ of the event
-
-	// print out all of the information about triggerAction and return something early
-	// fmt.Println("triggerAction", triggerAction)
-	// return 0, cm.List[uint8]{}, ""
 
 	if triggerAction.EthContractEvent() == nil {
 		panic("decode_trigger_event triggerAction.EthContractEvent() is nil")
 	}
 
 	ethEvent := triggerAction.EthContractEvent()
-	logData := ethEvent.Log.Data.Slice()
 
-	allTopics := ethEvent.Log.Topics.Slice()
-	topics := []types.Hash{}
-	for _, t := range allTopics {
-		topics = append(topics, types.MustHashFromBytes(t.Slice(), types.PadRight)) // TODO: try padding?
-	}
-	t := topics[0] // this is all that is used in the main example
-
-	fmt.Println("ethEvent CA", ethEvent.ContractAddress)
-	fmt.Println("ethEvent height:", ethEvent.BlockHeight)
-	fmt.Println("ethEvent log data", logData)
-
-	fmt.Println("topic", t, "bytes", t.Bytes())
-
-	// decode event log data raw
-	// logData := layertypes.EthEventLogData{
-	// 	// Topics: ethEvent.Log.Topics,
-	// 	Data: ethEvent.Log.Data,
-	// }
-
-	// decode the event from the given log object
-	var triggerEvent NewTriggerEvent
-	if err := NewTriggerEventABI.DecodeValues(topics, logData, &triggerEvent.TriggerInfo); err != nil {
-		panic(fmt.Sprintf("NewTriggerEvent decode error: %v", err))
-	}
-
-	fmt.Println("triggerEvent", triggerEvent.TriggerInfo)
-	fmt.Println("triggerEvent", string(triggerEvent.TriggerInfo))
-
-	// Now decode the TriggerInfo struct from the encoded bytes
-	var triggerInfo TriggerInfo
-	if err := abi.DecodeValue(TriggerInfoTypeABI, ethEvent.Log.Data.Slice(), &triggerInfo); err != nil {
-		println(fmt.Printf("err triggerInfo: %+v\n", triggerInfo))
-		panic(fmt.Sprintf("TriggerInfo decode error: %v", err))
-	}
+	triggerInfo := decodeTriggerInfo(ethEvent.Log.Data.Slice())
 
 	fmt.Printf("Trigger ID: %x\n", triggerInfo.TriggerID)
 	fmt.Printf("Creator: %s\n", triggerInfo.Creator.String())
 	fmt.Printf("Data: %x\n", triggerInfo.Data)
 
-	// TODO: return back out if valid
-	d := triggerInfo.Data
-	// triggerID := triggerInfo.TriggerID.Uint64()
-	triggerId := uint64(0)
-	return triggerId, cm.NewList(&d[0], len(d)), Ethereum
+	triggerId := uint64(0) // TODO: figure this out w/ triggerInfo.TriggerID
 
+	return triggerId, cm.NewList(&triggerInfo.Data[0], len(triggerInfo.Data)), Ethereum
+
+}
+
+func decodeTriggerInfo(rawLog []byte) TriggerInfo {
+	// Parse the data into sections (each section is 32 bytes)
+	sections := make([][]byte, 0)
+	for i := 0; i < len(rawLog); i += 32 {
+		end := i + 32
+		if end > len(rawLog) {
+			end = len(rawLog)
+		}
+		sec := rawLog[i:end]
+		fmt.Println("sec", sec)
+		sections = append(sections, sec)
+	}
+
+	triggerInfo := TriggerInfo{}
+
+	// TriggerID from section 4 (last byte)
+	triggerIdSection := sections[3]
+	triggerInfo.TriggerID = big.NewInt(int64(triggerIdSection[31])) // The last byte contains the ID // TODO: fix me
+
+	// Creator address from section 5
+	creatorSection := sections[4]
+	triggerInfo.Creator = types.MustAddressFromBytes(creatorSection[12:32]) // Ethereum addresses are 20 bytes
+
+	// Data value
+	// First get the data length from section 7
+	dataLengthSection := sections[6]
+	dataLength := int(dataLengthSection[31])
+
+	// Then get the actual data from section 8
+	dataSection := sections[7]
+	triggerInfo.Data = make([]byte, dataLength)
+	copy(triggerInfo.Data, dataSection[:dataLength])
+
+	return triggerInfo
 }
 
 func main() {}
-
-// addTrigger(bytes) input method to string decode
-/*
-hacky temp work around:
-	asHex := hex.EncodeToString(logData)
-	input := getStringValue(asHex)
-	fmt.Println("input from data:", input)
-*/
-func getStringValue(hexData string) string {
-	// Convert hex to bytes
-	data, err := hex.DecodeString(hexData)
-	if err != nil || len(data) < 225 {
-		return ""
-	}
-
-	// Get the first byte of word 7, which contains the ASCII value
-	// Word 7 starts at index 224 (0xE0) for addTrigger
-	return string(data[224:225])
-}
