@@ -37,11 +37,20 @@ type DataWithID struct {
 func doComputation(inputReq []uint8, dest Destination) ([]byte, error) {
 	// if dest is CliOuput, remove right padded bytes (0s)
 	if dest == CliOutput {
+		lastNonZero := -1
 		for i := len(inputReq) - 1; i >= 0; i-- {
 			if inputReq[i] != 0 {
-				inputReq = inputReq[:i+1]
+				lastNonZero = i
 				break
 			}
+		}
+
+		// If we found a non-zero byte, trim after it
+		// If all bytes are zero, we'll keep at least one zero byte
+		if lastNonZero >= 0 {
+			inputReq = inputReq[:lastNonZero+1]
+		} else if len(inputReq) > 0 {
+			inputReq = inputReq[:1] // Keep just one zero if all are zeros
 		}
 	}
 
@@ -107,7 +116,6 @@ func decode_trigger_event(triggerAction wavstypes.TriggerData) (trigger_id uint6
 	fmt.Printf("Data: %x\n", triggerInfo.Data)
 
 	triggerId := uint64(0) // TODO: figure this out w/ triggerInfo.TriggerID
-
 	return triggerId, cm.NewList(&triggerInfo.Data[0], len(triggerInfo.Data)), Ethereum
 
 }
@@ -129,7 +137,7 @@ func decodeTriggerInfo(rawLog []byte) TriggerInfo {
 
 	// TriggerID from section 4 (last byte)
 	triggerIdSection := sections[3]
-	triggerInfo.TriggerID = big.NewInt(int64(triggerIdSection[31])) // The last byte contains the ID // TODO: fix me
+	triggerInfo.TriggerID = big.NewInt(int64(triggerIdSection[31])) // TODO: fix me
 
 	// Creator address from section 5
 	creatorSection := sections[4]
