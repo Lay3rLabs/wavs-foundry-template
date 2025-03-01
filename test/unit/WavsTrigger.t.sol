@@ -13,14 +13,13 @@ contract TriggerTest is Test {
     }
 
     function testTrigger() public {
-        // simpleTrigger.addTrigger("data1");
+        simpleTrigger.addTrigger("data1");
 
-        // uint64 triggerId = 1;
-        // ITypes.TriggerInfo memory trigger = simpleTrigger.getTrigger(triggerId);
+        ITypes.TriggerId triggerId = ITypes.TriggerId.wrap(1);
+        ITypes.TriggerInfo memory trigger = simpleTrigger.getTrigger(triggerId);
 
-        // TODO: re-enable this when triggerInfo is fixed back to the aliased type. does not work for now
-        // assertEq(trigger.creator, address(this));
-        // assertEq(trigger.data, "data1");
-        // assertEq(trigger.triggerId, triggerId);
+        assertEq(trigger.creator, address(this));
+        assertEq(trigger.data, "data1");
+        assertEq(ITypes.TriggerId.unwrap(trigger.triggerId), ITypes.TriggerId.unwrap(triggerId));
     }
 }

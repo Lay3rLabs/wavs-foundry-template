@@ -13,8 +13,8 @@ contract Trigger is Common {
         SimpleTrigger trigger = SimpleTrigger(vm.parseAddress(serviceTriggerAddr));
 
         trigger.addTrigger(abi.encodePacked(coinMarketCapID));
-        uint64 triggerId = trigger.nextTriggerId();
-        console.log("TriggerId",triggerId);
+        ITypes.TriggerId triggerId = trigger.nextTriggerId();
+        console.log("TriggerId", ITypes.TriggerId.unwrap(triggerId));
         vm.stopBroadcast();
     }
 }

@@ -8,7 +8,7 @@ interface ITypes {
      * @param data Data associated with the triggerId
      */
     struct DataWithId {
-        uint64 triggerId;
+        TriggerId triggerId;
         bytes data;
     }
 
@@ -19,7 +19,7 @@ interface ITypes {
      * @param data Data associated with the trigger
      */
     struct TriggerInfo {
-        uint64 triggerId;
+        TriggerId triggerId;
         address creator;
         bytes data;
     }
