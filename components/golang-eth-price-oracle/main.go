@@ -68,7 +68,7 @@ func doComputation(inputReq []uint8, dest Destination) ([]byte, error) {
 }
 
 func init() {
-	type TriggerResult = cm.Result[cm.List[uint8], cm.List[uint8], string]
+	type TriggerResult = cm.Result[wavs.OptionListU8Shape, cm.Option[cm.List[uint8]], string]
 
 	wavs.Exports.Run = func(triggerAction wavs.TriggerAction) TriggerResult {
 		trigger_id, req, dest := decode_trigger_event(triggerAction.Data)
@@ -84,9 +84,9 @@ func init() {
 		case Ethereum:
 			bz := encode_trigger_output(trigger_id, result)
 			fmt.Printf("Encoded output (raw): %x\n", bz)
-			return cm.OK[TriggerResult](cm.NewList(&bz[0], len(bz)))
+			return cm.OK[TriggerResult](cm.Some(cm.NewList(&bz[0], len(bz))))
 		case CliOutput:
-			return cm.OK[TriggerResult](cm.NewList(&reqInput[0], len(reqInput)))
+			return cm.OK[TriggerResult](cm.Some(cm.NewList(&result[0], len(result))))
 		default:
 			panic("unknown destination, not supported")
 		}

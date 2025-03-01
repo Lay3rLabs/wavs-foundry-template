@@ -35,9 +35,11 @@ wkg --version
 cd components/golang-eth-price-oracle
 
 # download the WAVS package bindings
-export WAVS_PACKAGE=wavs:worker@0.3.0-beta
+export WAVS_PACKAGE=wavs:worker@0.3.0-rc1
 # TODO: this is currently broken on this release, requires:
 # TODO: https://github.com/Lay3rLabs/WAVS/pull/403 to fix `failed to resolve import `wasi:cli/environment@0.2.0::get-environment`
+
+cp /home/reece/Desktop/Programming/Rust/wavs/sdk/wavs:worker@0.3.0-rc1.wasm .
 # wkg get $WAVS_PACKAGE --overwrite --format wasm --output ${WAVS_PACKAGE}.wasm
 
 # generate the Go/ bindings
