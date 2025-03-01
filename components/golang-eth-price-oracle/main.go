@@ -71,8 +71,6 @@ func init() {
 	type TriggerResult = cm.Result[cm.List[uint8], cm.List[uint8], string]
 
 	wavs.Exports.Run = func(triggerAction wavs.TriggerAction) TriggerResult {
-		fmt.Println("This is an example print statement")
-
 		trigger_id, req, dest := decode_trigger_event(triggerAction.Data)
 		reqInput := req.Slice()
 
@@ -85,7 +83,6 @@ func init() {
 		switch dest {
 		case Ethereum:
 			bz := encode_trigger_output(trigger_id, result)
-			fmt.Printf("Encoded output: %v\n", string(bz))
 			fmt.Printf("Encoded output (raw): %x\n", bz)
 			return cm.OK[TriggerResult](cm.NewList(&bz[0], len(bz)))
 		case CliOutput:
@@ -96,16 +93,32 @@ func init() {
 	}
 }
 
+// encode_trigger_output abi encodes the output of the computation to be sent back to the Ethereum contract
 func encode_trigger_output(trigger_id uint64, output []byte) []byte {
-	// for trigger_id of 1 and output of `test-data`, the proper solidity encoding is of:
-	// 0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000009746573742d646174610000000000000000000000000000000000000000000000
-	// this is not how the words in the abi encoding lib work, so I manually prepend the offset bytes to the data.
+	/*
+		for trigger_id of 1 and output of `test-data`, the proper solidity encoding is:
+
+		Offset to the start of the struct (32 bytes)
+		0x0000000000000000000000000000000000000000000000000000000000000020
+		triggerId: 1 (uint64)
+		0000000000000000000000000000000000000000000000000000000000000001
+		Offset to the dynamic bytes field (64 bytes from struct start)
+		0000000000000000000000000000000000000000000000000000000000000040
+		Length of bytes array: 9
+		0000000000000000000000000000000000000000000000000000000000000009
+		Content: "test-data" with padding
+		746573742d646174610000000000000000000000000000000000000000000000
+
+		this is not how the abi encoding library works, so manually prepend the offset bytes to the data.
+		verified by console.log in the solidity contract of some encoded test data, then cross comparing
+		to this functions output.
+	*/
+
 	bz := abi.MustEncodeValue(DataWithIdABI, DataWithID{
 		TriggerID: trigger_id,
 		Data:      output,
 	})
-	// prepend 0000000000000000000000000000000000000000000000000000000000000020 to the encoded data
-	// this is the offset to the start of the data which matches something upstream when I manually figured this out
+
 	offsetBytes, _ := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000020")
 	return append(offsetBytes, bz...)
 }
@@ -125,7 +138,7 @@ func decode_trigger_event(triggerAction wavstypes.TriggerData) (trigger_id uint6
 
 	fmt.Printf("Trigger ID: %v\n", triggerInfo.TriggerID)
 	fmt.Printf("Creator: %s\n", triggerInfo.Creator.String())
-	fmt.Printf("Data: %v\n", string(triggerInfo.Data))
+	fmt.Printf("Input Data: %v\n", string(triggerInfo.Data))
 
 	return triggerInfo.TriggerID.Uint64(), cm.NewList(&triggerInfo.Data[0], len(triggerInfo.Data)), Ethereum
 
@@ -167,10 +180,4 @@ func decodeTriggerInfo(rawLog []byte) TriggerInfo {
 	return triggerInfo
 }
 
-func testingStuff() {
-	bz := encode_trigger_output(1, []byte("test-data"))
-	fmt.Printf("Encoded output: %x\n", bz)
-}
-
-func main() {
-}
+func main() {}
