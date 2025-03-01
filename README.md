@@ -74,6 +74,7 @@ cargo install cargo-binstall
 cargo binstall cargo-component warg-cli wkg --locked --no-confirm
 
 # Configure default registry
+# Found at: $HOME/.config/wasm-pkg/config.toml
 wkg config --default-registry wa.dev
 ```
 

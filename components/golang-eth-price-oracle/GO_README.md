@@ -1,56 +1,51 @@
-```bash
-wkg get wasi:cli@0.2.0
-# move it into wit/deps/NAME-version/package.wit
-
-wkg get wasi:filesystem@0.2.0
-wkg get wasi:sockets@0.2.0
-wkg get wasi:random@0.2.0
-```
-
+## Install Wit Bindgen for Go
 
 ```bash
-git clone git@github.com:bytecodealliance/go-modules.git
-cd go-modules
-go install ./cmd/wit-bindgen-go
+go install go.bytecodealliance.org/cmd/wit-bindgen-go@4d5b3110c9
 
-cargo binstall wasm-tools
-
-wit-bindgen-go
+wit-bindgen-go --version
 ```
+
+## System Setup
 
 ```bash
 # https://component-model.bytecodealliance.org/language-support/go.html
-# wit-bindgen-go generate ../wasi-cli/wit
 
 # https://tinygo.org/getting-started/install/
+
+# macOS
+brew tap tinygo-org/tools
+brew install tinygo
+
+# Arch (btw)
 sudo pacman -Sy tinygo
 
-# TODO: move to use docker only instead?
-# docker run --rm -v $(pwd):/src tinygo/tinygo:0.35.0 tinygo build -o wasm.wasm -target=wasm examples/wasm/export
+# Ubuntu / WSL:
+# TODO: .
 
 
+# -------
 
+# verify installs
 tinygo version
-wasm-tools -V
-# TOTO: ensure wkg is installed
+wkg --version
 
-cd /home/reece/Desktop/Programming/Rust/wavs/sdk/
-wkg wit build
-
-
+# move into the golang oracle directory
 
 cd components/golang-eth-price-oracle
 
-# cp /home/reece/Desktop/Programming/Rust/wavs/sdk/wavs:worker@0.3.0-beta.wasm .
+# download the WAVS package bindings
+export WAVS_PACKAGE=wavs:worker@0.3.0-beta
+# TODO: this is currently broken on this release, requires:
+# TODO: https://github.com/Lay3rLabs/WAVS/pull/403 to fix `failed to resolve import `wasi:cli/environment@0.2.0::get-environment`
+# wkg get $WAVS_PACKAGE --overwrite --format wasm --output ${WAVS_PACKAGE}.wasm
 
-# TODO: we should also include these in the release process so that we can just curl down?
-wit-bindgen-go generate -o internal/ /home/reece/Desktop/Programming/Rust/wavs/sdk/wavs:worker@0.3.0-beta.wasm
+# generate the Go/ bindings
+wit-bindgen-go generate -o internal/ ${WAVS_PACKAGE}.wasm
 
-
+# install
 go mod tidy
-tinygo build -target=wasip2 -o ../../compiled/golang-wavs-example.wasm --wit-package /home/reece/Desktop/Programming/Rust/wavs/sdk/wavs:worker@0.3.0-beta.wasm --wit-world wavs:worker/layer-trigger-world main.go
-
-go build
+tinygo build -target=wasip2 -o ../../compiled/golang-wavs-example.wasm --wit-package ${WAVS_PACKAGE}.wasm --wit-world wavs:worker/layer-trigger-world main.go
 
 (cd ../../; make wasi-exec COMPONENT_FILENAME=golang-wavs-example.wasm)
 ```
