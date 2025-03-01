@@ -1,7 +1,7 @@
 ## Install Wit Bindgen for Go
 
 ```bash
-go install go.bytecodealliance.org/cmd/wit-bindgen-go@4d5b3110c9
+go install go.bytecodealliance.org/cmd/wit-bindgen-go@ecfa620df5beee882fb7be0740959e5dfce9ae26
 
 wit-bindgen-go --version
 ```
@@ -50,4 +50,12 @@ go mod tidy
 tinygo build -target=wasip2 -o ../../compiled/golang-wavs-example.wasm --wit-package ${WAVS_PACKAGE}.wasm --wit-world wavs:worker/layer-trigger-world main.go
 
 (cd ../../; make wasi-exec COMPONENT_FILENAME=golang-wavs-example.wasm)
+```
+
+```bash
+cd ../../
+make start-all
+
+# new tab
+sh script/go.sh
 ```
