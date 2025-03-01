@@ -29,6 +29,7 @@ build: _build_forge wasi-build
 ## wasi-build: building the WAVS wasi component(s)
 wasi-build:
 	@for component in $(shell ls ./components); do \
+		[ -f components/$$component/Cargo.toml ] || continue; \
 		echo "Building component: $$component"; \
 		(cd components/$$component; cargo component build --release; cargo fmt); \
 	done
