@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -28,11 +29,11 @@ type TriggerInfo struct {
 }
 
 // ITypes.sol
-var DataWithIdABI = abi.MustParseStruct(`struct DataWithId { uint256 triggerId; bytes data; }`)
+var DataWithIdABI = abi.MustParseStruct(`struct DataWithId { uint64 triggerId; bytes data; }`)
 
 type DataWithID struct {
-	TriggerID *big.Int `abi:"triggerId"`
-	Data      []byte   `abi:"data"`
+	TriggerID uint64 `abi:"triggerId"`
+	Data      []byte `abi:"data"`
 }
 
 func doComputation(inputReq []uint8, dest Destination) ([]byte, error) {
@@ -79,10 +80,13 @@ func init() {
 		if err != nil {
 			return cm.Err[TriggerResult](err.Error())
 		}
+		fmt.Printf("doComputation Result: %v\n", string(result))
 
 		switch dest {
 		case Ethereum:
 			bz := encode_trigger_output(trigger_id, result)
+			fmt.Printf("Encoded output: %v\n", string(bz))
+			fmt.Printf("Encoded output (raw): %x\n", bz)
 			return cm.OK[TriggerResult](cm.NewList(&bz[0], len(bz)))
 		case CliOutput:
 			return cm.OK[TriggerResult](cm.NewList(&reqInput[0], len(reqInput)))
@@ -93,10 +97,17 @@ func init() {
 }
 
 func encode_trigger_output(trigger_id uint64, output []byte) []byte {
-	return abi.MustEncodeValue(DataWithIdABI, DataWithID{
-		TriggerID: big.NewInt(int64(trigger_id)),
+	// for trigger_id of 1 and output of `test-data`, the proper solidity encoding is of:
+	// 0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000009746573742d646174610000000000000000000000000000000000000000000000
+	// this is not how the words in the abi encoding lib work, so I manually prepend the offset bytes to the data.
+	bz := abi.MustEncodeValue(DataWithIdABI, DataWithID{
+		TriggerID: trigger_id,
 		Data:      output,
 	})
+	// prepend 0000000000000000000000000000000000000000000000000000000000000020 to the encoded data
+	// this is the offset to the start of the data which matches something upstream when I manually figured this out
+	offsetBytes, _ := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000020")
+	return append(offsetBytes, bz...)
 }
 
 func decode_trigger_event(triggerAction wavstypes.TriggerData) (trigger_id uint64, req cm.List[uint8], dest Destination) {
@@ -112,12 +123,11 @@ func decode_trigger_event(triggerAction wavstypes.TriggerData) (trigger_id uint6
 
 	triggerInfo := decodeTriggerInfo(ethEvent.Log.Data.Slice())
 
-	fmt.Printf("Trigger ID: %x\n", triggerInfo.TriggerID)
+	fmt.Printf("Trigger ID: %v\n", triggerInfo.TriggerID)
 	fmt.Printf("Creator: %s\n", triggerInfo.Creator.String())
-	fmt.Printf("Data: %x\n", triggerInfo.Data)
+	fmt.Printf("Data: %v\n", string(triggerInfo.Data))
 
-	triggerId := uint64(0) // TODO: figure this out w/ triggerInfo.TriggerID
-	return triggerId, cm.NewList(&triggerInfo.Data[0], len(triggerInfo.Data)), Ethereum
+	return triggerInfo.TriggerID.Uint64(), cm.NewList(&triggerInfo.Data[0], len(triggerInfo.Data)), Ethereum
 
 }
 
@@ -157,4 +167,10 @@ func decodeTriggerInfo(rawLog []byte) TriggerInfo {
 	return triggerInfo
 }
 
-func main() {}
+func testingStuff() {
+	bz := encode_trigger_output(1, []byte("test-data"))
+	fmt.Printf("Encoded output: %x\n", bz)
+}
+
+func main() {
+}
