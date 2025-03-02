@@ -43,11 +43,12 @@ cp /home/reece/Desktop/Programming/Rust/wavs/sdk/wavs:worker@0.3.0-rc1.wasm .
 # wkg get $WAVS_PACKAGE --overwrite --format wasm --output ${WAVS_PACKAGE}.wasm
 
 # generate the Go/ bindings
-wit-bindgen-go generate -o internal/ ${WAVS_PACKAGE}.wasm
+# if `error: error executing wasm-tools: module closed with exit_code(1)`, set WAVS_PACKAGE
+wit-bindgen-go generate -o src/internal/ ${WAVS_PACKAGE}.wasm
 
 # install
 go mod tidy
-tinygo build -target=wasip2 -o ../../compiled/golang-wavs-example.wasm --wit-package ${WAVS_PACKAGE}.wasm --wit-world wavs:worker/layer-trigger-world main.go
+tinygo build -target=wasip2 -o ../../compiled/golang-wavs-example.wasm --wit-package ${WAVS_PACKAGE}.wasm --wit-world wavs:worker/layer-trigger-world ./src
 
 (cd ../../; make wasi-exec COMPONENT_FILENAME=golang-wavs-example.wasm)
 ```
