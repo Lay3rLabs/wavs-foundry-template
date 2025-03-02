@@ -7,3 +7,6 @@ compiled/*.wasm
 .env
 node_modules/
 lcov.info
+internal/
+wavs:worker*.wit
+wavs:worker*.wasm

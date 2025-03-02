@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "components/*",
+    "components/eth-price-oracle",
 ]
 resolver = "2"
 
