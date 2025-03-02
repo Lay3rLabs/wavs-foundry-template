@@ -2,8 +2,11 @@ module github.com/Lay3rLabs/wavs-foundry-template/components/golang-eth-price-or
 
 go 1.23.1
 
+replace github.com/dev-wasm/dev-wasm-go/lib => github.com/Reecepbcups/dev-wasm-go/lib v0.0.0-20250302004559-caf3bb14c8e6
+
 require (
 	github.com/defiweb/go-eth v0.7.0
+	github.com/dev-wasm/dev-wasm-go/lib v0.0.0
 	go.bytecodealliance.org/cm v0.1.1-0.20250218151459-e57ac0139b6f
 )
 
