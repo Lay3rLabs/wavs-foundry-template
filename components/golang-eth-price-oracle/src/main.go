@@ -3,17 +3,26 @@ package main
 import (
 	"bytes"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"strconv"
+	"time"
 
 	wavs "github.com/Lay3rLabs/wavs-foundry-template/components/golang-eth-price-oracle/src/internal/wavs/worker/layer-trigger-world"
 	wavstypes "github.com/Lay3rLabs/wavs-foundry-template/components/golang-eth-price-oracle/src/internal/wavs/worker/layer-types"
 
+	incominghandler "github.com/Lay3rLabs/wavs-foundry-template/components/golang-eth-price-oracle/src/internal/wasi/http/incoming-handler"
+
 	"github.com/defiweb/go-eth/abi"
+	wasiclient "github.com/dev-wasm/dev-wasm-go/lib/http/client"
 	"go.bytecodealliance.org/cm"
 )
 
 func init() {
+	incominghandler.Exports.Handle = theHandler
+
 	wavs.Exports.Run = func(triggerAction wavs.TriggerAction) TriggerResult {
 		triggerID, requestInput, dest := decodeTriggerEvent(triggerAction.Data)
 
@@ -47,14 +56,22 @@ func compute(input []uint8, dest Destination) ([]byte, error) {
 		input = bytes.TrimRight(input, "\x00")
 	}
 
-	// Convert input to int, multiply by 2, and convert back to string
-	v, err := strconv.Atoi(string(input))
+	id, err := strconv.Atoi(string(input))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse input: %w", err)
 	}
 
-	v *= 2
-	return []byte(strconv.Itoa(v)), nil
+	priceFeed, err := fetchCryptoPrice(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch price: %w", err)
+	}
+
+	priceJson, err := json.Marshal(priceFeed)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+
+	return priceJson, nil
 }
 
 // encodeTriggerOutput abi encodes the output of the computation to be sent back to the Ethereum contract
@@ -109,3 +126,52 @@ func decodeTriggerEvent(triggerAction wavstypes.TriggerData) (trigger_id uint64,
 }
 
 func main() {}
+
+func fetchCryptoPrice(id int) (*PriceFeedData, error) {
+	// Create a new HTTP client with WASI transport
+	client := &http.Client{
+		Transport: wasiclient.WasiRoundTripper{},
+	}
+
+	// Prepare the URL
+	url := fmt.Sprintf("https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id=%d&range=1h", id)
+
+	// Create a new HTTP request
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set the headers
+	currentTime := time.Now().Unix()
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36")
+	req.Header.Set("Cookie", fmt.Sprintf("myrandom_cookie=%d", currentTime))
+
+	// Make the request
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Read and parse the response
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse the JSON
+	var root Root
+	if err := json.Unmarshal(body, &root); err != nil {
+		return nil, err
+	}
+
+	// Create the price feed data
+	return &PriceFeedData{
+		Symbol:    root.Data.Symbol,
+		Price:     root.Data.Statistics.Price,
+		Timestamp: root.Status.Timestamp,
+	}, nil
+}
