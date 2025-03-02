@@ -6,11 +6,12 @@ GO_MOD_NAME?=$(shell head -n 1 go.mod | cut -d' ' -f2 | rev | cut -d'/' -f1 | re
 OUTPUT_DIR?=../../compiled
 
 check-package:
-# TODO: https://github.com/Lay3rLabs/WAVS/pull/403, then `wkg get $(WAVS_PACKAGE) --overwrite --format wasm --output $(WAVS_PACKAGE).wasm`
-	@if [ ! -f $(WAVS_PACKAGE).wasm ]; then \
-		echo "Downloading $(WAVS_PACKAGE).wasm"; \
-		cp /home/reece/Desktop/Programming/Rust/wavs/sdk/$(WAVS_PACKAGE).wasm .; \
-	fi
+# TODO: https://github.com/Lay3rLabs/WAVS/pull/403, then enable this
+# @if [ ! -f $(WAVS_PACKAGE).wasm ]; then \
+#	echo "Downloading $(WAVS_PACKAGE).wasm"; \
+#	wkg get $(WAVS_PACKAGE) --overwrite --format wasm --output $(WAVS_PACKAGE).wasm
+# fi
+	cp /home/reece/Desktop/Programming/Rust/wavs/sdk/$(WAVS_PACKAGE).wasm .
 
 ## wasi-build: building the WAVS wasi component
 wasi-build: check-package
