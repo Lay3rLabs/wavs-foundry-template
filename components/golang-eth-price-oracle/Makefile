@@ -1,14 +1,23 @@
-COMPONENT_FILENAME=eth_price_oracle.wasm
+WAVS_PACKAGE=wavs:worker@0.3.0-rc1
+WAVS_WIT_WORLD=wavs:worker/layer-trigger-world
+# get the first line of the go.mod and get the last element after the last /, then replace - with _
+GO_MOD_NAME?=$(shell head -n 1 go.mod | cut -d' ' -f2 | rev | cut -d'/' -f1 | rev | tr '-' '_')
 
-## wasi-build: building the WAVS wasi component(s)
-wasi-build:
-	@for component in $(shell ls ./components); do \
-		[ -f components/$$component/Cargo.toml ] || continue; \
-		echo "Building component: $$component"; \
-		(cd components/$$component; cargo component build --release; cargo fmt); \
-	done
-	@mkdir -p ./compiled
-	@cp ./target/wasm32-wasip1/release/*.wasm ./compiled/
+OUTPUT_DIR?=../../compiled
+
+check-package:
+# TODO: https://github.com/Lay3rLabs/WAVS/pull/403, then `wkg get $(WAVS_PACKAGE) --overwrite --format wasm --output $(WAVS_PACKAGE).wasm`
+	@if [ ! -f $(WAVS_PACKAGE).wasm ]; then \
+		echo "Downloading $(WAVS_PACKAGE).wasm"; \
+		cp /home/reece/Desktop/Programming/Rust/wavs/sdk/$(WAVS_PACKAGE).wasm .; \
+	fi
+
+## wasi-build: building the WAVS wasi component
+wasi-build: check-package
+	@echo "Building component: $(GO_MOD_NAME) [takes a few seconds...]"
+	@go mod tidy
+	@tinygo build -target=wasip2 -o $(OUTPUT_DIR)/$(GO_MOD_NAME).wasm --wit-package $(WAVS_PACKAGE).wasm --wit-world $(WAVS_WIT_WORLD) ./src
+	@echo "WASI component built: $(GO_MOD_NAME).wasm"
 
 
 .PHONY: help
