@@ -36,15 +36,11 @@ cd components/golang-eth-price-oracle
 
 # download the WAVS package bindings
 export WAVS_PACKAGE=wavs:worker@0.3.0-rc1
+
 # TODO: this is currently broken on this release, requires:
 # TODO: https://github.com/Lay3rLabs/WAVS/pull/403 to fix `failed to resolve import `wasi:cli/environment@0.2.0::get-environment`
-
-cp /home/reece/Desktop/Programming/Rust/wavs/sdk/wavs:worker@0.3.0-rc1.wasm .
+cp /home/reece/Desktop/Programming/Rust/wavs/sdk/${WAVS_PACKAGE}.wasm .
 # wkg get $WAVS_PACKAGE --overwrite --format wasm --output ${WAVS_PACKAGE}.wasm
-
-# generate the Go/ bindings
-# if `error: error executing wasm-tools: module closed with exit_code(1)`, set WAVS_PACKAGE
-wit-bindgen-go generate -o src/internal/ ${WAVS_PACKAGE}.wasm
 
 # install
 go mod tidy
