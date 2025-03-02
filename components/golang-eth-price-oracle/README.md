@@ -27,7 +27,7 @@ cd components/golang-eth-price-oracle
 
 make wasi-build
 
-(cd ../../; make wasi-exec COMPONENT_FILENAME=golang_eth_price_oracle.wasm)
+(cd ../../; make wasi-exec COMPONENT_FILENAME=golang_eth_price_oracle.wasm COIN_MARKET_CAP_ID=2)
 ```
 
 ## Run in a local environment
