@@ -34,19 +34,9 @@ wkg --version
 
 cd components/golang-eth-price-oracle
 
-# download the WAVS package bindings
-export WAVS_PACKAGE=wavs:worker@0.3.0-rc1
+make wasi-build
 
-# TODO: this is currently broken on this release, requires:
-# TODO: https://github.com/Lay3rLabs/WAVS/pull/403 to fix `failed to resolve import `wasi:cli/environment@0.2.0::get-environment`
-cp /home/reece/Desktop/Programming/Rust/wavs/sdk/${WAVS_PACKAGE}.wasm .
-# wkg get $WAVS_PACKAGE --overwrite --format wasm --output ${WAVS_PACKAGE}.wasm
-
-# install
-go mod tidy
-tinygo build -target=wasip2 -o ../../compiled/golang-wavs-example.wasm --wit-package ${WAVS_PACKAGE}.wasm --wit-world wavs:worker/layer-trigger-world ./src
-
-(cd ../../; make wasi-exec COMPONENT_FILENAME=golang-wavs-example.wasm)
+(cd ../../; make wasi-exec COMPONENT_FILENAME=golang_eth_price_oracle.wasm)
 ```
 
 ```bash
