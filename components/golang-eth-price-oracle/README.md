@@ -1,11 +1,3 @@
-## Install Wit Bindgen for Go
-
-```bash
-go install go.bytecodealliance.org/cmd/wit-bindgen-go@ecfa620df5beee882fb7be0740959e5dfce9ae26
-
-wit-bindgen-go --version
-```
-
 ## System Setup
 
 ```bash
@@ -23,21 +15,22 @@ sudo pacman -Sy tinygo
 # Ubuntu / WSL:
 # TODO: .
 
-
-# -------
-
 # verify installs
 tinygo version
 wkg --version
+```
 
-# move into the golang oracle directory
+## Build Component
 
+```bash
 cd components/golang-eth-price-oracle
 
 make wasi-build
 
 (cd ../../; make wasi-exec COMPONENT_FILENAME=golang_eth_price_oracle.wasm)
 ```
+
+## Run in a local environment
 
 ```bash
 cd ../../
