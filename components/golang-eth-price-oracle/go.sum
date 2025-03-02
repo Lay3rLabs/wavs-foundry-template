@@ -21,8 +21,8 @@ github.com/defiweb/go-sigparser v0.6.0 h1:HSNAZSUl8xyV+nKfWNKYVAPWLwTuASas6ohtar
 github.com/defiweb/go-sigparser v0.6.0/go.mod h1:R1wkfsnASR2M38ZupKHoqqIfv+8HgRbZaFQI9Inr4k8=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/reecepbcups/wavs-go v0.0.0-20250302022307-8b2b8ea19013 h1:Mp3TRnlqoQ3loZJBpS5tdT31lvGxD+IctL7HiILqQoU=
-github.com/reecepbcups/wavs-go v0.0.0-20250302022307-8b2b8ea19013/go.mod h1:stlP3yjUjidfPQIYzywjenQc5/P8PP/rt4mGEDRTPlY=
+github.com/reecepbcups/wavs-go v0.0.0-20250302025119-797694b921fd h1:lbpX7M2JpB3L4+U2fM/oEki8lXE7n2OmXH2+cGSAiDE=
+github.com/reecepbcups/wavs-go v0.0.0-20250302025119-797694b921fd/go.mod h1:stlP3yjUjidfPQIYzywjenQc5/P8PP/rt4mGEDRTPlY=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 go.bytecodealliance.org/cm v0.1.1-0.20250218151459-e57ac0139b6f h1:cHJcIruuUZwd7rDdcJHOVotufiO+qPfFwcxb6uCUVSI=

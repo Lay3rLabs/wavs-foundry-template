@@ -6,7 +6,7 @@ replace github.com/dev-wasm/dev-wasm-go/lib => github.com/Reecepbcups/dev-wasm-g
 
 require (
 	github.com/dev-wasm/dev-wasm-go/lib v0.0.0
-	github.com/reecepbcups/wavs-go v0.0.0-20250302022307-8b2b8ea19013
+	github.com/reecepbcups/wavs-go v0.0.0-20250302025119-797694b921fd
 	go.bytecodealliance.org/cm v0.1.1-0.20250218151459-e57ac0139b6f
 )
 

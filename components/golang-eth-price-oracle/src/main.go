@@ -9,9 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	wavshttphandler "github.com/reecepbcups/wavs-go/handler"
 	"github.com/reecepbcups/wavs-go/types"
-	incominghandler "github.com/reecepbcups/wavs-go/wasi/http/incoming-handler"
 	wavs "github.com/reecepbcups/wavs-go/wavs/worker/layer-trigger-world"
 	trigger "github.com/reecepbcups/wavs-go/wavs/worker/layer-types"
 
@@ -20,8 +18,6 @@ import (
 )
 
 func init() {
-	incominghandler.Exports.Handle = wavshttphandler.WasiHandler
-
 	wavs.Exports.Run = func(triggerAction wavs.TriggerAction) types.TriggerResult {
 		triggerID, requestInput, dest := decodeTriggerEvent(triggerAction.Data)
 
