@@ -1,0 +1,23 @@
+---
+title: Testing a component
+---
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+
+
+## Build your component
+
+Use the following command to build your component:
+
+```bash
+just wasi-build <your-component>
+```
+
+## Test your component
+
+The following commands will allow you to test your component by running it in a mock environment.
+
+```bash
+cd packages/cli && cargo run exec --component ./components/<your-component>.wasm --input '<your-input>'
+```
+

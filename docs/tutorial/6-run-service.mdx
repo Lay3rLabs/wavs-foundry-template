@@ -1,0 +1,110 @@
+---
+title: 6. Run your service
+---
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+
+
+## Start Anvil, WAVS, and Deploy Eigenlayer
+
+1. Create a `.env` file for your project by copying over the example with the following command:
+
+```bash
+cp .env.example .env
+```
+
+2. Use the following command to start an Anvil test chain and the WAVS runtime while deploying core EigenLayer contracts for your service:
+
+```bash
+make start-all
+```
+
+<Callout title="Keep WAVS running" type="info">
+
+The `start-all` command must remain running in your terminal. Open another terminal to run other commands.
+
+You can stop the services with `ctrl+c`. Some MacOS terminals require pressing this twice.
+
+</Callout>
+
+
+With the chain and WAVS running, you can deploy and run your service.
+
+## Deploy solidity contracts
+
+Open a new terminal and run the following command from the root of your project to upload your Service's Trigger and Submission contracts:
+
+```bash
+make deploy-contracts
+```
+
+This command uses the script located in [`script/Deploy.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0-rc1/script/Deploy.s.sol) to deploy your contracts.
+
+<Callout title="Deployed addresses" type="info">
+
+View your deployed trigger address:
+
+```bash
+make get-trigger-from-deploy
+```
+
+View your deployed submission address:
+
+```bash
+make get-service-handler-from-deploy
+```
+
+</Callout>
+
+
+## Deploy your service to WAVS
+
+The following command will deploy your WASI component and service information to WAVS to be run by operators when triggered:
+
+```bash
+make deploy-service
+```
+
+This command specifies the event emitted from your trigger contract as the on-chain event that will trigger your service. In the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0-rc1/Makefile#L95-L102), you can also see that it specifies the submission contract as the `submit-address`, as well as the filename of your component.
+
+<Callout title="Customize variables" type="info">
+
+Open the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0-rc1/Makefile#L9-L22) to view the different variables that you can customize, including the trigger event, the component filename, and the service config.
+
+You can also modify variables by specifying them before running the `make` command:
+
+```bash
+TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
+```
+
+</Callout>
+
+
+## Trigger the Service
+
+Next, use your deployed trigger contract to trigger the oracle to be run. In the following command, you'll specify the `COIN_MARKET_CAP_ID` as `1`, which corresponds to the ID of Bitcoin.
+
+Running this command will execute [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0-rc1/script/Trigger.s.sol) and pass the ID to the trigger contract, starting the following chain of events:
+
+1. The trigger contract will emit an event with the specified ID as its data.
+2. Operators listening for the event will receive the data and run it in the oracle component off-chain.
+3. The oracle component will use the ID to query the price of Bitcoin from the CoinMarketCap API.
+4. The returned data will be signed by operators and passed to the submission contract, which will verify the operator's signature and submit the price of Bitcoin on-chain 🎉
+
+
+```bash
+COIN_MARKET_CAP_ID=1 make trigger-service
+```
+
+## Show the result
+
+Run the following to view the result of your service in your terminal:
+
+```bash
+# Get the latest TriggerId and show the result via `script/ShowResult.s.sol`
+make show-result
+```
+
+Congratulations, you've just made a simple Bitcoin price oracle service using WAVS!
+
+
