@@ -78,14 +78,12 @@ start-all: clean-docker setup-env
 	@rm --interactive=never .docker/*.json || true
 	@bash -ec 'anvil & anvil_pid=$$!; trap "kill -9 $$anvil_pid 2>/dev/null" EXIT; $(SUDO) docker compose up; wait'
 
-## deploy-contracts: deploying the contracts | SERVICE_MANAGER_ADDR, RPC_URL
-deploy-contracts:
-# `sudo chmod 0666 .docker/deployments.json`
-	@forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url $(RPC_URL) --broadcast
-
 ## get-service-handler: getting the service handler address from the script deploy
 get-service-handler-from-deploy:
 	@jq -r '.service_handler' "./.docker/script_deploy.json"
+
+get-eigen-service-manager-from-deploy:
+	@jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json
 
 ## get-trigger: getting the trigger address from the script deploy
 get-trigger-from-deploy:
@@ -103,10 +101,6 @@ deploy-service:
 	--trigger-address "${SERVICE_TRIGGER_ADDR}" \
 	--submit-address "${SERVICE_SUBMISSION_ADDR}" \
 	--service-config ${SERVICE_CONFIG}
-
-## trigger-service: triggering the service | SERVICE_TRIGGER_ADDR, COIN_MARKET_CAP_ID, RPC_URL
-trigger-service:
-	@forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig "run(string,string)" --rpc-url $(RPC_URL) --broadcast -v 4
 
 ## show-result: showing the result | SERVICE_TRIGGER_ADDR, SERVICE_SUBMISSION_ADDR, RPC_URL
 show-result:

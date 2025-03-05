@@ -94,7 +94,7 @@ forge init --template Lay3rLabs/wavs-foundry-template my-wavs
 Install the required packages to build the Solidity contracts. This project supports both [submodules](./.gitmodules) and [npm packages](./package.json).
 
 ```bash
-# Install packages
+# Install packages (npm & submodules)
 make setup
 
 # Build the contracts
@@ -155,8 +155,8 @@ make start-all
 Upload your service's trigger and submission contracts. The trigger contract is where WAVS will watch for events, and the submission contract is where the AVS service operator will submit the result on chain.
 
 ```bash
-# Run `./script/Deploy.s.sol`
-make deploy-contracts
+export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
+forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
 ```
 
 > [!TIP]
@@ -176,7 +176,9 @@ TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
 Anyone can now call the [trigger contract](./src/contracts/WavsTrigger.sol) which emits the trigger event WAVS is watching for from the previous step. WAVS then calls the service and saves the result on-chain.
 
 ```bash
-COIN_MARKET_CAP_ID=1 make trigger-service
+export COIN_MARKET_CAP_ID=1
+export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig "run(string,string)" --rpc-url http://localhost:8545 --broadcast -v 4
 ```
 
 ## Show the result
