@@ -36,27 +36,9 @@ With the chain and WAVS running, you can deploy and run your service.
 Open a new terminal and run the following command from the root of your project to upload your Service's Trigger and Submission contracts:
 
 ```bash
-make deploy-contracts
+export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
+forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
 ```
-
-This command uses the script located in [`script/Deploy.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0-rc1/script/Deploy.s.sol) to deploy your contracts.
-
-<Callout title="Deployed addresses" type="info">
-
-View your deployed trigger address:
-
-```bash
-make get-trigger-from-deploy
-```
-
-View your deployed submission address:
-
-```bash
-make get-service-handler-from-deploy
-```
-
-</Callout>
-
 
 ## Deploy your service to WAVS
 
@@ -94,7 +76,9 @@ Running this command will execute [`/script/Trigger.s.sol`](https://github.com/L
 
 
 ```bash
-COIN_MARKET_CAP_ID=1 make trigger-service
+export COIN_MARKET_CAP_ID=1
+export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig "run(string,string)" --rpc-url http://localhost:8545 --broadcast -v 4
 ```
 
 ## Show the result
@@ -107,5 +91,3 @@ make show-result
 ```
 
 Congratulations, you've just made a simple Bitcoin price oracle service using WAVS!
-
-
