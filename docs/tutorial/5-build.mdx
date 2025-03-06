@@ -84,11 +84,11 @@ The maximum fuel allocation can be adjusted in the `Makefile` to accommodate dif
 
 When developing a custom trigger, you will need to update the template code in a few places:
 
-1. The trigger contract itself in [`src/WavsTrigger.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0-rc1/src/contracts/WavsTrigger.sol), which defines how triggers are created and emitted on-chain.
-2. The `wasi-exec` command in the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0-rc1/Makefile#L36-L40), which passes input data when testing WAVS components via `--input cast format-bytes32-string $(COIN_MARKET_CAP_ID)`. This simulates an Ethereum event during local execution.
-3. The `decode_trigger_event` function in [`/components/eth-price-oracle/src/trigger.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0-rc1/components/eth-price-oracle/src/trigger.rs#L11-L21), which processes the trigger data and extracts relevant fields like `trigger_id` and `data`.
-4. The `run` function in [`/components/eth-price-oracle/src/lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0-rc1/components/eth-price-oracle/src/lib.rs#L13), which calls decode_trigger_event, processes the extracted trigger data, and determines how to handle it.
-5. The trigger script in [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0-rc1/script/Trigger.s.sol#L15), which calls the `addTrigger` function with the `coinMarketCapID`, used in this template for the oracle example.
+1. The trigger contract itself in [`src/WavsTrigger.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsTrigger.sol), which defines how triggers are created and emitted on-chain.
+2. The `wasi-exec` command in the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L39-L43), which passes input data when testing WAVS components via `--input cast format-bytes32-string $(COIN_MARKET_CAP_ID)`. This simulates an Ethereum event during local execution.
+3. The `decode_trigger_event` function in [`/components/eth-price-oracle/src/trigger.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/trigger.rs#L11-L21), which processes the trigger data and extracts relevant fields like `trigger_id` and `data`.
+4. The `run` function in [`/components/eth-price-oracle/src/lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/lib.rs#L13), which calls decode_trigger_event, processes the extracted trigger data, and determines how to handle it.
+5. The trigger script in [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/script/Trigger.s.sol#L15), which calls the `addTrigger` function with the `coinMarketCapID`, used in this template for the oracle example.
 
 ##  Contract interfaces
 

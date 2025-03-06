@@ -63,7 +63,7 @@ Submission logic defines what is done with the result of a service component aft
 
 After the execution of a service component in the WAVS runtime, the results are passed to this contract, which can contain validation and submission logic for the service. Developers can use this contract to define their own logic for results and implement different rules depending on the specific needs of their service.
 
-You can view an example service handler contract in the template tutorial. This service handler contract [calls the `Service Manager` contract](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0-rc1/src/contracts/WavsSubmit.sol) to validate operator signatures before executing the business logic (storing BTC price onchain in this case). This contract contains a basic example of verifying submission data, however, a submission contract can theoretically contain any business logic that a service may need.
+You can view an example service handler contract in the template tutorial. This service handler contract [calls the `Service Manager` contract](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/src/contracts/WavsSubmit.sol) to validate operator signatures before executing the business logic (storing BTC price onchain in this case). This contract contains a basic example of verifying submission data, however, a submission contract can theoretically contain any business logic that a service may need.
 
 ## WAVS Runtime
 

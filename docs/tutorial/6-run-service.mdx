@@ -48,11 +48,11 @@ The following command will deploy your WASI component and service information to
 make deploy-service
 ```
 
-This command specifies the event emitted from your trigger contract as the on-chain event that will trigger your service. In the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0-rc1/Makefile#L95-L102), you can also see that it specifies the submission contract as the `submit-address`, as well as the filename of your component.
+This command specifies the event emitted from your trigger contract as the on-chain event that will trigger your service. In the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L95-L102), you can also see that it specifies the submission contract as the `submit-address`, as well as the filename of your component.
 
 <Callout title="Customize variables" type="info">
 
-Open the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0-rc1/Makefile#L9-L22) to view the different variables that you can customize, including the trigger event, the component filename, and the service config.
+Open the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L9-L22) to view the different variables that you can customize, including the trigger event, the component filename, and the service config.
 
 You can also modify variables by specifying them before running the `make` command:
 
@@ -67,7 +67,7 @@ TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
 
 Next, use your deployed trigger contract to trigger the oracle to be run. In the following command, you'll specify the `COIN_MARKET_CAP_ID` as `1`, which corresponds to the ID of Bitcoin.
 
-Running this command will execute [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0-rc1/script/Trigger.s.sol) and pass the ID to the trigger contract, starting the following chain of events:
+Running this command will execute [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/script/Trigger.s.sol) and pass the ID to the trigger contract, starting the following chain of events:
 
 1. The trigger contract will emit an event with the specified ID as its data.
 2. Operators listening for the event will receive the data and run it in the oracle component off-chain.

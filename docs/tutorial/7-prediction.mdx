@@ -32,7 +32,7 @@ These contracts handle the creation of markets and conditional tokens.
 
 In this demo, the oracle that resolves the market is triggered by the [`PredictionMarketOracleController.sol`](https://github.com/Lay3rLabs/wavs-demos/blob/d13fd90b1407cdb876340e2f399769bb31b1dc52/src/PredictionMarketOracleController.sol) contract.
 
-This contract contains modifications to the `WavsTrigger.sol` contract from the [WAVS Foundry Template repo](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0-rc1/src/contracts/WavsTrigger.sol). Similar to the simple trigger contract, it passes data to the oracle AVS via the `NewTrigger` event.
+This contract contains modifications to the `WavsTrigger.sol` contract from the [WAVS Foundry Template repo](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsTrigger.sol). Similar to the simple trigger contract, it passes data to the oracle AVS via the `NewTrigger` event.
 
 ```rust
     struct TriggerInputData {
