@@ -26,11 +26,11 @@ componentize-py --wit-path add.wit --world example componentize app -o add.wasm
 componentize-py --wit-path /home/reece/Desktop/Programming/Rust/wavs/sdk/wit --world wavs:worker/layer-trigger-world bindings wavs_py
 
 # Create component
-componentize-py --wit-path /home/reece/Desktop/Programming/Rust/wavs/sdk/wit --world wavs:worker/layer-trigger-world componentize main -o ../../compiled/python.wasm
+
 ```
 
 ## Run
 
 ```bash
-(cd ../../; make wasi-exec COMPONENT_FILENAME=python.wasm COIN_MARKET_CAP_ID=2)
+componentize-py --wit-path /home/reece/Desktop/Programming/Rust/wavs/sdk/wit --world wavs:worker/layer-trigger-world componentize main -o ../../compiled/python.wasm && (cd ../../; make wasi-exec COMPONENT_FILENAME=python.wasm COIN_MARKET_CAP_ID=2)
 ```
