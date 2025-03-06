@@ -10,3 +10,5 @@ lcov.info
 internal/
 wavs:worker*.wit
 wavs:worker*.wasm
+venv
+__pycache__
