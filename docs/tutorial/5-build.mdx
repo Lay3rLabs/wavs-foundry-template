@@ -12,10 +12,11 @@ docsignore-->
 
 1. Make sure that Docker is installed. If you are using Docker Desktop, make sure it is open and running. If you are using Mac OS, make sure that your[ Docker app is configured correctly](./2-setup#docker).
 
-2. Make sure that you have already run the following commands from the [system setup section](./2-setup#cargo-components):
+2. Make sure that you have already run the following commands from the [system setup section](./2-setup#cargo-components).
 
 ```bash
-cargo install cargo-component warg-cli wkg --locked
+cargo install cargo-binstall
+cargo binstall cargo-component warg-cli wkg --locked --no-confirm
 
 # Configure default registry
 wkg config --default-registry wa.dev
