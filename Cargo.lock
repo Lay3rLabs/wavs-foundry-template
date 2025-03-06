@@ -1070,7 +1070,7 @@ dependencies = [
 
 [[package]]
 name = "eth-price-oracle"
-version = "0.3.0-rc1"
+version = "0.3.0"
 dependencies = [
  "alloy-sol-macro",
  "alloy-sol-types",
@@ -3123,9 +3123,9 @@ dependencies = [
 
 [[package]]
 name = "wavs-wasi-chain"
-version = "0.3.0-rc1"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfa297209480a64b0623ce5e07ea861283b4683b4b4e0c3bb0ff68b421f8f460"
+checksum = "adabf0e7d9d50f63bd7537d9b90acc05d3e3bd35468aed5379fccc740f7d0540"
 dependencies = [
  "alloy-json-rpc",
  "alloy-primitives",

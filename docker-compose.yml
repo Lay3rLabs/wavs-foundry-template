@@ -20,7 +20,7 @@ services:
 
   # The main instance all WAVS interaction will happen from
   wavs:
-    image: "ghcr.io/lay3rlabs/wavs:0.3.0-rc1"
+    image: "ghcr.io/lay3rlabs/wavs:0.3.0"
     container_name: "wavs"
     stop_signal: SIGKILL
     # depends_on: ["anvil"]
@@ -38,7 +38,7 @@ services:
       - "./.docker:/root/wavs/cli/"
 
   aggregator:
-    image: "ghcr.io/lay3rlabs/wavs:0.3.0-rc1"
+    image: "ghcr.io/lay3rlabs/wavs:0.3.0"
     container_name: "wavs-aggregator"
     stop_signal: SIGKILL
     depends_on: ["wavs"]
@@ -51,7 +51,7 @@ services:
     network_mode: "host"
 
   deploy-eigenlayer:
-    image: "ghcr.io/lay3rlabs/wavs:0.3.0-rc1"
+    image: "ghcr.io/lay3rlabs/wavs:0.3.0"
     container_name: "wavs-deploy-eigenlayer"
     depends_on: ["wavs", "aggregator"] # "anvil",
     restart: "no"
@@ -63,7 +63,7 @@ services:
     network_mode: "host"
 
   deploy-eigenlayer-service-manager:
-    image: "ghcr.io/lay3rlabs/wavs:0.3.0-rc1"
+    image: "ghcr.io/lay3rlabs/wavs:0.3.0"
     container_name: "wavs-deploy-service-manager"
     depends_on:
       deploy-eigenlayer:

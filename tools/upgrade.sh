@@ -9,10 +9,9 @@ if [ -z "$VERSION" ]; then
     echo "Usage: $0 <version>"
     exit 1
 fi
-if 
 
 # conditional sudo, just for docker
-if groups | grep -q docker; then 
+if groups | grep -q docker; then
   SUDO="";
 else
   SUDO="sudo";
