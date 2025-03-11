@@ -1,0 +1,29 @@
+---
+title: State and Persistence
+---
+<!--docsignore
+import { HomeIcon, AppWindow, CircuitBoard, Layers, Microscope, Grid2x2, ChevronRight } from 'lucide-react';
+import { Callout } from 'fumadocs-ui/components/callout';
+import { DocsPage } from 'fumadocs-ui/page';
+docsignore-->
+
+## Design considerations
+
+The WAVS approach to AVS design focuses on the lightweight and agile nature of components, with an emphasis on performance and security.
+
+WAVS works best with the "serverless function" approach, wherein the priority of service component logic is to process data from external sources rather than store it locally. In this model, a component can receive input data from external sources, process it, and submit the verifiable outputs to external sources.
+
+When state persistence is necessary, it should utilize an external immutable source (like Ethereum or IPFS) which are optimized for this functionality and can be deterministically referenced. This design bypasses the consensus errors that can arise from mutable state between operators.
+
+### Caching
+
+WAVS provides components with an optional local data directory that can be used for caching, but only if explicitly granted filesystem permissions. This storage method should only be used to cache immutable data as a performance optimization and not as a replacement for external state stores.
+
+It is best practice when using a cache to reference external data from deterministic immutable sources to avoid consensus failures. For example, data fetched should have a timestamp or blockheight specified to ensure that the same data point is always retrieved by all operators. Caching data from non-immutable sources can lead to consensus errors between operators and should be avoided.
+
+Keep the following points in mind when using cached data:
+
+1. Caching should be used as a performance optimization only.
+2. Use immutable, deterministic external data sources with specific time stamps or block heights.
+3. Design your component logic to work even if the cache is cleared. Cache state is not shared among operators, and any operator should be able to rebuild the cache from scratch.
+4. Never use caching to store state that depends on previous executions or mutable data.
