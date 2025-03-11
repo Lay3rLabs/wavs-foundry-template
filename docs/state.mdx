@@ -17,7 +17,7 @@ When state persistence is necessary, it should utilize external immutable source
 
 ### Caching
 
-WAVS provides components with an optional local data directory that can be used for caching, but only if explicitly granted filesystem permissions. This storage method should only be used to cache immutable data as a performance optimization and not as a replacement for external state stores.
+WAVS provides components with an optional local data directory that can be used for caching. This storage method should only be used to cache immutable data as a performance optimization and not as a replacement for external state stores.
 
 It is best practice when using a cache to reference external data from deterministic immutable sources to avoid consensus failures. For example, data fetched should have a timestamp or blockheight specified to ensure that the same data point is always retrieved by all operators. Caching data from non-immutable sources can lead to consensus errors between operators and should be avoided.
 
