@@ -25,9 +25,9 @@ Conversely, a component that is designed to fetch "current price" would be non-d
 
 ## State
 
-Persistent state introduces additional challenges in AVS design with WAVS: operators may execute triggers at different times or, in some cases, not run them at all if they join an AVS after it has already been active. Components that rely on operator-local mutable state risk failing consensus due to inconsistencies in execution. For these reasons, it is best practice to avoid storing operator-local mutable state within your components.
+Persistent state introduces additional challenges in AVS design with WAVS: operators may execute triggers at different times or, in some cases, not run them at all if they join an AVS after it has been running for some time. Components that rely on operator-local mutable state risk failing consensus due to inconsistencies in execution. For these reasons, it is best practice to avoid storing operator-local mutable state within your components.
 
-Though not currently available, features such as state synchronization, guaranteed execution ordering, and Merkle-proof validation will be available to help ensure consistency across operators.
+This functionality would require features such as state synchronization, guaranteed execution ordering, and Merkle-proof validation which are not yet supported.
 
 ## Caching
 
