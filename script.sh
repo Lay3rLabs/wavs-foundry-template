@@ -6,7 +6,7 @@
 # TODO: ideally the builder is in WAVS, but for now it's in this script
 
 # Define output file
-output_file="service_config.json"
+output_file=".docker/service_config.json"
 
 # Get user input for the various values
 echo "Setting up your service configuration..."
@@ -18,20 +18,23 @@ if [ -z "$SERVICE_NAME" ]; then
 fi
 
 # Upload component 1 and get digest
-# TODO: make the component upload have an argument
-echo "Uploading component 1 (eth_price_oracle.wasm)..."
-DIGEST_1=$(curl -s -X POST http://127.0.0.1:8000/upload \
-     --data-binary @./compiled/eth_price_oracle.wasm \
-     -H "Content-Type: application/wasm" | jq -r '.digest')
 
-if [[ -z "$DIGEST_1" || "$DIGEST_1" == "null" ]]; then
+DEFAULT_COMPONENT_FILENAME=eth_price_oracle.wasm
+read -p "Enter Component Filename: (default: $DEFAULT_COMPONENT_FILENAME) " COMPONENT_FILENAME
+if [ -z "$COMPONENT_FILENAME" ]; then
+    COMPONENT_FILENAME=$DEFAULT_COMPONENT_FILENAME
+fi
+export COMPONENT_FILENAME=$COMPONENT_FILENAME
+
+WASM_DIGEST=`make upload-component`
+if [[ -z "$WASM_DIGEST" || "$WASM_DIGEST" == "null" ]]; then
     echo "Failed to upload component 1. Please check if the file exists and the server is running."
     exit 1
 fi
 
 # parse out the hex part of the digest by grabbing the raw values within .digest & removing sha256
-DIGEST_1=$(echo $DIGEST_1 | cut -d':' -f2)
-echo "Component 1 uploaded successfully. Digest: $DIGEST_1"
+WASM_DIGEST=$(echo $WASM_DIGEST | cut -d':' -f2)
+echo "Component 1 uploaded successfully. Digest: $WASM_DIGEST"
 
 DEFAULT_TRIGGER_ADDR=`jq -r '.trigger' "./.docker/script_deploy.json"`
 DEFAULT_SUBMIT_ADDRESS=`jq -r '.service_handler' "./.docker/script_deploy.json"`
@@ -62,13 +65,13 @@ cat > "$output_file" << EOF
   "name": "$SERVICE_NAME",
   "components": {
     "component1": {
-      "wasm": "$DIGEST_1",
+      "wasm": "$WASM_DIGEST",
       "permissions": {
         "allowed_http_hosts": "all",
         "file_system": true
       },
       "source": {
-        "Digest": "$DIGEST_1"
+        "Digest": "$WASM_DIGEST"
       }
     }
   },

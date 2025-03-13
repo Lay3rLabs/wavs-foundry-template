@@ -168,12 +168,10 @@ forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" -
 Deploy the compiled component with the contracts from the previous steps. Review the [makefile](./Makefile) for more details and configuration options.`TRIGGER_EVENT` is the event that the trigger contract emits and WAVS watches for. By altering `SERVICE_TRIGGER_ADDR` you can watch events for contracts others have deployed.
 
 ```bash
-# TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
+# Build your service JSON
+sh ./script.sh
 
-# we upload and deploy in the same 1 now, this is just testing
-# make upload-component
-
-sh script.sh
+# Deploy the service JSON
 SERVICE_CONFIG_FILE=service_config.json make deploy-service
 ```
 
