@@ -1,54 +1,71 @@
 import os
 import re
+import signal
 import subprocess
-import time
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
-
-import requests
 
 # current file location
 REPO_ROOT = subprocess.check_output(["git", "rev-parse", "--show-toplevel"]).decode("utf-8").strip()
 print(f"Root dir: {REPO_ROOT}")
 
-# Commands which block the process
-BLOCKING_START_COMMANDS = ["local-ic start", "make testnet", "make sh-testnet"]
-
-DOCS_TO_CI = ["README.md"]
-
-START_PID = -1
-DEBUGGING = False
+# Store PIDs of background processes for later cleanup
+background_processes = []
 
 def main():
     paths = config.iterate_paths()
     file_path = next(paths)
 
-    values = parse_markdown_code_blocks(file_path)
-    for value in values:
-        if value.ignored: continue
+    config.run_pre_cmds()
 
-        value.run_commands()
+    try:
+        values = parse_markdown_code_blocks(file_path)
+        for value in values:
+            if value.ignored: continue
+
+            # value.print()
+            value.run_commands(additional_env=config.env_var)
+    finally:
+        config.run_cleanup_cmds()
+        cleanup_background_processes()
 
 class Config:
     paths: List[str] = [] # this will be loaded with the prefix of the absolute path of the repo
     env_var: Dict[str, str] = {}
+    pre_cmds: List[str] = []
     cleanup_cmds: List[str] = []
     only_run_bash: bool = True
     ignore_commands: List[str] = ['gh repo create'] # TODO: example
+    # debugging?
 
-    def __init__(self, paths: List[str], env_var: Dict[str, str], cleanup_cmds: List[str]):
+    def __init__(self, paths: List[str], env_var: Dict[str, str], cleanup_cmds: List[str], pre_cmds: List[str] = []):
         self.paths = paths
         self.env_var = env_var
         self.cleanup_cmds = cleanup_cmds
+        self.pre_cmds = pre_cmds
 
     def iterate_paths(self):
         for path in self.paths:
             yield os.path.join(REPO_ROOT, path)
 
+    def __run_cmd(self, cmd: str):
+        print(f"Running command: {cmd}")
+        subprocess.run(cmd, shell=True, cwd=REPO_ROOT)
+
+    def run_pre_cmds(self):
+        for cmd in self.pre_cmds:
+            self.__run_cmd(cmd)
+
+    def run_cleanup_cmds(self):
+        for cmd in self.cleanup_cmds:
+            self.__run_cmd(cmd)
+
 config = Config(
-    paths=DOCS_TO_CI,
+    # paths=["README.md"],
+    paths=["README_WAVS.md"],
     env_var={"WAVS_IN_BACKGROUND": "true"},
-    cleanup_cmds=["killall anvil", "docker compose rm"]
+    pre_cmds=["docker compose rm --stop --force --volumes", "docker rm -f wavs wavs-deploy-service-manager wavs-deploy-eigenlayer"],
+    cleanup_cmds=["killall anvil"],
 )
 
 @dataclass
@@ -58,19 +75,39 @@ class DocsValue:
     content: str # unmodified content
     ignored: bool
     commands: List[str]
+    background: bool = False # if the command should run in the background i.e. it is blocking
 
-    def run_commands(self, additional_env: Dict[str, str] = {}):
-        # Start with the current environment
+    def run_commands(
+        self,
+        additional_env: Dict[str, str] = {},
+        background_exclude_commands: List[str] = ["cp", "export", "cd", "mkdir", "echo", "cat"],
+    ) -> bool: # success / failure returned
+        '''
+        Runs the commands
+        '''
+
         env = os.environ.copy()
-
-        # Add any additional environment variables
         env.update(additional_env)
+
+        success = True
 
         for command in self.commands:
             if command in config.ignore_commands:
                 continue
 
-            print(f"Running command: {command}")
+            # Determine if this specific command should run in background
+            cmd_background = self.background
+            if self.background:
+                # Check if command starts with any excluded prefix
+                first_word = command.strip().split()[0]
+                if first_word in background_exclude_commands:
+                    cmd_background = False
+
+            # Add & if running in background and not already there
+            if cmd_background and not command.strip().endswith('&'):
+                command = f"{command} &"
+
+            print(f"Running command: {command}" + (" (& added for background)" if cmd_background else ""))
 
             # Use the merged environment when running the command
             process = subprocess.Popen(
@@ -79,13 +116,34 @@ class DocsValue:
                 env=env,
                 cwd=REPO_ROOT
             )
-            process.wait()
 
-            if process.returncode != 0:
-                print(f"Error running command: {command}")
-                break
+            if cmd_background:
+                # Try to get PID of the actual background process
+                try:
+                    # Simple approach: the last word in the output of echo $! is the PID
+                    pid_cmd = f"bash -c '{command} echo $!'"
+                    pid_output = subprocess.check_output(pid_cmd, shell=True, text=True)
+                    pid = int(pid_output.strip().split()[-1])
+                    background_processes.append(pid)
+                    print(f"Started background process with PID: {pid}")
+                except Exception as e:
+                    print(f"Warning: Could not track background process: {e}")
+                    # If we can't get the specific PID, save the shell's PID as a fallback
+                    if process.pid:
+                        background_processes.append(process.pid)
+            else:
+                # For regular processes, wait and check return code
+                process.wait()
 
-            print(f"Command finished: {command}")
+                if process.returncode != 0:
+                    print(f"Error running command: {command}")
+                    success = False
+                    break
+
+                print(f"Command finished: {command}")
+
+        return success
+
 
     def __str__(self):
         # content={self.content.replace('\n', '\\n')}
@@ -93,6 +151,22 @@ class DocsValue:
 
     def print(self):
         print(self.__str__())
+
+def cleanup_background_processes():
+    """Kill all saved background processes"""
+    if not background_processes:
+        return
+
+    print(f"Cleaning up {len(background_processes)} background processes...")
+    for pid in background_processes:
+        try:
+            os.kill(pid, signal.SIGTERM)
+            print(f"Terminated process with PID: {pid}")
+        except OSError as e:
+            print(f"Error terminating process {pid}: {e}")
+
+    # Clear the list
+    background_processes.clear()
 
 def parse_markdown_code_blocks(file_path: str) -> List[DocsValue]:
     """
@@ -129,6 +203,7 @@ def parse_markdown_code_blocks(file_path: str) -> List[DocsValue]:
         tags = language_parts[1:] if len(language_parts) > 1 else []
 
         ignored = 'docs-ci-ignore' in tags  # TODO: only run bash?
+        background = 'docs-ci-background' in tags
 
         content = str(block_content).strip()
 
@@ -137,12 +212,14 @@ def parse_markdown_code_blocks(file_path: str) -> List[DocsValue]:
             tags=tags,
             content=content,
             ignored=ignored,
+            background=background,
             commands=[]
         )
 
         # using regex, remove any sections of code that start with a comment '#' and end with a new line '\n', this info is not needed.
         # an example is '# Install packages (npm & submodules)\nmake setup\n\n# Build the contracts\nforge build\n\n# Run the solidity tests\nforge test'
         # this should just be `make setup\nforge build\nforge test`
+        # TODO: other comment types need to also be supported?
         content = re.sub(r'^#.*\n', '', content, flags=re.MULTILINE)
 
         # if there is a # comment with no further \n after it, remove it
