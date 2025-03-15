@@ -55,7 +55,7 @@ clean: clean-docker
 
 ## clean-docker: remove unused docker containers
 clean-docker:
-	@$(SUDO) docker rm -v $(shell $(SUDO) docker ps --filter status=exited -q) || true
+	@$(SUDO) docker rm -v $(shell $(SUDO) docker ps --filter status=exited -q) 2> /dev/null || true
 
 ## fmt: formatting solidity and rust code
 fmt:
@@ -74,8 +74,15 @@ setup: check-requirements
 ## start-all: starting anvil and WAVS with docker compose
 # running anvil out of compose is a temp work around for MacOS
 start-all: clean-docker setup-env
-	@rm --interactive=never .docker/*.json || true
-	@bash -ec 'anvil & anvil_pid=$$!; trap "kill -9 $$anvil_pid 2>/dev/null" EXIT; $(SUDO) docker compose up; wait'
+	@rm --interactive=never .docker/*.json 2> /dev/null || true
+
+	@if [ "$(WAVS_IN_BACKGROUND)" = "true" ]; then \
+		echo "Starting WAVS in the background"; \
+		anvil & $(SUDO) docker compose up -d; \
+	else \
+		echo "Starting WAVS"; \
+		bash -ec 'anvil & anvil_pid=$$!; trap "kill -9 $$anvil_pid 2>/dev/null" EXIT; $(SUDO) docker compose up; wait'; \
+	fi
 
 ## get-service-handler: getting the service handler address from the script deploy
 get-service-handler-from-deploy:
