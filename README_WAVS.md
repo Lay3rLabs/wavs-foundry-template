@@ -14,7 +14,7 @@
 
 Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https://www.eigenlayer.xyz/) contracts to the local network.
 
-```bash docs-ci-background
+```bash docs-ci-background docs-ci-post-delay=5
 # cp .env.example .env
 
 # Start the backend
@@ -22,4 +22,13 @@ Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https:
 # This must remain running in your terminal. Use another terminal to run other commands.
 # You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
 make start-all
+```
+
+### Deploy Contract
+
+Upload your service's trigger and submission contracts. The trigger contract is where WAVS will watch for events, and the submission contract is where the AVS service operator will submit the result on chain.
+
+```bash
+export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
+forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
 ```

@@ -2,12 +2,12 @@ import os
 import re
 import signal
 import subprocess
-from dataclasses import dataclass
+import time
+from dataclasses import dataclass, field
 from typing import Dict, List, Tuple
 
 # current file location
 REPO_ROOT = subprocess.check_output(["git", "rev-parse", "--show-toplevel"]).decode("utf-8").strip()
-print(f"Root dir: {REPO_ROOT}")
 
 # Store PIDs of background processes for later cleanup
 background_processes = []
@@ -16,17 +16,17 @@ def main():
     paths = config.iterate_paths()
     file_path = next(paths)
 
-    config.run_pre_cmds()
+    config.run_pre_cmds(hide_output=True)
 
     try:
         values = parse_markdown_code_blocks(file_path)
         for value in values:
             if value.ignored: continue
 
-            # value.print()
-            value.run_commands(additional_env=config.env_var)
+            value.print()
+            # value.run_commands(additional_env=config.env_var)
     finally:
-        config.run_cleanup_cmds()
+        config.run_cleanup_cmds(hide_output=True)
         cleanup_background_processes()
 
 class Config:
@@ -36,7 +36,6 @@ class Config:
     cleanup_cmds: List[str] = []
     only_run_bash: bool = True
     ignore_commands: List[str] = ['gh repo create'] # TODO: example
-    # debugging?
 
     def __init__(self, paths: List[str], env_var: Dict[str, str], cleanup_cmds: List[str], pre_cmds: List[str] = []):
         self.paths = paths
@@ -48,17 +47,16 @@ class Config:
         for path in self.paths:
             yield os.path.join(REPO_ROOT, path)
 
-    def __run_cmd(self, cmd: str):
-        print(f"Running command: {cmd}")
-        subprocess.run(cmd, shell=True, cwd=REPO_ROOT)
+    def __run_cmd(self, cmd: str, hide_output: bool):
+        subprocess.run(cmd, shell=True, cwd=REPO_ROOT, stdout=subprocess.DEVNULL if hide_output else None, stderr=subprocess.DEVNULL if hide_output else None)
 
-    def run_pre_cmds(self):
+    def run_pre_cmds(self, hide_output: bool = False):
         for cmd in self.pre_cmds:
-            self.__run_cmd(cmd)
+            self.__run_cmd(cmd, hide_output)
 
-    def run_cleanup_cmds(self):
+    def run_cleanup_cmds(self, hide_output: bool = False):
         for cmd in self.cleanup_cmds:
-            self.__run_cmd(cmd)
+            self.__run_cmd(cmd, hide_output)
 
 config = Config(
     # paths=["README.md"],
@@ -76,6 +74,8 @@ class DocsValue:
     ignored: bool
     commands: List[str]
     background: bool = False # if the command should run in the background i.e. it is blocking
+    post_delay: int = 0 # delay in seconds after the command is run
+    envs: Dict[str, str] = field(default_factory=dict)
 
     def run_commands(
         self,
@@ -142,12 +142,16 @@ class DocsValue:
 
                 print(f"Command finished: {command}")
 
+        if self.post_delay > 0:
+            print(f"Sleeping for {self.post_delay} seconds after running commands...")
+            time.sleep(self.post_delay)
+
         return success
 
 
     def __str__(self):
         # content={self.content.replace('\n', '\\n')}
-        return f"DocsValue(language={self.language}, tags={self.tags}, ignored={self.ignored}, commands={self.commands})"
+        return f"DocsValue(language={self.language}, tags={self.tags}, ignored={self.ignored}, commands={self.commands}, background={self.background}, post_delay={self.post_delay})"
 
     def print(self):
         print(self.__str__())
@@ -204,6 +208,7 @@ def parse_markdown_code_blocks(file_path: str) -> List[DocsValue]:
 
         ignored = 'docs-ci-ignore' in tags  # TODO: only run bash?
         background = 'docs-ci-background' in tags
+        post_delay = int([tag.split('=')[1] for tag in tags if 'docs-ci-post-delay' in tag][0]) if any('docs-ci-post-delay' in tag for tag in tags) else 0
 
         content = str(block_content).strip()
 
@@ -213,6 +218,7 @@ def parse_markdown_code_blocks(file_path: str) -> List[DocsValue]:
             content=content,
             ignored=ignored,
             background=background,
+            post_delay=post_delay,
             commands=[]
         )
 
@@ -231,10 +237,92 @@ def parse_markdown_code_blocks(file_path: str) -> List[DocsValue]:
         # split by the \n to get a list of commands
         commands = content.split('\n')
 
+        # parse out env vars from commands. an example format is:
+        # export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy
+        env_vars = {}
+        for command in commands:
+            env_vars.update(parse_env(command))
+
+
+
         value.commands = commands
         results.append(value)
 
     return results
 
+def execute_backticks(value: str) -> str:
+    """
+    Execute commands inside backticks and return the value with output substituted.
+
+    Args:
+        value: String that may contain backtick commands
+
+    Returns:
+        String with backtick commands replaced by their output
+    """
+    backtick_match = re.search(r'`(.*?)`', value)
+    if not backtick_match:
+        return value
+
+    cmd_to_execute = backtick_match.group(1)
+    try:
+        executed_value = subprocess.check_output(
+            cmd_to_execute, shell=True, text=True, cwd=REPO_ROOT
+        ).strip()
+        return value.replace(f"`{cmd_to_execute}`", executed_value)
+    except subprocess.CalledProcessError as e:
+        print(f"Warning: Failed to execute command in backticks: {cmd_to_execute}")
+        print(f"Error: {e}")
+        return value  # Return original value if execution fails
+
+def parse_env(command: str) -> Dict[str, str]:
+    """
+    Parse environment variable commands, handling backtick execution and inline env vars.
+
+    Args:
+        command: String containing potential env var assignments and commands
+
+    Returns:
+        Dictionary of environment variables (can be empty if no env vars found)
+    """
+    # Early return if no '=' is present in the command
+    if '=' not in command:
+        return {}
+
+    # First check for export KEY=VALUE pattern
+    export_match = re.match(r'^export\s+([A-Za-z_][A-Za-z0-9_]*)=(.*)$', command.strip())
+    if export_match:
+        key = export_match.group(1)
+        value = execute_backticks(export_match.group(2))
+        return {key: value}
+
+    # Check for inline environment variables (KEY=VALUE command args)
+    inline_match = re.match(r'^([A-Za-z_][A-Za-z0-9_]*=[^ ]+(?: [A-Za-z_][A-Za-z0-9_]*=[^ ]+)*) (.+)$', command.strip())
+    if inline_match:
+        env_vars = {}
+        env_part = inline_match.group(1)
+
+        # Extract all KEY=VALUE pairs
+        for pair in env_part.split():
+            if '=' in pair:
+                key, value = pair.split('=', 1)
+                env_vars[key] = execute_backticks(value)
+
+        return env_vars
+
+    # Check for standalone KEY=VALUE
+    standalone_match = re.match(r'^([A-Za-z_][A-Za-z0-9_]*)=(.*)$', command.strip())
+    if standalone_match:
+        key = standalone_match.group(1)
+        value = execute_backticks(standalone_match.group(2))
+        return {key: value}
+
+    # If we get here, there were no environment variables we could parse
+    return {}
+
+
 if __name__ == "__main__":
+    # print(parse_env('export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`'))
+    # print(parse_env('export SERVICE_MANAGER_ADDR=123'))
+    # print(parse_env('SERVICE_CONFIG_FILE=service_config.json make deploy-service'))
     main()
