@@ -13,17 +13,28 @@ print(f"Root dir: {REPO_ROOT}")
 
 # Commands which block the process
 BLOCKING_START_COMMANDS = ["local-ic start", "make testnet", "make sh-testnet"]
-ignore_commands = ["gh repo create"]
 
 DOCS_TO_CI = ["README.md"]
 
 START_PID = -1
 DEBUGGING = False
 
+def main():
+    paths = config.iterate_paths()
+    file_path = next(paths)
+
+    values = parse_markdown_code_blocks(file_path)
+    for value in values:
+        if value.ignored: continue
+
+        value.run_commands()
+
 class Config:
     paths: List[str] = [] # this will be loaded with the prefix of the absolute path of the repo
     env_var: Dict[str, str] = {}
     cleanup_cmds: List[str] = []
+    only_run_bash: bool = True
+    ignore_commands: List[str] = ['gh repo create'] # TODO: example
 
     def __init__(self, paths: List[str], env_var: Dict[str, str], cleanup_cmds: List[str]):
         self.paths = paths
@@ -34,24 +45,40 @@ class Config:
         for path in self.paths:
             yield os.path.join(REPO_ROOT, path)
 
+config = Config(
+    paths=DOCS_TO_CI,
+    env_var={"WAVS_IN_BACKGROUND": "true"},
+    cleanup_cmds=["killall anvil", "docker compose rm"]
+)
+
 @dataclass
 class DocsValue:
-    # bash, python, rust, etc
-    language: str
-    # (e.g., 'docs-ci-ignore') in the ```bash tag1, tag2```
-    tags: List[str]
+    language: str # bash, python, rust, etc
+    tags: List[str] # (e.g., 'docs-ci-ignore') in the ```bash tag1, tag2```
     content: str # unmodified content
     ignored: bool
     commands: List[str]
 
-    # static method which iterates over commands and runs them
-    def run_commands(self, env_var: Dict[str, str]):
+    def run_commands(self, additional_env: Dict[str, str] = {}):
+        # Start with the current environment
+        env = os.environ.copy()
+
+        # Add any additional environment variables
+        env.update(additional_env)
+
         for command in self.commands:
-            if command in ignore_commands:
+            if command in config.ignore_commands:
                 continue
 
             print(f"Running command: {command}")
-            process = subprocess.Popen(command, shell=True, env=env_var)
+
+            # Use the merged environment when running the command
+            process = subprocess.Popen(
+                command,
+                shell=True,
+                env=env,
+                cwd=REPO_ROOT
+            )
             process.wait()
 
             if process.returncode != 0:
@@ -60,23 +87,12 @@ class DocsValue:
 
             print(f"Command finished: {command}")
 
-def main():
-    config = Config(
-        paths=DOCS_TO_CI,
-        env_var={"WAVS_IN_BACKGROUND": "true"},
-        cleanup_cmds=["killall anvil", "docker compose rm"]
-    )
+    def __str__(self):
+        # content={self.content.replace('\n', '\\n')}
+        return f"DocsValue(language={self.language}, tags={self.tags}, ignored={self.ignored}, commands={self.commands})"
 
-    paths = config.iterate_paths()
-    file_path = next(paths)
-
-    values = parse_markdown_code_blocks(file_path)
-    for value in values:
-        if value.ignored: continue
-
-        value.run_commands()
-
-
+    def print(self):
+        print(self.__str__())
 
 def parse_markdown_code_blocks(file_path: str) -> List[DocsValue]:
     """
