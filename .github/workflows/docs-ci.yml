@@ -73,22 +73,8 @@ jobs:
         wkg config --default-registry wa.dev
 
     # -------------------
-
     - name: Readme Runner
-      uses: actions/checkout@v4
-      with:
-        repository: reecepbcups/docs-ci
-        ref: v0.1.1
-        path: docs-ci
-
-    # staticx issue requires this -- https://github.com/JonathonReinhart/staticx/issues/188
-    - name: Setup Python
-      working-directory: docs-ci
       run: |
-        sudo add-apt-repository ppa:deadsnakes/ppa && sudo apt-get update && sudo apt-get install python3.12
-        python -m pip install --upgrade pip
-        pip install pyinstaller staticx --break-system-packages
-        make install
-
-    - name: Readme Runner
-      run: readme-runner .github/workflows/config.json
+        sudo wget -O /usr/local/bin/readme-runner https://github.com/Reecepbcups/docs-ci/releases/download/v0.1.1/readme-runner
+        sudo chmod +x /usr/local/bin/readme-runner
+        readme-runner .github/workflows/config.json
