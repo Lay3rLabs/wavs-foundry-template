@@ -141,7 +141,7 @@ COIN_MARKET_CAP_ID=1 make wasi-exec
 
 Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https://www.eigenlayer.xyz/) contracts to the local network.
 
-```bash docs-ci-background docs-ci-post-delay=5
+```bash docs-ci-background docs-ci-delay-after=5
 # cp .env.example .env
 
 # Start the backend
@@ -168,7 +168,7 @@ forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" -
 
 Deploy the compiled component with the contracts from the previous steps. Review the [makefile](./Makefile) for more details and configuration options.`TRIGGER_EVENT` is the event that the trigger contract emits and WAVS watches for. By altering `SERVICE_TRIGGER_ADDR` you can watch events for contracts others have deployed.
 
-```bash docs-ci-cmd-delay=1
+```bash docs-ci-delay-per-cmd=1
 # Build your service JSON
 sh ./script.sh
 
@@ -190,7 +190,7 @@ forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID
 
 Query the latest submission contract id from the previous request made.
 
-```bash docs-ci-cmd-delay=2
+```bash docs-ci-delay-per-cmd=2
 # Get the latest TriggerId and show the result via `script/ShowResult.s.sol`
 make show-result
 ```
