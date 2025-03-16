@@ -1,0 +1,14 @@
+{
+    "paths": ["README.md"],
+    "env_vars": {
+      "WAVS_IN_BACKGROUND": "true",
+      "WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS": "true"
+    },
+    "pre_cmds": [],
+    "cleanup_cmds": [
+      "killall anvil || true",
+      "docker compose rm --stop --force --volumes || true",
+      "docker rm -f wavs wavs-aggregator wavs-deploy-service-manager wavs-deploy-eigenlayer || true"
+    ],
+    "final_output_contains": "BTC"
+  }

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS=${WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS:-"true"}
+
 # Define output file
 output_file=".docker/service_config.json"
 
@@ -7,7 +9,11 @@ output_file=".docker/service_config.json"
 echo "Setting up your service configuration..."
 
 SERVICE_ID=$(uuidgen)
-read -p "Enter Service Name: (default: $SERVICE_ID) " SERVICE_NAME
+if [ "$WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS" == "true" ]; then
+    echo "Using default values for all prompts. To disable this, set WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS=false"
+else
+    read -p "Enter Service Name: (default: $SERVICE_ID) " SERVICE_NAME
+fi
 if [ -z "$SERVICE_NAME" ]; then
     SERVICE_NAME=$SERVICE_ID
 fi
@@ -15,7 +21,11 @@ fi
 # Upload component 1 and get digest
 
 DEFAULT_COMPONENT_FILENAME=eth_price_oracle.wasm
-read -p "Enter Component Filename: (default: $DEFAULT_COMPONENT_FILENAME) " COMPONENT_FILENAME
+if [ "$WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS" == "true" ]; then
+    echo "Using default values for all prompts. To disable this, set WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS=false"
+else
+  read -p "Enter Component Filename: (default: $DEFAULT_COMPONENT_FILENAME) " COMPONENT_FILENAME
+fi
 if [ -z "$COMPONENT_FILENAME" ]; then
     COMPONENT_FILENAME=$DEFAULT_COMPONENT_FILENAME
 fi
@@ -35,8 +45,12 @@ DEFAULT_TRIGGER_ADDR=`jq -r '.trigger' "./.docker/script_deploy.json"`
 DEFAULT_SUBMIT_ADDRESS=`jq -r '.service_handler' "./.docker/script_deploy.json"`
 
 # Get contract addresses
-read -p "Enter Trigger Contract Address: (default: $DEFAULT_TRIGGER_ADDR) " TRIGGER_ADDRESS
-read -p "Enter Submit Contract Address: (default: $DEFAULT_SUBMIT_ADDRESS) " SUBMIT_ADDRESS
+if [ "$WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS" == "true" ]; then
+    echo "Using default values for all prompts. To disable this, set WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS=false"
+else
+  read -p "Enter Trigger Contract Address: (default: $DEFAULT_TRIGGER_ADDR) " TRIGGER_ADDRESS
+  read -p "Enter Submit Contract Address: (default: $DEFAULT_SUBMIT_ADDRESS) " SUBMIT_ADDRESS
+fi
 
 if [ -z "$TRIGGER_ADDRESS" ]; then
     TRIGGER_ADDRESS=$DEFAULT_TRIGGER_ADDR
@@ -47,7 +61,11 @@ fi
 
 
 DEFAULT_TRIGGER_EVENT=`cast keccak "NewTrigger(bytes)"`
-read -p "Enter Event Hash: (default: $DEFAULT_TRIGGER_EVENT) " EVENT_HASH
+if [ "$WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS" == "true" ]; then
+    echo "Using default values for all prompts. To disable this, set WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS=false"
+else
+  read -p "Enter Event Hash: (default: $DEFAULT_TRIGGER_EVENT) " EVENT_HASH
+fi
 if [ -z "$EVENT_HASH" ]; then
     EVENT_HASH=$DEFAULT_TRIGGER_EVENT
 fi

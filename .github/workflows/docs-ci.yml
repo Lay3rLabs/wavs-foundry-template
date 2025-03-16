@@ -1,0 +1,80 @@
+name: Docs CI
+
+# based on https://docs.wavs.xyz/ & this repos README.md
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+# Ensures that only a single workflow per PR will run at a time. Cancels in-progress jobs if new commit is pushed.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      DEBUGGING: true
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # TODO: change to use the internal CI instead of this?
+    - name: Install Ubuntu packages
+      run: sudo apt-get update && sudo apt-get install bash make jq
+
+    - uses: actions/setup-node@v4
+      name: Install Node.js
+      with:
+        node-version: 21
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+
+    - name: Cache Rust target
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.rustup/toolchains
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-rust-wasm32-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-rust-wasm32-
+
+    - uses: cargo-bins/cargo-binstall@main
+      name: Install cargo-binstall
+      with:
+        version: latest
+
+    - name: Install Foundry
+      uses: foundry-rs/foundry-toolchain@v1
+      with:
+        version: stable
+
+    - name: Install rust wasm32-wasip2
+      run: rustup target add wasm32-wasip2
+
+    - name: Install wasi components
+      run: |
+        cargo binstall cargo-component warg-cli wkg --locked --no-confirm
+        wkg config --default-registry wa.dev
+
+    # -------------------
+    - name: Readme Runner
+      run: |
+        sudo wget -O /usr/local/bin/readme-runner https://github.com/Reecepbcups/docs-ci/releases/download/v0.0.2/readme-runner
+        sudo chmod +x /usr/local/bin/readme-runner
+        readme-runner .github/workflows/config.json

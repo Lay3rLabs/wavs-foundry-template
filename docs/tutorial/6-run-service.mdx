@@ -16,7 +16,7 @@ cp .env.example .env
 
 2. Use the following command to start an Anvil test chain and the WAVS runtime while deploying core EigenLayer contracts for your service:
 
-```bash
+```bash docs-ci-background docs-ci-post-delay=5
 make start-all
 ```
 
@@ -35,7 +35,7 @@ With the chain and WAVS running, you can deploy and run your service.
 
 Open a new terminal and run the following command from the root of your project to upload your Service's Trigger and Submission contracts:
 
-```bash
+```bash docs-ci-cmd-delay=1
 export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
 forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
 ```
@@ -44,7 +44,7 @@ forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" -
 
 The following command will deploy your WASI component and service information to WAVS to be run by operators when triggered:
 
-```bash
+```bash docs-ci-ignore (run in the next codeblock)
 make deploy-service
 ```
 
@@ -56,8 +56,12 @@ Open the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0
 
 You can also modify variables by specifying them before running the `make` command:
 
-```bash
-TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
+```bash docs-ci-cmd-delay=1
+# Build your service JSON
+sh ./script.sh
+
+# Deploy the service JSON
+SERVICE_CONFIG_FILE=service_config.json make deploy-service
 ```
 
 </Callout>
@@ -75,7 +79,7 @@ Running this command will execute [`/script/Trigger.s.sol`](https://github.com/L
 4. The returned data will be signed by operators and passed to the submission contract, which will verify the operator's signature and submit the price of Bitcoin on-chain 🎉
 
 
-```bash
+```bash docs-ci-cmd-delay=1
 export COIN_MARKET_CAP_ID=1
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig "run(string,string)" --rpc-url http://localhost:8545 --broadcast -v 4
@@ -85,7 +89,7 @@ forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID
 
 Run the following to view the result of your service in your terminal:
 
-```bash
+```bash docs-ci-cmd-delay=2
 # Get the latest TriggerId and show the result via `script/ShowResult.s.sol`
 make show-result
 ```
