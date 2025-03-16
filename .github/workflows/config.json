@@ -9,6 +9,5 @@
       "killall anvil || true",
       "docker compose rm --stop --force --volumes || true",
       "docker rm -f wavs wavs-aggregator wavs-deploy-service-manager wavs-deploy-eigenlayer || true"
-    ],
-    "final_output_contains": "BTC"
+    ]
   }

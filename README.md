@@ -190,7 +190,7 @@ forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID
 
 Query the latest submission contract id from the previous request made.
 
-```bash docs-ci-delay-per-cmd=2
+```bash docs-ci-delay-per-cmd=2 docs-ci-output-contains="BTC"
 # Get the latest TriggerId and show the result via `script/ShowResult.s.sol`
 make show-result
 ```
