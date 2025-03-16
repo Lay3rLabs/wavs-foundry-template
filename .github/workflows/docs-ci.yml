@@ -75,6 +75,6 @@ jobs:
     # -------------------
     - name: Readme Runner
       run: |
-        sudo wget -O /usr/local/bin/docs-ci https://github.com/Reecepbcups/docs-ci/releases/download/v0.2.0/docs-ci
-        sudo chmod a+rx /usr/local/bin/docs-ci
-        docs-ci .github/workflows/config.json
+        sudo wget -O /usr/local/bin/docci https://github.com/Reecepbcups/docci/releases/download/v0.4.0/docci
+        sudo chmod a+rx /usr/local/bin/docci
+        docci .github/workflows/config.json

@@ -41,7 +41,7 @@ A template for developing WebAssembly AVS applications using Rust and Solidity, 
 
 ### Rust Installation
 
-```bash docs-ci-ignore
+```bash docci-ignore
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 rustup toolchain install stable
@@ -50,7 +50,7 @@ rustup target add wasm32-wasip2
 
 ### Upgrade Rust
 
-```bash docs-ci-ignore
+```bash docci-ignore
 # Remove old targets if present
 rustup target remove wasm32-wasi || true
 rustup target remove wasm32-wasip1 || true
@@ -67,7 +67,7 @@ rustup target add wasm32-wasip2
 
 ### Install Cargo Components
 
-```bash docs-ci-ignore
+```bash docci-ignore
 # Install required cargo components
 # https://github.com/bytecodealliance/cargo-component#installation
 cargo install cargo-binstall
@@ -82,7 +82,7 @@ wkg config --default-registry wa.dev
 ## Create Project
 
 <!-- TODO: this would be unignored and run from an external CI, but not for now -->
-```bash docs-ci-ignore
+```bash docci-ignore
 # If you don't have foundry: `curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup`
 forge init --template Lay3rLabs/wavs-foundry-template my-wavs --branch main
 ```
@@ -141,7 +141,7 @@ COIN_MARKET_CAP_ID=1 make wasi-exec
 
 Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https://www.eigenlayer.xyz/) contracts to the local network.
 
-```bash docs-ci-background docs-ci-delay-after=5
+```bash docci-background docci-delay-after=5
 # cp .env.example .env
 
 # Start the backend
@@ -168,7 +168,7 @@ forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" -
 
 Deploy the compiled component with the contracts from the previous steps. Review the [makefile](./Makefile) for more details and configuration options.`TRIGGER_EVENT` is the event that the trigger contract emits and WAVS watches for. By altering `SERVICE_TRIGGER_ADDR` you can watch events for contracts others have deployed.
 
-```bash docs-ci-delay-per-cmd=1
+```bash docci-delay-per-cmd=1
 # Build your service JSON
 sh ./script.sh
 
@@ -190,7 +190,7 @@ forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID
 
 Query the latest submission contract id from the previous request made.
 
-```bash docs-ci-delay-per-cmd=2 docs-ci-output-contains="BTC"
+```bash docci-delay-per-cmd=2 docci-output-contains="BTC"
 # Get the latest TriggerId and show the result via `script/ShowResult.s.sol`
 make show-result
 ```
