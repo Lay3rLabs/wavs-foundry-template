@@ -1,5 +1,5 @@
 {
-    "paths": ["README.md"],
+    "paths": ["README.md", "docs/tutorial"],
     "env_vars": {
       "WAVS_IN_BACKGROUND": "true",
       "WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS": "true"
