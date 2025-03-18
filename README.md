@@ -155,7 +155,7 @@ make start-all
 
 Upload your service's trigger and submission contracts. The trigger contract is where WAVS will watch for events, and the submission contract is where the AVS service operator will submit the result on chain.
 
-```bash
+```bash docci-delay-per-cmd=1
 export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
 forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
 ```
