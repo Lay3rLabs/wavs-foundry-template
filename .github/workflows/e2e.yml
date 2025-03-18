@@ -68,7 +68,7 @@ jobs:
 
     - name: Install wasi components
       run: |
-        cargo binstall cargo-component warg-cli wkg --locked --no-confirm
+        cargo binstall cargo-component warg-cli wkg --locked --no-confirm --force
         wkg config --default-registry wa.dev
 
     - name: Install forge deps

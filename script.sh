@@ -1,10 +1,5 @@
 #!/bin/bash
 
-
-# TODO: allow setting ENV variables to override? (match makefile)
-# COMPONENT_FILENAME, TRIGGER_EVENT, SERVICE_TRIGGER_ADDR, SERVICE_SUBMISSION_ADDR, SERVICE_CONFIG
-# TODO: ideally the builder is in WAVS, but for now it's in this script
-
 # Define output file
 output_file=".docker/service_config.json"
 
