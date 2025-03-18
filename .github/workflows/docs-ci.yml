@@ -69,12 +69,12 @@ jobs:
 
     - name: Install wasi components
       run: |
-        cargo binstall cargo-component warg-cli wkg --locked --no-confirm
+        cargo binstall cargo-component warg-cli wkg --locked --no-confirm --force
         wkg config --default-registry wa.dev
 
     # -------------------
-    - name: Readme Runner
+    - name: Run docci readme runner
       run: |
-        sudo wget -O /usr/local/bin/docci https://github.com/Reecepbcups/docci/releases/download/v0.4.0/docci
+        sudo wget -O /usr/local/bin/docci https://github.com/Reecepbcups/docci/releases/download/v0.4.1/docci
         sudo chmod a+rx /usr/local/bin/docci
         docci .github/workflows/config.json
