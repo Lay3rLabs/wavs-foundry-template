@@ -16,10 +16,10 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
     let len5 = l4;
     let bytes5 = _rt::Vec::from_raw_parts(l3.cast(), len5, len5);
     let l6 = i32::from(*arg0.add(16).cast::<u8>());
-    use wavs::worker::layer_types::TriggerSource as V26;
-    let v26 = match l6 {
+    use wavs::worker::layer_types::TriggerSource as V30;
+    let v30 = match l6 {
         0 => {
-            let e26 = {
+            let e30 = {
                 let l7 = *arg0.add(20).cast::<*mut u8>();
                 let l8 = *arg0.add(24).cast::<usize>();
                 let len9 = l8;
@@ -38,10 +38,10 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
                     event_hash: _rt::Vec::from_raw_parts(l13.cast(), len15, len15),
                 }
             };
-            V26::EthContractEvent(e26)
+            V30::EthContractEvent(e30)
         }
         1 => {
-            let e26 = {
+            let e30 = {
                 let l16 = *arg0.add(20).cast::<*mut u8>();
                 let l17 = *arg0.add(24).cast::<usize>();
                 let len18 = l17;
@@ -64,161 +64,189 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
                     event_type: _rt::string_lift(bytes25),
                 }
             };
-            V26::CosmosContractEvent(e26)
+            V30::CosmosContractEvent(e30)
+        }
+        2 => {
+            let e30 = {
+                let l26 = *arg0.add(20).cast::<*mut u8>();
+                let l27 = *arg0.add(24).cast::<usize>();
+                let len28 = l27;
+                let bytes28 = _rt::Vec::from_raw_parts(l26.cast(), len28, len28);
+                let l29 = *arg0.add(28).cast::<i32>();
+                wavs::worker::layer_types::BlockIntervalSource {
+                    chain_name: _rt::string_lift(bytes28),
+                    n_blocks: l29 as u32,
+                }
+            };
+            V30::BlockInterval(e30)
         }
         n => {
-            debug_assert_eq!(n, 2, "invalid enum discriminant");
-            V26::Manual
+            debug_assert_eq!(n, 3, "invalid enum discriminant");
+            V30::Manual
         }
     };
-    let l27 = i32::from(*arg0.add(48).cast::<u8>());
-    use wavs::worker::layer_types::TriggerData as V67;
-    let v67 = match l27 {
+    let l31 = i32::from(*arg0.add(48).cast::<u8>());
+    use wavs::worker::layer_types::TriggerData as V75;
+    let v75 = match l31 {
         0 => {
-            let e67 = {
-                let l28 = *arg0.add(56).cast::<*mut u8>();
-                let l29 = *arg0.add(60).cast::<usize>();
-                let len30 = l29;
-                let l31 = *arg0.add(64).cast::<*mut u8>();
-                let l32 = *arg0.add(68).cast::<usize>();
-                let len33 = l32;
-                let bytes33 = _rt::Vec::from_raw_parts(l31.cast(), len33, len33);
-                let l34 = *arg0.add(72).cast::<*mut u8>();
-                let l35 = *arg0.add(76).cast::<usize>();
-                let base39 = l34;
-                let len39 = l35;
-                let mut result39 = _rt::Vec::with_capacity(len39);
-                for i in 0..len39 {
-                    let base = base39.add(i * 8);
-                    let e39 = {
-                        let l36 = *base.add(0).cast::<*mut u8>();
-                        let l37 = *base.add(4).cast::<usize>();
-                        let len38 = l37;
-                        _rt::Vec::from_raw_parts(l36.cast(), len38, len38)
+            let e75 = {
+                let l32 = *arg0.add(56).cast::<*mut u8>();
+                let l33 = *arg0.add(60).cast::<usize>();
+                let len34 = l33;
+                let l35 = *arg0.add(64).cast::<*mut u8>();
+                let l36 = *arg0.add(68).cast::<usize>();
+                let len37 = l36;
+                let bytes37 = _rt::Vec::from_raw_parts(l35.cast(), len37, len37);
+                let l38 = *arg0.add(72).cast::<*mut u8>();
+                let l39 = *arg0.add(76).cast::<usize>();
+                let base43 = l38;
+                let len43 = l39;
+                let mut result43 = _rt::Vec::with_capacity(len43);
+                for i in 0..len43 {
+                    let base = base43.add(i * 8);
+                    let e43 = {
+                        let l40 = *base.add(0).cast::<*mut u8>();
+                        let l41 = *base.add(4).cast::<usize>();
+                        let len42 = l41;
+                        _rt::Vec::from_raw_parts(l40.cast(), len42, len42)
                     };
-                    result39.push(e39);
+                    result43.push(e43);
                 }
-                _rt::cabi_dealloc(base39, len39 * 8, 4);
-                let l40 = *arg0.add(80).cast::<*mut u8>();
-                let l41 = *arg0.add(84).cast::<usize>();
-                let len42 = l41;
-                let l43 = *arg0.add(88).cast::<i64>();
+                _rt::cabi_dealloc(base43, len43 * 8, 4);
+                let l44 = *arg0.add(80).cast::<*mut u8>();
+                let l45 = *arg0.add(84).cast::<usize>();
+                let len46 = l45;
+                let l47 = *arg0.add(88).cast::<i64>();
                 wavs::worker::layer_types::TriggerDataEthContractEvent {
                     contract_address: wavs::worker::layer_types::EthAddress {
-                        raw_bytes: _rt::Vec::from_raw_parts(l28.cast(), len30, len30),
+                        raw_bytes: _rt::Vec::from_raw_parts(l32.cast(), len34, len34),
                     },
-                    chain_name: _rt::string_lift(bytes33),
+                    chain_name: _rt::string_lift(bytes37),
                     log: wavs::worker::layer_types::EthEventLogData {
-                        topics: result39,
-                        data: _rt::Vec::from_raw_parts(l40.cast(), len42, len42),
+                        topics: result43,
+                        data: _rt::Vec::from_raw_parts(l44.cast(), len46, len46),
                     },
-                    block_height: l43 as u64,
+                    block_height: l47 as u64,
                 }
             };
-            V67::EthContractEvent(e67)
+            V75::EthContractEvent(e75)
         }
         1 => {
-            let e67 = {
-                let l44 = *arg0.add(56).cast::<*mut u8>();
-                let l45 = *arg0.add(60).cast::<usize>();
-                let len46 = l45;
-                let bytes46 = _rt::Vec::from_raw_parts(l44.cast(), len46, len46);
-                let l47 = *arg0.add(64).cast::<i32>();
-                let l48 = *arg0.add(68).cast::<*mut u8>();
-                let l49 = *arg0.add(72).cast::<usize>();
+            let e75 = {
+                let l48 = *arg0.add(56).cast::<*mut u8>();
+                let l49 = *arg0.add(60).cast::<usize>();
                 let len50 = l49;
                 let bytes50 = _rt::Vec::from_raw_parts(l48.cast(), len50, len50);
-                let l51 = *arg0.add(76).cast::<*mut u8>();
-                let l52 = *arg0.add(80).cast::<usize>();
-                let len53 = l52;
-                let bytes53 = _rt::Vec::from_raw_parts(l51.cast(), len53, len53);
-                let l54 = *arg0.add(84).cast::<*mut u8>();
-                let l55 = *arg0.add(88).cast::<usize>();
-                let base62 = l54;
-                let len62 = l55;
-                let mut result62 = _rt::Vec::with_capacity(len62);
-                for i in 0..len62 {
-                    let base = base62.add(i * 16);
-                    let e62 = {
-                        let l56 = *base.add(0).cast::<*mut u8>();
-                        let l57 = *base.add(4).cast::<usize>();
-                        let len58 = l57;
-                        let bytes58 = _rt::Vec::from_raw_parts(l56.cast(), len58, len58);
-                        let l59 = *base.add(8).cast::<*mut u8>();
-                        let l60 = *base.add(12).cast::<usize>();
-                        let len61 = l60;
-                        let bytes61 = _rt::Vec::from_raw_parts(l59.cast(), len61, len61);
-                        (_rt::string_lift(bytes58), _rt::string_lift(bytes61))
+                let l51 = *arg0.add(64).cast::<i32>();
+                let l52 = *arg0.add(68).cast::<*mut u8>();
+                let l53 = *arg0.add(72).cast::<usize>();
+                let len54 = l53;
+                let bytes54 = _rt::Vec::from_raw_parts(l52.cast(), len54, len54);
+                let l55 = *arg0.add(76).cast::<*mut u8>();
+                let l56 = *arg0.add(80).cast::<usize>();
+                let len57 = l56;
+                let bytes57 = _rt::Vec::from_raw_parts(l55.cast(), len57, len57);
+                let l58 = *arg0.add(84).cast::<*mut u8>();
+                let l59 = *arg0.add(88).cast::<usize>();
+                let base66 = l58;
+                let len66 = l59;
+                let mut result66 = _rt::Vec::with_capacity(len66);
+                for i in 0..len66 {
+                    let base = base66.add(i * 16);
+                    let e66 = {
+                        let l60 = *base.add(0).cast::<*mut u8>();
+                        let l61 = *base.add(4).cast::<usize>();
+                        let len62 = l61;
+                        let bytes62 = _rt::Vec::from_raw_parts(l60.cast(), len62, len62);
+                        let l63 = *base.add(8).cast::<*mut u8>();
+                        let l64 = *base.add(12).cast::<usize>();
+                        let len65 = l64;
+                        let bytes65 = _rt::Vec::from_raw_parts(l63.cast(), len65, len65);
+                        (_rt::string_lift(bytes62), _rt::string_lift(bytes65))
                     };
-                    result62.push(e62);
+                    result66.push(e66);
                 }
-                _rt::cabi_dealloc(base62, len62 * 16, 4);
-                let l63 = *arg0.add(96).cast::<i64>();
+                _rt::cabi_dealloc(base66, len66 * 16, 4);
+                let l67 = *arg0.add(96).cast::<i64>();
                 wavs::worker::layer_types::TriggerDataCosmosContractEvent {
                     contract_address: wavs::worker::layer_types::CosmosAddress {
-                        bech32_addr: _rt::string_lift(bytes46),
-                        prefix_len: l47 as u32,
+                        bech32_addr: _rt::string_lift(bytes50),
+                        prefix_len: l51 as u32,
                     },
-                    chain_name: _rt::string_lift(bytes50),
+                    chain_name: _rt::string_lift(bytes54),
                     event: wavs::worker::layer_types::CosmosEvent {
-                        ty: _rt::string_lift(bytes53),
-                        attributes: result62,
+                        ty: _rt::string_lift(bytes57),
+                        attributes: result66,
                     },
-                    block_height: l63 as u64,
+                    block_height: l67 as u64,
                 }
             };
-            V67::CosmosContractEvent(e67)
+            V75::CosmosContractEvent(e75)
+        }
+        2 => {
+            let e75 = {
+                let l68 = *arg0.add(56).cast::<*mut u8>();
+                let l69 = *arg0.add(60).cast::<usize>();
+                let len70 = l69;
+                let bytes70 = _rt::Vec::from_raw_parts(l68.cast(), len70, len70);
+                let l71 = *arg0.add(64).cast::<i64>();
+                wavs::worker::layer_types::BlockIntervalData {
+                    chain_name: _rt::string_lift(bytes70),
+                    block_height: l71 as u64,
+                }
+            };
+            V75::BlockInterval(e75)
         }
         n => {
-            debug_assert_eq!(n, 2, "invalid enum discriminant");
-            let e67 = {
-                let l64 = *arg0.add(56).cast::<*mut u8>();
-                let l65 = *arg0.add(60).cast::<usize>();
-                let len66 = l65;
-                _rt::Vec::from_raw_parts(l64.cast(), len66, len66)
+            debug_assert_eq!(n, 3, "invalid enum discriminant");
+            let e75 = {
+                let l72 = *arg0.add(56).cast::<*mut u8>();
+                let l73 = *arg0.add(60).cast::<usize>();
+                let len74 = l73;
+                _rt::Vec::from_raw_parts(l72.cast(), len74, len74)
             };
-            V67::Raw(e67)
+            V75::Raw(e75)
         }
     };
-    let result68 = T::run(wavs::worker::layer_types::TriggerAction {
+    let result76 = T::run(wavs::worker::layer_types::TriggerAction {
         config: wavs::worker::layer_types::TriggerConfig {
             service_id: _rt::string_lift(bytes2),
             workflow_id: _rt::string_lift(bytes5),
-            trigger_source: v26,
+            trigger_source: v30,
         },
-        data: v67,
+        data: v75,
     });
     _rt::cabi_dealloc(arg0, 104, 8);
-    let ptr69 = _RET_AREA.0.as_mut_ptr().cast::<u8>();
-    match result68 {
+    let ptr77 = _RET_AREA.0.as_mut_ptr().cast::<u8>();
+    match result76 {
         Ok(e) => {
-            *ptr69.add(0).cast::<u8>() = (0i32) as u8;
+            *ptr77.add(0).cast::<u8>() = (0i32) as u8;
             match e {
                 Some(e) => {
-                    *ptr69.add(4).cast::<u8>() = (1i32) as u8;
-                    let vec70 = (e).into_boxed_slice();
-                    let ptr70 = vec70.as_ptr().cast::<u8>();
-                    let len70 = vec70.len();
-                    ::core::mem::forget(vec70);
-                    *ptr69.add(12).cast::<usize>() = len70;
-                    *ptr69.add(8).cast::<*mut u8>() = ptr70.cast_mut();
+                    *ptr77.add(4).cast::<u8>() = (1i32) as u8;
+                    let vec78 = (e).into_boxed_slice();
+                    let ptr78 = vec78.as_ptr().cast::<u8>();
+                    let len78 = vec78.len();
+                    ::core::mem::forget(vec78);
+                    *ptr77.add(12).cast::<usize>() = len78;
+                    *ptr77.add(8).cast::<*mut u8>() = ptr78.cast_mut();
                 }
                 None => {
-                    *ptr69.add(4).cast::<u8>() = (0i32) as u8;
+                    *ptr77.add(4).cast::<u8>() = (0i32) as u8;
                 }
             };
         }
         Err(e) => {
-            *ptr69.add(0).cast::<u8>() = (1i32) as u8;
-            let vec71 = (e.into_bytes()).into_boxed_slice();
-            let ptr71 = vec71.as_ptr().cast::<u8>();
-            let len71 = vec71.len();
-            ::core::mem::forget(vec71);
-            *ptr69.add(8).cast::<usize>() = len71;
-            *ptr69.add(4).cast::<*mut u8>() = ptr71.cast_mut();
+            *ptr77.add(0).cast::<u8>() = (1i32) as u8;
+            let vec79 = (e.into_bytes()).into_boxed_slice();
+            let ptr79 = vec79.as_ptr().cast::<u8>();
+            let len79 = vec79.len();
+            ::core::mem::forget(vec79);
+            *ptr77.add(8).cast::<usize>() = len79;
+            *ptr77.add(4).cast::<*mut u8>() = ptr79.cast_mut();
         }
     };
-    ptr69
+    ptr77
 }
 #[doc(hidden)]
 #[allow(non_snake_case)]
@@ -418,9 +446,26 @@ pub mod wavs {
                 }
             }
             #[derive(Clone)]
+            pub struct BlockIntervalSource {
+                pub chain_name: _rt::String,
+                pub n_blocks: u32,
+            }
+            impl ::core::fmt::Debug for BlockIntervalSource {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
+                    f.debug_struct("BlockIntervalSource")
+                        .field("chain-name", &self.chain_name)
+                        .field("n-blocks", &self.n_blocks)
+                        .finish()
+                }
+            }
+            #[derive(Clone)]
             pub enum TriggerSource {
                 EthContractEvent(TriggerSourceEthContractEvent),
                 CosmosContractEvent(TriggerSourceCosmosContractEvent),
+                BlockInterval(BlockIntervalSource),
                 Manual,
             }
             impl ::core::fmt::Debug for TriggerSource {
@@ -436,6 +481,11 @@ pub mod wavs {
                         }
                         TriggerSource::CosmosContractEvent(e) => {
                             f.debug_tuple("TriggerSource::CosmosContractEvent")
+                                .field(e)
+                                .finish()
+                        }
+                        TriggerSource::BlockInterval(e) => {
+                            f.debug_tuple("TriggerSource::BlockInterval")
                                 .field(e)
                                 .finish()
                         }
@@ -504,9 +554,26 @@ pub mod wavs {
                 }
             }
             #[derive(Clone)]
+            pub struct BlockIntervalData {
+                pub chain_name: _rt::String,
+                pub block_height: u64,
+            }
+            impl ::core::fmt::Debug for BlockIntervalData {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
+                    f.debug_struct("BlockIntervalData")
+                        .field("chain-name", &self.chain_name)
+                        .field("block-height", &self.block_height)
+                        .finish()
+                }
+            }
+            #[derive(Clone)]
             pub enum TriggerData {
                 EthContractEvent(TriggerDataEthContractEvent),
                 CosmosContractEvent(TriggerDataCosmosContractEvent),
+                BlockInterval(BlockIntervalData),
                 Raw(_rt::Vec<u8>),
             }
             impl ::core::fmt::Debug for TriggerData {
@@ -524,6 +591,9 @@ pub mod wavs {
                             f.debug_tuple("TriggerData::CosmosContractEvent")
                                 .field(e)
                                 .finish()
+                        }
+                        TriggerData::BlockInterval(e) => {
+                            f.debug_tuple("TriggerData::BlockInterval").field(e).finish()
                         }
                         TriggerData::Raw(e) => {
                             f.debug_tuple("TriggerData::Raw").field(e).finish()
@@ -843,11 +913,11 @@ macro_rules! __export_layer_trigger_world_impl {
 #[doc(inline)]
 pub(crate) use __export_layer_trigger_world_impl as export;
 #[cfg(target_arch = "wasm32")]
-#[link_section = "component-type:wit-bindgen:0.36.0:wavs:worker@0.3.0:layer-trigger-world:encoded world"]
+#[link_section = "component-type:wit-bindgen:0.36.0:wavs:worker@0.4.0-alpha.1:layer-trigger-world:encoded world"]
 #[doc(hidden)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 1580] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xa2\x0b\x01A\x02\x01\
-A\x0e\x01B#\x01r\x02\x0bbech32-addrs\x0aprefix-leny\x04\0\x0ecosmos-address\x03\0\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 1738] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xc0\x0c\x01A\x02\x01\
+A\x0e\x01B'\x01r\x02\x0bbech32-addrs\x0aprefix-leny\x04\0\x0ecosmos-address\x03\0\
 \0\x01o\x02ss\x01p\x02\x01r\x02\x02tys\x0aattributes\x03\x04\0\x0ccosmos-event\x03\
 \0\x04\x01ks\x01r\x07\x08chain-ids\x0crpc-endpoint\x06\x0dgrpc-endpoint\x06\x11g\
 rpc-web-endpoint\x06\x09gas-pricev\x09gas-denoms\x0dbech32-prefixs\x04\0\x13cosm\
@@ -857,27 +927,30 @@ os-chain-config\x03\0\x07\x01p}\x01r\x01\x09raw-bytes\x09\x04\0\x0beth-address\x
 h-chain-config\x03\0\x0f\x01r\x03\x07address\x0b\x0achain-names\x0aevent-hash\x09\
 \x04\0!trigger-source-eth-contract-event\x03\0\x11\x01r\x03\x07address\x01\x0ach\
 ain-names\x0aevent-types\x04\0$trigger-source-cosmos-contract-event\x03\0\x13\x01\
-q\x03\x12eth-contract-event\x01\x12\0\x15cosmos-contract-event\x01\x14\0\x06manu\
-al\0\0\x04\0\x0etrigger-source\x03\0\x15\x01r\x03\x0aservice-ids\x0bworkflow-ids\
-\x0etrigger-source\x16\x04\0\x0etrigger-config\x03\0\x17\x01r\x04\x10contract-ad\
-dress\x0b\x0achain-names\x03log\x0e\x0cblock-heightw\x04\0\x1ftrigger-data-eth-c\
-ontract-event\x03\0\x19\x01r\x04\x10contract-address\x01\x0achain-names\x05event\
-\x05\x0cblock-heightw\x04\0\"trigger-data-cosmos-contract-event\x03\0\x1b\x01q\x03\
-\x12eth-contract-event\x01\x1a\0\x15cosmos-contract-event\x01\x1c\0\x03raw\x01\x09\
-\0\x04\0\x0ctrigger-data\x03\0\x1d\x01r\x02\x06config\x18\x04data\x1e\x04\0\x0et\
-rigger-action\x03\0\x1f\x01q\x05\x05error\0\0\x04warn\0\0\x04info\0\0\x05debug\0\
-\0\x05trace\0\0\x04\0\x09log-level\x03\0!\x03\0\x1dwavs:worker/layer-types@0.3.0\
-\x05\0\x02\x03\0\0\x0etrigger-action\x03\0\x0etrigger-action\x03\0\x01\x02\x03\0\
-\0\x10eth-chain-config\x02\x03\0\0\x13cosmos-chain-config\x02\x03\0\0\x09log-lev\
-el\x01B\x0e\x02\x03\x02\x01\x03\x04\0\x10eth-chain-config\x03\0\0\x02\x03\x02\x01\
-\x04\x04\0\x13cosmos-chain-config\x03\0\x02\x02\x03\x02\x01\x05\x04\0\x09log-lev\
-el\x03\0\x04\x01k\x01\x01@\x01\x0achain-names\0\x06\x04\0\x14get-eth-chain-confi\
-g\x01\x07\x01k\x03\x01@\x01\x0achain-names\0\x08\x04\0\x17get-cosmos-chain-confi\
-g\x01\x09\x01@\x02\x05level\x05\x07messages\x01\0\x04\0\x03log\x01\x0a\x03\0\x04\
-host\x05\x06\x01p}\x01k\x07\x01j\x01\x08\x01s\x01@\x01\x0etrigger-action\x02\0\x09\
-\x04\0\x03run\x01\x0a\x04\0%wavs:worker/layer-trigger-world@0.3.0\x04\0\x0b\x19\x01\
-\0\x13layer-trigger-world\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit\
--component\x070.220.0\x10wit-bindgen-rust\x060.36.0";
+r\x02\x0achain-names\x08n-blocksy\x04\0\x15block-interval-source\x03\0\x15\x01q\x04\
+\x12eth-contract-event\x01\x12\0\x15cosmos-contract-event\x01\x14\0\x0eblock-int\
+erval\x01\x16\0\x06manual\0\0\x04\0\x0etrigger-source\x03\0\x17\x01r\x03\x0aserv\
+ice-ids\x0bworkflow-ids\x0etrigger-source\x18\x04\0\x0etrigger-config\x03\0\x19\x01\
+r\x04\x10contract-address\x0b\x0achain-names\x03log\x0e\x0cblock-heightw\x04\0\x1f\
+trigger-data-eth-contract-event\x03\0\x1b\x01r\x04\x10contract-address\x01\x0ach\
+ain-names\x05event\x05\x0cblock-heightw\x04\0\"trigger-data-cosmos-contract-even\
+t\x03\0\x1d\x01r\x02\x0achain-names\x0cblock-heightw\x04\0\x13block-interval-dat\
+a\x03\0\x1f\x01q\x04\x12eth-contract-event\x01\x1c\0\x15cosmos-contract-event\x01\
+\x1e\0\x0eblock-interval\x01\x20\0\x03raw\x01\x09\0\x04\0\x0ctrigger-data\x03\0!\
+\x01r\x02\x06config\x1a\x04data\"\x04\0\x0etrigger-action\x03\0#\x01q\x05\x05err\
+or\0\0\x04warn\0\0\x04info\0\0\x05debug\0\0\x05trace\0\0\x04\0\x09log-level\x03\0\
+%\x03\0%wavs:worker/layer-types@0.4.0-alpha.1\x05\0\x02\x03\0\0\x0etrigger-actio\
+n\x03\0\x0etrigger-action\x03\0\x01\x02\x03\0\0\x10eth-chain-config\x02\x03\0\0\x13\
+cosmos-chain-config\x02\x03\0\0\x09log-level\x01B\x0e\x02\x03\x02\x01\x03\x04\0\x10\
+eth-chain-config\x03\0\0\x02\x03\x02\x01\x04\x04\0\x13cosmos-chain-config\x03\0\x02\
+\x02\x03\x02\x01\x05\x04\0\x09log-level\x03\0\x04\x01k\x01\x01@\x01\x0achain-nam\
+es\0\x06\x04\0\x14get-eth-chain-config\x01\x07\x01k\x03\x01@\x01\x0achain-names\0\
+\x08\x04\0\x17get-cosmos-chain-config\x01\x09\x01@\x02\x05level\x05\x07messages\x01\
+\0\x04\0\x03log\x01\x0a\x03\0\x04host\x05\x06\x01p}\x01k\x07\x01j\x01\x08\x01s\x01\
+@\x01\x0etrigger-action\x02\0\x09\x04\0\x03run\x01\x0a\x04\0-wavs:worker/layer-t\
+rigger-world@0.4.0-alpha.1\x04\0\x0b\x19\x01\0\x13layer-trigger-world\x03\0\0\0G\
+\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.220.0\x10wit-bindgen\
+-rust\x060.36.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {
