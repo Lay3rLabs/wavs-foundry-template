@@ -7,13 +7,12 @@ SUDO := $(shell if groups | grep -q docker; then echo ''; else echo 'sudo'; fi)
 default: build
 
 # Customize these variables
-COMPONENT_FILENAME=eth_price_oracle.wasm
-TRIGGER_EVENT="NewTrigger(bytes)"
-SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv":[],"workflow_id":"default","component_id":"default"}'
+COMPONENT_FILENAME?=eth_price_oracle.wasm
+SERVICE_CONFIG_FILE?=service_config.json
 
 # Define common variables
 CARGO=cargo
-WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ghcr.io/lay3rlabs/wavs:0.3.0 wavs-cli
+WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ghcr.io/lay3rlabs/wavs:latest wavs-cli
 ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 RPC_URL?=http://localhost:8545
 SERVICE_MANAGER_ADDR?=`jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json`
@@ -56,7 +55,7 @@ clean: clean-docker
 
 ## clean-docker: remove unused docker containers
 clean-docker:
-	@$(SUDO) docker rm -v $(shell $(SUDO) docker ps --filter status=exited -q) || true
+	@$(SUDO) docker rm -v $(shell $(SUDO) docker ps -a --filter status=exited -q) 2> /dev/null || true
 
 ## fmt: formatting solidity and rust code
 fmt:
@@ -75,8 +74,15 @@ setup: check-requirements
 ## start-all: starting anvil and WAVS with docker compose
 # running anvil out of compose is a temp work around for MacOS
 start-all: clean-docker setup-env
-	@rm --interactive=never .docker/*.json || true
-	@bash -ec 'anvil & anvil_pid=$$!; trap "kill -9 $$anvil_pid 2>/dev/null" EXIT; $(SUDO) docker compose up; wait'
+	@rm --interactive=never .docker/*.json 2> /dev/null || true
+
+	@if [ "$(WAVS_IN_BACKGROUND)" = "true" ]; then \
+		echo "Starting WAVS in the background"; \
+		anvil & $(SUDO) docker compose up -d; \
+	else \
+		echo "Starting WAVS"; \
+		bash -ec 'anvil & anvil_pid=$$!; trap "kill -9 $$anvil_pid 2>/dev/null" EXIT; $(SUDO) docker compose up; wait'; \
+	fi
 
 ## get-service-handler: getting the service handler address from the script deploy
 get-service-handler-from-deploy:
@@ -93,14 +99,13 @@ get-trigger-from-deploy:
 wavs-cli:
 	@$(WAVS_CMD) $(filter-out $@,$(MAKECMDGOALS))
 
-## deploy-service: deploying the WAVS component service | COMPONENT_FILENAME, TRIGGER_EVENT, SERVICE_TRIGGER_ADDR, SERVICE_SUBMISSION_ADDR, SERVICE_CONFIG
+## upload-component: uploading the WAVS component | COMPONENT_FILENAME
+upload-component:
+	@curl --silent -X POST http://127.0.0.1:8000/upload --data-binary @./compiled/$(COMPONENT_FILENAME) -H "Content-Type: application/wasm" | jq -r .digest
+
+## deploy-service: deploying the WAVS component service json | SERVICE_CONFIG_FILE
 deploy-service:
-	@$(WAVS_CMD) deploy-service --log-level=info --data /data/.docker --home /data \
-	--component "/data/compiled/${COMPONENT_FILENAME}" \
-	--trigger-event-name ${TRIGGER_EVENT} \
-	--trigger-address "${SERVICE_TRIGGER_ADDR}" \
-	--submit-address "${SERVICE_SUBMISSION_ADDR}" \
-	--service-config ${SERVICE_CONFIG}
+	@$(WAVS_CMD) deploy-service-raw --log-level=info --data /data/.docker --home /data --service `jq -c . < .docker/$(SERVICE_CONFIG_FILE)`
 
 ## show-result: showing the result | SERVICE_TRIGGER_ADDR, SERVICE_SUBMISSION_ADDR, RPC_URL
 show-result:

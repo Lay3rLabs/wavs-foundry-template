@@ -1,4 +1,4 @@
-name: E2E
+name: Docs CI
 
 # based on https://docs.wavs.xyz/ & this repos README.md
 
@@ -24,8 +24,9 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    # TODO: change to use the internal CI instead of this?
     - name: Install Ubuntu packages
-      run: sudo apt-get install bash make jq
+      run: sudo apt-get update && sudo apt-get install bash make jq
 
     - uses: actions/setup-node@v4
       name: Install Node.js
@@ -68,46 +69,12 @@ jobs:
 
     - name: Install wasi components
       run: |
-        cargo binstall cargo-component warg-cli wkg --locked --no-confirm
+        cargo binstall cargo-component warg-cli wkg --locked --no-confirm --force
         wkg config --default-registry wa.dev
 
-    - name: Install forge deps
-      run: make setup
-
-    - name: build contracts
-      run: forge build
-
-    # `strings | grep BTC` verifies the output contains BTC from the price oracle example
-    - name: wasi build and local exec
+    # -------------------
+    - name: Run docci readme runner
       run: |
-        make wasi-build
-        make wasi-exec | strings | grep BTC
-
-    # modified version of `make start-all`
-    - name: Build the stack
-      run: |
-        cp .env.example .env
-        anvil --host 0.0.0.0 &
-        docker compose up -d
-
-    - name: Run tests
-      run: |
-        export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
-        forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
-        sleep 2
-        TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
-        sleep 2
-        export COIN_MARKET_CAP_ID=1
-        export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
-        forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig "run(string,string)" --rpc-url http://localhost:8545 --broadcast -v 4
-        sleep 2
-
-    # `strings | grep BTC` verifies the output contains BTC from the price oracle example
-    - name: Run show result
-      run: |
-        make show-result | strings | grep BTC
-
-    - name: Stop the stack
-      run: |
-        killall anvil
-        docker compose down
+        sudo wget -O /usr/local/bin/docci https://github.com/Reecepbcups/docci/releases/download/v0.4.1/docci
+        sudo chmod a+rx /usr/local/bin/docci
+        docci .github/workflows/config.json

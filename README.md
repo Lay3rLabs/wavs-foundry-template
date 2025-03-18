@@ -41,7 +41,7 @@ A template for developing WebAssembly AVS applications using Rust and Solidity, 
 
 ### Rust Installation
 
-```bash
+```bash docci-ignore
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 rustup toolchain install stable
@@ -50,7 +50,7 @@ rustup target add wasm32-wasip2
 
 ### Upgrade Rust
 
-```bash
+```bash docci-ignore
 # Remove old targets if present
 rustup target remove wasm32-wasi || true
 rustup target remove wasm32-wasip1 || true
@@ -67,7 +67,7 @@ rustup target add wasm32-wasip2
 
 ### Install Cargo Components
 
-```bash
+```bash docci-ignore
 # Install required cargo components
 # https://github.com/bytecodealliance/cargo-component#installation
 cargo install cargo-binstall
@@ -81,9 +81,10 @@ wkg config --default-registry wa.dev
 
 ## Create Project
 
-```bash
+<!-- TODO: this would be unignored and run from an external CI, but not for now -->
+```bash docci-ignore
 # If you don't have foundry: `curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup`
-forge init --template Lay3rLabs/wavs-foundry-template my-wavs --branch v0.3.0
+forge init --template Lay3rLabs/wavs-foundry-template my-wavs --branch main
 ```
 
 > [!TIP]
@@ -140,8 +141,8 @@ COIN_MARKET_CAP_ID=1 make wasi-exec
 
 Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https://www.eigenlayer.xyz/) contracts to the local network.
 
-```bash
-cp .env.example .env
+```bash docci-background docci-delay-after=5
+# cp .env.example .env
 
 # Start the backend
 #
@@ -154,7 +155,7 @@ make start-all
 
 Upload your service's trigger and submission contracts. The trigger contract is where WAVS will watch for events, and the submission contract is where the AVS service operator will submit the result on chain.
 
-```bash
+```bash docci-delay-per-cmd=1
 export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
 forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
 ```
@@ -167,8 +168,12 @@ forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" -
 
 Deploy the compiled component with the contracts from the previous steps. Review the [makefile](./Makefile) for more details and configuration options.`TRIGGER_EVENT` is the event that the trigger contract emits and WAVS watches for. By altering `SERVICE_TRIGGER_ADDR` you can watch events for contracts others have deployed.
 
-```bash
-TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
+```bash docci-delay-per-cmd=1
+# Build your service JSON
+sh ./script.sh
+
+# Deploy the service JSON
+SERVICE_CONFIG_FILE=service_config.json make deploy-service
 ```
 
 ## Trigger the Service
@@ -185,7 +190,7 @@ forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID
 
 Query the latest submission contract id from the previous request made.
 
-```bash
+```bash docci-delay-per-cmd=2 docci-output-contains="BTC"
 # Get the latest TriggerId and show the result via `script/ShowResult.s.sol`
 make show-result
 ```
