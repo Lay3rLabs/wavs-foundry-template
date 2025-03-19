@@ -1,359 +1,126 @@
-# WAVS Foundry Template
+# WAVS
 
-> A template project for building Autonomous Verifiable Services (AVS) using WAVS (WASI-AVS runtime). Enables creation, deployment, and operation of AVS components with on-chain verifiability through WASM/WASI execution and EigenLayer security.
+> A framework for building decentralized services that perform off-chain computation with on-chain verification. WAVS (WASI Autonomous Verifiable Services) enables developers to create high-performance AVS services using WASM/WASI for computation and EigenLayer for security.
 
-WAVS enables building decentralized services that execute off-chain computation with on-chain verifiability, leveraging WASM/WASI for near-native performance and EigenLayer for security. The platform supports dynamic deployment and updates through a composable service architecture.
+WAVS streamlines AVS development by providing:
+- WASM/WASI runtime for near-native performance
+- EigenLayer integration for security via restaking
+- Dynamic deployment and updates
+- Cross-chain compatibility
 
 ## Core Documentation
-Please read through each of the linked files for a basic understanding of WAVS.
-### Main Documentation
-- [Overview](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/overview.mdx): Core concepts, use cases, and basic service architecture
-- [How It Works](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/how-it-works.mdx): Technical architecture, execution flow, and WASM/WASI runtime details
-- [Design Considerations](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/design.mdx): Best practices, deterministic execution guidelines, and state management
-- [Benefits](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/benefits.mdx): Platform advantages and features
 
-### Tutorial: Building a Prediction Market Oracle
-Follow this step-by-step guide to build a prediction market oracle using WAVS. For a complete list of setup and execution commands, see the [repository README](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/README.md):
-- [1. Overview](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/1-overview.mdx): Introduction and architecture overview
-- [2. Setup](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/2-setup.mdx): Environment setup and prerequisites
-- [3. Project](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/3-project.mdx): Project structure and configuration
-- [4. Component](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/4-component.mdx): Building the WASM component
-- [5. Build](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/5-build.mdx): Building and testing the service
-- [6. Run Service](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/6-run-service.mdx): Deploying and running the service
-- [7. Prediction](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/7-prediction.mdx): Using the prediction market oracle
+- [Overview](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/overview.mdx): Core concepts and architecture
+- [Technical Details](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/how-it-works.mdx): In-depth platform mechanics
+- [Design Guidelines](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/design.mdx): Best practices and AVS design patterns
+- [Benefits](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/benefits.mdx): Platform advantages
 
-## Template Structure
+## Service Components
 
-### Configuration Files
-- [`.env.example`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/.env.example): Environment configuration template
-  ```env
-  # Core WAVS settings
-  WAVS_DATA=~/wavs/data
-  WAVS_LOG_LEVEL="info"
-  WAVS_SUBMISSION_MNEMONIC="test test test test test test test test test test test junk"
-  
-  # CLI and Aggregator settings
-  WAVS_CLI_DATA=~/wavs/cli
-  WAVS_AGGREGATOR_DATA=~/wavs/aggregator
-  ```
-  Environment variables control WAVS node behavior, CLI operations, and aggregator settings. Custom env vars can be added for component-specific needs.
+### 1. Trigger Contract
+- [Example Contract](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/src/contracts/WavsTrigger.sol): On-chain event trigger
+- [Contract Guide](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/how-it-works.mdx#triggers): Implementing triggers
 
-- [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/Makefile): Build and deployment automation
-  ```makefile
-  # Customize these variables for your service
-  COMPONENT_FILENAME=eth_price_oracle.wasm
-  TRIGGER_EVENT="NewTrigger(bytes)"
-  SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv":[],"workflow_id":"default","component_id":"default"}'
-  ```
-  The Makefile provides commands for building components (`make wasi-build`), deploying services (`make deploy-service`), and managing the development environment.
+### 2. WASI Component
+- [Example Component](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/components/eth-price-oracle/src/lib.rs): Off-chain computation in Rust
+- [Component Guide](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/how-it-works.mdx#service-components): Building components
 
-### Smart Contracts
-- [`src/contracts/WavsSubmit.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/src/contracts/WavsSubmit.sol): Service handler implementation
-  ```solidity
-  contract SimpleSubmit is ISimpleSubmit, IWavsServiceHandler {
-      mapping(TriggerId => bool) internal _validTriggers;
-      mapping(TriggerId => bytes) internal _datas;
-      mapping(TriggerId => bytes) internal _signatures;
-      
-      function handleSignedData(bytes calldata _data, bytes calldata _signature) external {
-          _serviceManager.validate(_data, _signature);
-          // Store validated data and signature
-      }
-  }
-  ```
-  The service handler validates and processes signed data from WAVS operators. It implements `IWavsServiceHandler` for integration with the WAVS platform.
+### 3. Submission Contract
+- [Example Handler](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/src/contracts/WavsSubmit.sol): Result verification
+- [Handler Guide](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/how-it-works.mdx#submission): Implementing handlers
 
-### WASM Components
-- [`components/eth-price-oracle/src/lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/components/eth-price-oracle/src/lib.rs): Example price oracle implementation
-  ```rust
-  impl Guest for Component {
-      fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
-          // Decode trigger event data
-          let (trigger_id, req, dest) = decode_trigger_event(action.data)?;
-          
-          // Parse input and fetch price data
-          let id = input.chars().next().ok_or("Empty input")?.to_digit(16)? as u64;
-          let res = block_on(async move { get_price_feed(id).await })?;
-          
-          // Encode response based on destination
-          Ok(match dest {
-              Destination::Ethereum => Some(encode_trigger_output(trigger_id, &res)),
-              Destination::CliOutput => Some(res),
-          })
-      }
-  }
-  ```
-  Components are compiled to WASM and run in the WAVS runtime. They implement the `Guest` trait to handle trigger events and return results.
+## Tutorial
 
-## Development Workflow
+- [1. Overview](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/1-overview.mdx): Introduction and concepts
+- [2. Setup](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/2-setup.mdx): Environment configuration  
+- [3. Project](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/3-project.mdx): Project structure
+- [4. Component](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/4-component.mdx): Building components
+- [5. Build](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/5-build.mdx): Testing services
+- [6. Deploy](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/6-run-service.mdx): Service deployment
+- [7. Oracle](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/7-prediction.mdx): Example oracle service
 
-### 1. Environment Setup
-- Copy [`.env.example`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/.env.example) to `.env`
-- Configure environment variables:
-  ```bash
-  # Copy environment template
-  cp .env.example .env
-  
-  # Install dependencies and setup project
-  make setup
-  ```
+## Quick Start
 
-### 2. Component Development
-- Create new component in [`components/`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components) directory
-- Reference the [eth-price-oracle](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle) example:
-  ```rust
-  // Implement Guest trait for your component
-  impl Guest for Component {
-      fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
-          // 1. Decode trigger input
-          // 2. Process data
-          // 3. Return encoded result
-      }
-  }
-  ```
-- Use [`wavs_wasi_chain`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/components/eth-price-oracle/Cargo.toml) crate for chain interactions
-
-### 3. Smart Contract Integration
-- Define trigger contracts in [`src/contracts/`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts)
-- Implement service handler using [`IWavsServiceHandler`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/src/interfaces/IWavsSubmit.sol)
-- Configure submission logic in your handler contract
-
-### 4. Build and Deploy
+1. Create project:
 ```bash
-# Build WASM components and Solidity contracts
-make build
-
-# Deploy service with configuration from Makefile
-make deploy-service
+forge init --template Lay3rLabs/wavs-foundry-template my-service --branch v0.3.0
+cd my-service
+make setup
+cp .env.example .env
 ```
 
-## Key Interfaces
-
-### Component Interface
-[`bindings.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/components/eth-price-oracle/src/bindings.rs):
-```rust
-trait Guest {
-    // Process trigger action and return optional bytes result
-    fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String>;
-}
-
-// TriggerAction contains the input data from the trigger event
-struct TriggerAction {
-    pub data: Vec<u8>,
-}
-```
-
-### Service Handler Interface
-[`IWavsServiceHandler.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/src/interfaces/IWavsSubmit.sol):
-```solidity
-interface IWavsServiceHandler {
-    /// @notice Handle signed data from WAVS operators
-    /// @param _data The data to handle
-    /// @param _signature The signature of the data
-    function handleSignedData(bytes calldata _data, bytes calldata _signature) external;
-}
-
-interface ISimpleSubmit {
-    function isValidTriggerId(TriggerId _triggerId) external view returns (bool);
-    function getSignature(TriggerId _triggerId) external view returns (bytes memory);
-    function getData(TriggerId _triggerId) external view returns (bytes memory);
-}
-```
-
-
-### Quick Start
+2. Build and test:
 ```bash
-# 1. Create project
-forge init --template Lay3rLabs/wavs-foundry-template my-wavs && cd my-wavs
-
-# 2. Setup environment
-make setup && cp .env.example .env
-
-# 3. Build everything
-make build
-
-# 4. Start local services (keep running)
-make start-all
-
-# 5. Deploy and test
-TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
-```
-
-### 1. Environment Setup
-
-#### A. System Requirements
-- Docker and Docker Compose for container management
-- Make for build automation
-- Node.js v21+ for JavaScript dependencies
-- Rust v1.84+ with wasm32-wasip2 target for WASI components
-- JQ for JSON processing
-
-#### Project Initialization
-```bash
-# Create new project from template
-forge init --template Lay3rLabs/wavs-foundry-template my-wavs
-cd my-wavs
-
-# Install dependencies
-make setup  # Installs npm packages and git submodules
-
-# Configure environment
-cp .env.example .env  # Copy and edit for your needs
-```
-
-### 2. Development Process
-
-#### A. Component Development
-Location: [`components/`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components)
-```bash
-# Build WASI components
-make wasi-build  # Compiles Rust to WASM in ./compiled/
-
-# Test component in isolation
-COIN_MARKET_CAP_ID=1 make wasi-exec  # Tests price oracle component
-```
-
-#### B. Smart Contract Development
-Location: [`src/contracts/`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts)
-```bash
-# Build contracts
 forge build
-
-# Run contract tests
-forge test
+make wasi-build
+COIN_MARKET_CAP_ID=1 make wasi-exec  # Test component
 ```
 
-#### C. Full Build
+3. Deploy:
 ```bash
-make build  # Builds both components and contracts
-```
-
-### 3. Local Testing Environment
-
-#### A. Start Infrastructure
-```bash
-# Start local blockchain and WAVS services
-make start-all  # Keep running in separate terminal
-```
-
-#### B. Deploy Contracts
-```bash
-# 1. Get EigenLayer service manager
+make start-all  # Start local env
 export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
-
-# 2. Deploy trigger and submission contracts
-forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} \
-    --sig "run(string)" \
-    --rpc-url http://localhost:8545 \
-    --broadcast
-
-# 3. Note contract addresses
-echo "Trigger contract: $(make get-trigger-from-deploy)"
-echo "Handler contract: $(make get-service-handler-from-deploy)"
-```
-
-### 4. Service Deployment
-
-#### A. Deploy WAVS Service
-```bash
-# Deploy service with trigger event configuration
+forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
 TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
 ```
 
-#### B. Integration Testing
-```bash
-# 1. Trigger service (example with Bitcoin price)
-export COIN_MARKET_CAP_ID=1
-export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
+## Component Development
 
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} \
-    --sig "run(string,string)" \
-    --rpc-url http://localhost:8545 \
-    --broadcast -v 4
+### Requirements
+- Deterministic execution for consensus
+- Immutable/deterministic data sources
+- No component-local state
+- Proper error handling
 
-# 2. Check results
-make show-result
+### Component Structure
+```rust
+mod trigger;  // Handle event data
+pub mod bindings;  // WASI bindings
+
+struct Component;
+export!(Component with_types_in bindings);
+
+impl Guest for Component {
+    fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
+        // 1. Decode trigger data
+        let (trigger_id, input_data, dest) = decode_trigger_event(action.data)?;
+
+        // 2. Process input
+        let result = process_input(input_data)?;
+
+        // 3. Encode for blockchain
+        Ok(Some(encode_trigger_output(trigger_id, &result)))
+    }
+}
 ```
 
-### 5. Development Tools
+## Example Code
+```solidity
+// Trigger Contract
+contract WavsTrigger {
+    event NewTrigger(bytes data);
+    function requestData(bytes calldata _input) external {
+        emit NewTrigger(_input);
+    }
+}
 
-#### A. Configuration
-Key variables in [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/Makefile):
-```makefile
-# Component settings
-COMPONENT_FILENAME=eth_price_oracle.wasm
-TRIGGER_EVENT="NewTrigger(bytes)"
-SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000}'
+// Submission Contract
+contract SimpleSubmit is IWavsServiceHandler {
+    function handleSignedData(bytes calldata _data, bytes calldata _signature) external {
+        _serviceManager.validate(_data, _signature);
+        (bytes32 triggerId, bytes memory result) = decode_result(_data);
+        _results[triggerId] = result;
+    }
+}
 ```
 
-#### B. Utility Commands
-```bash
-make help     # List all commands
-make clean    # Clean build artifacts
-make fmt      # Format code
+```rust
+// WASI Component
+impl Guest for Component {
+    fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
+        let (trigger_id, input) = decode_trigger_event(action.data)?;
+        let result = compute_result(input)?;
+        Ok(Some(encode_result(trigger_id, result)))
+    }
+}
 ```
-
-### Development Tips
-
-#### Best Practices
-1. Always keep `make start-all` running in a separate terminal during development
-2. Use `make wasi-exec` to test components in isolation before deployment
-3. Check contract addresses with `make get-trigger-from-deploy` and `make get-service-handler-from-deploy`
-4. Monitor service logs in the `make start-all` terminal for debugging
-5. Use `make clean` when switching branches or after failed builds
-
-#### Common Issues
-1. If `make start-all` fails:
-   - Check Docker is running
-   - Run `make clean` and try again
-   - Verify ports 8545 (Anvil) and 3000 (WAVS) are free
-
-2. If component build fails:
-   - Ensure Rust toolchain is up to date
-   - Check wasm32-wasip2 target is installed
-   - Verify component code follows WASI interface
-
-3. If contract deployment fails:
-   - Verify Anvil is running (`make start-all`)
-   - Check contract addresses in `.env`
-   - Ensure enough test ETH in deployer account
-
-#### Debugging Tools
-```bash
-# View service logs
-docker compose logs -f wavs
-
-# Check component status
-make get-service-status
-
-# Verify contract deployment
-make verify-contracts
-
-# Test network connection
-curl -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' http://localhost:8545
-```
-
-## Project Configuration
-
-### Build Configuration
-- [`foundry.toml`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/foundry.toml): Foundry settings for Solidity development
-- [`Cargo.toml`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/Cargo.toml): Rust workspace and dependency configuration
-- [`package.json`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/package.json): NPM dependencies and scripts
-
-### WAVS Configuration
-- [`wavs.toml`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/wavs.toml): WAVS node configuration
-- [`cli.toml`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/cli.toml): CLI tool settings
-- [`aggregator.toml`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/aggregator.toml): Aggregator node settings
-
-### Docker Setup
-- [`docker-compose.yml`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docker-compose.yml): Container configuration for WAVS services
-
-## Optional Resources
-
-### Source Code and Tests
-- [Template Source Code](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src): Implementation examples and reference code
-- [Contract Tests](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/test): Contract test implementations
-
-### Documentation and Tutorials
-- [Component Examples](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components): Reference implementations of WASM components
-- [Script Examples](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/script): Deployment and testing scripts
