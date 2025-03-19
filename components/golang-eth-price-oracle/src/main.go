@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/reecepbcups/wavs-go/types"
-	wavs "github.com/reecepbcups/wavs-go/wavs/worker/layer-trigger-world"
-	trigger "github.com/reecepbcups/wavs-go/wavs/worker/layer-types"
+	"github.com/Lay3rLabs/wavs-wasi/go/types"
+	wavs "github.com/Lay3rLabs/wavs-wasi/go/wavs/worker/layer-trigger-world"
+	trigger "github.com/Lay3rLabs/wavs-wasi/go/wavs/worker/layer-types"
 
 	wasiclient "github.com/dev-wasm/dev-wasm-go/lib/http/client"
 	"go.bytecodealliance.org/cm"

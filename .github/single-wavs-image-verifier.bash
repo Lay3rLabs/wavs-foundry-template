@@ -54,7 +54,7 @@ main() {
 test_data() {
     # Example test data
     TEST_DATA="
-    Running container ghcr.io/lay3rlabs/wavs:0.3.0-beta
+    Running container ghcr.io/lay3rlabs/wavs:latest-beta
     Pulling ghcr.io/lay3rlabs/wavs:latest
     Found ghcr.io/lay3rlabs/wavs:0.1.0
     Invalid: docker.io/other/image:1.0
@@ -65,7 +65,7 @@ test_data() {
     Invalid: docker.io/other/image:1.0
     Using ghcr.io/lay3rlabs/wavs:sha-abc123
     ghcr.io/lay3rlabs/wavs:rc.1.0.0
-    ghcr.io/lay3rlabs/wavs:0.3.0-beta
+    ghcr.io/lay3rlabs/wavs:latest-beta
     ghcr.io/lay3rlabs/wavs:1.0.0-alpha
     "
 
