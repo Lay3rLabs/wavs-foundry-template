@@ -21,6 +21,8 @@ github.com/defiweb/go-sigparser v0.6.0 h1:HSNAZSUl8xyV+nKfWNKYVAPWLwTuASas6ohtar
 github.com/defiweb/go-sigparser v0.6.0/go.mod h1:R1wkfsnASR2M38ZupKHoqqIfv+8HgRbZaFQI9Inr4k8=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/reecepbcups/wavs-go v0.0.0-20250312154030-3bf0083c7245 h1:kwNfdAizabFl18RinZVeW4ME1TchMgxjq4VVQfCNM40=
+github.com/reecepbcups/wavs-go v0.0.0-20250312154030-3bf0083c7245/go.mod h1:stlP3yjUjidfPQIYzywjenQc5/P8PP/rt4mGEDRTPlY=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 go.bytecodealliance.org/cm v0.1.1-0.20250218151459-e57ac0139b6f h1:cHJcIruuUZwd7rDdcJHOVotufiO+qPfFwcxb6uCUVSI=
