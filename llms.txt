@@ -1,5 +1,7 @@
 # WAVS
 
+Repository: https://github.com/Lay3rLabs/wavs-foundry-template
+
 > A framework for building decentralized services that perform off-chain computation with on-chain verification. WAVS (WASI Autonomous Verifiable Services) enables developers to create high-performance AVS services using WASM/WASI for computation and EigenLayer for security.
 
 WAVS streamlines AVS development by providing:
@@ -10,34 +12,34 @@ WAVS streamlines AVS development by providing:
 
 ## Core Documentation
 
-- [Overview](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/overview.mdx): Core concepts and architecture
-- [Technical Details](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/how-it-works.mdx): In-depth platform mechanics
-- [Design Guidelines](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/design.mdx): Best practices and AVS design patterns
-- [Benefits](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/benefits.mdx): Platform advantages
+- [Overview](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/overview.mdx): Core concepts and architecture
+- [Technical Details](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/how-it-works.mdx): In-depth platform mechanics
+- [Design Guidelines](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/design.mdx): Best practices and AVS design patterns
+- [Benefits](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/benefits.mdx): Platform advantages
 
 ## Service Components
 
 ### 1. Trigger Contract
-- [Example Contract](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/src/contracts/WavsTrigger.sol): On-chain event trigger
-- [Contract Guide](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/how-it-works.mdx#triggers): Implementing triggers
+- [Example Contract](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/src/contracts/WavsTrigger.sol): On-chain event trigger
+- [Contract Guide](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/how-it-works.mdx#triggers): Implementing triggers
 
 ### 2. WASI Component
-- [Example Component](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/components/eth-price-oracle/src/lib.rs): Off-chain computation in Rust
-- [Component Guide](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/how-it-works.mdx#service-components): Building components
+- [Example Component](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/components/eth-price-oracle/src/lib.rs): Off-chain computation in Rust
+- [Component Guide](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/how-it-works.mdx#service-components): Building components
 
 ### 3. Submission Contract
-- [Example Handler](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/src/contracts/WavsSubmit.sol): Result verification
-- [Handler Guide](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/how-it-works.mdx#submission): Implementing handlers
+- [Example Handler](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/src/contracts/WavsSubmit.sol): Result verification
+- [Handler Guide](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/how-it-works.mdx#submission): Implementing handlers
 
 ## Tutorial
 
-- [1. Overview](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/1-overview.mdx): Introduction and concepts
-- [2. Setup](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/2-setup.mdx): Environment configuration  
-- [3. Project](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/3-project.mdx): Project structure
-- [4. Component](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/4-component.mdx): Building components
-- [5. Build](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/5-build.mdx): Testing services
-- [6. Deploy](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/6-run-service.mdx): Service deployment
-- [7. Oracle](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/7-prediction.mdx): Example oracle service
+- [1. Overview](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/tutorial/1-overview.mdx): Introduction and concepts
+- [2. Setup](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/tutorial/2-setup.mdx): Environment configuration  
+- [3. Project](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/tutorial/3-project.mdx): Project structure
+- [4. Component](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/tutorial/4-component.mdx): Building components
+- [5. Build](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/tutorial/5-build.mdx): Testing services
+- [6. Deploy](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/tutorial/6-run-service.mdx): Service deployment
+- [7. Oracle](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/tutorial/7-prediction.mdx): Example oracle service
 
 ## Common Issues
 
