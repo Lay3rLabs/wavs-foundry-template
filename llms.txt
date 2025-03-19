@@ -5,21 +5,22 @@
 WAVS enables building decentralized services that execute off-chain computation with on-chain verifiability, leveraging WASM/WASI for near-native performance and EigenLayer for security. The platform supports dynamic deployment and updates through a composable service architecture.
 
 ## Core Documentation
-
+Please read through each of the linked files for a basic understanding of WAVS.
 ### Main Documentation
-- [README](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/README.md): Quick start guide, system requirements, and basic usage
 - [Overview](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/overview.mdx): Core concepts, use cases, and basic service architecture
 - [How It Works](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/how-it-works.mdx): Technical architecture, execution flow, and WASM/WASI runtime details
 - [Design Considerations](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/design.mdx): Best practices, deterministic execution guidelines, and state management
 - [Benefits](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/benefits.mdx): Platform advantages and features
 
-### Oracle tutorial
-This tutorial demonstrates the creation of an example oracle AVS using WAVS.
-- [1. Overview](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/1-overview.mdx): Introduction to the tutorial and project setup
-- [2. Components](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/2-components.mdx): Understanding WASM components and their role
-- [3. Contracts](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/3-contracts.mdx): Smart contract development and integration
-- [4. Service](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/4-service.mdx): WAVS service configuration and deployment
-- [5. Build](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/5-build.mdx): Building and testing the complete service
+### Tutorial: Building a Prediction Market Oracle
+Follow this step-by-step guide to build a prediction market oracle using WAVS. For a complete list of setup and execution commands, see the [repository README](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/README.md):
+- [1. Overview](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/1-overview.mdx): Introduction and architecture overview
+- [2. Setup](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/2-setup.mdx): Environment setup and prerequisites
+- [3. Project](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/3-project.mdx): Project structure and configuration
+- [4. Component](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/4-component.mdx): Building the WASM component
+- [5. Build](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/5-build.mdx): Building and testing the service
+- [6. Run Service](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/6-run-service.mdx): Deploying and running the service
+- [7. Prediction](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/7-prediction.mdx): Using the prediction market oracle
 
 ## Template Structure
 
