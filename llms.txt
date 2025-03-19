@@ -1,6 +1,7 @@
 # WAVS
 
 Repository: https://github.com/Lay3rLabs/wavs-foundry-template
+README with commands: https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/README.md
 
 > A framework for building decentralized services that perform off-chain computation with on-chain verification. WAVS (WASI Autonomous Verifiable Services) enables developers to create high-performance AVS services using WASM/WASI for computation and EigenLayer for security.
 
@@ -75,6 +76,11 @@ cargo install cargo-binstall
 cargo binstall cargo-component warg-cli wkg --locked
 wkg config --default-registry wa.dev
 ```
+
+## Essential Documentation
+
+- [README.md](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/README.md): Main documentation with all make commands
+- [Makefile](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/Makefile): Full build automation script
 
 ## Quick Start
 
@@ -166,6 +172,8 @@ SERVICE_CONFIG='{              # Component settings
 ```
 
 ## Example Code
+
+From [WavsTrigger.sol](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/src/contracts/WavsTrigger.sol):
 ```solidity
 // Trigger Contract
 contract WavsTrigger {
@@ -174,7 +182,10 @@ contract WavsTrigger {
         emit NewTrigger(_input);
     }
 }
+```
 
+From [WavsSubmit.sol](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/src/contracts/WavsSubmit.sol):
+```solidity
 // Submission Contract
 contract SimpleSubmit is IWavsServiceHandler {
     function handleSignedData(bytes calldata _data, bytes calldata _signature) external {
@@ -185,6 +196,7 @@ contract SimpleSubmit is IWavsServiceHandler {
 }
 ```
 
+From [eth-price-oracle/src/lib.rs](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/components/eth-price-oracle/src/lib.rs):
 ```rust
 // WASI Component
 impl Guest for Component {
