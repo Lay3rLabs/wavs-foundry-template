@@ -39,6 +39,41 @@ WAVS streamlines AVS development by providing:
 - [6. Deploy](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/6-run-service.mdx): Service deployment
 - [7. Oracle](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/docs/tutorial/7-prediction.mdx): Example oracle service
 
+## Common Issues
+
+### Mac ARM (M1/M2) Setup
+- Install Rosetta: `softwareupdate --install-rosetta`
+- Enable Rosetta in Docker Desktop: Settings -> General -> "Use Rosetta for x86_64/amd64 emulation"
+- Configure networking:
+  - Enable host networking in Docker Desktop, or
+  - Install network connect: `brew install chipmk/tap/docker-mac-net-connect`
+
+### Component Building
+- If error "no registry configured": Run `wkg config --default-registry wa.dev`
+- For consensus, ensure deterministic execution and data sources
+- Test locally with `make wasi-exec` before deployment
+
+## System Requirements
+
+### Core
+- Docker & Docker Compose
+- Make & JQ
+- Node.js v21+
+
+### Rust Setup
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustup toolchain install stable
+rustup target add wasm32-wasip2
+```
+
+### Cargo Components
+```bash
+cargo install cargo-binstall
+cargo binstall cargo-component warg-cli wkg --locked
+wkg config --default-registry wa.dev
+```
+
 ## Quick Start
 
 1. Create project:
@@ -72,6 +107,18 @@ TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
 - No component-local state
 - Proper error handling
 
+### Project Structure
+```
+my-service/
+├── components/          # WASM service implementations
+│   └── my-component/    # Your Rust component
+├── src/
+│   ├── contracts/      # Solidity contracts
+│   └── interfaces/     # Contract interfaces
+├── .env               # Environment configuration
+└── Makefile          # Build automation
+```
+
 ### Component Structure
 ```rust
 mod trigger;  // Handle event data
@@ -92,6 +139,28 @@ impl Guest for Component {
         Ok(Some(encode_trigger_output(trigger_id, &result)))
     }
 }
+```
+
+
+## Environment Configuration
+
+Key variables in `.env`:
+```bash
+# Core Settings
+WAVS_DATA=".docker"           # Data directory path
+WAVS_LOG_LEVEL="info"        # Logging verbosity
+
+# Network Settings
+RPC_URL="http://localhost:8545"  # Local Ethereum node
+ANVIL_PRIVATE_KEY="0xac0974..." # Local development key
+
+# Service Configuration
+SERVICE_CONFIG='{              # Component settings
+  "fuel_limit": 100000000,
+  "max_gas": 5000000,
+  "workflow_id": "default",
+  "component_id": "default"
+}'
 ```
 
 ## Example Code
