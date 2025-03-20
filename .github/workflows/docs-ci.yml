@@ -15,8 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  GO_VERSION: 1.23.6
-  TINYGO_VERSION: 0.37.0
+  GO_VERSION: 1.23.7
+  TINYGO_VERSION: 0.35.0
 
 jobs:
   run:
