@@ -1,3 +1,5 @@
+github.com/Lay3rLabs/wavs-wasi/go v0.0.0-20250320001549-b328e80abaab h1:6SCbOqhBPNV2iKmt0QmVpiHdasqxxEgTwKbND+qdoCI=
+github.com/Lay3rLabs/wavs-wasi/go v0.0.0-20250320001549-b328e80abaab/go.mod h1:+YuQa+Asl1vAeeXewN3ZAnLaP19aQMGrQU0bWWmvSpw=
 github.com/Reecepbcups/dev-wasm-go/lib v0.0.0-20250302004559-caf3bb14c8e6 h1:hG9sS0tIzj1rt9PVvWTSZGxjcPF3rEr0qD71hH9APLM=
 github.com/Reecepbcups/dev-wasm-go/lib v0.0.0-20250302004559-caf3bb14c8e6/go.mod h1:IAZDQaELmHlCjhQkmfnFesp2pAymqgvlPak5JEdNu4c=
 github.com/btcsuite/btcd v0.24.0 h1:gL3uHE/IaFj6fcZSu03SvqPMSx7s/dPzfpG/atRwWdo=

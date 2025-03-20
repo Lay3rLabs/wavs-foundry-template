@@ -19,7 +19,7 @@ sudo pacman -Sy tinygo
 
 ### Ubuntu Linux
 
-```bash docci-ignore
+```bash docci-os=linux docci-if-not-installed="tinygo"
 # https://tinygo.org/getting-started/install/linux/
 wget https://github.com/tinygo-org/tinygo/releases/download/v0.37.0/tinygo_0.37.0_amd64.deb
 sudo dpkg -i tinygo_0.37.0_amd64.deb

@@ -4,10 +4,8 @@ go 1.23.1
 
 replace github.com/dev-wasm/dev-wasm-go/lib => github.com/Reecepbcups/dev-wasm-go/lib v0.0.0-20250302004559-caf3bb14c8e6
 
-replace github.com/Lay3rLabs/wavs-wasi/go => /home/reece/Desktop/Programming/Rust/wavs-wasi/go
-
 require (
-	github.com/Lay3rLabs/wavs-wasi/go v0.0.0-20250312161606-bae6ec979f97
+	github.com/Lay3rLabs/wavs-wasi/go v0.0.0-20250320001549-b328e80abaab
 	github.com/dev-wasm/dev-wasm-go/lib v0.0.0
 	go.bytecodealliance.org/cm v0.1.1-0.20250218151459-e57ac0139b6f
 )
