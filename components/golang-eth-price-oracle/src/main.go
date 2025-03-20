@@ -31,21 +31,7 @@ func init() {
 	}
 }
 
-// routeResult sends the computation result to the appropriate destination
-func routeResult(triggerID uint64, result []byte, dest types.Destination) types.TriggerResult {
-	switch dest {
-	case types.CliOutput:
-		return types.Ok(result)
-	case types.Ethereum:
-		// WAVS & the contract expects abi encoded data
-		encoded := types.EncodeTriggerOutput(triggerID, result)
-		fmt.Printf("Encoded output (raw): %x\n", encoded)
-		return types.Ok(encoded)
-	default:
-		return cm.Err[types.TriggerResult](fmt.Sprintf("unsupported destination: %s", dest))
-	}
-}
-
+// compute is the main function that computes the price of the crypto currency
 func compute(input []uint8, dest types.Destination) ([]byte, error) {
 	if dest == types.CliOutput {
 		input = bytes.TrimRight(input, "\x00")
@@ -69,6 +55,22 @@ func compute(input []uint8, dest types.Destination) ([]byte, error) {
 	return priceJson, nil
 }
 
+// routeResult sends the computation result to the appropriate destination
+func routeResult(triggerID uint64, result []byte, dest types.Destination) types.TriggerResult {
+	switch dest {
+	case types.CliOutput:
+		return types.Ok(result)
+	case types.Ethereum:
+		// WAVS & the contract expects abi encoded data
+		encoded := types.EncodeTriggerOutput(triggerID, result)
+		fmt.Printf("Encoded output (raw): %x\n", encoded)
+		return types.Ok(encoded)
+	default:
+		return cm.Err[types.TriggerResult](fmt.Sprintf("unsupported destination: %s", dest))
+	}
+}
+
+// decodeTriggerEvent is the function that decodes the trigger event from the chain event to Go.
 func decodeTriggerEvent(triggerAction trigger.TriggerData) (trigger_id uint64, req cm.List[uint8], dest types.Destination) {
 	// Handle CLI input case
 	if triggerAction.Raw() != nil {
@@ -81,6 +83,8 @@ func decodeTriggerEvent(triggerAction trigger.TriggerData) (trigger_id uint64, r
 		panic("triggerAction.EthContractEvent() is nil")
 	}
 
+	// if you modify the contract trigger from the default event, you will need to create a custom `DecodeTriggerInfo` function
+	// to match the solidity contract data types.
 	triggerInfo := types.DecodeTriggerInfo(ethEvent.Log.Data.Slice())
 
 	fmt.Printf("Trigger ID: %v\n", triggerInfo.TriggerID)
@@ -90,6 +94,7 @@ func decodeTriggerEvent(triggerAction trigger.TriggerData) (trigger_id uint64, r
 	return triggerInfo.TriggerID, cm.NewList(&triggerInfo.Data[0], len(triggerInfo.Data)), types.Ethereum
 }
 
+// fetchCryptoPrice fetches the price of the crypto currency from the CoinMarketCap API by their ID.
 func fetchCryptoPrice(id int) (*PriceFeedData, error) {
 	// Create a new HTTP client with WASI transport
 	client := &http.Client{
@@ -139,4 +144,5 @@ func fetchCryptoPrice(id int) (*PriceFeedData, error) {
 	}, nil
 }
 
+// empty main function to satisfy wasm-ld (wit)
 func main() {}
