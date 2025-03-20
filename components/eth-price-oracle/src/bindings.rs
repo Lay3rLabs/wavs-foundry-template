@@ -5,8 +5,7 @@ pub type TriggerAction = wavs::worker::layer_types::TriggerAction;
 #[doc(hidden)]
 #[allow(non_snake_case)]
 pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
-    #[cfg(target_arch = "wasm32")]
-    _rt::run_ctors_once();
+    #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
     let l0 = *arg0.add(0).cast::<*mut u8>();
     let l1 = *arg0.add(::core::mem::size_of::<*const u8>()).cast::<usize>();
     let len2 = l1;
@@ -20,15 +19,27 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
     let v30 = match l6 {
         0 => {
             let e30 = {
-                let l7 = *arg0.add(5 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                let l8 = *arg0.add(6 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                let l7 = *arg0
+                    .add(5 * ::core::mem::size_of::<*const u8>())
+                    .cast::<*mut u8>();
+                let l8 = *arg0
+                    .add(6 * ::core::mem::size_of::<*const u8>())
+                    .cast::<usize>();
                 let len9 = l8;
-                let l10 = *arg0.add(7 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                let l11 = *arg0.add(8 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                let l10 = *arg0
+                    .add(7 * ::core::mem::size_of::<*const u8>())
+                    .cast::<*mut u8>();
+                let l11 = *arg0
+                    .add(8 * ::core::mem::size_of::<*const u8>())
+                    .cast::<usize>();
                 let len12 = l11;
                 let bytes12 = _rt::Vec::from_raw_parts(l10.cast(), len12, len12);
-                let l13 = *arg0.add(9 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                let l14 = *arg0.add(10 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                let l13 = *arg0
+                    .add(9 * ::core::mem::size_of::<*const u8>())
+                    .cast::<*mut u8>();
+                let l14 = *arg0
+                    .add(10 * ::core::mem::size_of::<*const u8>())
+                    .cast::<usize>();
                 let len15 = l14;
                 wavs::worker::layer_types::TriggerSourceEthContractEvent {
                     address: wavs::worker::layer_types::EthAddress {
@@ -42,17 +53,31 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
         }
         1 => {
             let e30 = {
-                let l16 = *arg0.add(5 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                let l17 = *arg0.add(6 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                let l16 = *arg0
+                    .add(5 * ::core::mem::size_of::<*const u8>())
+                    .cast::<*mut u8>();
+                let l17 = *arg0
+                    .add(6 * ::core::mem::size_of::<*const u8>())
+                    .cast::<usize>();
                 let len18 = l17;
                 let bytes18 = _rt::Vec::from_raw_parts(l16.cast(), len18, len18);
-                let l19 = *arg0.add(7 * ::core::mem::size_of::<*const u8>()).cast::<i32>();
-                let l20 = *arg0.add(8 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                let l21 = *arg0.add(9 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                let l19 = *arg0
+                    .add(7 * ::core::mem::size_of::<*const u8>())
+                    .cast::<i32>();
+                let l20 = *arg0
+                    .add(8 * ::core::mem::size_of::<*const u8>())
+                    .cast::<*mut u8>();
+                let l21 = *arg0
+                    .add(9 * ::core::mem::size_of::<*const u8>())
+                    .cast::<usize>();
                 let len22 = l21;
                 let bytes22 = _rt::Vec::from_raw_parts(l20.cast(), len22, len22);
-                let l23 = *arg0.add(10 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                let l24 = *arg0.add(11 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                let l23 = *arg0
+                    .add(10 * ::core::mem::size_of::<*const u8>())
+                    .cast::<*mut u8>();
+                let l24 = *arg0
+                    .add(11 * ::core::mem::size_of::<*const u8>())
+                    .cast::<usize>();
                 let len25 = l24;
                 let bytes25 = _rt::Vec::from_raw_parts(l23.cast(), len25, len25);
                 wavs::worker::layer_types::TriggerSourceCosmosContractEvent {
@@ -68,11 +93,17 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
         }
         2 => {
             let e30 = {
-                let l26 = *arg0.add(5 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                let l27 = *arg0.add(6 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                let l26 = *arg0
+                    .add(5 * ::core::mem::size_of::<*const u8>())
+                    .cast::<*mut u8>();
+                let l27 = *arg0
+                    .add(6 * ::core::mem::size_of::<*const u8>())
+                    .cast::<usize>();
                 let len28 = l27;
                 let bytes28 = _rt::Vec::from_raw_parts(l26.cast(), len28, len28);
-                let l29 = *arg0.add(7 * ::core::mem::size_of::<*const u8>()).cast::<i32>();
+                let l29 = *arg0
+                    .add(7 * ::core::mem::size_of::<*const u8>())
+                    .cast::<i32>();
                 wavs::worker::layer_types::BlockIntervalSource {
                     chain_name: _rt::string_lift(bytes28),
                     n_blocks: l29 as u32,
@@ -85,20 +116,34 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
             V30::Manual
         }
     };
-    let l31 = i32::from(*arg0.add(12 * ::core::mem::size_of::<*const u8>()).cast::<u8>());
+    let l31 = i32::from(
+        *arg0.add(12 * ::core::mem::size_of::<*const u8>()).cast::<u8>(),
+    );
     use wavs::worker::layer_types::TriggerData as V75;
     let v75 = match l31 {
         0 => {
             let e75 = {
-                let l32 = *arg0.add(8 + 12 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                let l33 = *arg0.add(8 + 13 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                let l32 = *arg0
+                    .add(8 + 12 * ::core::mem::size_of::<*const u8>())
+                    .cast::<*mut u8>();
+                let l33 = *arg0
+                    .add(8 + 13 * ::core::mem::size_of::<*const u8>())
+                    .cast::<usize>();
                 let len34 = l33;
-                let l35 = *arg0.add(8 + 14 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                let l36 = *arg0.add(8 + 15 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                let l35 = *arg0
+                    .add(8 + 14 * ::core::mem::size_of::<*const u8>())
+                    .cast::<*mut u8>();
+                let l36 = *arg0
+                    .add(8 + 15 * ::core::mem::size_of::<*const u8>())
+                    .cast::<usize>();
                 let len37 = l36;
                 let bytes37 = _rt::Vec::from_raw_parts(l35.cast(), len37, len37);
-                let l38 = *arg0.add(8 + 16 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                let l39 = *arg0.add(8 + 17 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                let l38 = *arg0
+                    .add(8 + 16 * ::core::mem::size_of::<*const u8>())
+                    .cast::<*mut u8>();
+                let l39 = *arg0
+                    .add(8 + 17 * ::core::mem::size_of::<*const u8>())
+                    .cast::<usize>();
                 let base43 = l38;
                 let len43 = l39;
                 let mut result43 = _rt::Vec::with_capacity(len43);
@@ -106,7 +151,9 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
                     let base = base43.add(i * (2 * ::core::mem::size_of::<*const u8>()));
                     let e43 = {
                         let l40 = *base.add(0).cast::<*mut u8>();
-                        let l41 = *base.add(::core::mem::size_of::<*const u8>()).cast::<usize>();
+                        let l41 = *base
+                            .add(::core::mem::size_of::<*const u8>())
+                            .cast::<usize>();
                         let len42 = l41;
                         _rt::Vec::from_raw_parts(l40.cast(), len42, len42)
                     };
@@ -117,10 +164,16 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
                     len43 * (2 * ::core::mem::size_of::<*const u8>()),
                     ::core::mem::size_of::<*const u8>(),
                 );
-                let l44 = *arg0.add(8 + 18 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                let l45 = *arg0.add(8 + 19 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                let l44 = *arg0
+                    .add(8 + 18 * ::core::mem::size_of::<*const u8>())
+                    .cast::<*mut u8>();
+                let l45 = *arg0
+                    .add(8 + 19 * ::core::mem::size_of::<*const u8>())
+                    .cast::<usize>();
                 let len46 = l45;
-                let l47 = *arg0.add(8 + 20 * ::core::mem::size_of::<*const u8>()).cast::<i64>();
+                let l47 = *arg0
+                    .add(8 + 20 * ::core::mem::size_of::<*const u8>())
+                    .cast::<i64>();
                 wavs::worker::layer_types::TriggerDataEthContractEvent {
                     contract_address: wavs::worker::layer_types::EthAddress {
                         raw_bytes: _rt::Vec::from_raw_parts(l32.cast(), len34, len34),
@@ -137,21 +190,39 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
         }
         1 => {
             let e75 = {
-                let l48 = *arg0.add(8 + 12 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                let l49 = *arg0.add(8 + 13 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                let l48 = *arg0
+                    .add(8 + 12 * ::core::mem::size_of::<*const u8>())
+                    .cast::<*mut u8>();
+                let l49 = *arg0
+                    .add(8 + 13 * ::core::mem::size_of::<*const u8>())
+                    .cast::<usize>();
                 let len50 = l49;
                 let bytes50 = _rt::Vec::from_raw_parts(l48.cast(), len50, len50);
-                let l51 = *arg0.add(8 + 14 * ::core::mem::size_of::<*const u8>()).cast::<i32>();
-                let l52 = *arg0.add(8 + 15 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                let l53 = *arg0.add(8 + 16 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                let l51 = *arg0
+                    .add(8 + 14 * ::core::mem::size_of::<*const u8>())
+                    .cast::<i32>();
+                let l52 = *arg0
+                    .add(8 + 15 * ::core::mem::size_of::<*const u8>())
+                    .cast::<*mut u8>();
+                let l53 = *arg0
+                    .add(8 + 16 * ::core::mem::size_of::<*const u8>())
+                    .cast::<usize>();
                 let len54 = l53;
                 let bytes54 = _rt::Vec::from_raw_parts(l52.cast(), len54, len54);
-                let l55 = *arg0.add(8 + 17 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                let l56 = *arg0.add(8 + 18 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                let l55 = *arg0
+                    .add(8 + 17 * ::core::mem::size_of::<*const u8>())
+                    .cast::<*mut u8>();
+                let l56 = *arg0
+                    .add(8 + 18 * ::core::mem::size_of::<*const u8>())
+                    .cast::<usize>();
                 let len57 = l56;
                 let bytes57 = _rt::Vec::from_raw_parts(l55.cast(), len57, len57);
-                let l58 = *arg0.add(8 + 19 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                let l59 = *arg0.add(8 + 20 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                let l58 = *arg0
+                    .add(8 + 19 * ::core::mem::size_of::<*const u8>())
+                    .cast::<*mut u8>();
+                let l59 = *arg0
+                    .add(8 + 20 * ::core::mem::size_of::<*const u8>())
+                    .cast::<usize>();
                 let base66 = l58;
                 let len66 = l59;
                 let mut result66 = _rt::Vec::with_capacity(len66);
@@ -159,13 +230,17 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
                     let base = base66.add(i * (4 * ::core::mem::size_of::<*const u8>()));
                     let e66 = {
                         let l60 = *base.add(0).cast::<*mut u8>();
-                        let l61 = *base.add(::core::mem::size_of::<*const u8>()).cast::<usize>();
+                        let l61 = *base
+                            .add(::core::mem::size_of::<*const u8>())
+                            .cast::<usize>();
                         let len62 = l61;
                         let bytes62 = _rt::Vec::from_raw_parts(l60.cast(), len62, len62);
-                        let l63 =
-                            *base.add(2 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                        let l64 =
-                            *base.add(3 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                        let l63 = *base
+                            .add(2 * ::core::mem::size_of::<*const u8>())
+                            .cast::<*mut u8>();
+                        let l64 = *base
+                            .add(3 * ::core::mem::size_of::<*const u8>())
+                            .cast::<usize>();
                         let len65 = l64;
                         let bytes65 = _rt::Vec::from_raw_parts(l63.cast(), len65, len65);
                         (_rt::string_lift(bytes62), _rt::string_lift(bytes65))
@@ -177,7 +252,9 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
                     len66 * (4 * ::core::mem::size_of::<*const u8>()),
                     ::core::mem::size_of::<*const u8>(),
                 );
-                let l67 = *arg0.add(16 + 20 * ::core::mem::size_of::<*const u8>()).cast::<i64>();
+                let l67 = *arg0
+                    .add(16 + 20 * ::core::mem::size_of::<*const u8>())
+                    .cast::<i64>();
                 wavs::worker::layer_types::TriggerDataCosmosContractEvent {
                     contract_address: wavs::worker::layer_types::CosmosAddress {
                         bech32_addr: _rt::string_lift(bytes50),
@@ -195,11 +272,17 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
         }
         2 => {
             let e75 = {
-                let l68 = *arg0.add(8 + 12 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                let l69 = *arg0.add(8 + 13 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                let l68 = *arg0
+                    .add(8 + 12 * ::core::mem::size_of::<*const u8>())
+                    .cast::<*mut u8>();
+                let l69 = *arg0
+                    .add(8 + 13 * ::core::mem::size_of::<*const u8>())
+                    .cast::<usize>();
                 let len70 = l69;
                 let bytes70 = _rt::Vec::from_raw_parts(l68.cast(), len70, len70);
-                let l71 = *arg0.add(8 + 14 * ::core::mem::size_of::<*const u8>()).cast::<i64>();
+                let l71 = *arg0
+                    .add(8 + 14 * ::core::mem::size_of::<*const u8>())
+                    .cast::<i64>();
                 wavs::worker::layer_types::BlockIntervalData {
                     chain_name: _rt::string_lift(bytes70),
                     block_height: l71 as u64,
@@ -210,8 +293,12 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
         n => {
             debug_assert_eq!(n, 3, "invalid enum discriminant");
             let e75 = {
-                let l72 = *arg0.add(8 + 12 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                let l73 = *arg0.add(8 + 13 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                let l72 = *arg0
+                    .add(8 + 12 * ::core::mem::size_of::<*const u8>())
+                    .cast::<*mut u8>();
+                let l73 = *arg0
+                    .add(8 + 13 * ::core::mem::size_of::<*const u8>())
+                    .cast::<usize>();
                 let len74 = l73;
                 _rt::Vec::from_raw_parts(l72.cast(), len74, len74)
             };
@@ -233,17 +320,22 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
             *ptr77.add(0).cast::<u8>() = (0i32) as u8;
             match e {
                 Some(e) => {
-                    *ptr77.add(::core::mem::size_of::<*const u8>()).cast::<u8>() = (1i32) as u8;
+                    *ptr77.add(::core::mem::size_of::<*const u8>()).cast::<u8>() = (1i32)
+                        as u8;
                     let vec78 = (e).into_boxed_slice();
                     let ptr78 = vec78.as_ptr().cast::<u8>();
                     let len78 = vec78.len();
                     ::core::mem::forget(vec78);
-                    *ptr77.add(3 * ::core::mem::size_of::<*const u8>()).cast::<usize>() = len78;
-                    *ptr77.add(2 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>() =
-                        ptr78.cast_mut();
+                    *ptr77
+                        .add(3 * ::core::mem::size_of::<*const u8>())
+                        .cast::<usize>() = len78;
+                    *ptr77
+                        .add(2 * ::core::mem::size_of::<*const u8>())
+                        .cast::<*mut u8>() = ptr78.cast_mut();
                 }
                 None => {
-                    *ptr77.add(::core::mem::size_of::<*const u8>()).cast::<u8>() = (0i32) as u8;
+                    *ptr77.add(::core::mem::size_of::<*const u8>()).cast::<u8>() = (0i32)
+                        as u8;
                 }
             };
         }
@@ -254,7 +346,8 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
             let len79 = vec79.len();
             ::core::mem::forget(vec79);
             *ptr77.add(2 * ::core::mem::size_of::<*const u8>()).cast::<usize>() = len79;
-            *ptr77.add(::core::mem::size_of::<*const u8>()).cast::<*mut u8>() = ptr79.cast_mut();
+            *ptr77.add(::core::mem::size_of::<*const u8>()).cast::<*mut u8>() = ptr79
+                .cast_mut();
         }
     };
     ptr77
@@ -265,12 +358,18 @@ pub unsafe fn __post_return_run<T: Guest>(arg0: *mut u8) {
     let l0 = i32::from(*arg0.add(0).cast::<u8>());
     match l0 {
         0 => {
-            let l1 = i32::from(*arg0.add(::core::mem::size_of::<*const u8>()).cast::<u8>());
+            let l1 = i32::from(
+                *arg0.add(::core::mem::size_of::<*const u8>()).cast::<u8>(),
+            );
             match l1 {
                 0 => {}
                 _ => {
-                    let l2 = *arg0.add(2 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                    let l3 = *arg0.add(3 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                    let l2 = *arg0
+                        .add(2 * ::core::mem::size_of::<*const u8>())
+                        .cast::<*mut u8>();
+                    let l3 = *arg0
+                        .add(3 * ::core::mem::size_of::<*const u8>())
+                        .cast::<usize>();
                     let base4 = l2;
                     let len4 = l3;
                     _rt::cabi_dealloc(base4, len4 * 1, 1);
@@ -302,8 +401,9 @@ pub(crate) use __export_world_layer_trigger_world_cabi;
 #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
 #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
 struct _RetArea([::core::mem::MaybeUninit<u8>; 4 * ::core::mem::size_of::<*const u8>()]);
-static mut _RET_AREA: _RetArea =
-    _RetArea([::core::mem::MaybeUninit::uninit(); 4 * ::core::mem::size_of::<*const u8>()]);
+static mut _RET_AREA: _RetArea = _RetArea(
+    [::core::mem::MaybeUninit::uninit(); 4 * ::core::mem::size_of::<*const u8>()],
+);
 #[rustfmt::skip]
 #[allow(dead_code, clippy::all)]
 pub mod wavs {
@@ -670,9 +770,12 @@ pub mod host {
         unsafe {
             #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
             #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
-            struct RetArea([::core::mem::MaybeUninit<u8>; 9 * ::core::mem::size_of::<*const u8>()]);
+            struct RetArea(
+                [::core::mem::MaybeUninit<u8>; 9 * ::core::mem::size_of::<*const u8>()],
+            );
             let mut ret_area = RetArea(
-                [::core::mem::MaybeUninit::uninit(); 9 * ::core::mem::size_of::<*const u8>()],
+                [::core::mem::MaybeUninit::uninit(); 9
+                    * ::core::mem::size_of::<*const u8>()],
             );
             let vec0 = chain_name;
             let ptr0 = vec0.as_ptr().cast::<u8>();
@@ -694,15 +797,23 @@ pub mod host {
                 0 => None,
                 1 => {
                     let e = {
-                        let l4 = *ptr1.add(::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                        let l5 = *ptr1.add(2 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                        let l4 = *ptr1
+                            .add(::core::mem::size_of::<*const u8>())
+                            .cast::<*mut u8>();
+                        let l5 = *ptr1
+                            .add(2 * ::core::mem::size_of::<*const u8>())
+                            .cast::<usize>();
                         let len6 = l5;
                         let bytes6 = _rt::Vec::from_raw_parts(l4.cast(), len6, len6);
                         let l7 = i32::from(
-                            *ptr1.add(3 * ::core::mem::size_of::<*const u8>()).cast::<u8>(),
+                            *ptr1
+                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                .cast::<u8>(),
                         );
                         let l11 = i32::from(
-                            *ptr1.add(6 * ::core::mem::size_of::<*const u8>()).cast::<u8>(),
+                            *ptr1
+                                .add(6 * ::core::mem::size_of::<*const u8>())
+                                .cast::<u8>(),
                         );
                         super::wavs::worker::layer_types::EthChainConfig {
                             chain_id: _rt::string_lift(bytes6),
@@ -717,8 +828,11 @@ pub mod host {
                                             .add(5 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>();
                                         let len10 = l9;
-                                        let bytes10 =
-                                            _rt::Vec::from_raw_parts(l8.cast(), len10, len10);
+                                        let bytes10 = _rt::Vec::from_raw_parts(
+                                            l8.cast(),
+                                            len10,
+                                            len10,
+                                        );
                                         _rt::string_lift(bytes10)
                                     };
                                     Some(e)
@@ -736,8 +850,11 @@ pub mod host {
                                             .add(8 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>();
                                         let len14 = l13;
-                                        let bytes14 =
-                                            _rt::Vec::from_raw_parts(l12.cast(), len14, len14);
+                                        let bytes14 = _rt::Vec::from_raw_parts(
+                                            l12.cast(),
+                                            len14,
+                                            len14,
+                                        );
                                         _rt::string_lift(bytes14)
                                     };
                                     Some(e)
@@ -762,7 +879,8 @@ pub mod host {
                 [::core::mem::MaybeUninit<u8>; 17 * ::core::mem::size_of::<*const u8>()],
             );
             let mut ret_area = RetArea(
-                [::core::mem::MaybeUninit::uninit(); 17 * ::core::mem::size_of::<*const u8>()],
+                [::core::mem::MaybeUninit::uninit(); 17
+                    * ::core::mem::size_of::<*const u8>()],
             );
             let vec0 = chain_name;
             let ptr0 = vec0.as_ptr().cast::<u8>();
@@ -784,30 +902,46 @@ pub mod host {
                 0 => None,
                 1 => {
                     let e = {
-                        let l4 = *ptr1.add(::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                        let l5 = *ptr1.add(2 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                        let l4 = *ptr1
+                            .add(::core::mem::size_of::<*const u8>())
+                            .cast::<*mut u8>();
+                        let l5 = *ptr1
+                            .add(2 * ::core::mem::size_of::<*const u8>())
+                            .cast::<usize>();
                         let len6 = l5;
                         let bytes6 = _rt::Vec::from_raw_parts(l4.cast(), len6, len6);
                         let l7 = i32::from(
-                            *ptr1.add(3 * ::core::mem::size_of::<*const u8>()).cast::<u8>(),
+                            *ptr1
+                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                .cast::<u8>(),
                         );
                         let l11 = i32::from(
-                            *ptr1.add(6 * ::core::mem::size_of::<*const u8>()).cast::<u8>(),
+                            *ptr1
+                                .add(6 * ::core::mem::size_of::<*const u8>())
+                                .cast::<u8>(),
                         );
                         let l15 = i32::from(
-                            *ptr1.add(9 * ::core::mem::size_of::<*const u8>()).cast::<u8>(),
+                            *ptr1
+                                .add(9 * ::core::mem::size_of::<*const u8>())
+                                .cast::<u8>(),
                         );
-                        let l19 = *ptr1.add(12 * ::core::mem::size_of::<*const u8>()).cast::<f32>();
-                        let l20 =
-                            *ptr1.add(13 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                        let l21 =
-                            *ptr1.add(14 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                        let l19 = *ptr1
+                            .add(12 * ::core::mem::size_of::<*const u8>())
+                            .cast::<f32>();
+                        let l20 = *ptr1
+                            .add(13 * ::core::mem::size_of::<*const u8>())
+                            .cast::<*mut u8>();
+                        let l21 = *ptr1
+                            .add(14 * ::core::mem::size_of::<*const u8>())
+                            .cast::<usize>();
                         let len22 = l21;
                         let bytes22 = _rt::Vec::from_raw_parts(l20.cast(), len22, len22);
-                        let l23 =
-                            *ptr1.add(15 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
-                        let l24 =
-                            *ptr1.add(16 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
+                        let l23 = *ptr1
+                            .add(15 * ::core::mem::size_of::<*const u8>())
+                            .cast::<*mut u8>();
+                        let l24 = *ptr1
+                            .add(16 * ::core::mem::size_of::<*const u8>())
+                            .cast::<usize>();
                         let len25 = l24;
                         let bytes25 = _rt::Vec::from_raw_parts(l23.cast(), len25, len25);
                         super::wavs::worker::layer_types::CosmosChainConfig {
@@ -823,8 +957,11 @@ pub mod host {
                                             .add(5 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>();
                                         let len10 = l9;
-                                        let bytes10 =
-                                            _rt::Vec::from_raw_parts(l8.cast(), len10, len10);
+                                        let bytes10 = _rt::Vec::from_raw_parts(
+                                            l8.cast(),
+                                            len10,
+                                            len10,
+                                        );
                                         _rt::string_lift(bytes10)
                                     };
                                     Some(e)
@@ -842,8 +979,11 @@ pub mod host {
                                             .add(8 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>();
                                         let len14 = l13;
-                                        let bytes14 =
-                                            _rt::Vec::from_raw_parts(l12.cast(), len14, len14);
+                                        let bytes14 = _rt::Vec::from_raw_parts(
+                                            l12.cast(),
+                                            len14,
+                                            len14,
+                                        );
                                         _rt::string_lift(bytes14)
                                     };
                                     Some(e)
@@ -861,8 +1001,11 @@ pub mod host {
                                             .add(11 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>();
                                         let len18 = l17;
-                                        let bytes18 =
-                                            _rt::Vec::from_raw_parts(l16.cast(), len18, len18);
+                                        let bytes18 = _rt::Vec::from_raw_parts(
+                                            l16.cast(),
+                                            len18,
+                                            len18,
+                                        );
                                         _rt::string_lift(bytes18)
                                     };
                                     Some(e)
@@ -972,7 +1115,9 @@ macro_rules! __export_layer_trigger_world_impl {
 #[doc(inline)]
 pub(crate) use __export_layer_trigger_world_impl as export;
 #[cfg(target_arch = "wasm32")]
-#[unsafe(link_section = "component-type:wit-bindgen:0.41.0:wavs:worker@0.4.0-alpha.1:layer-trigger-world:encoded world")]
+#[unsafe(
+    link_section = "component-type:wit-bindgen:0.41.0:wavs:worker@0.4.0-alpha.1:layer-trigger-world:encoded world"
+)]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
 pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 1738] = *b"\

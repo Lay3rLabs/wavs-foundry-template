@@ -29,7 +29,7 @@ wkg config --default-registry wa.dev
 
 Run the following command in your terminal to build your component.
 
-```bash
+```bash docci-if-file-not-exists="./compiled/eth_price_oracle.wasm"
 make wasi-build
 ```
 
@@ -38,7 +38,8 @@ This command will build any components present in the `/components` directory, a
 <Callout title="Build command" type="info">
 You can also use the command below to build your solidity contracts and components in one command:
 
-```bash
+
+```bash docci-if-file-not-exists="./compiled/eth_price_oracle.wasm"
 make build
 ```
 
