@@ -12,6 +12,7 @@ SERVICE_CONFIG_FILE?=service_config.json
 
 # Define common variables
 CARGO=cargo
+RECIPE := wasi-build
 WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ghcr.io/lay3rlabs/wavs:latest wavs-cli
 ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 RPC_URL?=http://localhost:8545
@@ -19,6 +20,7 @@ SERVICE_MANAGER_ADDR?=`jq -r '.eigen_service_managers.local | .[-1]' .docker/dep
 SERVICE_TRIGGER_ADDR?=`jq -r '.trigger' "./.docker/script_deploy.json"`
 SERVICE_SUBMISSION_ADDR?=`jq -r '.service_handler' "./.docker/script_deploy.json"`
 COIN_MARKET_CAP_ID?=1
+MAKEFILE_DIRS := $(dir $(shell find components -name "Makefile" -o -name "makefile"))
 
 ## check-requirements: verify system requirements are installed
 check-requirements: check-node check-jq check-cargo
@@ -26,15 +28,16 @@ check-requirements: check-node check-jq check-cargo
 ## build: building the project
 build: _build_forge wasi-build
 
-## wasi-build: building the WAVS wasi component(s)
+## wasi-build: building WAVS wasi components
 wasi-build:
-	@for component in $(shell ls ./components); do \
-		[ -f components/$$component/Cargo.toml ] || continue; \
-		echo "Building component: $$component"; \
-		(cd components/$$component; cargo component build --release; cargo fmt); \
+	@for dir in $(MAKEFILE_DIRS); do \
+		if grep -q "^$(RECIPE):" "$$dir/Makefile" 2>/dev/null || grep -q "^$(RECIPE):" "$$dir/makefile" 2>/dev/null; then \
+			echo "Running '$(RECIPE)' in $$dir"; \
+			$(MAKE) -s -C "$$dir" $(RECIPE); \
+		else \
+			echo "Recipe '$(RECIPE)' not found in $$dir"; \
+		fi; \
 	done
-	@mkdir -p ./compiled
-	@cp ./target/wasm32-wasip1/release/*.wasm ./compiled/
 
 ## wasi-exec: executing the WAVS wasi component(s) | COMPONENT_FILENAME, COIN_MARKET_CAP_ID
 wasi-exec:

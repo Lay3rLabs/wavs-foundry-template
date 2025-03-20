@@ -6,7 +6,7 @@ GO_MOD_NAME?=$(shell head -n 1 go.mod | cut -d' ' -f2 | rev | cut -d'/' -f1 | re
 OUTPUT_DIR?=../../compiled
 
 check-package:
-# TODO: https://github.com/Lay3rLabs/WAVS/pull/403, then enable this
+# TODO: wavs-wasi alpha2, then enable this vs copy
 # @if [ ! -f $(WAVS_PACKAGE).wasm ]; then \
 #	echo "Downloading $(WAVS_PACKAGE).wasm"; \
 #	wkg get $(WAVS_PACKAGE) --overwrite --format wasm --output $(WAVS_PACKAGE).wasm
@@ -17,9 +17,10 @@ check-package:
 wasi-build: check-package
 	@echo "Building component: $(GO_MOD_NAME) [takes a few seconds...]"
 	@go mod tidy
+	@mkdir -p $(OUTPUT_DIR)
 	@tinygo build -target=wasip2 -o $(OUTPUT_DIR)/$(GO_MOD_NAME).wasm --wit-package $(WAVS_PACKAGE).wasm --wit-world $(WAVS_WIT_WORLD) ./src
 	@echo "WASI component built: $(GO_MOD_NAME).wasm"
-
+.PHONY: wasi-build
 
 .PHONY: help
 help: Makefile
