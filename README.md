@@ -116,7 +116,8 @@ Now build the WASI rust components into the `compiled` output directory.
 > run, `wkg config --default-registry wa.dev`
 
 ```bash
-make wasi-build # or `make build` to include solidity compilation.
+# or `make build` to include solidity compilation.
+make wasi-build
 ```
 
 ### Execute WASI component directly

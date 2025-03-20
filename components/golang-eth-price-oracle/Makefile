@@ -1,20 +1,19 @@
-WAVS_PACKAGE=wavs:worker@0.4.0-alpha.1
+WAVS_PACKAGE=wavs:worker@0.4.0-alpha.2
 WAVS_WIT_WORLD=wavs:worker/layer-trigger-world
 # get the first line of the go.mod and get the last element after the last /, then replace - with _
 GO_MOD_NAME?=$(shell head -n 1 go.mod | cut -d' ' -f2 | rev | cut -d'/' -f1 | rev | tr '-' '_')
 
 OUTPUT_DIR?=../../compiled
 
-# check-package:
-# TODO: wavs-wasi alpha2, then enable this vs copy
-# @if [ ! -f $(WAVS_PACKAGE).wasm ]; then \
-#	echo "Downloading $(WAVS_PACKAGE).wasm"; \
-#	wkg get $(WAVS_PACKAGE) --overwrite --format wasm --output $(WAVS_PACKAGE).wasm
-# fi
-# cp /home/reece/Desktop/Programming/Rust/wavs-wasi/$(WAVS_PACKAGE).wasm .
+check-package:
+# TODO: fix import to use the $(WAVS_PACKAGE) instead
+	@if [ ! -f $(WAVS_PACKAGE).wasm ]; then \
+		echo "Downloading WAVS package: $(WAVS_PACKAGE)"; \
+		wkg get reecepbcups:wavs-testing@0.4.0-alpha.2 --overwrite --format wasm --output $(WAVS_PACKAGE).wasm; \
+	fi
 
 ## wasi-build: building the WAVS wasi component
-wasi-build:
+wasi-build: check-package
 	@echo "Building component: $(GO_MOD_NAME) [takes a few seconds...]"
 	@go mod tidy
 	@mkdir -p $(OUTPUT_DIR)

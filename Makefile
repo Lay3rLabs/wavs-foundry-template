@@ -13,6 +13,8 @@ SERVICE_CONFIG_FILE?=service_config.json
 # Define common variables
 CARGO=cargo
 RECIPE := wasi-build
+# the directory to build, or "" for all
+WASI_BUILD_DIR ?= ""
 WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ghcr.io/lay3rlabs/wavs:latest wavs-cli
 ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 RPC_URL?=http://localhost:8545
@@ -32,6 +34,9 @@ build: _build_forge wasi-build
 wasi-build:
 	@for dir in $(MAKEFILE_DIRS); do \
 		if grep -q "^$(RECIPE):" "$$dir/Makefile" 2>/dev/null || grep -q "^$(RECIPE):" "$$dir/makefile" 2>/dev/null; then \
+			if [ "$(WASI_BUILD_DIR)" != "" ] && [[ "$$dir" != *"$(WASI_BUILD_DIR)"* ]]; then \
+				continue; \
+			fi; \
 			echo "Running '$(RECIPE)' in $$dir"; \
 			$(MAKE) -s -C "$$dir" $(RECIPE); \
 		else \
