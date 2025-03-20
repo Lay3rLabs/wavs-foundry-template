@@ -27,6 +27,10 @@ sudo dpkg -i tinygo_0.35.0_amd64.deb
 
 ## Core Packages
 
+```bash
+make setup
+```
+
 ```bash docci-if-not-installed="wasm-tools"
 cargo install wasm-tools
 ```
