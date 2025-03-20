@@ -42,20 +42,6 @@ WAVS streamlines AVS development by providing:
 - [6. Deploy](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/tutorial/6-run-service.mdx): Service deployment
 - [7. Oracle](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/tutorial/7-prediction.mdx): Example oracle service
 
-## Common Issues
-
-### Mac ARM (M1/M2) Setup
-- Install Rosetta: `softwareupdate --install-rosetta`
-- Enable Rosetta in Docker Desktop: Settings -> General -> "Use Rosetta for x86_64/amd64 emulation"
-- Configure networking:
-  - Enable host networking in Docker Desktop, or
-  - Install network connect: `brew install chipmk/tap/docker-mac-net-connect`
-
-### Component Building
-- If error "no registry configured": Run `wkg config --default-registry wa.dev`
-- For consensus, ensure deterministic execution and data sources
-- Test locally with `make wasi-exec` before deployment
-
 ## System Requirements
 
 ### Core
@@ -80,9 +66,10 @@ wkg config --default-registry wa.dev
 ## Essential Documentation
 
 - [README.md](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/README.md): Main documentation with all make commands
-- [Makefile](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/Makefile): Full build automation script
+- [Makefile](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/Makefile): Full build automation script with variables.
 
 ## Quick Start
+Run through the template oracle example. All commands found in https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/README.md
 
 1. Create project:
 ```bash
@@ -95,17 +82,42 @@ cp .env.example .env
 2. Build and test:
 ```bash
 forge build
+forge test
 make wasi-build
-COIN_MARKET_CAP_ID=1 make wasi-exec  # Test component
+COIN_MARKET_CAP_ID=1 make wasi-exec  # Test component directly
 ```
 
 3. Deploy:
 ```bash
+# This must remain running in your terminal. Use another terminal to run other commands.
 make start-all  # Start local env
+# Open a new terminal
 export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
 forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
 TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
 ```
+
+4. Trigger the service:
+```bash
+export COIN_MARKET_CAP_ID=1
+export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig "run(string,string)" --rpc-url http://localhost:8545 --broadcast -v 4
+# Get the latest TriggerId and show the result via `script/ShowResult.s.sol`
+make show-result
+```
+## Common Issues
+
+### Mac ARM (M1/M2) Setup
+- Install Rosetta: `softwareupdate --install-rosetta`
+- Enable Rosetta in Docker Desktop: Settings -> General -> "Use Rosetta for x86_64/amd64 emulation"
+- Configure networking:
+  - Enable host networking in Docker Desktop, or
+  - Install network connect: `brew install chipmk/tap/docker-mac-net-connect`
+
+### Component Building
+- If error "no registry configured": Run `wkg config --default-registry wa.dev`
+- For consensus, ensure deterministic execution and data sources
+- Test locally with `make wasi-exec` before deployment
 
 ## Component Development
 
@@ -119,13 +131,48 @@ TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
 ```
 my-service/
 ├── components/          # WASM service implementations
-│   └── my-component/    # Your Rust component
+│   └── my-component/    # Your Rust component(s)
 ├── src/
 │   ├── contracts/      # Solidity contracts
 │   └── interfaces/     # Contract interfaces
 ├── .env               # Environment configuration
 └── Makefile          # Build automation
 ```
+
+> **Component Building Process**:
+> 1. Place your Rust component in a subdirectory of `components/`
+> 2. Each component must implement the `Guest` trait and use `export!(Component)`
+> 3. Running `make wasi-build`:
+>    - Generates WASI bindings for each component
+>    - Compiles all components to WASM using `cargo component build --release`
+>    - Formats code with `cargo fmt`
+>    - Copies `.wasm` files to `compiled/` directory
+> 4. Test components with `COMPONENT_FILENAME=your_component.wasm make wasi-exec`
+> 5. Deploy using `TRIGGER_EVENT="YourEvent(bytes)" make deploy-service`
+
+### Component Requirements
+
+1. Cargo.toml dependencies:
+```toml
+[package]
+name = "your-component"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wavs-wasi-chain = "0.3.0"  # WAVS runtime
+wit-bindgen = "0.11.0"    # WIT bindings
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+```
+
+2. Required files:
+- `src/lib.rs`: Main component logic
+- `src/trigger.rs`: Event handling utilities
+- `wit/`: WIT interface definitions (auto-generated)
 
 ### Component Structure
 ```rust
@@ -149,27 +196,45 @@ impl Guest for Component {
 }
 ```
 
+## Configuration
 
-## Environment Configuration
+Key settings in `.env` and `Makefile`:
 
-Key variables in `.env`:
 ```bash
-# Core Settings
-WAVS_DATA=".docker"           # Data directory path
-WAVS_LOG_LEVEL="info"        # Logging verbosity
+# Core Settings (.env)
+WAVS_DATA=.docker              # Data directory
+WAVS_LOG_LEVEL=info           # Logging level
+RPC_URL=http://localhost:8545 # Ethereum node
 
-# Network Settings
-RPC_URL="http://localhost:8545"  # Local Ethereum node
-ANVIL_PRIVATE_KEY="0xac0974..." # Local development key
+# Component Settings (Makefile)
+COMPONENT_FILENAME=eth_price_oracle.wasm  # Your component
+TRIGGER_EVENT="NewTrigger(bytes)"        # Event signature
 
-# Service Configuration
-SERVICE_CONFIG='{              # Component settings
+# Service Settings (both)
+SERVICE_CONFIG='{                        # Component config
   "fuel_limit": 100000000,
   "max_gas": 5000000,
-  "workflow_id": "default",
-  "component_id": "default"
+  "workflow_id": "default"
 }'
 ```
+
+See full options in:
+- [.env.example](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/.env.example)
+- [Makefile](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/Makefile)
+
+## Custom Triggers
+
+To implement a custom trigger, modify these files:
+
+1. [WavsTrigger.sol](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/src/contracts/WavsTrigger.sol): Define trigger event and data structure
+2. [Makefile](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/Makefile): Update `wasi-exec` test input
+3. `components/your-component/src/trigger.rs`: Implement `decode_trigger_event` for your data format
+4. `components/your-component/src/lib.rs`: Process trigger data in `run` function
+5. [Trigger.s.sol](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/script/Trigger.s.sol): Update deployment script
+
+Flow: Contract emits event → Component decodes data → Process → Encode result → Submit
+
+Example implementation in [eth-price-oracle](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/components/eth-price-oracle/src/lib.rs)
 
 ## Example Code
 
