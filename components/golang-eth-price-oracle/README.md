@@ -35,8 +35,12 @@ curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup
 make setup
 ```
 
+```bash docci-if-not-installed="cargo-binstall"
+cargo install cargo-binstall
+```
+
 ```bash docci-if-not-installed="wasm-tools"
-cargo install wasm-tools
+cargo binstall wasm-tools --no-confirm
 ```
 
 <!-- matches the value in the wavs-wasi for generation of the bindings -->
