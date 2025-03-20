@@ -33,6 +33,10 @@ jobs:
       with:
         node-version: 21
 
+    - uses: acifani/setup-tinygo@v2
+      with:
+        tinygo-version: '0.37.0'
+
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
@@ -72,9 +76,13 @@ jobs:
         cargo binstall cargo-component warg-cli wkg --locked --no-confirm --force
         wkg config --default-registry wa.dev
 
-    # -------------------
-    - name: Run docci readme runner
+    - name: Install docci readme runner
       run: |
         sudo wget -O /usr/local/bin/docci https://github.com/Reecepbcups/docci/releases/download/v0.4.1/docci
         sudo chmod a+rx /usr/local/bin/docci
+
+    - name: Run docci
+      run: |
         docci .github/workflows/config.json
+        docci components/golang-eth-price-oracle/config.json
+

@@ -1,13 +1,17 @@
 {
-    "paths": ["README.md", "docs/tutorial"],
-    "env_vars": {
-      "WAVS_IN_BACKGROUND": "true",
-      "WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS": "true"
-    },
-    "pre_cmds": [],
-    "cleanup_cmds": [
-      "killall anvil || true",
-      "docker compose rm --stop --force --volumes || true",
-      "docker rm -f wavs wavs-aggregator wavs-deploy-service-manager wavs-deploy-eigenlayer || true"
-    ]
-  }
+  "__tool": "github.com/Reecepbcups/docci",
+  "paths": [
+    "README.md",
+    "docs/tutorial"
+  ],
+  "env_vars": {
+    "WAVS_IN_BACKGROUND": "true",
+    "WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS": "true"
+  },
+  "pre_cmds": [],
+  "cleanup_cmds": [
+    "killall anvil || true",
+    "docker compose rm --stop --force --volumes || true",
+    "docker rm -f wavs wavs-aggregator wavs-deploy-service-manager wavs-deploy-eigenlayer || true"
+  ]
+}

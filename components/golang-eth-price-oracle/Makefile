@@ -5,16 +5,16 @@ GO_MOD_NAME?=$(shell head -n 1 go.mod | cut -d' ' -f2 | rev | cut -d'/' -f1 | re
 
 OUTPUT_DIR?=../../compiled
 
-check-package:
+# check-package:
 # TODO: wavs-wasi alpha2, then enable this vs copy
 # @if [ ! -f $(WAVS_PACKAGE).wasm ]; then \
 #	echo "Downloading $(WAVS_PACKAGE).wasm"; \
 #	wkg get $(WAVS_PACKAGE) --overwrite --format wasm --output $(WAVS_PACKAGE).wasm
 # fi
-	cp /home/reece/Desktop/Programming/Rust/wavs-wasi/$(WAVS_PACKAGE).wasm .
+# cp /home/reece/Desktop/Programming/Rust/wavs-wasi/$(WAVS_PACKAGE).wasm .
 
 ## wasi-build: building the WAVS wasi component
-wasi-build: check-package
+wasi-build:
 	@echo "Building component: $(GO_MOD_NAME) [takes a few seconds...]"
 	@go mod tidy
 	@mkdir -p $(OUTPUT_DIR)
