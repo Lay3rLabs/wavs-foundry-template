@@ -21,8 +21,20 @@ sudo pacman -Sy tinygo
 
 ```bash docci-os=linux docci-if-not-installed="tinygo"
 # https://tinygo.org/getting-started/install/linux/
-wget https://github.com/tinygo-org/tinygo/releases/download/v0.37.0/tinygo_0.37.0_amd64.deb
-sudo dpkg -i tinygo_0.37.0_amd64.deb
+wget https://github.com/tinygo-org/tinygo/releases/download/v0.35.0/tinygo_0.35.0_amd64.deb
+sudo dpkg -i tinygo_0.35.0_amd64.deb
+```
+
+## Core Packages
+
+```bash docci-if-not-installed="wasm-tools"
+cargo install wasm-tools
+```
+
+<!-- matches the value in the wavs-wasi for generation of the bindings -->
+```bash occi-if-not-installed="wit-bindgen-go"
+go install go.bytecodealliance.org/cmd/wit-bindgen-go@ecfa620df5beee882fb7be0740959e5dfce9ae26
+wit-bindgen-go --version
 ```
 
 ## Verify installs

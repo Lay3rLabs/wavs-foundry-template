@@ -14,9 +14,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+# go version MUST be 1.23.X and 0.35.X for tinygo, else reflect.ArrayOf breaks within the `github.com/defiweb/go-eth` repo
 env:
   GO_VERSION: 1.23.7
-  TINYGO_VERSION: 0.35.0
 
 jobs:
   run:
@@ -36,10 +36,6 @@ jobs:
       name: Install Node.js
       with:
         node-version: 21
-
-    - uses: acifani/setup-tinygo@v2
-      with:
-        tinygo-version: ${{ env.TINYGO_VERSION }}
 
     - name: Set up Go ${{ env.GO_VERSION }}
       uses: actions/setup-go@v4

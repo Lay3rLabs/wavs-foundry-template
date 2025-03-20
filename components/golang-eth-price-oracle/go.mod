@@ -1,6 +1,6 @@
 module github.com/Lay3rLabs/wavs-foundry-template/components/golang-eth-price-oracle
 
-go 1.23.6
+go 1.23.7
 
 replace github.com/dev-wasm/dev-wasm-go/lib => github.com/Reecepbcups/dev-wasm-go/lib v0.0.0-20250302004559-caf3bb14c8e6
 
