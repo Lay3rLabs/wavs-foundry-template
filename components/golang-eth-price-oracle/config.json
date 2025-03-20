@@ -1,5 +1,5 @@
 {
-    "__tool": "github.com/Reecepbcups/docci",
+    "__tool": "github.com/reecepbcups/docci",
     "paths": [
       "components/golang-eth-price-oracle/README.md"
     ],
