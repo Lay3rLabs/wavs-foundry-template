@@ -14,7 +14,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-# go version MUST be 1.23.X and 0.35.X for tinygo, else reflect.ArrayOf breaks within the `github.com/defiweb/go-eth` repo
 env:
   GO_VERSION: 1.23.7
 
