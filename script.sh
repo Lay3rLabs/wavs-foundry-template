@@ -20,7 +20,7 @@ fi
 
 # Upload component 1 and get digest
 
-DEFAULT_COMPONENT_FILENAME=eth_price_oracle.wasm
+DEFAULT_COMPONENT_FILENAME=${DEFAULT_COMPONENT_FILENAME:-"eth_price_oracle.wasm"}
 if [ "$WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS" == "true" ]; then
     echo "Using default values for all prompts. To disable this, set WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS=false"
 else
