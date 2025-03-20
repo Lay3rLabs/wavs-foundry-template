@@ -21,11 +21,15 @@ sudo pacman -Sy tinygo
 
 ```bash docci-os=linux docci-if-not-installed="tinygo"
 # https://tinygo.org/getting-started/install/linux/
-wget https://github.com/tinygo-org/tinygo/releases/download/v0.35.0/tinygo_0.35.0_amd64.deb
-sudo dpkg -i tinygo_0.35.0_amd64.deb
+wget https://github.com/tinygo-org/tinygo/releases/download/v0.37.0/tinygo_0.37.0_amd64.deb
+sudo dpkg -i tinygo_0.37.0_amd64.deb && rm tinygo_0.37.0_amd64.deb
 ```
 
 ## Core Packages
+
+```bash docci-if-not-installed="cast"
+curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup
+```
 
 ```bash
 make setup

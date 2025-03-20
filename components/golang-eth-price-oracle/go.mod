@@ -2,7 +2,11 @@ module github.com/Lay3rLabs/wavs-foundry-template/components/golang-eth-price-or
 
 go 1.23.7
 
+// namespace import fix
 replace github.com/dev-wasm/dev-wasm-go/lib => github.com/Reecepbcups/dev-wasm-go/lib v0.0.0-20250302004559-caf3bb14c8e6
+
+// tinygo >0.35 support
+replace github.com/defiweb/go-eth => github.com/Reecepbcups/go-eth v0.7.1-0.20250320155602-e7f53502e2df
 
 require (
 	github.com/Lay3rLabs/wavs-wasi/go v0.0.0-20250320001549-b328e80abaab

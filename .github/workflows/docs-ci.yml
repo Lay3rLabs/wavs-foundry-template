@@ -28,7 +28,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # TODO: change to use the internal CI instead of this?
     - name: Install Ubuntu packages
       run: sudo apt-get update && sudo apt-get install bash make jq
 
