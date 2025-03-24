@@ -1,11 +1,97 @@
-# JS
+# Typescript Ethereum Price Oracle
+
+A WAVS component that fetches the price of a crypto currency from CoinMarketCap and returns it to the Ethereum contract, in Typescript.
+
+## System Setup
+
+### Mac
+
+<!-- TODO: -->
+
+### Arch Linux
+
+<!-- TODO: -->
+
+### Ubuntu Linux
+
+<!-- TODO -->
+
+## Core Packages
+
+```bash docci-if-not-installed="cast"
+curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup
+```
 
 ```bash
-cd components/js-eth-price-oracle
+make setup
+```
 
-npm install @bytecodealliance/componentize-js @bytecodealliance/jco
+```bash
+npm --prefix ./components/js-eth-price-oracle/ install
+```
 
-make wasi-build # `too many arguments` error is fine for now
+## Build Component
 
-(cd ../../ && make wasi-exec COMPONENT_FILENAME=js_eth_price_oracle.wasm)
+Build all wasi components from the root of the repo. You can also run this command within each component directory.
+
+```bash docci-output-contains="Successfully written"
+# Builds only this component, not all.
+WASI_BUILD_DIR=js-eth-price-oracle make wasi-build
+```
+
+## Execute Component
+
+Run the component with the `wasi-exec` command in the root of the repo
+
+<!-- TODO: actually migate this to use the CMC, output is LTC -->
+```bash docci-output-contains="4"
+COMPONENT_FILENAME=js_eth_price_oracle.wasm COIN_MARKET_CAP_ID=2 make wasi-exec
+```
+
+## Run in a local environment
+
+Start all services
+
+```bash docci-background docci-delay-after=5
+make start-all
+```
+
+Build your smart contracts
+
+```bash
+forge build
+```
+
+Deploy the contracts
+
+```bash docci-delay-after=1
+export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
+
+forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
+```
+
+Deploy the component
+
+```bash docci-delay-after=1
+WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS=true
+
+DEFAULT_COMPONENT_FILENAME=js_eth_price_oracle.wasm sh ./script.sh
+
+SERVICE_CONFIG_FILE=service_config.json make deploy-service
+```
+
+Trigger the service
+
+```bash docci-delay-after=1
+export COIN_MARKET_CAP_ID=1
+export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
+
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig "run(string,string)" --rpc-url http://localhost:8545 --broadcast -v 4
+```
+
+Show the result from the triggered service
+
+<!-- TODO: has output BTC -->
+```bash docci-output-contains="2"
+make show-result
 ```

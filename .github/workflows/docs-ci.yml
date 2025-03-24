@@ -93,3 +93,6 @@ jobs:
       run: |
         docci .github/workflows/config.json
 
+    - name: Run docci (typescript)
+      run: |
+        docci components/js-eth-price-oracle/config.json
