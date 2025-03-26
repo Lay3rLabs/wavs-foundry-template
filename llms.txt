@@ -1215,58 +1215,57 @@ COINMARKETCAP_API_KEY = "${COINMARKETCAP_API_KEY}"
 
 ### WAVS Component Examples
 
-### Common Patterns
+### Common Patterns and Best Practices
+
+1. **Standard Imports**
 ```rust
-// Required for all components
 use bindings::{export, Guest, TriggerAction};
 use wavs_wasi_chain::{decode_event_log_data, http};
+use bindings::host::{self, LogLevel};
+use wstd::runtime::block_on;
 
-// Basic component structure
-struct Component;
+// For Ethereum interactions
+use alloy_sol_types::{sol, SolValue};
+use alloy_primitives::{Address, Bytes, U256};
 
-impl Guest for Component {
-    fn run(trigger_action: TriggerAction) -> std::result::Result<Vec<u8>, String> {
-        match trigger_action.data {
-            TriggerData::EthContractEvent(event) => {
-                // Handle Ethereum events
-            }
-            TriggerData::CosmosContractEvent(event) => {
-                // Handle Cosmos events  
-            }
-            TriggerData::Raw(_) => {
-                // Handle raw data
-            }
-        }
-    }
-}
-
-// Required for WAVS registration
-export!(Component with_types_in bindings);
+// For external APIs
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 ```
 
-### Core Data Structures
+2. **Error Handling Pattern**
 ```rust
-// Component configuration
-#[derive(Default)]
-pub struct ComponentConfig {
-    pub id: String,
-    pub trigger_event: String,
-    pub destination: Destination,
+impl Guest for Component {
+    fn run(trigger_action: TriggerAction) -> std::result::Result<Vec<u8>, String> {
+        // Always use descriptive error messages
+        let data = decode_event_log_data!(trigger_action.data)
+            .map_err(|e| format!("Failed to decode event data: {}", e))?;
+            
+        // Log important operations
+        host::log(LogLevel::Info, &format!("Processing data: {:?}", data));
+        
+        // Return encoded results or empty vec for no-op
+        Ok(data.abi_encode())
+    }
 }
+```
 
-// Trigger data passed to components
-pub struct TriggerData {
-    pub trigger_id: [u8; 32],
-    pub data: Vec<u8>,
-    pub destination: Destination,
-}
+3. **Configuration Structure**
+```toml
+[package]
+name = "example-component"
+version = "0.1.0"
 
-// Component result types
-pub enum ComponentResult {
-    Success(Vec<u8>),
-    NoOp(String),
-    Error(String),
-}
+[dependencies]
+wit-bindgen-rt = { workspace = true }
+wavs-wasi-chain = { workspace = true }
+alloy-sol-types = { workspace = true }
+serde = { workspace = true }
+wstd = { workspace = true }
+
+[package.metadata.component]
+package = "wavs:example-component"
+target = "wavs:worker/layer-trigger-world@0.3.0-alpha2"
 ```
 
 ### Example Components
@@ -1275,30 +1274,39 @@ pub enum ComponentResult {
 ```rust
 impl Guest for Component {
     fn run(trigger_action: TriggerAction) -> std::result::Result<Vec<u8>, String> {
-        // Decode trigger containing market parameters
-        let (trigger_id, market_params) = decode_trigger_event(trigger_action.data)?;
+        // Decode market parameters
+        let (trigger_id, params) = decode_trigger_event(trigger_action.data)?;
         
-        // Fetch price data
+        // Fetch price with proper error handling
         let price = block_on(async {
-            let response = http::fetch_json::<PriceResponse>(build_price_request()?).await?;
+            let response = http::fetch_json::<PriceResponse>(build_request()?).await?;
             Ok(response.price)
         })?;
 
-        // Encode result for on-chain submission
+        // Log operation
+        host::log(LogLevel::Info, &format!("Price fetched: {}", price));
+
+        // Return encoded result
         Ok(encode_oracle_result(trigger_id, price))
     }
 }
 ```
 
-2. **Safe-Guard Component** 
+2. **Safe-Guard Component**
 ```rust
 impl Guest for Component {
     fn run(trigger_action: TriggerAction) -> std::result::Result<Vec<u8>, String> {
-        // Decode transaction validation request
-        let ApproveHash { hash, .. } = decode_event_log_data!(trigger_action.data)?;
+        // Decode validation request
+        let event = decode_event_log_data!(trigger_action.data)?;
         
+        // Log validation
+        host::log(LogLevel::Info, &format!("Validating hash: {:?}", event));
+
         // Return validation result
-        Ok(ValidationPayload { hash, approved: true }.abi_encode())
+        Ok(ValidationPayload { 
+            hash: event.hash,
+            approved: true 
+        }.abi_encode())
     }
 }
 ```
@@ -1310,14 +1318,17 @@ impl Guest for Component {
         // Decode proposal
         let proposal = decode_event_log_data!(trigger_action.data)?;
         
-        // Get AI decision
+        // Get AI decision with proper error handling
         let decision = block_on(async {
-            let response = query_ai_model(build_prompt(&proposal)).await?;
-            parse_ai_response(response)
+            let response = query_ai(&proposal).await?;
+            validate_decision(response)
         })?;
 
+        // Log decision
+        host::log(LogLevel::Info, &format!("AI decision: {:?}", decision));
+
         // Return encoded transaction
-        Ok(encode_safe_transaction(decision))
+        Ok(encode_transaction(decision))
     }
 }
 ```
@@ -1328,13 +1339,16 @@ impl Guest for Component {
     fn run(trigger_action: TriggerAction) -> std::result::Result<Vec<u8>, String> {
         match trigger_action.data {
             TriggerData::CosmosContractEvent(event) => {
-                // Parse deposit event
-                let deposit = parse_cosmos_deposit(event)?;
+                // Parse deposit with proper validation
+                let deposit = parse_deposit(event)?;
                 
+                // Log bridge operation
+                host::log(LogLevel::Info, &format!("Processing deposit: {:?}", deposit));
+
                 // Return encoded bridge action
                 Ok(encode_bridge_deposit(deposit))
             }
-            _ => Ok(Vec::new())
+            _ => Ok(Vec::new()) // Standard no-op response
         }
     }
 }
@@ -1347,16 +1361,48 @@ impl Guest for Component {
         // Decode message
         let message = decode_event_log_data!(trigger_action.data)?;
         
-        // Send via Telegram API
+        // Send message with proper error handling
         block_on(async {
             let client = TelegramClient::new()?;
+            
+            // Log operation
+            host::log(LogLevel::Info, "Sending Telegram message");
+            
             client.send_message(message).await
         })?;
 
-        Ok(Vec::new())
+        Ok(Vec::new()) // Standard no-op response
     }
 }
 ```
+
+### Key Implementation Guidelines
+
+1. **Error Handling**
+- Always use `Result<Vec<u8>, String>` for consistency
+- Provide descriptive error messages
+- Use `map_err` for error conversion
+- Log errors appropriately
+
+2. **Logging**
+- Use `host::log` for production logging
+- Include operation context in log messages
+- Use appropriate log levels
+
+3. **Async Operations**
+- Always wrap in `block_on`
+- Proper error propagation
+- Timeout handling
+
+4. **Security**
+- Validate all inputs
+- Check permissions
+- Sanitize external data
+
+5. **Testing**
+- Use `make wasi-exec` for local testing
+- Test all error paths
+- Verify deterministic behavior
 
 ### Configuration
 ```toml
@@ -1365,39 +1411,17 @@ name = "example-service"
 version = "0.1.0"
 
 [components]
-prediction_market = { wasm = "prediction_market.wasm" }
-safe_guard = { wasm = "safe_guard.wasm" }
-dao_agent = { wasm = "dao_agent.wasm" }
-bridge = { wasm = "bridge.wasm" }
-telegram_bot = { wasm = "telegram_bot.wasm" }
+prediction_market = { package = "wavs:prediction-market" }
+safe_guard = { package = "wavs:safe-guard" }
+dao_agent = { package = "wavs:dao-agent" }
+bridge = { package = "wavs:bridge" }
+telegram_bot = { package = "wavs:telegram-bot" }
 
 [chains]
-ethereum = { rpc_url = "${ETH_RPC_URL}" }
-cosmos = { rpc_url = "${COSMOS_RPC_URL}" }
+ethereum = { url = "${ETH_RPC_URL}" }
+cosmos = { url = "${COSMOS_RPC_URL}" }
 
 [environment]
 # Add sensitive values to .env file
 API_KEYS = "${API_KEYS}"
 ```
-
-### Key Implementation Notes
-
-1. **Error Handling**
-- Use `Result<Vec<u8>, String>` for component results
-- Propagate errors with descriptive messages
-- Handle all trigger data variants
-
-2. **State Management** 
-- Components should be stateless
-- Use environment variables for configuration
-- Store persistent data on-chain
-
-3. **Security**
-- Validate all inputs
-- Handle API keys securely
-- Implement proper access controls
-
-4. **Testing**
-- Test with `make wasi-exec`
-- Verify deterministic execution
-- Simulate different trigger types
