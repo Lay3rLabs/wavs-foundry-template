@@ -57,4 +57,6 @@ $BASE_CMD trigger set-ethereum --workflow-id ${WORKFLOW_ID} --address ${TRIGGER_
 
 $BASE_CMD submit set-ethereum --workflow-id ${WORKFLOW_ID} --address ${SUBMIT_ADDRESS} --chain-name local --max-gas 5000000
 
+$BASE_CMD validate
+
 echo "Configuration file created at ${FILE_LOCATION}"
