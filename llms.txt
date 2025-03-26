@@ -235,13 +235,8 @@ export!(Component with_types_in bindings);
 
 impl Guest for Component {
     fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
-        // 1. Decode the trigger data
         let (trigger_id, req, dest) = decode_trigger_event(action.data)?;
-        
-        // 2. Process the data (Your custom logic here)
         let result = process_data(req)?;
-        
-        // 3. Encode and return the result
         let output = match dest {
             Destination::Ethereum => Some(encode_trigger_output(trigger_id, &result)),
             Destination::CliOutput => Some(result),
@@ -354,6 +349,113 @@ impl Guest for Component {
         let (trigger_id, input) = decode_trigger_event(action.data)?;
         let result = compute_result(input)?;
         Ok(Some(encode_result(trigger_id, result)))
+    }
+}
+```
+
+# WAVS Component Development Guide
+
+## Core Dependencies
+```toml
+[dependencies]
+wit-bindgen-rt = {workspace = true}    # WASI bindings and Guest trait
+wavs-wasi-chain = { workspace = true }  # Core WAVS functionality
+```
+
+## Component Structure
+```rust
+pub mod bindings;
+use crate::bindings::{export, Guest, TriggerAction};
+struct Component;
+export!(Component with_types_in bindings);
+
+impl Guest for Component {
+    fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
+        let (trigger_id, req, dest) = decode_trigger_event(action.data)?;
+        let result = process_data(req)?;
+        let output = match dest {
+            Destination::Ethereum => Some(encode_trigger_output(trigger_id, &result)),
+            Destination::CliOutput => Some(result),
+        };
+        Ok(output)
+    }
+}
+```
+
+## Trigger Handling
+- Trigger contract emits `NewTrigger` event with encoded data
+- Component uses `decode_event_log_data!` macro to decode event data
+- Each trigger has unique ID linking to its data
+- Results submitted back via submission contract
+
+## Network Requests
+```rust
+use wavs_wasi_chain::http::{fetch_json, http_request_get};
+use wstd::http::HeaderValue;
+
+async fn make_request() -> Result<(), String> {
+    let url = "https://api.example.com/data";
+    let mut req = http_request_get(url).map_err(|e| e.to_string())?;
+    req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
+    let json: Response = fetch_json(req).await.map_err(|e| e.to_string())?;
+    Ok(())
+}
+```
+
+## Logging
+Development:
+```rust
+println!("Debug info: {:?}", data);
+```
+
+Production:
+```rust
+use crate::bindings::wavs::worker::layer_types::LogLevel;
+host::log(LogLevel::Info, "Production log message");
+```
+
+## Build Process
+1. Place component in `components/` subdirectory
+2. Implement `Guest` trait with `export!(Component)`
+3. `make wasi-build`:
+   - Generates WASI bindings
+   - Compiles to WASM
+   - Copies to `compiled/`
+4. Test: `COMPONENT_FILENAME=component.wasm make wasi-exec`
+5. Deploy: `TRIGGER_EVENT="Event(bytes)" make deploy-service`
+
+## Key Points
+1. `run` function: Entry point for trigger processing
+2. Results: Can return to Ethereum or CLI output
+3. Error handling: Uses `Result` type
+4. Bindings: Auto-generated for `/components` and `/src`
+5. `Destination` enum: Controls output destination
+
+## Configuration
+```bash
+WAVS_DATA=.docker
+WAVS_LOG_LEVEL=info
+RPC_URL=http://localhost:8545
+COMPONENT_FILENAME=component.wasm
+TRIGGER_EVENT="Event(bytes)"
+```
+
+## Example Contracts
+```solidity
+// Trigger
+contract WavsTrigger {
+    event NewTrigger(bytes data);
+    function requestData(bytes calldata _input) external {
+        emit NewTrigger(_input);
+    }
+}
+
+// Submission
+contract SimpleSubmit is IWavsServiceHandler {
+    function handleSignedData(bytes calldata _data, bytes calldata _signature) external {
+        _serviceManager.validate(_data, _signature);
+        (bytes32 triggerId, bytes memory result) = decode_result(_data);
+        _results[triggerId] = result;
     }
 }
 ```
