@@ -73,11 +73,9 @@ forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" -
 Deploy the component
 
 ```bash docci-delay-after=1
-WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS=true
+COMPONENT_FILENAME=js_eth_price_oracle.wasm sh ./script/build_service.sh
 
-DEFAULT_COMPONENT_FILENAME=js_eth_price_oracle.wasm sh ./script.sh
-
-SERVICE_CONFIG_FILE=service_config.json make deploy-service
+SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
 ```
 
 Trigger the service
