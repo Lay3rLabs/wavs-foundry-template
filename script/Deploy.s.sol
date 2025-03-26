@@ -27,8 +27,8 @@ contract Deploy is Common {
         vm.stopBroadcast();
 
         string memory _json = "json";
-        _json.serialize("service_handler", Strings.toHexString(address(_submit)));
-        _json.serialize("trigger", Strings.toHexString(address(_trigger)));
+        _json.serialize("service_handler", toChecksumAddress(address(_submit)));
+        _json.serialize("trigger", toChecksumAddress(address(_trigger)));
         string memory _finalJson = _json.serialize("service_manager", _serviceManagerAddr);
         vm.writeFile(script_output_path, _finalJson);
     }
@@ -62,5 +62,48 @@ contract Deploy is Common {
      */
     function _jsonBytesToAddress(string memory _byteString) internal view returns (address _address) {
         _address = address(uint160(bytes20(vm.readFile(deployments_path).readBytes(_byteString))));
+    }
+
+    function toChecksumAddress(address addr) internal pure returns (string memory) {
+        // Convert address to hex string without 0x prefix
+        bytes memory addressBytes = abi.encodePacked(addr);
+        bytes memory addressHex = new bytes(40);
+
+        for (uint256 i = 0; i < 20; i++) {
+            uint8 b = uint8(addressBytes[i]);
+            addressHex[i*2] = toHexChar(b / 16);
+            addressHex[i*2+1] = toHexChar(b % 16);
+        }
+
+        // Calculate hash of the hex address (without 0x)
+        bytes32 hash = keccak256(addressHex);
+
+        // Create checksummed hex string (with proper capitalization)
+        bytes memory result = new bytes(42);
+        result[0] = '0';
+        result[1] = 'x';
+
+        for (uint256 i = 0; i < 40; i++) {
+            uint8 hashByte = uint8(hash[i / 2]);
+            uint8 hashValue = i % 2 == 0 ? hashByte >> 4 : hashByte & 0xf;
+
+            // If hash value is >= 8, uppercase the character if it's a letter
+            if (hashValue >= 8 && addressHex[i] >= 0x61 && addressHex[i] <= 0x66) {
+                // Convert a-f to A-F
+                result[i+2] = bytes1(uint8(addressHex[i]) - 32);
+            } else {
+                result[i+2] = addressHex[i];
+            }
+        }
+
+        return string(result);
+    }
+
+    function toHexChar(uint8 value) internal pure returns (bytes1) {
+        if (value < 10) {
+            return bytes1(uint8(bytes1('0')) + value);
+        } else {
+            return bytes1(uint8(bytes1('a')) + value - 10);
+        }
     }
 }
