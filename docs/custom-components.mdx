@@ -14,6 +14,8 @@ Check out the [WAVS design considerations](/design) page to learn which use-case
 
 The simple onchain trigger contract in the template is used to emit triggers to the WAVS service. The trigger data is encoded as a bytes object. When a WAVS component receives this trigger, it uses the `decode_event_log_data!` macro from the [`wavs-wasi-chain`](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) crate to decode the event data for processing.
 
+Each trigger has a unique ID that links it to its data. The component processes the trigger data and returns results. Results are submitted back to the blockchain via the submission contract.
+
 The trigger in the template is a simple example that takes generic bytes and passes them to the component. When developing a custom trigger, you will need to update the template code in a few places:
 
 1. The trigger contract itself in [`src/WavsTrigger.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsTrigger.sol), which defines how triggers are created and emitted on-chain.
@@ -24,15 +26,20 @@ The trigger in the template is a simple example that takes generic bytes and pas
 
 ## Component
 
-The component is the main logic of the WAVS component. It is responsible for processing the trigger data and determining how to handle it.
+A component contains the main logic of a WAVS service. It is responsible for processing the trigger data and determining how to handle it.
 
 A basic component has three main parts:
 
-1. Decoding trigger data
-2. Processing the data (this is the custom logic of your component)
-3. Encode and returning the result for submission.
+1. Decoding incoming trigger data.
+2. Processing the data (this is the custom logic of your component).
+3. Encoding and returning the result for submission.
 
-```rust
+```rust lib.rs
+pub mod bindings;
+use crate::bindings::{export, Guest, TriggerAction};
+struct Component;
+export!(Component with_types_in bindings);
+
 impl Guest for Component {
     fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
         // 1. Decode the trigger data
@@ -51,16 +58,60 @@ impl Guest for Component {
 }
 ```
 
+Components must implement the `Guest` trait, which is the main interface between your component and the WAVS runtime. The `run` function is the entry point for processing triggers: it receives the trigger data, decodes it, processes it according to your component's logic, and returns the results. Results can be sent back to Ethereum (when triggered by a contract event) or returned as CLI output (when triggered manually during testing). Error handling is done through the `Result` type. In the foundry template, bindings are automatically generated for any files in the `/components` and `/src` directories when the `make build` command is run.
 
-Bindings are automatically generated for any files in the `/components` and `/src` directories when the `make build` command is run.
+### Building Components
 
-### HTTP requests
-
-### Dependencies
-
-The following dependencies are useful for making HTTP requests from a component. Make sure to add them to your `Cargo.toml` file:
+Dependencies for components are added to the `Cargo.toml` file in the `components` directory.
 
 ```toml
+[dependencies]
+# Essential dependencies
+wit-bindgen-rt = {workspace = true}    # Required for WASI bindings and Guest trait
+wavs-wasi-chain = { workspace = true }  # Required for core WAVS functionality
+# Optional dependencies
+serde = { workspace = true }            # For serialization (if working with JSON)
+serde_json = { workspace = true }       # For JSON handling
+alloy-sol-macro = { workspace = true }  # For Ethereum contract interactions
+wstd = { workspace = true }             # For WASI standard library features
+alloy-sol-types = { workspace = true }  # For Ethereum ABI handling
+anyhow = { workspace = true }           # For enhanced error handling
+```
+
+**Build Process**:
+
+```bash
+# Build the component
+make build
+
+# Test locally
+make wasi-exec
+
+# Deploy the service
+make deploy-service
+```
+
+#### Testing
+
+To test your components locally, use the `wasi-exec` command. This command allows you to simulate triggers using the `--input` flag, and you can view the component's logs in stdout/stderr to debug its execution.
+
+```bash
+make wasi-exec
+```
+
+### `wavs-wasi-chain` crate
+
+The `wavs-wasi-chain` crate provides a set of helpful functions for making HTTP requests and interacting with the blockchain. It also provides a macro for decoding trigger data for use in the component.
+
+Learn more in the [crate documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions).
+
+### Network requests
+
+Components can make network requests to external APIs using the `wavs-wasi-chain` crate.
+
+The following dependencies are useful for making HTTP requests from a component. These are added to a component's `Cargo.toml` file:
+
+```toml Cargo.toml
 [dependencies]
 wavs-wasi-chain = { workspace = true }  # HTTP utilities
 wstd = { workspace = true }             # Runtime utilities
@@ -68,15 +119,9 @@ serde = { workspace = true }            # Serialization
 serde_json = { workspace = true }       # JSON handling
 ```
 
-The `wavs-wasi-chain` crate provides a set of helpful functions for making HTTP requests. It also provides a macro for decoding trigger data for use in the component.
-
-Learn more in the [crate documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions).
-
-
 The following example shows how to make a basic HTTP GET request from a component:
 
-
-```rust
+```rust lib.rs
 async fn make_request() -> Result<YourResponseType, String> {
     // Create the request
     let url = "https://api.example.com/endpoint";
@@ -84,7 +129,7 @@ async fn make_request() -> Result<YourResponseType, String> {
     
     // Add headers
     req.headers_mut().insert(
-        "Accept", 
+        "Accept",
         HeaderValue::from_static("application/json")
     );
     
@@ -97,12 +142,153 @@ async fn make_request() -> Result<YourResponseType, String> {
 }
 ```
 
-Use https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions 
+Other functions are available in the [crate documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions).
 
+### Logging
 
+Components can use logging to debug and track the execution of the component.
 
-##  Contract interfaces
+**Logging in development**:
 
-You can view the code for the Solidity interfaces on the WAVS NPM package site: https://www.npmjs.com/package/@wavs/solidity?activeTab=code
+Use `println!()` to write to stdout/stderr. This is visible when running `wasi-exec` locally.
 
-## kv storage
+```rust lib.rs
+println!("Debug message: {:?}", data);
+```
+
+**Logging in production**
+
+For production, you can use a `host::log()` function which takes a `LogLevel` and writes its output via the tracing mechanism. Along with the string that the developer provides, it attaches additional context such as the `ServiceID`, `WorkflowID`, and component `Digest`.
+
+```rust lib.rs
+host::log(LogLevel::Info, "Production logging message");
+```
+
+### Blockchain interactions
+
+Components can query Ethereum using the `wavs-wasi-chain` crate:
+
+```rust lib.rs
+use wavs_wasi_chain::host;  // For blockchain interactions
+use alloy_sol_types::SolValue;  // For ABI encoding/decoding
+
+// Get chain configuration
+let chain_config = host::get_eth_chain_config("ethereum")
+    .ok_or("Chain config not found")?;
+
+// Make an eth_call
+let result = host::eth_call(
+    &chain_config,
+    "0x...", // contract address
+    "0x...", // encoded function call
+    "latest" // block tag
+).await?;
+```
+
+The following dependencies are required in `Cargo.toml` for Ethereum interactions:
+
+```toml Cargo.toml
+[dependencies]
+wavs-wasi-chain = { workspace = true }  # Blockchain interactions
+alloy-sol-types = { workspace = true }  # ABI handling
+```
+
+#### Chain configuration
+
+Chain configs are defined in `wavs.toml`. Configs support both HTTP and WebSocket endpoints.Returns encoded ABI data that can be decoded using `alloy-sol-types`.
+
+```toml wavs.toml
+[chains.eth.local]
+chain_id = "31337"
+ws_endpoint = "ws://localhost:8545"
+http_endpoint = "http://localhost:8545"
+```
+
+For advanced use cases like event decoding and direct blockchain interactions, visit the [wavs-wasi-chain documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions).
+
+### Environment and Configuration Variables
+
+Components can be configured with two types of variables:
+
+#### KV: public variables
+
+These variables can be used for non-sensitive settings and are viewable by anyone. These variables can be configured in the makefile and are set during service deployment. They are accessed using `std::env::var` in the component.
+
+To add public variables, modify the `"kv"` section in the `SERVICE_CONFIG` in your `Makefile`:
+
+```makefile
+SERVICE_CONFIG='{
+  "fuel_limit": 100000000,
+  "max_gas": 5000000,
+  "host_envs": ["WAVS_ENV_MY_API_KEY"],
+  "kv": [
+    ["max_retries", "3"],
+    ["timeout_seconds", "30"],
+    ["api_endpoint", "https://api.example.com"]
+  ],
+  "workflow_id": "default",
+  "component_id": "default"
+}'
+```
+
+Then use these variables in your component:
+
+```rust
+let max_retries = std::env::var("max_retries")?;
+let timeout = std::env::var("timeout_seconds")?;
+let endpoint = std::env::var("api_endpoint")?;
+```
+
+#### Host environment variables
+
+Private Environment Variables (`host_envs`) can be used for sensitive data like API keys. These variables are set by operators in their environment and are not viewable by anyone. These variables must be prefixed with `WAVS_ENV_`. Each operator must set these variables in their environment before deploying the service. Only variables listed in `host_envs` will be available to the component.
+
+To add private variables, set the environment variable in your `.env` file:
+
+```bash
+WAVS_ENV_MY_API_KEY=your_secret_key_here
+```
+
+Then modify `"host_envs"` in the `SERVICE_CONFIG` section of your `Makefile`:
+
+   ```json
+   "host_envs": ["MY_API_KEY"]
+   ```
+
+   - Example: `export WAVS_ENV_COINGECKO_API_KEY=xxxxx`
+   - Access in component: `std::env::var("WAVS_ENV_COINGECKO_API_KEY")?`
+
+Configuration is set during service deployment:
+
+```json
+SERVICE_CONFIG='{
+  "fuel_limit": 100000000,
+  "max_gas": 5000000,
+  "host_envs": ["WAVS_ENV_MY_API_KEY"],
+  "kv": [["max_retries", "3"]],
+  "workflow_id": "default",
+  "component_id": "default"
+}'
+```
+
+### Submission
+
+A service handler or submission contract handles the logic for submitting a component's output to the blockchain. A submission contract must implement the `handleSignedData()` function using the `IWavsServiceHandler` interface. This interface is defined in the `@wavs` package: https://www.npmjs.com/package/@wavs/solidity?activeTab=code
+
+In the template, the [submission contract](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsSubmit.sol) uses the `handleSignedData()` function to validate the operator's signature and store the processed data from the component. The `DataWithId` struct must match the output format from the component. Each trigger has a unique ID that links the data to its source.
+
+```solidity
+function handleSignedData(bytes calldata _data, bytes calldata _signature) external {
+    // 1. Validate the operator's signature by calling the `validate` function on the `_serviceManager` contract
+    _serviceManager.validate(_data, _signature);
+
+    // 2. Decode the data into a DataWithId struct defined in the `ITypes` interface
+    DataWithId memory dataWithId = abi.decode(_data, (DataWithId));
+
+    // 3. Store the result in state
+    _signatures[dataWithId.triggerId] = _signature;      // 1. Store operator signature
+    _datas[dataWithId.triggerId] = dataWithId.data;      // 2. Store the data
+    _validTriggers[dataWithId.triggerId] = true;         // 3. Mark trigger as valid
+}
+```
+
