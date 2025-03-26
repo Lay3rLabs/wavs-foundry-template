@@ -1011,3 +1011,204 @@ Key features:
 - Implements proper error handling for parsing failures
 - Uses Solidity type definitions for consistent data structures
 - Extensible for future ETH-to-Cosmos event handling
+
+### Telegram Bot Component
+```rust
+mod bindings;
+mod telegram;  // Module for Telegram API interactions
+
+use alloy_sol_types::SolValue;  // For ABI encoding
+use bindings::{
+    export,
+    wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent},
+    Guest, TriggerAction,
+};
+use serde_json::json;  // For JSON handling
+use std::str::FromStr;
+use wstd::{
+    http::{Client, IntoBody, Request},
+    io::AsyncRead,
+    runtime::block_on,
+};
+
+struct Component;
+
+impl Guest for Component {
+    fn run(trigger_action: TriggerAction) -> std::result::Result<Vec<u8>, String> {
+        match trigger_action.data {
+            // Handle Ethereum contract events
+            TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+                // Decode the message from the event data
+                let decoded = alloy_sol_types::sol_data::String::abi_decode(&log.data, false)
+                    .map_err(|e| format!("Failed to decode ABI string: {}", e))?;
+
+                let message = decoded.to_string();
+
+                return block_on(async move {
+                    // Send message to Telegram
+                    let response = send_telegram_message(&message).await?;
+
+                    println!("Telegram response: {}", response);
+
+                    // Return success response
+                    Ok(Vec::new())
+                });
+            }
+            _ => Err("Unsupported trigger data".to_string()),
+        }
+    }
+}
+
+// Send message to Telegram API
+async fn send_telegram_message(message: &str) -> Result<String, String> {
+    // Get bot token from environment
+    let bot_token = std::env::var("TELEGRAM_BOT_TOKEN")
+        .map_err(|e| format!("Failed to get TELEGRAM_BOT_TOKEN: {}", e))?;
+
+    // Get chat ID from environment
+    let chat_id = std::env::var("TELEGRAM_CHAT_ID")
+        .map_err(|e| format!("Failed to get TELEGRAM_CHAT_ID: {}", e))?;
+
+    // Construct Telegram API URL
+    let url = format!(
+        "https://api.telegram.org/bot{}/sendMessage",
+        bot_token
+    );
+
+    // Create request body
+    let body = json!({
+        "chat_id": chat_id,
+        "text": message,
+        "parse_mode": "HTML"
+    });
+
+    // Create HTTP request
+    let req = Request::post(&url)
+        .body(
+            serde_json::to_vec(&body)
+                .unwrap()
+                .into_body(),
+        )
+        .unwrap();
+
+    // Send request
+    let mut res = Client::new().send(req).await.map_err(|e| e.to_string())?;
+
+    if res.status() != 200 {
+        return Err(format!("Telegram API error: status {}", res.status()));
+    }
+
+    // Read response body
+    let mut body_buf = Vec::new();
+    res.body_mut().read_to_end(&mut body_buf).await.unwrap();
+
+    // Parse response
+    let resp = String::from_utf8_lossy(&body_buf);
+    Ok(resp.to_string())
+}
+
+export!(Component with_types_in bindings);
+```
+
+Key features:
+- Handles Ethereum contract events for message triggers
+- Sends messages to Telegram using Bot API
+- Uses environment variables for bot configuration
+- Supports HTML formatting in messages
+- Implements proper error handling
+- Uses async/await for API requests
+- Returns empty vector on success (no on-chain data needed)
+- Logs API responses for debugging
+
+### Common Data Structures and Interfaces
+
+```rust
+// Trigger data structure used across components
+pub struct TriggerData {
+    pub trigger_id: [u8; 32],
+    pub data: Vec<u8>,
+    pub destination: Destination,
+}
+
+// Market resolution interface
+sol! {
+    interface IMarketResolver {
+        function resolveMarket(bytes32 marketId, bool outcome) external;
+    }
+}
+
+// Bridge deposit structure
+sol! {
+    struct BridgeDeposit {
+        uint256 amount;
+        string sender;
+        address recipient;
+    }
+}
+
+// Safe transaction interface
+sol! {
+    struct SafeTransaction {
+        address to;
+        uint256 value;
+        bytes data;
+        string description;
+        ContractCall contract_call;
+    }
+
+    struct ContractCall {
+        string function;
+        string[] args;
+    }
+}
+
+// Telegram message structure
+#[derive(Serialize, Deserialize)]
+pub struct TelegramMessage {
+    pub chat_id: String,
+    pub text: String,
+    pub parse_mode: Option<String>,
+}
+
+// DAO context structure
+#[derive(Default)]
+pub struct DaoContext {
+    pub safe_address: String,
+    pub balances: HashMap<String, String>,
+    pub allowed_addresses: Vec<String>,
+    pub dao_description: String,
+    pub contracts: Vec<ContractInfo>,
+}
+
+#[derive(Default)]
+pub struct ContractInfo {
+    pub name: String,
+    pub address: String,
+    pub abi: String,
+}
+```
+
+### Configuration Examples
+
+```toml
+# Example wavs.toml for component configuration
+[service]
+name = "example-service"
+version = "0.1.0"
+
+[chains]
+ethereum = { rpc_url = "http://localhost:8545" }
+cosmos = { rpc_url = "http://localhost:26657" }
+
+[components]
+prediction_market = { wasm = "prediction_market.wasm" }
+safe_guard = { wasm = "safe_guard.wasm" }
+dao_agent = { wasm = "dao_agent.wasm" }
+bridge = { wasm = "bridge.wasm" }
+telegram_bot = { wasm = "telegram_bot.wasm" }
+
+[environment]
+TELEGRAM_BOT_TOKEN = "${TELEGRAM_BOT_TOKEN}"
+TELEGRAM_CHAT_ID = "${TELEGRAM_CHAT_ID}"
+COINMARKETCAP_API_KEY = "${COINMARKETCAP_API_KEY}"
+```
