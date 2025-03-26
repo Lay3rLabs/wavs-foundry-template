@@ -8,7 +8,7 @@ default: build
 
 # Customize these variables
 COMPONENT_FILENAME?=eth_price_oracle.wasm
-SERVICE_CONFIG_FILE?=service_config.json
+SERVICE_CONFIG_FILE?=.docker/service.json
 
 # Define common variables
 CARGO=cargo
@@ -114,7 +114,7 @@ upload-component:
 
 ## deploy-service: deploying the WAVS component service json | SERVICE_CONFIG_FILE
 deploy-service:
-	@$(WAVS_CMD) deploy-service-raw --log-level=info --data /data/.docker --home /data --service `jq -c . < .docker/$(SERVICE_CONFIG_FILE)`
+	@$(WAVS_CMD) deploy-service-raw --log-level=info --data /data/.docker --home /data --service `jq -c . < $(SERVICE_CONFIG_FILE)`
 
 ## show-result: showing the result | SERVICE_TRIGGER_ADDR, SERVICE_SUBMISSION_ADDR, RPC_URL
 show-result:

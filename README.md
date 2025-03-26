@@ -172,10 +172,10 @@ Deploy the compiled component with the contracts from the previous steps. Review
 
 ```bash docci-delay-per-cmd=1
 # Build your service JSON
-sh ./script.sh
+COMPONENT_FILENAME=eth_price_oracle.wasm sh ./script/build_service.sh
 
 # Deploy the service JSON
-SERVICE_CONFIG_FILE=service_config.json make deploy-service
+SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
 ```
 
 ## Trigger the Service
