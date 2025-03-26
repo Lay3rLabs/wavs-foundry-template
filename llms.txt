@@ -1,0 +1,359 @@
+# WAVS
+
+Repository: https://github.com/Lay3rLabs/wavs-foundry-template
+README with commands: https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/README.md
+
+> A framework for building decentralized services that perform off-chain computation with on-chain verification. WAVS (WASI Autonomous Verifiable Services) enables developers to create high-performance AVS services using WASM/WASI for computation and EigenLayer for security.
+
+WAVS streamlines AVS development by providing:
+- WASM/WASI runtime for near-native performance
+- EigenLayer integration for security via restaking
+- Dynamic deployment and updates
+- Cross-chain compatibility
+
+## Core Documentation
+
+- [Overview](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/overview.mdx): Core concepts and architecture
+- [Technical Details](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/how-it-works.mdx): In-depth platform mechanics
+- [Design Guidelines](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/design.mdx): Best practices and AVS design patterns
+- [Benefits](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/benefits.mdx): Platform advantages
+
+## Service Components
+
+### 1. Trigger Contract
+- [Example Contract](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/src/contracts/WavsTrigger.sol): On-chain event trigger
+- [Contract Guide](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/how-it-works.mdx#triggers): Implementing triggers
+
+### 2. WASI Component
+- [Example Component](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/components/eth-price-oracle/src/lib.rs): Off-chain computation in Rust
+- [Component Guide](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/how-it-works.mdx#service-components): Building components
+
+### 3. Submission Contract
+- [Example Handler](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/src/contracts/WavsSubmit.sol): Result verification
+- [Handler Guide](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/how-it-works.mdx#submission): Implementing handlers
+
+## Tutorial
+
+- [1. Overview](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/tutorial/1-overview.mdx): Introduction and concepts
+- [2. Setup](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/tutorial/2-setup.mdx): Environment configuration  
+- [3. Project](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/tutorial/3-project.mdx): Project structure
+- [4. Component](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/tutorial/4-component.mdx): Building components
+- [5. Build](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/tutorial/5-build.mdx): Testing services
+- [6. Deploy](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/tutorial/6-run-service.mdx): Service deployment
+- [7. Oracle](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/docs/tutorial/7-prediction.mdx): Example oracle service
+
+## System Requirements
+
+### Core
+- Docker & Docker Compose
+- Make & JQ
+- Node.js v21+
+
+### Rust Setup
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustup toolchain install stable
+rustup target add wasm32-wasip2
+```
+
+### Cargo Components
+```bash
+cargo install cargo-binstall
+cargo binstall cargo-component warg-cli wkg --locked
+wkg config --default-registry wa.dev
+```
+
+## Essential Documentation
+
+- [README.md](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/README.md): Main documentation with all make commands
+- [Makefile](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/Makefile): Full build automation script with variables.
+
+## Quick Start
+Run through the template oracle example. All commands found in https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/README.md
+
+1. Create project:
+```bash
+forge init --template Lay3rLabs/wavs-foundry-template my-service --branch v0.3.0
+cd my-service
+make setup
+cp .env.example .env
+```
+
+2. Build and test:
+```bash
+forge build
+forge test
+make wasi-build
+COIN_MARKET_CAP_ID=1 make wasi-exec  # Test component directly
+```
+
+3. Deploy:
+```bash
+# This must remain running in your terminal. Use another terminal to run other commands.
+make start-all  # Start local env
+# Open a new terminal
+export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
+forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
+TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
+```
+
+4. Trigger the service:
+```bash
+export COIN_MARKET_CAP_ID=1
+export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig "run(string,string)" --rpc-url http://localhost:8545 --broadcast -v 4
+# Get the latest TriggerId and show the result via `script/ShowResult.s.sol`
+make show-result
+```
+## Common Issues
+
+### Mac ARM (M1/M2) Setup
+- Install Rosetta: `softwareupdate --install-rosetta`
+- Enable Rosetta in Docker Desktop: Settings -> General -> "Use Rosetta for x86_64/amd64 emulation"
+- Configure networking:
+  - Enable host networking in Docker Desktop, or
+  - Install network connect: `brew install chipmk/tap/docker-mac-net-connect`
+
+### Component Building
+- If error "no registry configured": Run `wkg config --default-registry wa.dev`
+- For consensus, ensure deterministic execution and data sources
+- Test locally with `make wasi-exec` before deployment
+
+## Component Development
+
+### Requirements
+- Deterministic execution for consensus
+- Immutable/deterministic data sources
+- No component-local state
+- Proper error handling
+
+### Project Structure
+```
+my-service/
+├── components/          # WASM service implementations
+│   └── my-component/    # Your Rust component(s)
+├── src/
+│   ├── contracts/      # Solidity contracts
+│   └── interfaces/     # Contract interfaces
+├── .env               # Environment configuration
+└── Makefile          # Build automation
+```
+
+### Trigger Handling
+
+The trigger contract emits a `NewTrigger` event with encoded trigger information. When a WAVS component receives this trigger, it uses the `decode_event_log_data!` macro from the `wavs-wasi-chain` crate to decode the event data for processing.
+
+Each trigger has a unique ID that links it to its data. The component processes the trigger data and returns results. Results are submitted back to the blockchain via the submission contract.
+
+### Network Requests
+
+Components can make network requests to external APIs using the `wavs-wasi-chain` crate. Here's an example of making an HTTP GET request:
+
+```rust
+use wavs_wasi_chain::http::{fetch_json, http_request_get};
+use wstd::http::HeaderValue;
+
+async fn make_request() -> Result<(), String> {
+    let url = "https://api.example.com/data";
+    let mut req = http_request_get(url).map_err(|e| e.to_string())?;
+    
+    // Set headers
+    req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
+    req.headers_mut().insert("Content-Type", HeaderValue::from_static("application/json"));
+    
+    // Make request and parse JSON response
+    let json: Response = fetch_json(req).await.map_err(|e| e.to_string())?;
+    Ok(())
+}
+```
+
+### Logging
+
+When developing your own WASI component, it's helpful to use logging methods in your code. Components write all their standard output and errors (`stdout` or `stderr`) to the host machine.
+
+For development:
+```rust
+println!("Debug info: {:?}", data);  // Writes to stdout
+```
+
+For production:
+```rust
+use crate::bindings::wavs::worker::layer_types::LogLevel;
+host::log(LogLevel::Info, "Production log message");
+```
+
+The production logging includes additional context like `ServiceID`, `WorkflowID`, and component `Digest`.
+
+### Component Building Process
+
+1. Place your Rust component in a subdirectory of `components/`
+2. Each component must implement the `Guest` trait and use `export!(Component)`
+3. Running `make wasi-build`:
+   - Generates WASI bindings for each component
+   - Compiles all components to WASM using `cargo component build --release`
+   - Formats code with `cargo fmt`
+   - Copies `.wasm` files to `compiled/` directory
+4. Test components with `COMPONENT_FILENAME=your_component.wasm make wasi-exec`
+5. Deploy using `TRIGGER_EVENT="YourEvent(bytes)" make deploy-service`
+
+### Essential Dependencies
+
+The following dependencies are required in `Cargo.toml` for building components:
+
+```toml
+[dependencies]
+wit-bindgen-rt = {workspace = true}    # Required for WASI bindings and Guest trait
+wavs-wasi-chain = { workspace = true }  # Required for core WAVS functionality
+```
+
+Optional dependencies (add as needed):
+```toml
+[dependencies]
+serde = { workspace = true }            # For serialization (if working with JSON)
+serde_json = { workspace = true }       # For JSON handling
+alloy-sol-macro = { workspace = true }  # For Ethereum contract interactions
+wstd = { workspace = true }             # For WASI standard library features
+alloy-sol-types = { workspace = true }  # For Ethereum ABI handling
+anyhow = { workspace = true }           # For enhanced error handling
+```
+
+### Component Structure
+
+A basic component has three main parts:
+
+1. Decoding incoming trigger data
+2. Processing the data (your custom logic)
+3. Encoding and returning the result
+
+Here's a minimal example:
+
+```rust
+pub mod bindings;
+use crate::bindings::{export, Guest, TriggerAction};
+struct Component;
+export!(Component with_types_in bindings);
+
+impl Guest for Component {
+    fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
+        // 1. Decode the trigger data
+        let (trigger_id, req, dest) = decode_trigger_event(action.data)?;
+        
+        // 2. Process the data (Your custom logic here)
+        let result = process_data(req)?;
+        
+        // 3. Encode and return the result
+        let output = match dest {
+            Destination::Ethereum => Some(encode_trigger_output(trigger_id, &result)),
+            Destination::CliOutput => Some(result),
+        };
+        Ok(output)
+    }
+}
+```
+
+### Testing
+
+To test your components locally:
+
+1. Build the component:
+```bash
+make build
+```
+
+2. Test with input:
+```bash
+make wasi-exec
+```
+
+The `wasi-exec` command allows you to simulate triggers using the `--input` flag. You can view the component's logs in stdout/stderr to debug its execution.
+
+### Important Notes
+
+1. The `run` function is the entry point for processing triggers. It receives the trigger data, decodes it, processes it according to your component's logic, and returns the results.
+
+2. Results can be sent back to Ethereum (when triggered by a contract event) or returned as CLI output (when triggered manually during testing).
+
+3. Error handling is done through the `Result` type.
+
+4. Bindings are automatically generated for any files in the `/components` and `/src` directories when the `make build` command is run.
+
+5. The `Destination` enum determines where the output should be sent:
+   - `Ethereum`: When triggered by a contract event
+   - `CliOutput`: When triggered manually during testing
+
+## Configuration
+
+Key settings in `.env` and `Makefile`:
+
+```bash
+# Core Settings (.env)
+WAVS_DATA=.docker              # Data directory
+WAVS_LOG_LEVEL=info           # Logging level
+RPC_URL=http://localhost:8545 # Ethereum node
+
+# Component Settings (Makefile)
+COMPONENT_FILENAME=eth_price_oracle.wasm  # Your component
+TRIGGER_EVENT="NewTrigger(bytes)"        # Event signature
+
+# Service Settings (both)
+SERVICE_CONFIG='{                        # Component config
+  "fuel_limit": 100000000,
+  "max_gas": 5000000,
+  "workflow_id": "default"
+}'
+```
+
+See full options in:
+- [.env.example](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/.env.example)
+- [Makefile](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/Makefile)
+
+## Custom Triggers
+
+To implement a custom trigger, modify these files:
+
+1. [WavsTrigger.sol](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/src/contracts/WavsTrigger.sol): Define trigger event and data structure
+2. [Makefile](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/Makefile): Update `wasi-exec` test input
+3. `components/your-component/src/trigger.rs`: Implement `decode_trigger_event` for your data format
+4. `components/your-component/src/lib.rs`: Process trigger data in `run` function
+5. [Trigger.s.sol](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/script/Trigger.s.sol): Update deployment script
+
+Flow: Contract emits event → Component decodes data → Process → Encode result → Submit
+
+Example implementation in [eth-price-oracle](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/components/eth-price-oracle/src/lib.rs)
+
+## Example Code
+
+From [WavsTrigger.sol](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/src/contracts/WavsTrigger.sol):
+```solidity
+// Trigger Contract
+contract WavsTrigger {
+    event NewTrigger(bytes data);
+    function requestData(bytes calldata _input) external {
+        emit NewTrigger(_input);
+    }
+}
+```
+
+From [WavsSubmit.sol](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/src/contracts/WavsSubmit.sol):
+```solidity
+// Submission Contract
+contract SimpleSubmit is IWavsServiceHandler {
+    function handleSignedData(bytes calldata _data, bytes calldata _signature) external {
+        _serviceManager.validate(_data, _signature);
+        (bytes32 triggerId, bytes memory result) = decode_result(_data);
+        _results[triggerId] = result;
+    }
+}
+```
+
+From [eth-price-oracle/src/lib.rs](https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/v0.3.0/components/eth-price-oracle/src/lib.rs):
+```rust
+// WASI Component
+impl Guest for Component {
+    fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
+        let (trigger_id, input) = decode_trigger_event(action.data)?;
+        let result = compute_result(input)?;
+        Ok(Some(encode_result(trigger_id, result)))
+    }
+}
+```
