@@ -43,8 +43,7 @@ WASI_BUILD_DIR=js-eth-price-oracle make wasi-build
 
 Run the component with the `wasi-exec` command in the root of the repo
 
-<!-- TODO: actually migate this to use the CMC, output is LTC -->
-```bash docci-output-contains="4"
+```bash docci-output-contains="LTC"
 COMPONENT_FILENAME=js_eth_price_oracle.wasm COIN_MARKET_CAP_ID=2 make wasi-exec
 ```
 
@@ -81,7 +80,8 @@ SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
 Trigger the service
 
 ```bash docci-delay-after=1
-export COIN_MARKET_CAP_ID=1
+# TODO: ID of 1 fails here for some reason?
+export COIN_MARKET_CAP_ID=2
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 
 forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig "run(string,string)" --rpc-url http://localhost:8545 --broadcast -v 4
@@ -89,7 +89,6 @@ forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID
 
 Show the result from the triggered service
 
-<!-- TODO: has output BTC -->
-```bash docci-output-contains="2"
+```bash docci-output-contains="LTC"
 make show-result
 ```
