@@ -27,7 +27,12 @@ forge create SimpleSubmit --broadcast --rpc-url http://127.0.0.1:8545 --private-
 ```
 forge create WavsServiceAggregator --broadcast --rpc-url http://127.0.0.1:8545 --private-key <go_figure> --constructor-args 0xServiceHandlerAddress
 ```
-
+Now run the aggregator server in wavs/packages/aggregator and add the `ServiceHandler` through `add-service` endpoint:
+```bash
+curl -X POST http://localhost:8001/add-service \
+     -H "Content-Type: application/json" \
+     -d '{"eth_trigger": {"address": "SERVICE_HANDLER_ADDRESS"}}
+```
 
 # Generate service.json file
 Use `wavs-cli service` command:
