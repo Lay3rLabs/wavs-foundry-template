@@ -98,7 +98,7 @@ forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" -
 Deploy the component
 
 ```bash docci-delay-after=1
-COMPONENT_FILENAME=eth_price_oracle.wasm sh ./script/build_service.sh
+COMPONENT_FILENAME=golang_eth_price_oracle.wasm sh ./script/build_service.sh
 
 SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
 ```
