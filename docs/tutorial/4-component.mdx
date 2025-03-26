@@ -16,7 +16,7 @@ The core logic of the price oracle in this example is located in the [`/eth-pric
 
 ## !!steps trigger.rs
 
-The [trigger.rs](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/trigger.rs) file handles the decoding of incoming trigger data and preparing it for processing within the WAVS component. The `encode_trigger_output` function ensures that processed data is formatted correctly before being sent back. Update the code if you require different trigger types (e.g. Cosmos events) or if you are building a [custom trigger](./5-build#custom-triggers).
+The [trigger.rs](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/trigger.rs) file handles the decoding of incoming trigger data (`decode_event_log_data!()`) and prepares it for processing within the WAVS component. The `encode_trigger_output` function ensures that processed data is formatted correctly before being sent back. Update the code if you require different trigger types (e.g. Cosmos events) or if you are building a [custom trigger](./5-build#custom-triggers).
 
 
 ```rust ! trigger.rs
