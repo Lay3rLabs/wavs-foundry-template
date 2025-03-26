@@ -100,9 +100,9 @@ Deploy the component
 ```bash docci-delay-after=1
 WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS=true
 
-DEFAULT_COMPONENT_FILENAME=golang_eth_price_oracle.wasm sh ./script.sh
+COMPONENT_FILENAME=eth_price_oracle.wasm sh ./script/build_service.sh
 
-SERVICE_CONFIG_FILE=service_config.json make deploy-service
+SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
 ```
 
 Trigger the service
