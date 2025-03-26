@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 : '''
 # Run:
 
@@ -17,7 +19,7 @@ sh ./build_service.sh
 # == Defaults ==
 
 FILE_LOCATION=.docker/service.json
-BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:latest wavs-cli service --home /data --file /data/${FILE_LOCATION}"
+BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:local wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 if [ -z "$TRIGGER_ADDRESS" ]; then
     TRIGGER_ADDRESS=`jq -r '.trigger' ".docker/script_deploy.json"`
@@ -43,20 +45,21 @@ fi
 
 TRIGGER_EVENT_HASH=`cast keccak ${TRIGGER_EVENT}`
 
-$BASE_CMD init --name demo
+SERVICE_ID=`$BASE_CMD init --name demo | jq -r .id`
+echo "Service ID: ${SERVICE_ID}"
 
-$BASE_CMD component add --digest ${WASM_DIGEST}
-COMPONENT_ID=`jq -r '.components | keys | .[0]' .docker/service.json` # TODO: remove me (make the `component add` command return json)
+COMPONENT_ID=`$BASE_CMD component add --digest ${WASM_DIGEST} | jq -r '.components | keys | .[0]'`
+echo "Component ID: ${COMPONENT_ID}"
 
-$BASE_CMD component permissions --id ${COMPONENT_ID} --http-hosts '*' --file-system true
+$BASE_CMD component permissions --id ${COMPONENT_ID} --http-hosts '*' --file-system true > /dev/null
 
-$BASE_CMD workflow add --component-id ${COMPONENT_ID}
-WORKFLOW_ID=`jq -r '.workflows | keys | .[0]' .docker/service.json` # TODO: remove me (make the `workflow add` command return json)
+WORKFLOW_ID=`$BASE_CMD workflow add --component-id ${COMPONENT_ID} | jq -r '.workflows | keys | .[0]'`
+echo "Workflow ID: ${WORKFLOW_ID}"
 
-$BASE_CMD trigger set-ethereum --workflow-id ${WORKFLOW_ID} --address ${TRIGGER_ADDRESS} --chain-name local --event-hash ${TRIGGER_EVENT_HASH}
+$BASE_CMD trigger set-ethereum --workflow-id ${WORKFLOW_ID} --address ${TRIGGER_ADDRESS} --chain-name local --event-hash ${TRIGGER_EVENT_HASH} > /dev/null
 
-$BASE_CMD submit set-ethereum --workflow-id ${WORKFLOW_ID} --address ${SUBMIT_ADDRESS} --chain-name local --max-gas 5000000
+$BASE_CMD submit set-ethereum --workflow-id ${WORKFLOW_ID} --address ${SUBMIT_ADDRESS} --chain-name local --max-gas 5000000 > /dev/null
 
-$BASE_CMD validate
+$BASE_CMD validate > /dev/null
 
 echo "Configuration file created at ${FILE_LOCATION}"
