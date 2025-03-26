@@ -1,5 +1,5 @@
 # foundry
-```
+```cd 
 curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup
 ```
 
@@ -14,10 +14,20 @@ make setup
 forge build
 ```
 
+# Deploy eigen middleware
+https://github.com/Lay3rLabs/wavs-middleware/tree/ethan-docker/docker
+
+
 # Deploy ServiceHandler
 ```
-forge create SimpleSubmit --rpc-url http://127.0.0.1:8545 --private-key <go_figure> --constructor-args 0xYourServiceManagerAddress
+forge create SimpleSubmit --broadcast --rpc-url http://127.0.0.1:8545 --private-key <go_figure> --constructor-args 0xServiceManagerAddress
 ```
+
+# Deploy aggregator
+```
+forge create WavsServiceAggregator --broadcast --rpc-url http://127.0.0.1:8545 --private-key <go_figure> --constructor-args 0xServiceHandlerAddress
+```
+
 
 # Generate service.json file
 Use `wavs-cli service` command:
