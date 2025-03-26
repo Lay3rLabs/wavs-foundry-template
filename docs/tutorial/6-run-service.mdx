@@ -58,10 +58,10 @@ You can also modify variables by specifying them before running the `make` comma
 
 ```bash docci-delay-per-cmd=1
 # Build your service JSON
-sh ./script.sh
+COMPONENT_FILENAME=eth_price_oracle.wasm sh ./script/build_service.sh
 
 # Deploy the service JSON
-SERVICE_CONFIG_FILE=service_config.json make deploy-service
+SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
 ```
 
 </Callout>
