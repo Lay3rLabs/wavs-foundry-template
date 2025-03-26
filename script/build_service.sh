@@ -19,7 +19,7 @@ sh ./build_service.sh
 # == Defaults ==
 
 FILE_LOCATION=.docker/service.json
-BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:local wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
+BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:latest wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 if [ -z "$TRIGGER_ADDRESS" ]; then
     TRIGGER_ADDRESS=`jq -r '.trigger' ".docker/script_deploy.json"`
