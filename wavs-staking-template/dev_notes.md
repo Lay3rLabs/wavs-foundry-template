@@ -8,26 +8,39 @@ curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup
 anvil --fork-url https://ethereum-holesky-rpc.publicnode.com
 ```
 
+# Deploy eigen middleware
+https://github.com/Lay3rLabs/wavs-middleware/blob/dev/docker/README.md
+
+After deploying middleware:
+```
+{"lastUpdate":.... ,
+"layerServiceManager":"0xc73da08814528003ebadeb19d7ebebe51fb67b6b",
+....}** https://raw.githubusercontent.com/ethgas-developer/ethgas-developer.github.io/main/vision-avs-2.json **
+```
+Now you have the service manager address.
+
 # Build deps and the ServiceHandler contract
+https://github.com/Lay3rLabs/wavs-foundry-template
 ```
 make setup
 forge build
 ```
 
-# Deploy eigen middleware
-https://github.com/Lay3rLabs/wavs-middleware/tree/ethan-docker/docker
-
-
 # Deploy ServiceHandler
 ```
+cd src/contracts
 forge create SimpleSubmit --broadcast --rpc-url http://127.0.0.1:8545 --private-key <go_figure> --constructor-args 0xServiceManagerAddress
 ```
+Now you have the service handler address.
 
 # Deploy aggregator
+https://github.com/Lay3rLabs/WAVS
 ```
+cd contracts/solidty
 forge create WavsServiceAggregator --broadcast --rpc-url http://127.0.0.1:8545 --private-key <go_figure> --constructor-args 0xServiceHandlerAddress
 ```
-Now run the aggregator server in wavs/packages/aggregator and add the `ServiceHandler` through `add-service` endpoint:
+Now run the aggregator server and add the `ServiceHandler` through `add-service` endpoint:
+docker compose up # wavs-staking-template/docker-compose.yml
 ```bash
 curl -X POST http://localhost:8001/add-service \
      -H "Content-Type: application/json" \
