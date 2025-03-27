@@ -4,17 +4,7 @@ A WAVS component that fetches the price of a crypto currency from CoinMarketCap 
 
 ## System Setup
 
-### Mac
-
-<!-- TODO: -->
-
-### Arch Linux
-
-<!-- TODO: -->
-
-### Ubuntu Linux
-
-<!-- TODO -->
+Follow the main [README.md](../../README.md) to install all the necessary dependencies.
 
 ## Core Packages
 
@@ -83,7 +73,6 @@ SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
 
 Trigger the service
 
-<!-- TODO: ID of 1 fails here for some reason, not sure why.-->
 ```bash docci-delay-after=1
 export COIN_MARKET_CAP_ID=2
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`

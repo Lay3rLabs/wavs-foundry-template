@@ -1,50 +1,39 @@
 import { TriggerAction } from "./out/wavs:worker@0.4.0-alpha.2";
 import { decodeTriggerEvent, encodeOutput, Destination } from "./trigger";
 
-// TODO: return the TriggerResult type
 async function run(triggerAction: TriggerAction): Promise<Uint8Array> {
-  // Implement your logic here based on the trigger action
-  console.log("Received trigger action:", triggerAction);
-
   let event = decodeTriggerEvent(triggerAction.data);
-  console.log("Decoded trigger event: triggerId", event[0].triggerId);
-  console.log("Decoded trigger event: data raw", event[0].data);
-  console.log("Decoded trigger event: data string", event[0].data.toString());
+  let triggerId = event[0].triggerId;
 
   let result = await compute(event[0].data);
 
   switch (event[1]) {
     case Destination.Cli:
-      console.log("Sending response to CLI:", result);
       return result; // return raw bytes back
     case Destination.Ethereum:
-      let resp = encodeOutput(event[0].triggerId, result);
-      console.log("Sending response to Ethereum:", result);
-      console.log("Sending response to Ethereum encoded:", resp);
+      let resp = encodeOutput(triggerId, result);
       return resp; // return encoded bytes back
     case Destination.Cosmos:
-      console.log("Sending response to Cosmos:", result);
       break;
   }
 
-  return new Uint8Array([0]); // TODO: should never run
+  throw new Error(
+    "Unknown destination: " + event[1] + " for trigger ID: " + triggerId
+  );
 }
 
 async function compute(input: Uint8Array): Promise<Uint8Array> {
   const num = new TextDecoder().decode(input);
-  const numInt = parseInt(num);
 
-  const priceFeed = await fetchCryptoPrice(numInt);
+  const priceFeed = await fetchCryptoPrice(parseInt(num));
   const priceJson = priceFeedToJson(priceFeed);
-  console.log("Price feed JSON:", priceJson);
 
-  const resultBytes = new TextEncoder().encode(priceJson.toString());
-  return resultBytes;
+  return new TextEncoder().encode(priceJson);
 }
 
 // ======================== CMC ========================
 
-// Define the types for the API response
+// Define the types for the CMC API response
 interface Root {
   status: Status;
   data: Data;
