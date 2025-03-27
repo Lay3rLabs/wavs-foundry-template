@@ -1,0 +1,40 @@
+{
+  "id": "0195d86f-1650-7192-932a-2c44b",
+  "name": "madrid-demo",
+  "components": {
+    "price_oracle": {
+      "source": {
+        "Digest": "629ae3418057c57dff6b88c1ddae02204604ef296730b5a3001c330b9508885d"
+      },
+      "permissions": {
+        "allowed_http_hosts": "none",
+        "file_system": false
+      }
+    }
+  },
+  "workflows": {
+    "prices": {
+      "trigger": {
+        "eth_contract_event": {
+          "address": "0xad38494cbdca376623db9c366c8ce75287f300aa",
+          "chain_name": "holesky-fork",
+          "event_hash": "0x86eacd23610d81706516de1ed0476c87772fdf939c7c771fbbd7f0230d619e68"
+        }
+      },
+      "component": "price_oracle",
+      "submit": {
+        "ethereum_contract": {
+          "chain_name": "holesky-fork",
+          "address": "0x7a2ad41953b98044b3ffedc71f5a8e5e1c967a1c",
+          "max_gas": null
+        }
+      },
+      "fuel_limit": null
+    }
+  },
+  "status": "active",
+  "config": {
+    "host_envs": [],
+    "kv": []
+  }
+}
