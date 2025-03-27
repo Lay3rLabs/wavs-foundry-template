@@ -6,9 +6,7 @@ import { Callout } from 'fumadocs-ui/components/callout';
 import { DocsPage } from 'fumadocs-ui/page';
 docsignore-->
 
-Use the info in this guide to customize the template to create your own custom service.
-
-Check out the [WAVS design considerations](/design) page to learn which use-cases WAVS is best suited for.
+Use the info in this guide to customize the template to create your own custom service. Check out the [WAVS design considerations](/design) page to learn which use-cases WAVS is best suited for.
 
 ## Trigger
 
@@ -16,7 +14,7 @@ The simple onchain trigger contract in the template is used to emit triggers to 
 
 Each trigger has a unique ID that links it to its data. The component processes the trigger data and returns results. Results are submitted back to the blockchain via the submission contract.
 
-The trigger in the template is a simple example that takes generic bytes and passes them to the component. When developing a custom trigger, you will need to update the template code in a few places:
+The [trigger contract in the WAVS foundry template](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/src/contracts/WavsTrigger.sol) is a simple example that takes generic bytes and passes them to the component. When developing a custom trigger, you will need to update the template code in a few places:
 
 1. The trigger contract itself in [`src/WavsTrigger.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsTrigger.sol), which defines how triggers are created and emitted on-chain.
 2. The trigger script in [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/script/Trigger.s.sol#L15), which calls the `addTrigger` function with the `coinMarketCapID`.
@@ -26,7 +24,7 @@ The trigger in the template is a simple example that takes generic bytes and pas
 
 ## Component
 
-A component contains the main logic of a WAVS service. It is responsible for processing the trigger data and determining how to handle it.
+WASI components contain the main logic of a WAVS service. They are responsible for processing the trigger data executing the business logic of a service.
 
 A basic component has three main parts:
 
@@ -78,24 +76,15 @@ alloy-sol-types = { workspace = true }  # For Ethereum ABI handling
 anyhow = { workspace = true }           # For enhanced error handling
 ```
 
-**Build Process**:
+#### Testing
+
+Components can be built for local testing using the following commands. The `wasi-exec` command allows you to simulate triggers, and you can view the component's logs in stdout/stderr to debug its execution.
 
 ```bash
 # Build the component
 make build
 
 # Test locally
-make wasi-exec
-
-# Deploy the service
-make deploy-service
-```
-
-#### Testing
-
-To test your components locally, use the `wasi-exec` command. This command allows you to simulate triggers using the `--input` flag, and you can view the component's logs in stdout/stderr to debug its execution.
-
-```bash
 make wasi-exec
 ```
 
@@ -212,7 +201,7 @@ Components can be configured with two types of variables:
 
 #### KV: public variables
 
-These variables can be used for non-sensitive settings and are viewable by anyone. These variables can be configured in the makefile and are set during service deployment. They are accessed using `std::env::var` in the component.
+These variables can be used for non-sensitive information that can be viewed publicly. These variables can be configured in the makefile and are set during service deployment. They are accessed using `std::env::var` in the component.
 
 To add public variables, modify the `"kv"` section in the `SERVICE_CONFIG` in your `Makefile`:
 
@@ -255,9 +244,6 @@ Then modify `"host_envs"` in the `SERVICE_CONFIG` section of your `Makefile`:
    "host_envs": ["MY_API_KEY"]
    ```
 
-   - Example: `export WAVS_ENV_COINGECKO_API_KEY=xxxxx`
-   - Access in component: `std::env::var("WAVS_ENV_COINGECKO_API_KEY")?`
-
 Configuration is set during service deployment:
 
 ```json
@@ -269,6 +255,12 @@ SERVICE_CONFIG='{
   "workflow_id": "default",
   "component_id": "default"
 }'
+```
+
+The following example shows how to access a private environment variable in a component:
+
+```rust
+let api_key = std::env::var("WAVS_ENV_MY_API_KEY")?;
 ```
 
 ### Submission
