@@ -1,10 +1,49 @@
-mod trigger;
-use trigger::{decode_trigger_event, encode_trigger_output, Destination};
-use wavs_wasi_chain::http::{fetch_json, http_request_get};
-pub mod bindings;
-use crate::bindings::{export, Guest, TriggerAction};
+use alloy_sol_types::SolValue;
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use wavs_wasi_chain::{
+    decode_event_log_data,
+    http::{fetch_json, http_request_get},
+};
 use wstd::{http::HeaderValue, runtime::block_on};
+
+use crate::bindings::{export, Guest, TriggerAction};
+pub mod bindings;
+
+pub enum Destination {
+    Ethereum,
+    CliOutput,
+}
+
+pub fn decode_trigger_event(
+    trigger_data: bindings::wavs::worker::layer_types::TriggerData,
+) -> Result<(u64, Vec<u8>, Destination)> {
+    match trigger_data {
+        bindings::wavs::worker::layer_types::TriggerData::EthContractEvent(
+            bindings::wavs::worker::layer_types::TriggerDataEthContractEvent { log, .. },
+        ) => {
+            let event: solidity::NewTrigger = decode_event_log_data!(log)?;
+            let trigger_info = solidity::TriggerInfo::abi_decode(&event._triggerInfo, false)?;
+            Ok((trigger_info.triggerId, trigger_info.data.to_vec(), Destination::Ethereum))
+        }
+        bindings::wavs::worker::layer_types::TriggerData::Raw(data) => {
+            Ok((0, data.clone(), Destination::CliOutput))
+        }
+        _ => Err(anyhow::anyhow!("Unsupported trigger data type")),
+    }
+}
+
+pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> Vec<u8> {
+    solidity::DataWithId { triggerId: trigger_id, data: output.as_ref().to_vec().into() }
+        .abi_encode()
+}
+
+mod solidity {
+    use alloy_sol_macro::sol;
+    pub use ITypes::*;
+
+    sol!("../../src/interfaces/ITypes.sol");
+}
 
 struct Component;
 export!(Component with_types_in bindings);
@@ -73,7 +112,7 @@ pub struct PriceFeedData {
 /// <https://transform.tools/json-to-rust-serde>
 /// Generated from <https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id=1&range=1h>
 /// -----
-///
+
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Root {
     pub data: Data,
