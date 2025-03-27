@@ -23,7 +23,10 @@ sh ./build_service.sh
 FUEL_LIMIT=${FUEL_LIMIT:-1000000000000}
 MAX_GAS=${MAX_GAS:-5000000}
 FILE_LOCATION=${FILE_LOCATION:-".docker/service.json"}
-BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:latest wavs-cli service --home /data --file /data/${FILE_LOCATION}"
+COMPONENT_FILENAME=${COMPONENT_FILENAME:-"eth_price_oracle.wasm"}
+TRIGGER_EVENT=${TRIGGER_EVENT:-"NewTrigger(bytes)"}
+
+BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:latest wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 if [ -z "$TRIGGER_ADDRESS" ]; then
     TRIGGER_ADDRESS=`jq -r '.trigger' ".docker/script_deploy.json"`
@@ -31,18 +34,9 @@ fi
 if [ -z "$SUBMIT_ADDRESS" ]; then
     SUBMIT_ADDRESS=`jq -r '.service_handler' ".docker/script_deploy.json"`
 fi
-
-if [ -z "$COMPONENT_FILENAME" ]; then
-    COMPONENT_FILENAME="eth_price_oracle.wasm"
-fi
-
 if [ -z "$WASM_DIGEST" ]; then
     WASM_DIGEST=`make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME`
     WASM_DIGEST=$(echo ${WASM_DIGEST} | cut -d':' -f2)
-fi
-
-if [ -z "$TRIGGER_EVENT" ]; then
-    TRIGGER_EVENT="NewTrigger(bytes)"
 fi
 
 # === Core ===
