@@ -13,6 +13,7 @@ check-package:
 convert-wasm-to-wit:
 	@wasm-tools component wit $(WAVS_PACKAGE).wasm -o $(WAVS_PACKAGE).wit
 
+## build-bindings: building the WAVS bindings
 build-bindings: check-package
 	@npx jco types $(WAVS_PACKAGE).wasm --out-dir out/
 
@@ -22,7 +23,6 @@ wasi-build: build-bindings convert-wasm-to-wit
 	@npx tsc --outDir out/ --target es6 --strict --module preserve index.ts
 	@npx esbuild ./index.js --bundle --outfile=out/out.js --platform=node --format=esm
 	@npx jco componentize out/out.js --wit $(WAVS_PACKAGE).wit --world-name $(WAVS_WIT_WORLD) --out ../../compiled/js_eth_price_oracle.wasm
-
 
 .PHONY: help
 help: Makefile
