@@ -320,74 +320,99 @@ function handleSignedData(bytes calldata _data, bytes calldata _signature) exter
 This first component is the main example. It is found in components/eth-price-oracle/src/lib.rs in this repo.
 
 ```
+// Import required dependencies for Solidity type handling, error handling, and serialization
 use alloy_sol_types::SolValue;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+// Import WAVS chain utilities for decoding events and making HTTP requests
 use wavs_wasi_chain::{
     decode_event_log_data,
     http::{fetch_json, http_request_get},
 };
+// Import WASI standard library for HTTP headers and async runtime
 use wstd::{http::HeaderValue, runtime::block_on};
 
+// Import the generated bindings and required types
 use crate::bindings::{export, Guest, TriggerAction};
 pub mod bindings;
 
+// Define where the output should be sent - either back to Ethereum or as CLI output
 pub enum Destination {
     Ethereum,
     CliOutput,
 }
 
+// Function to decode trigger data from either Ethereum events or raw input
 pub fn decode_trigger_event(
     trigger_data: bindings::wavs::worker::layer_types::TriggerData,
 ) -> Result<(u64, Vec<u8>, Destination)> {
     match trigger_data {
+        // Handle Ethereum contract events
         bindings::wavs::worker::layer_types::TriggerData::EthContractEvent(
             bindings::wavs::worker::layer_types::TriggerDataEthContractEvent { log, .. },
         ) => {
+            // Decode the event log data into a NewTrigger struct
             let event: solidity::NewTrigger = decode_event_log_data!(log)?;
+            // Decode the trigger info from the event data
             let trigger_info = solidity::TriggerInfo::abi_decode(&event._triggerInfo, false)?;
+            // Return the trigger ID, data, and destination
             Ok((trigger_info.triggerId, trigger_info.data.to_vec(), Destination::Ethereum))
         }
+        // Handle raw input (used for CLI testing)
         bindings::wavs::worker::layer_types::TriggerData::Raw(data) => {
             Ok((0, data.clone(), Destination::CliOutput))
         }
+        // Reject any other trigger types
         _ => Err(anyhow::anyhow!("Unsupported trigger data type")),
     }
 }
 
+// Function to encode the output for submission back to Ethereum
 pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> Vec<u8> {
+    // Create a DataWithId struct with the trigger ID and output data
     solidity::DataWithId { triggerId: trigger_id, data: output.as_ref().to_vec().into() }
         .abi_encode()
 }
 
+// Module for Solidity type definitions
 mod solidity {
     use alloy_sol_macro::sol;
     pub use ITypes::*;
 
+    // Generate Rust types from Solidity interface
     sol!("../../src/interfaces/ITypes.sol");
 }
 
+// Define the main component struct
 struct Component;
+// Export the component with the generated bindings
 export!(Component with_types_in bindings);
 
+// Implement the Guest trait for the component
 impl Guest for Component {
+    // Main entry point for processing triggers
     fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
+        // Decode the trigger data to get trigger ID, request data, and destination
         let (trigger_id, req, dest) =
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
 
-        // Convert bytes to string and parse first char as u64
+        // Convert the request bytes to a string
         let input = std::str::from_utf8(&req).map_err(|e| e.to_string())?;
         println!("input id: {}", input);
 
+        // Extract the first character and convert it to a hex digit
         let id = input.chars().next().ok_or("Empty input")?;
         let id = id.to_digit(16).ok_or("Invalid hex digit")? as u64;
 
+        // Make an async request to get price feed data
         let res = block_on(async move {
             let resp_data = get_price_feed(id).await?;
             println!("resp_data: {:?}", resp_data);
+            // Convert the response to JSON bytes
             serde_json::to_vec(&resp_data).map_err(|e| e.to_string())
         })?;
 
+        // Return the result based on the destination
         let output = match dest {
             Destination::Ethereum => Some(encode_trigger_output(trigger_id, &res)),
             Destination::CliOutput => Some(res),
@@ -396,14 +421,18 @@ impl Guest for Component {
     }
 }
 
+// Function to fetch price data from CoinMarketCap API
 async fn get_price_feed(id: u64) -> Result<PriceFeedData, String> {
+    // Construct the API URL with the cryptocurrency ID
     let url = format!(
         "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id={}&range=1h",
         id
     );
 
+    // Get current timestamp for cookie
     let current_time = std::time::SystemTime::now().elapsed().unwrap().as_secs();
 
+    // Create HTTP request with required headers
     let mut req = http_request_get(&url).map_err(|e| e.to_string())?;
     req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
     req.headers_mut().insert("Content-Type", HeaderValue::from_static("application/json"));
@@ -414,8 +443,10 @@ async fn get_price_feed(id: u64) -> Result<PriceFeedData, String> {
         HeaderValue::from_str(&format!("myrandom_cookie={}", current_time)).unwrap(),
     );
 
+    // Fetch and parse the JSON response
     let json: Root = fetch_json(req).await.map_err(|e| e.to_string())?;
 
+    // Extract relevant data from the response
     Ok(PriceFeedData {
         symbol: json.data.symbol,
         price: json.data.statistics.price,
@@ -423,6 +454,7 @@ async fn get_price_feed(id: u64) -> Result<PriceFeedData, String> {
     })
 }
 
+// Struct to hold the price feed data
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PriceFeedData {
     symbol: String,
@@ -430,11 +462,7 @@ pub struct PriceFeedData {
     price: f64,
 }
 
-/// -----
-/// <https://transform.tools/json-to-rust-serde>
-/// Generated from <https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id=1&range=1h>
-/// -----
-
+// Structs for parsing the CoinMarketCap API response
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Root {
     pub data: Data,
@@ -479,6 +507,7 @@ pub struct Status {
     pub elapsed: String,
     pub credit_count: f64,
 }
+
 ```
 
 ### Other examples
