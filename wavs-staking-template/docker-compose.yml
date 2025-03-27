@@ -1,0 +1,43 @@
+services:
+  # anvil:
+  #   image: "ghcr.io/foundry-rs/foundry:stable"
+  #   platform: linux/amd64
+  #   container_name: "anvil"
+  #   network_mode: "host"
+  #   ports:
+  #     - "8545:8545"
+  #   environment:
+  #     ANVIL_IP_ADDR: 0.0.0.0
+  #   command: ["anvil", "--no-cors"]
+
+  # wavs:
+  #   build: .
+  #   image: "ghcr.io/lay3rlabs/wavs:local"
+  #   container_name: "wavs"
+  #   stop_signal: SIGKILL
+  #   depends_on: ["anvil"]
+  #   network_mode: "host"
+  #   env_file: "./.env"
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     WAVS_HOME: "/wavs/packages/wavs"
+  #     WAVS_CLI_HOME: "/wavs/packages/cli"
+  #     WAVS_AGGREGATOR_HOME: "/wavs/packages/aggregator"
+  #   command: ["wavs"]
+  #   volumes:
+  #     - "./:/wavs"
+  #     - "./.docker/cli:/root/wavs/cli/"
+
+  aggregator:
+    image: "ghcr.io/lay3rlabs/wavs:local"
+    container_name: "wavs-aggregator"
+    stop_signal: SIGKILL
+    env_file: "./.wavs_env"
+    ports:
+      - "8001:8001"
+    command: ["wavs-aggregator"]
+    volumes:
+      - ".:/wavs"
+    network_mode: "host"
+
