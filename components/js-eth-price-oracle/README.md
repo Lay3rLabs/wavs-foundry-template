@@ -83,8 +83,8 @@ SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
 
 Trigger the service
 
+<!-- TODO: ID of 1 fails here for some reason, not sure why.-->
 ```bash docci-delay-after=1
-# TODO: ID of 1 fails here for some reason?
 export COIN_MARKET_CAP_ID=2
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 

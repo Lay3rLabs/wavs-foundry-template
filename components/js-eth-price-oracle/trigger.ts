@@ -1,5 +1,5 @@
 import { TriggerData } from "./out/interfaces/wavs-worker-layer-types";
-import { getAddress, getBytes } from "ethers";
+import { getAddress, getBytes, hexlify, Interface } from "ethers";
 import { AbiCoder } from "ethers";
 
 enum Destination {
@@ -23,17 +23,10 @@ function encodeOutput(triggerId: number, outputData: Uint8Array): Uint8Array {
     const abiCoder = new AbiCoder();
 
     // Encode the data
-    // Note: we need to convert the Uint8Array to a hex string for the ABI encoder
-    const hexData =
-      "0x" +
-      Array.from(outputData)
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-
     const encoded = abiCoder.encode(dataWithIdAbi, [
       {
         triggerId: triggerId,
-        data: hexData,
+        data: outputData,
       },
     ]);
 
@@ -66,58 +59,49 @@ function decodeTriggerEvent(
     console.log("Received eth contract event:", ethContractEvent);
 
     try {
-      // Get the raw log data
-      const rawLog = ethContractEvent.log.data;
+      // Define the NewTrigger event from your contract
+      const eventInterface = new Interface([
+        "event NewTrigger(bytes _triggerInfo)"
+      ]);
 
-      // Split into 32-byte chunks
-      const sections: Uint8Array[] = [];
-      for (let i = 0; i < rawLog.length; i += 32) {
-        sections.push(rawLog.slice(i, i + 32));
-      }
+      // Define the structure for TriggerInfo
+      const triggerInfoType = "tuple(uint64 triggerId, address creator, bytes data)";
 
-      // TriggerID from section 4 (last 8 bytes of the 32-byte chunk)
-      const triggerIdSection = sections[3];
-      const triggerIdBytes = triggerIdSection.slice(
-        triggerIdSection.length - 8
+      // Get topics and data from the log
+      const topics = ethContractEvent.log.topics.map(t => hexlify(t));
+      const data = ethContractEvent.log.data;
+
+      // Decode the NewTrigger event to get the encoded _triggerInfo bytes
+      const decodedEvent = eventInterface.decodeEventLog(
+        "NewTrigger",
+        data,
+        topics
       );
-      // Create a DataView to read a big-endian uint64
-      const dataView = new DataView(
-        triggerIdBytes.buffer,
-        triggerIdBytes.byteOffset,
-        triggerIdBytes.byteLength
-      );
-      const triggerId = Number(dataView.getBigUint64(0, false)); // false for big-endian
 
-      // Creator address from section 5 (last 20 bytes of the 32-byte chunk)
-      const creatorSection = sections[4];
-      const creatorBytes = creatorSection.slice(12, 32);
-      const creatorHex =
-        "0x" +
-        Array.from(creatorBytes)
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join("");
-      const creator = getAddress(creatorHex);
+      // Now decode the _triggerInfo bytes to get the TriggerInfo struct
+      const abiCoder = new AbiCoder();
+      const decodedTriggerInfo = abiCoder.decode(
+        [triggerInfoType],
+        decodedEvent._triggerInfo
+      )[0] as any;
 
-      // Data length from section 7 (last byte of the 32-byte chunk)
-      const dataLengthSection = sections[6];
-      const dataLength = dataLengthSection[31];
+      // Extract the values from the decoded struct
+      const triggerId = Number(decodedTriggerInfo.triggerId);
+      const creator = decodedTriggerInfo.creator;
+      const triggerData = getBytes(decodedTriggerInfo.data);
 
-      // Actual data from section 8 (first dataLength bytes)
-      const dataSection = sections[7];
-      const data = dataSection.slice(0, dataLength);
-
-      console.log("Extracted using chunk method:", {
+      console.log("Decoded TriggerInfo:", {
         triggerId,
         creator,
-        data,
-        dataAsString: String.fromCharCode(...data),
+        data: triggerData,
+        dataAsString: String.fromCharCode(...triggerData),
       });
 
       return [
         {
           triggerId,
           creator,
-          data,
+          data: triggerData,
         },
         Destination.Ethereum,
       ];
@@ -141,13 +125,14 @@ function decodeTriggerEvent(
 
   return [
     {
-      triggerId: 0,
+      triggerId: -1,
       creator: "",
       data: new Uint8Array([49]), // ASCII "1"
     },
     Destination.Cli,
   ];
 }
+
 
 // export all
 export { decodeTriggerEvent, encodeOutput, Destination };
