@@ -63,6 +63,8 @@ Now you have the service handler address. Store it as `SERVICE_HANDLER_ADDRESS`.
 
 ## Deploy aggregator
 
+### Contracts and Docker build
+
 https://github.com/Lay3rLabs/WAVS
 
 TODO: use this from wavs-middleware soon
@@ -72,10 +74,19 @@ cd contracts/solidty
 forge create WavsServiceAggregator --broadcast --rpc-url http://127.0.0.1:8545 --private-key "$PRIVATE_KEY" --constructor-args "$SERVICE_HANDLER_ADDRESS"
 ```
 
+Store this address as `SERVICE_AGGREGATOR_ADDRESS`.
+
+`docker build . -t ghcr.io/lay3rlabs/wavs:local`
+
+### Run aggregator
+
 Now run the aggregator server and add the `ServiceHandler` through `add-service` endpoint:
 
+Go pack to `wavs-foundry-template`:
+
 ```bash
-docker compose up # wavs-staking-template/docker-compose.yml
+cd wavs-staking-template
+docker compose up
 ```
 
 And add the service to the aggregator
@@ -83,8 +94,11 @@ And add the service to the aggregator
 ```bash
 curl -X POST http://localhost:8001/add-service \
      -H "Content-Type: application/json" \
-     -d '{"eth_trigger": {"address": "SERVICE_HANDLER_ADDRESS"}}
+     -d "{\"eth_trigger\": {\"address\": \"$SERVICE_AGGREGATOR_ADDRESS\"}}"
 ```
+
+Check this is now registered.
+TODO: add a command to check what is running.
 
 ## Generate service.json file
 
