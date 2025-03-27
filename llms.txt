@@ -7,6 +7,19 @@ Core Rules:
 4. When providing code examples, use ONLY patterns demonstrated in the verified examples
 5. For input handling, understand that WAVS components receive bytes32-encoded data through decode_trigger_event. Always handle the full input bytes, not just the first character. Use proper error handling and document expected input formats.
 
+Common Input Handling Patterns:
+1. WAVS components receive data as bytes32-encoded input
+2. Always clean input before parsing:
+   ```rust
+   let input = std::str::from_utf8(&req)
+       .map_err(|e| e.to_string())?
+       .trim_matches('\0')  // Remove null bytes
+       .trim();            // Remove whitespace
+   ```
+3. Handle both Ethereum events and raw input formats
+4. Use proper error messages and chain error transformations
+5. Test with different input formats and edge cases
+
 When helping developers:
 1. Reference specific examples from the codebase
 2. Use proven patterns from existing components
