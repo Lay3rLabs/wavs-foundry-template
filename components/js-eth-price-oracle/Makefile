@@ -8,34 +8,20 @@ check-package:
 		echo "Downloading WAVS package: $(WAVS_PACKAGE)"; \
 		wkg get reecepbcups:wavs-testing@0.4.0-alpha.2 --overwrite --format wasm --output $(WAVS_PACKAGE).wasm; \
 	fi
-# TODO: figure out jco better than whatever this is
-	@mkdir -p wit/deps/
-	@if [ ! -f wit/$(WAVS_PACKAGE).wit ]; then \
-		echo "Downloading WAVS package: $(WAVS_PACKAGE) wit"; \
-		wkg get reecepbcups:wavs-testing@0.4.0-alpha.2 --overwrite --format wit --output wit/$(WAVS_PACKAGE).wit; \
-	fi
+
+# converts the entire .wasm package into a single .wit file, easily consumable by the jco command
+convert-wasm-to-wit:
+	@wasm-tools component wit $(WAVS_PACKAGE).wasm -o $(WAVS_PACKAGE).wit
 
 build-bindings: check-package
 	@npx jco types $(WAVS_PACKAGE).wasm --out-dir out/
 
-download-wit-deps:
-	@if [ ! -d wit/deps/*.wit ]; then \
-		mkdir -p wit/deps; \
-		wkg get wasi:io --overwrite --output=wit/deps/; \
-		wkg get wasi:clocks --overwrite --output=wit/deps/; \
-		wkg get wasi:http --overwrite --output=wit/deps/; \
-		wkg get wasi:cli --overwrite --output=wit/deps/; \
-		wkg get wasi:filesystem --overwrite --output=wit/deps/; \
-		wkg get wasi:sockets --overwrite --output=wit/deps/; \
-		wkg get wasi:random --overwrite --output=wit/deps/; \
-	fi
-
 ## wasi-build: building the WAVS wasi component
-wasi-build: build-bindings download-wit-deps
+wasi-build: build-bindings convert-wasm-to-wit
 	@echo "Building component: js_eth_price_oracle"
 	@npx tsc --outDir out/ --target es6 --strict --module preserve index.ts
 	@npx esbuild ./index.js --bundle --outfile=out/out.js --platform=node --format=esm
-	@npx jco componentize out/out.js --wit ./wit --world-name $(WAVS_WIT_WORLD) --out ../../compiled/js_eth_price_oracle.wasm
+	@npx jco componentize out/out.js --wit $(WAVS_PACKAGE).wit --world-name $(WAVS_WIT_WORLD) --out ../../compiled/js_eth_price_oracle.wasm
 
 
 .PHONY: help

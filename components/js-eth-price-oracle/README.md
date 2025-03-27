@@ -22,6 +22,10 @@ A WAVS component that fetches the price of a crypto currency from CoinMarketCap 
 curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup
 ```
 
+```bash docci-if-not-installed="wasm-tools"
+cargo binstall wasm-tools --no-confirm
+```
+
 ```bash
 make setup
 ```
