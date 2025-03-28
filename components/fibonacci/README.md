@@ -5,16 +5,11 @@
 <!-- this required an SGX machine. Also does not seem their stack is updated to use wasm32-wasip1 instead of the old wasm32-wasi package, so may have to downgrade rust version to use -->
 
 ```bash
+cd components/fibonacci
+
 # https://enarx.dev/docs/WebAssembly/Rust
 cargo build --release --target=wasm32-wasip1
 
-# Something with WAVS breaks this when I tried to do Eth Price Oracle instead
-enarx run ../../target/wasm32-wasip1/release/fibonacci.wasm
-````
-Error: failed to link module
-Caused by:
-    unknown import: wasi:http/types@0.2.4::[resource-drop]future-incoming-response has not been defined
-````
-
-sudo rm -rf ../../target/wasm32-wasip1
+# hacky BUT it does work and gets data into the wasm
+echo 12 | enarx run ../../target/wasm32-wasip1/release/fibonacci.wasm
 ```

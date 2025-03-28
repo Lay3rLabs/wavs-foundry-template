@@ -1,0 +1,8 @@
+[env]
+INPUT = "12"
+
+[[files]]
+kind = "stdout"
+
+[[files]]
+kind = "stderr"

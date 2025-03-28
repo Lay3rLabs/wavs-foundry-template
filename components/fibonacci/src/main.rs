@@ -1,5 +1,4 @@
-use std::env::args;
-use std::io::stdin;
+use std::io::{self, Read};
 
 fn fib(n: u32) -> u32 {
     match n {
@@ -10,19 +9,17 @@ fn fib(n: u32) -> u32 {
 }
 
 fn main() {
-    println!("Rust - Fibonacci sequence example");
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input).expect("Failed to read from stdin");
 
-    let mut args: Vec<_> = args().skip(1).collect();
+    let idx = match input.trim().parse::<u32>() {
+        Ok(n) => n,
+        Err(_) => {
+            eprintln!("Error: Invalid input.  Please provide a non-negative integer.");
+            return;
+        }
+    };
 
-    if args.is_empty() {
-        println!("Enter a non-negative number:");
-        let mut idx = String::new();
-        stdin().read_line(&mut idx).expect("Failed to read line");
-        args.push(idx);
-    }
-
-    for arg in args {
-        let idx = arg.trim().parse().expect("Failed to parse number");
-        println!("Fibonacci sequence number at index {} is {}", idx, fib(idx));
-    }
+    let result = fib(idx);
+    println!("Fibonacci sequence number at index {} is {}", idx, result);
 }

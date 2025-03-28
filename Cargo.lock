@@ -1143,6 +1143,9 @@ dependencies = [
 [[package]]
 name = "fibonacci"
 version = "0.3.0"
+dependencies = [
+ "wasi 0.14.2+wasi-0.2.4",
+]
 
 [[package]]
 name = "fixed-hash"
