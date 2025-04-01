@@ -83,7 +83,8 @@ wkg config --default-registry wa.dev
 ## Create Project
 
 ```bash docci-ignore
-# if foundry is not installed: `curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup`
+# if foundry is not installed:
+# `curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup`
 forge init --template Lay3rLabs/wavs-foundry-template my-wavs --branch main
 ```
 
@@ -133,11 +134,15 @@ Expected output:
 
 ```shell docci-ignore
 input id: 1
-resp_data: PriceFeedData { symbol: "BTC", timestamp: "2025-04-01T00:00:00.000Z", price: 82717.27035239758 }
+resp_data: PriceFeedData {
+    symbol: "BTC",
+    timestamp: "2025-04-01T00:00:00.000Z",
+    price: 82717.27035239758
+}
 INFO Fuel used: 653415
 
 Result (hex encoded):
-7b2273796d626f6c223a22425443222c2274696d657374616d70223a22323032352d30342d30315430303a34383a34372e3937335a222c227072696365223a38323731372e32373033353233393735387d
+7b2273796d626f6c223a22425443222c2274696d657374616d70223a22323032352d30342d30315430303a34...
 
 Result (utf8):
 {"symbol":"BTC","timestamp":"2025-04-01T00:00:00.000Z","price":82717.27035239758}
