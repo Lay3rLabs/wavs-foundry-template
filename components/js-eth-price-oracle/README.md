@@ -73,7 +73,7 @@ SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
 
 Trigger the service
 
-```bash docci-delay-after=1
+```bash docci-delay-after=2
 export COIN_MARKET_CAP_ID=2
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 
