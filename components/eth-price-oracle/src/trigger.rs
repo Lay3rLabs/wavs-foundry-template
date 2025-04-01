@@ -65,7 +65,7 @@ pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> Vec<u
 /// - DataWithId struct
 ///
 /// Documentation:
-/// - https://docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html
+/// - <https://docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html>
 /// (You can also just sol! arbitrary solidity types like `event` or `struct` too)
 mod solidity {
     use alloy_sol_macro::sol;

@@ -72,7 +72,7 @@ impl Guest for Component {
 /// As of writing (Mar 31, 2025), the CoinMarketCap API is free to use and has no rate limits.
 /// This may change in the future so be aware of issues that you may encounter going forward.
 /// There is a more proper API for pro users that you can use
-/// - https://coinmarketcap.com/api/documentation/v1/
+/// - <https://coinmarketcap.com/api/documentation/v1/>
 async fn get_price_feed(id: u64) -> Result<PriceFeedData, String> {
     let url = format!(
         "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id={}&range=1h",
@@ -111,7 +111,7 @@ pub struct PriceFeedData {
 }
 
 /// Root response structure from CoinMarketCap API
-/// Generated from the API response using https://transform.tools/json-to-rust-serde
+/// Generated from the API response using <https://transform.tools/json-to-rust-serde>
 /// Contains detailed cryptocurrency information including price statistics
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Root {
