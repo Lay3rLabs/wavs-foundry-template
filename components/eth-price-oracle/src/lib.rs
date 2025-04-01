@@ -10,6 +10,22 @@ struct Component;
 export!(Component with_types_in bindings);
 
 impl Guest for Component {
+    /// Main entry point for the price oracle component.
+    /// WAVS is subscribed to watch for events emitted by the blockchain.
+    /// When WAVS observes an event is emitted, it will internally route the event and its data to this function (component).
+    /// The processing then occurs before the output is returned back to WAVS to be submitted to the blockchain by the operator(s).
+    ///
+    /// This is why the `Destination::Ethereum` requires the encoded trigger output, it must be ABI encoded for the solidity contract.
+    /// Failure to do so will result in a failed submission as the signature will not match the saved output.
+    ///
+    /// After the data is properly set by the operator through WAVS, any user can query the price data from the blockchain in the solidity contract.
+    /// You can also return `None` as the output if nothing needs to be saved to the blockchain. (great for performing some off chain action)
+    ///
+    /// This function:
+    /// 1. Receives a trigger action containing encoded data
+    /// 2. Decodes the input to get a cryptocurrency ID (in hex)
+    /// 3. Fetches current price data from CoinMarketCap
+    /// 4. Returns the encoded response based on the destination
     fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
         let (trigger_id, req, dest) =
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
@@ -35,6 +51,28 @@ impl Guest for Component {
     }
 }
 
+/// Fetches cryptocurrency price data from CoinMarketCap's API
+///
+/// # Arguments
+/// * `id` - CoinMarketCap's unique identifier for the cryptocurrency
+///
+/// # Returns
+/// * `PriceFeedData` containing:
+///   - symbol: The cryptocurrency's ticker symbol (e.g., "BTC")
+///   - price: Current price in USD
+///   - timestamp: Server timestamp of the price data
+///
+/// # Implementation Details
+/// - Uses CoinMarketCap's v3 API endpoint
+/// - Includes necessary headers to avoid rate limiting:
+///   * User-Agent to mimic a browser
+///   * Random cookie with current timestamp
+///   * JSON content type headers
+///
+/// As of writing (Mar 31, 2025), the CoinMarketCap API is free to use and has no rate limits.
+/// This may change in the future so be aware of issues that you may encounter going forward.
+/// There is a more proper API for pro users that you can use
+/// - https://coinmarketcap.com/api/documentation/v1/
 async fn get_price_feed(id: u64) -> Result<PriceFeedData, String> {
     let url = format!(
         "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id={}&range=1h",
@@ -62,6 +100,9 @@ async fn get_price_feed(id: u64) -> Result<PriceFeedData, String> {
     })
 }
 
+/// Represents the price feed response data structure
+/// This is the simplified version of the data that will be sent to the blockchain
+/// via the Submission of the operator(s).
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PriceFeedData {
     symbol: String,
@@ -69,11 +110,9 @@ pub struct PriceFeedData {
     price: f64,
 }
 
-/// -----
-/// <https://transform.tools/json-to-rust-serde>
-/// Generated from <https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id=1&range=1h>
-/// -----
-///
+/// Root response structure from CoinMarketCap API
+/// Generated from the API response using https://transform.tools/json-to-rust-serde
+/// Contains detailed cryptocurrency information including price statistics
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Root {
     pub data: Data,

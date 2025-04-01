@@ -22,7 +22,7 @@ SERVICE_MANAGER_ADDR?=`jq -r '.eigen_service_managers.local | .[-1]' .docker/dep
 SERVICE_TRIGGER_ADDR?=`jq -r '.trigger' "./.docker/script_deploy.json"`
 SERVICE_SUBMISSION_ADDR?=`jq -r '.service_handler' "./.docker/script_deploy.json"`
 COIN_MARKET_CAP_ID?=1
-MAKEFILE_DIRS := $(dir $(shell find components -name "Makefile" -o -name "makefile"))
+MAKEFILE_DIRS := $(dir $(shell find components/* -maxdepth 1 -name "Makefile" -o -name "makefile"))
 
 ## check-requirements: verify system requirements are installed
 check-requirements: check-node check-jq check-cargo

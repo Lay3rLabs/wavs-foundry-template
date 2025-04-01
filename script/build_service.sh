@@ -25,6 +25,8 @@ MAX_GAS=${MAX_GAS:-5000000}
 FILE_LOCATION=${FILE_LOCATION:-".docker/service.json"}
 COMPONENT_FILENAME=${COMPONENT_FILENAME:-"eth_price_oracle.wasm"}
 TRIGGER_EVENT=${TRIGGER_EVENT:-"NewTrigger(bytes)"}
+TRIGGER_CHAIN=${TRIGGER_CHAIN:-"local"}
+SUBMIT_CHAIN=${SUBMIT_CHAIN:-"local"}
 
 BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:latest wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
@@ -54,9 +56,9 @@ $BASE_CMD component permissions --id ${COMPONENT_ID} --http-hosts '*' --file-sys
 WORKFLOW_ID=`$BASE_CMD workflow add --fuel-limit ${FUEL_LIMIT} --component-id ${COMPONENT_ID} | jq -r '.workflows | keys | .[0]'`
 echo "Workflow ID: ${WORKFLOW_ID}"
 
-$BASE_CMD trigger set-ethereum --workflow-id ${WORKFLOW_ID} --address ${TRIGGER_ADDRESS} --chain-name local --event-hash ${TRIGGER_EVENT_HASH} > /dev/null
+$BASE_CMD trigger set-ethereum --workflow-id ${WORKFLOW_ID} --address ${TRIGGER_ADDRESS} --chain-name ${TRIGGER_CHAIN} --event-hash ${TRIGGER_EVENT_HASH} > /dev/null
 
-$BASE_CMD submit set-ethereum --workflow-id ${WORKFLOW_ID} --address ${SUBMIT_ADDRESS} --chain-name local --max-gas ${MAX_GAS} > /dev/null
+$BASE_CMD submit set-ethereum --workflow-id ${WORKFLOW_ID} --address ${SUBMIT_ADDRESS} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
 
 $BASE_CMD validate > /dev/null
 
