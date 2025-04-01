@@ -11,7 +11,7 @@ check-package:
 
 # if @bytecodealliance/jco is not installed, then run npm i here
 check-jco:
-	@npx jco --version || npm i
+	@npx jco --version > /dev/null || npm i
 
 # converts the entire .wasm package into a single .wit file, easily consumable by the jco command
 convert-wasm-to-wit:
