@@ -84,9 +84,10 @@ jobs:
     # limited due to low rate limits
     - name: Install wasi components
       if: steps.check-wkg.outputs.wkg_exists == 'false'
-      run: |
-        cargo binstall cargo-component warg-cli wkg --locked --no-confirm --force
-        wkg config --default-registry wa.dev
+      run: cargo binstall cargo-component warg-cli wkg --locked --no-confirm --force
+
+    - name: Configure wkg registry
+      run: wkg config --default-registry wa.dev
 
     - name: Install docci readme runner
       run: |
