@@ -61,6 +61,15 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-rust-wasm32-
 
+    - name: Check if wkg exists
+      id: check-wkg
+      run: |
+        if [ ! -f ~/.cargo/bin/wkg ]; then
+          echo "wkg_exists=false" >> $GITHUB_OUTPUT
+        else
+          echo "wkg_exists=true" >> $GITHUB_OUTPUT
+        fi
+
     - uses: cargo-bins/cargo-binstall@main
       name: Install cargo-binstall
       with:
@@ -74,7 +83,9 @@ jobs:
     - name: Install rust wasm32-wasip2
       run: rustup target add wasm32-wasip2
 
+    # limited due to low rate limits
     - name: Install wasi components
+      if: steps.check-wkg.outputs.wkg_exists == 'false'
       run: |
         cargo binstall cargo-component warg-cli wkg --locked --no-confirm --force
         wkg config --default-registry wa.dev
@@ -93,7 +104,7 @@ jobs:
 
     - name: Run docci (rust)
       run: |
-        docci .github/workflows/config.json
+        docci components/eth-price-oracle/config.json
 
     - name: Run docci (typescript)
       run: |
