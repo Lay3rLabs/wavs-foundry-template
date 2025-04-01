@@ -24,7 +24,6 @@ build-bindings: check-jco check-package
 ## wasi-build: building the WAVS wasi component
 wasi-build: check-jco build-bindings convert-wasm-to-wit
 	@echo "Building component: js_eth_price_oracle"
-	@npm i
 	@npx tsc --outDir out/ --target es6 --strict --module preserve index.ts
 	@npx esbuild ./index.js --bundle --outfile=out/out.js --platform=node --format=esm
 	@npx jco componentize out/out.js --wit $(WAVS_PACKAGE).wit --world-name $(WAVS_WIT_WORLD) --out ../../compiled/js_eth_price_oracle.wasm
