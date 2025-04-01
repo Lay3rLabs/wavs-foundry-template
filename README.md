@@ -120,6 +120,11 @@ Now build the WASI components into the `compiled` output directory.
 >
 > run, `wkg config --default-registry wa.dev`
 
+> [!WARNING]
+> If you get: `failed to find the 'wasm32-wasip1' target and 'rustup' is not available`
+>
+> `brew uninstall rust` & install it from <https://rustup.rs>
+
 ```bash
 # or `make build` to include solidity compilation.
 # this command only builds the rust component.
