@@ -22,9 +22,24 @@ Install [VS Code](https://code.visualstudio.com/download) and the [Solidity exte
 
 Run the following command to install [Rust](https://www.rust-lang.org/tools/install).
 
+
 ```bash docci-ignore
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
+
+<Callout title="Homebrew Rust not supported" type="error">
+
+If you installed Rust using Homebrew, you will need to uninstall it and install it again using the rustup command.
+
+```bash docci-ignore
+# run these manually
+❯ brew uninstall rust
+```
+Then run:
+```bash docci-ignore
+❯ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+</Callout>
 
 <Callout title="Fresh Install" type="info">
 
