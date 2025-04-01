@@ -26,7 +26,7 @@ cors_allowed_origins = [
 # data = "~/wavs/data"
 
 # active chain names to watch for triggers
-active_trigger_chains = ["local"]
+active_trigger_chains = ["local", "local2"]
 
 max_wasm_fuel = 1_000_000
 

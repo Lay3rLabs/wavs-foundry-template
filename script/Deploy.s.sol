@@ -7,30 +7,34 @@ import {IWavsServiceManager} from "@wavs/interfaces/IWavsServiceManager.sol";
 import {SimpleSubmit} from "contracts/WavsSubmit.sol";
 import {SimpleTrigger} from "contracts/WavsTrigger.sol";
 import {Common, EigenContracts} from "script/Common.s.sol";
-
+import {console} from "forge-std/console.sol";
 /// @dev Deployment script for SimpleSubmit and SimpleTrigger contracts
 contract Deploy is Common {
     using stdJson for string;
 
     string public root = vm.projectRoot();
     string public deployments_path = string.concat(root, "/.docker/deployments.json");
-    string public script_output_path = string.concat(root, "/.docker/script_deploy.json");
-
     /**
      * @dev Deploys the SimpleSubmit and SimpleTrigger contracts and writes the results to a JSON file
      * @param _serviceManagerAddr The address of the service manager
      */
-    function run(string calldata _serviceManagerAddr) public {
+    function run(string calldata _serviceManagerAddr, string calldata _chainName, bool _deploySubmit) public {
         vm.startBroadcast(_privateKey);
-        SimpleSubmit _submit = new SimpleSubmit(IWavsServiceManager(vm.parseAddress(_serviceManagerAddr)));
+        SimpleSubmit _submit;
         SimpleTrigger _trigger = new SimpleTrigger();
+        if(_deploySubmit) {
+            _submit = new SimpleSubmit(IWavsServiceManager(vm.parseAddress(_serviceManagerAddr)));
+        }
         vm.stopBroadcast();
+
+        string memory _scriptOutputPath = string.concat(root, "/.docker/deploy_", _chainName, ".json");
 
         string memory _json = "json";
         _json.serialize("service_handler", toChecksumAddress(address(_submit)));
         _json.serialize("trigger", toChecksumAddress(address(_trigger)));
         string memory _finalJson = _json.serialize("service_manager", _serviceManagerAddr);
-        vm.writeFile(script_output_path, _finalJson);
+
+        vm.writeFile(_scriptOutputPath, _finalJson);
     }
 
     /**

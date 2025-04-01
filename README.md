@@ -192,7 +192,10 @@ make start-all
 
 ```bash docci-delay-per-cmd=1
 export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
-forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
+forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} local true --sig "run(string,string,bool)" --rpc-url http://localhost:8545 --broadcast
+
+export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
+export SERVICE_HANDLER=`make get-service-handler-from-deploy`
 ```
 
 > [!TIP]
@@ -202,8 +205,15 @@ forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" -
 
 Deploy the compiled component with the contract information from the previous steps. Review the [makefile](./Makefile) for more details and configuration options.`TRIGGER_EVENT` is the event that the trigger contract emits and WAVS watches for. By altering `SERVICE_TRIGGER_ADDR` you can watch events for contracts others have deployed.
 
+If you are looking for multichain support, reference the [MULTICHAIN.md](./examples/MULTICHAIN.md) example.
+
 ```bash docci-delay-per-cmd=1
 # Build your service JSON with optional overrides in the script
+# Multichain support can be enabled by setting:
+# * `SUBMIT_CHAIN=local`, `SUBMIT_ADDRESS`, `TRIGGER_CHAIN`, and `TRIGGER_ADDRESS`
+# * assert wavs.toml `active_trigger_chains` is watching your trigger chain.
+# * `SUBMIT_CHAIN` must be local of ethereum for now, since Eigenlayer is deployed there.
+#   We will have a solution in the near future to submit to other chains (L2s, Cosmos, etc.)
 COMPONENT_FILENAME=eth_price_oracle.wasm sh ./script/build_service.sh
 
 # Deploy the service JSON to WAVS so it now watches and submits
@@ -230,6 +240,9 @@ forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID
 Query the latest submission contract id from the previous request made.
 
 ```bash docci-delay-per-cmd=2 docci-output-contains="BTC"
-# Get the latest TriggerId and show the result via `script/ShowResult.s.sol`
-make show-result
+# Get the latest TriggerId
+# set `RPC_URL` if you are doing multichain
+make show-trigger-id
+
+TRIGGER_ID=1 SERVICE_SUBMISSION_ADDR=$SERVICE_HANDLER make show-result
 ```

@@ -31,10 +31,10 @@ SUBMIT_CHAIN=${SUBMIT_CHAIN:-"local"}
 BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:latest wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 if [ -z "$TRIGGER_ADDRESS" ]; then
-    TRIGGER_ADDRESS=`jq -r '.trigger' ".docker/script_deploy.json"`
+    TRIGGER_ADDRESS=`jq -r '.trigger' ".docker/deploy_${TRIGGER_CHAIN}.json"`
 fi
 if [ -z "$SUBMIT_ADDRESS" ]; then
-    SUBMIT_ADDRESS=`jq -r '.service_handler' ".docker/script_deploy.json"`
+    SUBMIT_ADDRESS=`jq -r '.service_handler' ".docker/deploy_${SUBMIT_CHAIN}.json"`
 fi
 if [ -z "$WASM_DIGEST" ]; then
     WASM_DIGEST=`make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME`

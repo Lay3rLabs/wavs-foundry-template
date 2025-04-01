@@ -92,7 +92,7 @@ Deploy the contracts
 ```bash docci-delay-after=1
 export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
 
-forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
+forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} local true --sig "run(string,string,bool)" --rpc-url http://localhost:8545 --broadcast
 ```
 
 Deploy the component
