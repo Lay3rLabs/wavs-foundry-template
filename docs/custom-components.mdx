@@ -179,15 +179,33 @@ wavs-wasi-chain = { workspace = true }  # Blockchain interactions
 alloy-sol-types = { workspace = true }  # ABI handling
 ```
 
-The `wavs-wasi-chain` crate provides the [`new_eth_provider` function](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/ethereum/fn.new_eth_provider.html) which creates a new Ethereum provider along with other basic helpers to create an alloy client for interacting with the blockchain that can be used in a component.
-
-WAVS also provides host bindings to get the chain config for a given chain name in the `wavs.toml` file.
+Chain configs are defined in the `wavs.toml` file:
 
 ```toml wavs.toml
 [chains.eth.local]
 chain_id = "31337"
 ws_endpoint = "ws://localhost:8545"
 http_endpoint = "http://localhost:8545"
+```
+
+WAVS provides host bindings to get the chain config for a given chain name in the `wavs.toml` file:
+
+```rust lib.rs
+// Get the chain config for an Ethereum chain
+let chain_config = host::get_eth_chain_config(&chain_name)?;
+
+// Get the chain config for a Cosmos chain
+let chain_config = host::get_cosmos_chain_config(&chain_name)?;
+```
+
+The `wavs-wasi-chain` crate provides the [`new_eth_provider` function](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/ethereum/fn.new_eth_provider.html) which creates a new Ethereum provider along with other basic helpers to create an alloy client for interacting with the blockchain that can be used in a component:
+
+```rust lib.rs
+let provider = new_eth_provider::<Ethereum>(
+    chain_config
+        .http_endpoint
+        .context("http_endpoint is missing")?,
+)?;
 ```
 
 Visit the [wavs-wasi-chain documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) for more information on the functions available for interacting with the blockchain.
