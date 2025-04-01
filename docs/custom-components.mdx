@@ -24,7 +24,7 @@ The [trigger contract in the WAVS foundry template](https://github.com/Lay3rLabs
 
 ## Component
 
-WASI components contain the main logic of a WAVS service. They are responsible for processing the trigger data executing the business logic of a service.
+WASI components contain the main logic of a WAVS service. They are responsible for processing the trigger data and executing the business logic of a service.
 
 A basic component has three main parts:
 
@@ -173,10 +173,11 @@ host::log(LogLevel::Info, "Production logging message");
 
 The following dependencies are required in `Cargo.toml` for Ethereum interactions:
 
-```toml Cargo.toml
+```toml
 [dependencies]
 wavs-wasi-chain = { workspace = true }  # Blockchain interactions
 alloy-sol-types = { workspace = true }  # ABI handling
+alloy-sol-macro = { workspace = true }  # For Solidity type generation
 ```
 
 Chain configs are defined in the `wavs.toml` file:
@@ -204,11 +205,35 @@ The `wavs-wasi-chain` crate provides the [`new_eth_provider` function](https://d
 let provider = new_eth_provider::<Ethereum>(
     chain_config
         .http_endpoint
-        .context("http_endpoint is missing")?,
+        .context("http_endpoint is missing")?
 )?;
 ```
 
 Visit the [wavs-wasi-chain documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) for more information on the functions available for interacting with the blockchain.
+
+### Sol! macro
+
+The `sol!` macro from `alloy-sol-macro` allows you to generate Rust types from Solidity interface files. This is useful for handling blockchain events and data structures in components.
+
+In the template, the `sol!` macro is used in the `trigger.rs` component file to generate Rust types from the `ITypes.sol` file.
+
+```rust trigger.rs
+mod solidity {
+    use alloy_sol_macro::sol;
+    pub use ITypes::*;
+
+    // The objects here will be generated automatically into Rust types.
+    // If you update the .sol file, you must re-run `cargo build` to see the changes.
+    sol!("../../src/interfaces/ITypes.sol");
+}
+```
+
+The macro reads a Solidity interface file and generates corresponding Rust types and encoding/decoding functions. In the example above, it reads `ITypes.sol` which defines:
+- `NewTrigger` event
+- `TriggerInfo` struct
+- `DataWithId` struct
+
+Documentation for the `sol!` macro can be found at: https://docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html
 
 ### Environment and Configuration Variables
 
