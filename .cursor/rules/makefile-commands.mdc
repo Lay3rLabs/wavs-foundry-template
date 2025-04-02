@@ -37,7 +37,7 @@ make wasi-exec
 
 # IMPORTANT: Component Input Handling
 # The COIN_MARKET_CAP_ID variable is used as the generic input for all components
-# Even if your component doesn't use CoinMarketCap, you must provide this variable
+# Even if your component doesn't use CoinMarketCap, you must provide this variable unless you change it.
 # The value is converted to hex and passed as input to your component's run() function
 
 # Example: Testing the price oracle (original component)

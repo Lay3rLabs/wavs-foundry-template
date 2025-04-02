@@ -1,0 +1,185 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+ ---
+description: Guidelines for encoding and decoding data in WAVS components
+globs: components/**/*
+---
+# Data Encoding and Decoding Guidelines
+
+Guidelines for handling data encoding and decoding in WAVS components.
+
+## Input Decoding
+
+1. Trigger Event Decoding:
+```rust
+fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, Destination)> {
+    match trigger_data {
+        // Handle Ethereum contract events
+        TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+            // Decode event using generated types
+            let event: solidity::NewTrigger = decode_event_log_data!(log)?;
+            let trigger_info = solidity::TriggerInfo::abi_decode(&event._triggerInfo, false)?;
+            Ok((trigger_info.triggerId, trigger_info.data.to_vec(), Destination::Ethereum))
+        }
+        // Handle raw CLI input
+        TriggerData::Raw(data) => Ok((0, data.clone(), Destination::CliOutput)),
+        _ => Err(anyhow::anyhow!("Unsupported trigger data type")),
+    }
+}
+```
+
+2. Raw Input Processing:
+```rust
+// Convert bytes to string
+let input = std::str::from_utf8(&req)
+    .map_err(|e| e.to_string())?;
+
+// Parse first character as hex digit
+let value = input
+    .chars()
+    .next()
+    .ok_or("Empty input")?
+    .to_digit(16)
+    .ok_or("Invalid hex digit")? as u64;
+```
+
+## Output Encoding
+
+1. Basic Output Encoding:
+```rust
+fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> Vec<u8> {
+    solidity::DataWithId {
+        triggerId: trigger_id,
+        data: output.as_ref().to_vec().into()
+    }.abi_encode()
+}
+```
+
+2. Destination-based Encoding:
+```rust
+let output = match dest {
+    // For Ethereum: Encode with trigger ID
+    Destination::Ethereum => Some(encode_trigger_output(trigger_id, &result)),
+    // For CLI: Return raw output
+    Destination::CliOutput => Some(result),
+};
+```
+
+## Common Patterns
+
+1. Event Data Decoding:
+```rust
+// Decode Solidity string from event data
+let decoded = alloy_sol_types::sol_data::String::abi_decode(&log.data, false)
+    .map_err(|e| format!("Failed to decode ABI string: {}", e))?;
+
+let message = decoded.to_string();
+```
+
+2. Bridge Event Handling:
+```rust
+// Handle different event types
+match trigger_data {
+    TriggerData::EthContractEvent(event) => {
+        // Decode Ethereum event
+        let event: solidity::NewTrigger = decode_event_log_data!(log)?;
+    }
+    TriggerData::CosmosContractEvent(event) => {
+        // Parse Cosmos event attributes
+        if event.ty.as_str() == NewDepositEvent::KEY {
+            for (key, value) in event.attributes {
+                match key.as_str() {
+                    "amount" => amount = Some(value),
+                    "sender" => sender = Some(value),
+                    "recipient" => recipient = Some(value),
+                }
+            }
+        }
+    }
+}
+```
+
+## Best Practices
+
+1. Input Validation:
+- Always validate decoded input before processing
+- Handle empty or malformed input gracefully
+- Provide clear error messages for decoding failures
+
+2. Error Handling:
+```rust
+// Use descriptive error messages
+.map_err(|e| format!("Failed to decode event log data: {}", e))?;
+
+// Handle specific error cases
+match decode_result {
+    Ok(data) => process_data(data),
+    Err(e) => handle_error(e),
+}
+```
+
+3. Type Safety:
+- Use generated Solidity types for contract interactions
+- Validate numeric conversions
+- Check array bounds and lengths
+- Verify address formats
+
+4. Output Formatting:
+```rust
+// For Ethereum submission
+let payload = TransactionPayload {
+    data: result.abi_encode(),
+    destination: validated_address,
+    value: amount,
+};
+
+// For CLI output
+let formatted_output = serde_json::to_string(&result)
+    .map_err(|e| format!("Failed to serialize output: {}", e))?;
+```
+
+## Common Encoding Scenarios
+
+1. Number Encoding:
+```rust
+// Input: Hex string to number
+let number = input.chars().next()
+    .and_then(|c| c.to_digit(16))
+    .map(|n| n as u64)
+    .ok_or("Invalid hex input")?;
+
+// Output: Number to bytes
+let bytes = number.to_string().into_bytes();
+```
+
+2. JSON Data:
+```rust
+// Decode JSON response
+let json: Root = fetch_json(req).await
+    .map_err(|e| e.to_string())?;
+
+// Encode structured data
+let output = serde_json::to_vec(&response_data)
+    .map_err(|e| e.to_string())?;
+```
+
+3. Contract Events:
+```rust
+// Define Solidity types
+sol! {
+    event NewTrigger(TriggerInfo _triggerInfo);
+    struct TriggerInfo {
+        uint64 triggerId;
+        bytes data;
+    }
+}
+
+// Encode for contract submission
+let encoded = solidity::DataWithId {
+    triggerId: id,
+    data: result.into()
+}.abi_encode();
+```
