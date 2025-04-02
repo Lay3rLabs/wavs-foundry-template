@@ -1,0 +1,85 @@
+---
+description: Guidelines for making HTTP requests in WAVS components
+globs: 
+alwaysApply: false
+---
+ ---
+description: Guidelines for making HTTP requests in WAVS components
+globs: components/**/*.rs
+alwaysApply: false
+---
+# HTTP Request Guidelines
+
+When making HTTP requests in WAVS components, follow these guidelines:
+
+1. Required imports:
+```rust
+use wavs_wasi_chain::http::{fetch_json, http_request_get};
+use wstd::{http::HeaderValue, runtime::block_on};
+```
+
+2. Basic GET request pattern:
+```rust
+async fn make_request() -> Result<YourResponseType, String> {
+    let url = "https://api.example.com/endpoint";
+    let mut req = http_request_get(&url).map_err(|e| e.to_string())?;
+    
+    // Add required headers
+    req.headers_mut().insert(
+        "Accept", 
+        HeaderValue::from_static("application/json")
+    );
+    req.headers_mut().insert(
+        "Content-Type", 
+        HeaderValue::from_static("application/json")
+    );
+
+    // Make request and parse response
+    let response: YourResponseType = fetch_json(req)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(response)
+}
+```
+
+3. Best practices:
+- Always use proper error handling with `map_err`
+- Set appropriate headers (Content-Type, Accept)
+- Use type-safe response parsing with serde
+- Implement timeouts and retries for reliability
+- Handle rate limiting with appropriate delays
+- Log request failures appropriately
+
+4. Common headers to include:
+```rust
+// User agent to prevent blocking
+req.headers_mut().insert(
+    "User-Agent",
+    HeaderValue::from_static("Mozilla/5.0 ...")
+);
+
+// API keys (from environment)
+req.headers_mut().insert(
+    "Authorization",
+    HeaderValue::from_str(&format!("Bearer {}", api_key))?
+);
+```
+
+5. Response handling:
+```rust
+// Check status code
+if response.status() != 200 {
+    return Err(format!("API error: status {}", response.status()));
+}
+
+// Parse JSON response
+let data: ResponseType = serde_json::from_str(&response_text)?;
+```
+
+6. Security considerations:
+- Never hardcode API keys
+- Use HTTPS for all requests
+- Validate all response data
+- Handle sensitive data appropriately
+- Implement proper error handling

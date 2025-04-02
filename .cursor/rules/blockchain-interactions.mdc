@@ -1,0 +1,102 @@
+---
+description: Guidelines for blockchain interactions in WAVS components
+globs: 
+alwaysApply: false
+---
+---
+description: Guidelines for blockchain interactions in WAVS components
+globs: components/**/*.rs
+alwaysApply: true
+---
+# Blockchain Interaction Guidelines
+
+Guidelines for interacting with blockchain networks in WAVS components:
+
+1. Required imports:
+```rust
+use alloy_primitives::{Address, Bytes, U256};
+use alloy_sol_types::{sol, SolCall, SolType, SolValue};
+use wavs_wasi_chain::chain::{get_chain_config, new_provider};
+```
+
+2. Chain configuration:
+```toml
+# In wavs.toml
+[chains.eth.mainnet]
+chain_id = "1"
+http_endpoint = "https://eth-mainnet.example.com"
+ws_endpoint = "wss://eth-mainnet.example.com"
+
+[chains.eth.testnet]
+chain_id = "5"
+http_endpoint = "https://eth-goerli.example.com"
+ws_endpoint = "wss://eth-goerli.example.com"
+```
+
+3. Provider setup:
+```rust
+// Get chain configuration
+let chain_config = get_chain_config("eth.mainnet")
+    .map_err(|e| format!("Failed to get chain config: {}", e))?;
+
+// Create provider
+let provider = new_provider(
+    chain_config.http_endpoint
+        .context("http_endpoint is missing")?
+);
+```
+
+4. Contract interaction:
+```rust
+// Define contract interface
+mod solidity {
+    use alloy_sol_macro::sol;
+    sol!("../../src/interfaces/IContract.sol");
+}
+
+// Create contract call
+let call = solidity::ContractCall {
+    to: Address::from_str("0x...")?,
+    value: U256::from(0),
+    data: contract_data,
+};
+
+// Encode call data
+let encoded = call.abi_encode();
+```
+
+5. Event handling:
+```rust
+// Define event structure
+struct ContractEvent {
+    id: U256,
+    data: Bytes,
+}
+
+// Decode event data
+fn decode_event(log: &Log) -> Result<ContractEvent, String> {
+    let event = decode_event_log_data!(log)?;
+    Ok(ContractEvent {
+        id: event.id,
+        data: event.data,
+    })
+}
+```
+
+6. Best practices:
+- Use proper error handling for all chain interactions
+- Implement retry logic for network issues
+- Handle chain reorgs appropriately
+- Validate all input data before submission
+- Use appropriate gas limits and prices
+- Monitor transaction status
+- Handle failed transactions gracefully
+
+7. Security considerations:
+- Validate chain IDs
+- Check contract addresses
+- Verify transaction data
+- Handle chain forks
+- Monitor gas costs
+- Implement proper access control
+- Log important transactions

@@ -1,0 +1,65 @@
+---
+description: Basic structure and requirements for WAVS components
+globs: 
+alwaysApply: false
+---
+ ---
+description: Basic structure and requirements for WAVS components
+globs: components/**/*.rs
+alwaysApply: true
+---
+# WAVS Component Structure
+
+Every WAVS component must follow this basic structure:
+
+1. Required imports and module declarations:
+```rust
+use wavs_wasi_chain::http::{fetch_json, http_request_get};
+pub mod bindings;
+use crate::bindings::{export, Guest, TriggerAction};
+use anyhow::Result;
+```
+
+2. Component declaration and export:
+```rust
+struct Component;
+export!(Component with_types_in bindings);
+
+impl Guest for Component {
+    fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
+        // Implementation
+    }
+}
+```
+
+3. Core structure requirements:
+- Must implement the `Guest` trait
+- Must have a `run` function that handles `TriggerAction`
+- Must return `Result<Option<Vec<u8>>, String>`
+- Must use proper error handling with `Result` types
+
+4. Best practices:
+- Use descriptive error messages
+- Implement proper logging
+- Handle all trigger data types appropriately
+- Document public functions and complex logic
+- Use async/await for network operations
+
+5. Common patterns:
+```rust
+// Pattern for handling different trigger types
+match trigger_action.data {
+    TriggerData::EthContractEvent(event) => {
+        // Handle Ethereum events
+    }
+    TriggerData::Raw(data) => {
+        // Handle raw data
+    }
+    _ => Err("Unsupported trigger type".to_string())
+}
+
+// Pattern for async operations
+block_on(async move {
+    // Async operations here
+})?
+```

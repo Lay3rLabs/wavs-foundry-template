@@ -1,0 +1,107 @@
+---
+description: Guidelines for handling environment variables in WAVS components
+globs: 
+alwaysApply: false
+---
+---
+description: Guidelines for handling environment variables in WAVS components
+globs: components/**/*.rs
+alwaysApply: true
+---
+# Environment Variable Handling
+
+Guidelines for managing environment variables in WAVS components:
+
+1. Required setup:
+```toml
+# In wavs.toml
+[service]
+name = "your-service"
+version = "0.1.0"
+
+[environment]
+# Public variables
+MAX_RETRIES = "3"
+TIMEOUT_SECONDS = "30"
+
+# Private variables (must be prefixed with WAVS_ENV_)
+WAVS_ENV_API_KEY = "${API_KEY}"
+WAVS_ENV_SECRET_TOKEN = "${SECRET_TOKEN}"
+```
+
+2. Accessing environment variables:
+```rust
+// Basic access pattern
+fn get_api_key() -> Result<String, String> {
+    std::env::var("WAVS_ENV_API_KEY")
+        .map_err(|e| format!("Failed to get API key: {}", e))
+}
+
+// With default value
+fn get_timeout() -> u64 {
+    std::env::var("TIMEOUT_SECONDS")
+        .unwrap_or_else(|_| "30".to_string())
+        .parse()
+        .unwrap_or(30)
+}
+```
+
+3. Best practices:
+- Prefix sensitive variables with `WAVS_ENV_`
+- Use descriptive variable names
+- Document all required variables
+- Provide sensible defaults where appropriate
+- Validate environment variables at startup
+- Handle missing variables gracefully
+
+4. Configuration validation:
+```rust
+fn validate_config() -> Result<(), String> {
+    // Check required variables
+    let required_vars = [
+        "WAVS_ENV_API_KEY",
+        "WAVS_ENV_SECRET_TOKEN",
+    ];
+
+    for var in required_vars {
+        std::env::var(var).map_err(|_| {
+            format!("Missing required environment variable: {}", var)
+        })?;
+    }
+
+    // Validate variable formats
+    let timeout = get_timeout();
+    if timeout < 1 || timeout > 300 {
+        return Err("TIMEOUT_SECONDS must be between 1 and 300".to_string());
+    }
+
+    Ok(())
+}
+```
+
+5. Security considerations:
+- Never log sensitive environment variables
+- Don't expose secrets in error messages
+- Validate environment variable content
+- Use appropriate access patterns for different variable types
+- Handle environment changes gracefully
+
+6. Example usage in components:
+```rust
+fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
+    // Validate configuration on startup
+    validate_config()?;
+
+    // Use environment variables
+    let api_key = get_api_key()?;
+    let timeout = get_timeout();
+
+    // Configure client with environment
+    let client = Client::new()
+        .timeout(Duration::from_secs(timeout))
+        .header("Authorization", format!("Bearer {}", api_key));
+
+    // Process request
+    Ok(None)
+}
+```
