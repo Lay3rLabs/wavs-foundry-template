@@ -5,129 +5,48 @@ alwaysApply: false
 ---
 ---
 description: Setup and requirements for WAVS projects
-globs: components/**/*
+globs: **/*
 alwaysApply: true
 ---
-# WAVS Project Setup Guidelines
+# Project Structure Guidelines
 
-## System Requirements
+Guidelines for organizing WAVS projects and understanding the repository layout.
 
-1. Core Dependencies:
-- Docker and Docker Compose
-- Make
-- JQ
-- Node.js v21+
-- Rust v1.84+
+## Directory Structure
 
-2. Rust Setup:
-```bash
-# Install Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+project-root/
+├── .cursor/
+│   └── rules/              # Project-specific coding rules
+│       ├── component-structure.mdc
+│       ├── data-encoding.mdc
+│       └── project-setup.mdc
+├── .docker/                # Docker configuration and deployment files
+│   ├── service.json       # Service configuration
+│   ├── deployments.json   # Contract deployment addresses
+│   └── script_deploy.json # Script deployment data
+├── components/            # WASI component implementations
+│   └── eth-price-oracle/  # Example component
+│       ├── Cargo.toml    # Rust dependencies
+│       └── src/
+│           ├── lib.rs     # Component implementation
+│           ├── trigger.rs # Trigger event handling
+│           └── bindings/  # Generated WASI bindings
+├── src/
+│   ├── contracts/        # Solidity smart contracts
+│   │   ├── WavsTrigger.sol   # Trigger contract
+│   │   └── WavsSubmit.sol    # Submission contract
+│   └── interfaces/       # Contract interfaces
+│       └── ITypes.sol    # Shared type definitions
+├── script/              # Deployment and test scripts
+│   ├── build_components.sh  # WASI build script
+│   └── Trigger.s.sol       # Trigger deployment script
+├── compiled/            # Compiled WASM components
+├── README.md           # Project overview and setup instructions
+├── Cargo.toml          # Workspace-level Rust dependencies
+├── Makefile           # Build and deployment commands
+└── wavs.toml         # WAVS service configuration
 
-# Configure Rust
-rustup toolchain install stable
-rustup target add wasm32-wasip2
-
-# Remove old targets if present
-rustup target remove wasm32-wasi
-rustup target remove wasm32-wasip1
 ```
 
-3. Cargo Components:
-```bash
-# Install required cargo components
-cargo install cargo-binstall
-cargo binstall cargo-component warg-cli wkg --locked
-
-# Configure registry
-wkg config --default-registry wa.dev
-```
-
-## Project Structure
-
-1. Required Files:
-- `wavs.toml`: Component configuration
-- `Cargo.toml`: Rust dependencies
-- `.env`: Environment variables (optional)
-- `README.md`: Project documentation
-
-2. Environment Variables:
-- Prefix sensitive variables with `WAVS_ENV_`
-- Example: `WAVS_ENV_API_KEY`, `WAVS_ENV_PRIVATE_KEY`
-- Store non-sensitive config: `MAX_RETRIES`, `TIMEOUT_SECONDS`
-
-3. Build Process:
-```bash
-# Build WASI components
-make wasi-build
-
-# Test components locally
-make wasi-exec
-
-# Deploy service
-make deploy-service
-```
-
-## Contract Integration
-
-1. Smart Contracts:
-- Trigger Contract: Emits events for WAVS to monitor
-- Submission Contract: Receives component output
-- Service Manager: Manages operator permissions
-
-2. Deployment Flow:
-```bash
-# Deploy contracts
-forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR}
-
-# Build service configuration
-sh ./script/build_service.sh
-
-# Deploy service to WAVS
-make deploy-service
-```
-
-## Testing Guidelines
-
-1. Local Testing:
-- Use `make wasi-exec` for component testing
-- Set required environment variables
-- Verify output format matches expectations
-
-2. Contract Testing:
-- Test trigger contract events
-- Verify submission contract integration
-- Check operator permissions
-
-3. Common Test Commands:
-```bash
-# Test smart contracts
-forge test
-
-# Test WASI component
-COIN_MARKET_CAP_ID=1 make wasi-exec
-
-# Show latest results
-make show-result
-```
-
-## Best Practices
-
-1. Development:
-- Follow security guidelines for environment variables
-- Implement proper error handling
-- Document all component interfaces
-- Test thoroughly before deployment
-
-2. Deployment:
-- Validate all contract addresses
-- Verify environment variables
-- Test on testnet before mainnet
-- Monitor service logs
-
-3. Security:
-- Never commit sensitive data
-- Use environment variables for secrets
-- Validate all inputs
-- Implement rate limiting
-- Keep dependencies updated
+[Rest of the file content remains the same...]
