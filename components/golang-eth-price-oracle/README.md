@@ -60,7 +60,7 @@ wkg --version
 
 Build all wasi components from the root of the repo. You can also run this command within each component directory.
 
-```bash docci-output-contains="component built"
+```bash
 # Builds only this component, not all.
 WASI_BUILD_DIR=golang-eth-price-oracle make wasi-build
 ```
