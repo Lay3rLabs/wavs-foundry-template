@@ -14,7 +14,8 @@ SERVICE_CONFIG_FILE?=.docker/service.json
 CARGO=cargo
 # the directory to build, or "" for all
 WASI_BUILD_DIR ?= ""
-WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-alpha1-amd64 wavs-cli
+DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:0.4.0-alpha1-amd64
+WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ${DOCKER_IMAGE} wavs-cli
 ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 RPC_URL?=http://localhost:8545
 SERVICE_MANAGER_ADDR?=`jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json`
@@ -33,10 +34,16 @@ wasi-build:
 	@./script/build_components.sh $(WASI_BUILD_DIR)
 
 ## wasi-exec: executing the WAVS wasi component(s) | COMPONENT_FILENAME, COIN_MARKET_CAP_ID
-wasi-exec:
+wasi-exec: pull-image
 	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
 	--component "/data/compiled/$(COMPONENT_FILENAME)" \
 	--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)`
+
+pull-image:
+	@if ! docker image inspect ${DOCKER_IMAGE} &>/dev/null; then \
+		echo "Image ${DOCKER_IMAGE} not found. Pulling..."; \
+		$(SUDO) docker pull ${DOCKER_IMAGE}; \
+	fi
 
 ## update-submodules: update the git submodules
 update-submodules:
