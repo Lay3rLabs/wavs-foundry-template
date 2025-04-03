@@ -57,6 +57,16 @@ struct Brewery {
     website_url: Option<String>,
 }
 
+/// Fetches breweries for a given city from the OpenBreweryDB API.
+///
+/// Note on Data Size Limits:
+/// - Ethereum has a max transaction data size of ~24KB
+/// - For gas efficiency, responses should ideally be under 5KB
+/// - We limit to 5 breweries to stay within these constraints
+/// - Each additional byte costs extra gas (16 gas for non-zero bytes)
+///
+/// This implementation uses pagination (per_page=5) to ensure
+/// responses stay within reasonable size limits for blockchain storage.
 async fn get_breweries_by_city(city: &str) -> Result<Vec<Brewery>, String> {
     // Manually percent-encode the city name
     let encoded_city =
@@ -71,12 +81,15 @@ async fn get_breweries_by_city(city: &str) -> Result<Vec<Brewery>, String> {
             })
             .collect::<String>();
 
-    let url = format!("https://api.openbrewerydb.org/v1/breweries?by_city={}", encoded_city);
+    // Add per_page parameter to limit results to first 5 breweries
+    let url =
+        format!("https://api.openbrewerydb.org/v1/breweries?by_city={}&per_page=5", encoded_city);
 
     println!("Fetching from URL: {}", url);
     let req = http_request_get(&url).map_err(|e| e.to_string())?;
     let breweries: Vec<Brewery> = fetch_json(req).await.map_err(|e| e.to_string())?;
 
+    println!("Limiting response to first 5 breweries for size constraints");
     Ok(breweries)
 }
 

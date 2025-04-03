@@ -141,6 +141,42 @@ let formatted_output = serde_json::to_string(&result)
     .map_err(|e| format!("Failed to serialize output: {}", e))?;
 ```
 
+## Data Size Limits
+
+1. Blockchain Constraints:
+```rust
+// Maximum transaction data size is ~24KB (24,576 bytes)
+// Recommended to stay under 5KB for optimal performance
+const MAX_RECOMMENDED_SIZE: usize = 5 * 1024; // 5KB
+
+// Gas costs per byte:
+// - 16 gas for non-zero bytes
+// - 4 gas for zero bytes
+```
+
+2. Best Practices for Large Datasets:
+```rust
+// Use pagination for API responses
+let url = format!(
+    "https://api.example.com/data?page={}&per_page=5",
+    page_number
+);
+
+// Limit response size
+if response.len() > MAX_RECOMMENDED_SIZE {
+    return Err("Response exceeds recommended size limit".to_string());
+}
+```
+
+3. Optimization Strategies:
+- Use pagination when fetching data from APIs
+- Limit number of items in response (e.g., top 5)
+- Remove optional fields if not essential
+- Consider data compression for large responses
+- Cache frequently requested data if possible
+- Use shorter field names in JSON responses
+
+
 ## Common Encoding Scenarios
 
 1. Number Encoding:
@@ -183,3 +219,74 @@ let encoded = solidity::DataWithId {
     data: result.into()
 }.abi_encode();
 ```
+
+## Data Size Limits
+
+1. Blockchain Constraints:
+```rust
+// Maximum transaction data size is ~24KB (24,576 bytes)
+// Recommended to stay under 5KB for optimal performance
+const MAX_RECOMMENDED_SIZE: usize = 5 * 1024; // 5KB
+
+// Gas costs per byte:
+// - 16 gas for non-zero bytes
+// - 4 gas for zero bytes
+```
+
+2. Best Practices for Large Datasets:
+```rust
+// Use pagination for API responses
+let url = format!(
+    "https://api.example.com/data?page={}&per_page=5",
+    page_number
+);
+
+// Limit response size
+if response.len() > MAX_RECOMMENDED_SIZE {
+    return Err("Response exceeds recommended size limit".to_string());
+}
+```
+
+3. Optimization Strategies:
+- Use pagination when fetching data from APIs
+- Limit number of items in response (e.g., top 5)
+- Remove optional fields if not essential
+- Consider data compression for large responses
+- Cache frequently requested data if possible
+- Use shorter field names in JSON responses
+
+4. Real-World Example:
+```rust
+// Example from brewery finder component
+async fn get_breweries_by_city(city: &str) -> Result<Vec<Brewery>, String> {
+    // Use pagination to limit response size
+    let url = format!(
+        "https://api.openbrewerydb.org/v1/breweries?by_city={}&per_page=5",
+        encoded_city
+    );
+    
+    // Fetch and validate response size
+    let breweries: Vec<Brewery> = fetch_json(req).await?;
+    println!("Limiting response to first 5 breweries for blockchain size constraints");
+    
+    Ok(breweries)
+}
+```
+
+5. Size Validation Helper:
+```rust
+fn validate_response_size(data: &[u8]) -> Result<(), String> {
+    const MAX_SIZE: usize = 5 * 1024; // 5KB recommended limit
+    
+    if data.len() > MAX_SIZE {
+        return Err(format!(
+            "Response size ({} bytes) exceeds recommended limit ({} bytes)",
+            data.len(),
+            MAX_SIZE
+        ));
+    }
+    Ok(())
+}
+```
+
+

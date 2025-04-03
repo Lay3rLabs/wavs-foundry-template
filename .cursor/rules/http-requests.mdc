@@ -83,3 +83,59 @@ let data: ResponseType = serde_json::from_str(&response_text)?;
 - Validate all response data
 - Handle sensitive data appropriately
 - Implement proper error handling
+
+## Response Size Management
+
+1. Blockchain Size Constraints:
+- Keep responses under 5KB for optimal blockchain storage
+- Use pagination parameters in API requests
+- Limit number of items in response
+
+2. Pagination Best Practices:
+```rust
+// Always use pagination for potentially large datasets
+let url = format!(
+    "https://api.example.com/endpoint?per_page=5&page={}",
+    page_number
+);
+
+// Example with OpenBreweryDB API
+let url = format!(
+    "https://api.openbrewerydb.org/v1/breweries?by_city={}&per_page=5",
+    encoded_city
+);
+```
+
+3. Response Size Optimization:
+- Remove unnecessary fields from API responses
+- Use field filtering when APIs support it
+- Consider implementing response compression
+- Cache frequently requested data
+
+# Data Encoding Guidelines
+
+## Blockchain Data Limits
+
+1. Technical Constraints:
+- Maximum transaction data: ~24KB (24,576 bytes)
+- Recommended limit: 5KB for optimal performance
+- Gas costs: 16 gas per non-zero byte, 4 gas per zero byte
+
+2. Implementation Example:
+```rust
+const MAX_RECOMMENDED_SIZE: usize = 5 * 1024; // 5KB
+
+fn validate_data_size(data: &[u8]) -> Result<(), String> {
+    if data.len() > MAX_RECOMMENDED_SIZE {
+        return Err("Data exceeds recommended size limit".to_string());
+    }
+    Ok(())
+}
+```
+
+3. Optimization Strategies:
+- Minimize encoded data size
+- Remove optional fields when possible
+- Use efficient encoding formats
+- Consider compression for large datasets
+- 
