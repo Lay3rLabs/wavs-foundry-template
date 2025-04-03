@@ -7,158 +7,143 @@ alwaysApply: true
 
 Guidelines for handling input data in WAVS components:
 
-1. Input Mechanism:
+1. Input Format:
 ```rust
-// The make command converts COIN_MARKET_CAP_ID to hex string
-// Example: COIN_MARKET_CAP_ID=5 becomes "5" as hex string
-// Example: COIN_MARKET_CAP_ID=a becomes "a" as hex string
-fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
-    let (trigger_id, req, dest) = decode_trigger_event(action.data)?;
+// IMPORTANT: The make command formats input as bytes32 string
+// COIN_MARKET_CAP_ID is converted using: cast format-bytes32-string $(COIN_MARKET_CAP_ID)
+// This means:
+// - Input is a decimal string padded with null bytes to 32 bytes
+// - COIN_MARKET_CAP_ID=10 becomes "10\0\0\0..." (padded to 32 bytes)
+// - Always treat as decimal string, not hex
+
+// Example: Proper decimal string parsing
+fn parse_decimal_input(input: &str) -> Result<u64, String> {
+    // Get content before first null byte and trim whitespace
+    let clean_input = input.split('\0').next().unwrap_or("").trim();
     
-    // Convert bytes to string
-    let input = std::str::from_utf8(&req)?;
+    // Check for empty input
+    if clean_input.is_empty() {
+        return Err("Empty input".to_string());
+    }
     
-    // Parse first character as hex digit
-    let number = input.chars().next()
-        .ok_or("Empty input")?
-        .to_digit(16)
-        .ok_or("Invalid hex digit")? as u64;
-        
-    // Process the number
-    let result = process_number(number);
-    
-    // Return result
-    Ok(Some(result.to_string().into_bytes()))
+    // Parse as decimal number
+    clean_input.parse::<u64>()
+        .map_err(|_| format!("Invalid decimal number: '{}'", clean_input))
 }
 ```
 
 2. Common Input Patterns:
 ```rust
-// Pattern 1: Single hex digit input
-let number = input.chars().next()
+// Pattern 1: Decimal string input (RECOMMENDED)
+let number = input.split('\0')
+    .next()
     .ok_or("Empty input")?
-    .to_digit(16)
-    .ok_or("Invalid hex digit")? as u64;
+    .trim()
+    .parse::<u64>()
+    .map_err(|_| "Invalid decimal number")?;
 
-// Pattern 2: Multiple hex digits
-let number = u64::from_str_radix(input, 16)
-    .map_err(|e| format!("Invalid hex number: {}", e))?;
-
-// Pattern 3: Raw bytes
+// Pattern 2: Raw bytes (for binary data)
 let data = req.to_vec();
 
-// Pattern 4: JSON input
+// Pattern 3: JSON input
 let json: YourType = serde_json::from_slice(&req)
     .map_err(|e| format!("Invalid JSON: {}", e))?;
 ```
 
 3. Best Practices:
-- Always validate input format before processing
-- Handle empty or malformed input gracefully
-- Use appropriate error messages
-- Consider input size limits
-- Log input for debugging
-- Handle both hex and decimal inputs if needed
+- Remember input is ALWAYS a bytes32 string from cast format-bytes32-string
+- Handle null byte padding by splitting on '\0'
+- Trim whitespace from input
+- Parse as decimal unless specifically handling binary/JSON data
+- Provide clear error messages
+- Log raw input for debugging
+- Add validation for your specific number ranges
 
 4. Testing Input:
 ```bash
-# Test with single hex digit
-COIN_MARKET_CAP_ID=5 make wasi-exec  # Input: "5" (hex)
-COIN_MARKET_CAP_ID=a make wasi-exec  # Input: "a" (hex = 10 decimal)
-COIN_MARKET_CAP_ID=f make wasi-exec  # Input: "f" (hex = 15 decimal)
+# Test with decimal numbers
+COIN_MARKET_CAP_ID=5 make wasi-exec   # Input: "5\0\0\0..." -> 5
+COIN_MARKET_CAP_ID=10 make wasi-exec  # Input: "10\0\0\0..." -> 10
+COIN_MARKET_CAP_ID=42 make wasi-exec  # Input: "42\0\0\0..." -> 42
 
 # Test with custom component
-COMPONENT_FILENAME=your_component.wasm COIN_MARKET_CAP_ID=5 make wasi-exec
+COMPONENT_FILENAME=your_component.wasm COIN_MARKET_CAP_ID=123 make wasi-exec
 ```
 
 5. Common Pitfalls:
 ```rust
-// BAD: Trying to parse entire input as decimal
-let number = input.parse::<u64>()?;  // Will fail for hex input
+// BAD: Trying to parse as hex
+let number = u64::from_str_radix(input, 16)?;  // WRONG! Input is decimal
 
-// BAD: Not handling empty input
-let number = input.chars().next().unwrap().to_digit(16).unwrap() as u64;
+// BAD: Not handling null bytes
+let number = input.parse::<u64>()?;  // WRONG! Will fail with null bytes
 
-// GOOD: Proper error handling
-let number = input.chars().next()
+// BAD: Not trimming whitespace
+let number = input.split('\0').next()?.parse::<u64>()?;  // WRONG! Might have whitespace
+
+// GOOD: Proper decimal parsing with null bytes
+let number = input
+    .split('\0')
+    .next()
     .ok_or("Empty input")?
-    .to_digit(16)
-    .ok_or("Invalid hex digit")? as u64;
+    .trim()
+    .parse::<u64>()
+    .map_err(|_| "Invalid decimal number")?;
 ```
 
-6. Input Validation:
+6. Input Validation Example:
 ```rust
-fn validate_input(input: &str) -> Result<u64, String> {
-    // Check input length
-    if input.is_empty() {
+fn validate_decimal_input(input: &str) -> Result<u64, String> {
+    // Get clean input before first null byte
+    let clean_input = input.split('\0').next().unwrap_or("").trim();
+    
+    // Check for empty input
+    if clean_input.is_empty() {
         return Err("Empty input".to_string());
     }
     
-    // Check for valid hex characters
-    if !input.chars().all(|c| c.is_ascii_hexdigit()) {
-        return Err("Invalid hex characters".to_string());
+    // Parse decimal number
+    let number = clean_input.parse::<u64>()
+        .map_err(|_| format!("Invalid decimal number: '{}'", clean_input))?;
+    
+    // Add any range validation needed for your use case
+    if number > 1000 {
+        return Err("Number exceeds maximum value of 1000".to_string());
     }
     
-    // Parse hex
-    u64::from_str_radix(input, 16)
-        .map_err(|e| format!("Invalid hex number: {}", e))
+    Ok(number)
 }
 ```
 
-7. Logging Input:
+7. Logging Best Practices:
 ```rust
-// Log input for debugging
-println!("Received input: {}", input);
+// Log raw input for debugging
+println!("Received raw input: {:?}", input);  // Shows null bytes
 
 // Log parsed value
-println!("Parsed number: {}", number);
+println!("Parsed decimal number: {}", number);
 
-// Log result
-println!("Processing result: {}", result);
+// Log validation results
+println!("Validation passed: number {} is within range", number);
 ```
 
-8. Error Handling:
-```rust
-// Use descriptive error messages
-.map_err(|e| format!("Failed to process input: {}", e))?;
-
-// Handle specific error cases
-match parse_input(input) {
-    Ok(number) => process_number(number),
-    Err(e) => {
-        println!("Input error: {}", e);
-        return Err(e);
-    }
-}
-```
-
-9. Security Considerations:
-- Validate input size
-- Check for malicious input
-- Don't expose sensitive data in logs
-- Handle overflow cases
-- Sanitize input before processing
-
-10. Example Component:
+8. Complete Component Example:
 ```rust
 fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
     // Decode trigger event
     let (trigger_id, req, dest) = decode_trigger_event(action.data)?;
     
-    // Convert to string and log
+    // Convert to string and log raw input
     let input = std::str::from_utf8(&req)?;
-    println!("Received input: {}", input);
+    println!("Received raw input: {:?}", input);
     
-    // Parse hex input
-    let number = input.chars().next()
-        .ok_or("Empty input")?
-        .to_digit(16)
-        .ok_or("Invalid hex digit")? as u64;
+    // Parse decimal input
+    let number = parse_decimal_input(input)?;
+    println!("Parsed decimal number: {}", number);
     
-    println!("Parsed number: {}", number);
-    
-    // Process input
-    let result = process_input(number);
+    // Process number
+    let result = process_number(number);
+    println!("Processing result: {}", result);
     
     // Format output
     let output = result.to_string().into_bytes();
@@ -169,4 +154,20 @@ fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
         Destination::CliOutput => output,
     }))
 }
-``` 
+```
+
+9. Testing Guidelines:
+- Test with various decimal inputs
+- Test with leading/trailing whitespace
+- Test with empty input
+- Test with invalid numbers
+- Test with numbers at your min/max bounds
+- Test with malformed input
+
+10. Security Considerations:
+- Validate input size
+- Check numeric bounds
+- Handle overflow cases
+- Sanitize input before processing
+- Don't expose raw input in error messages
+- Consider rate limiting for expensive operations
