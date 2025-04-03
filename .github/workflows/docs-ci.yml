@@ -91,7 +91,7 @@ jobs:
 
     - name: Install docci readme runner
       run: |
-        RELEASE=https://github.com/Reecepbcups/docci/releases/download/v0.5.0/docci
+        RELEASE=https://github.com/Reecepbcups/docci/releases/download/v0.6.0-alpha.1/docci
         sudo wget --quiet -O /usr/local/bin/docci ${RELEASE}
         sudo chmod a+rx /usr/local/bin/docci
 
