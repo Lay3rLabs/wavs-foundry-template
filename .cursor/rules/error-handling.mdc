@@ -1,7 +1,7 @@
 ---
-description: Guidelines for error handling in WAVS components
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 ---
 description: Guidelines for error handling in WAVS components

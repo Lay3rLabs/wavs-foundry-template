@@ -1,7 +1,7 @@
 ---
-description: Guidelines for encoding and decoding data in WAVS components
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
  ---
 description: Guidelines for encoding and decoding data in WAVS components

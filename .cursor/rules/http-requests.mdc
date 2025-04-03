@@ -1,7 +1,7 @@
 ---
-description: Guidelines for making HTTP requests in WAVS components
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
  ---
 description: Guidelines for making HTTP requests in WAVS components

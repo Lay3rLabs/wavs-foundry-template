@@ -1,7 +1,7 @@
 ---
-description: How to add or edit Cursor rules in our project
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 # Cursor Rules Location
 

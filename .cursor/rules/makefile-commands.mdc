@@ -1,7 +1,7 @@
 ---
-description: Guidelines for using Makefile commands in WAVS projects
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 ---
 description: Guidelines for using Makefile commands in WAVS projects
@@ -27,178 +27,21 @@ WASI_BUILD_DIR=components/my-component make wasi-build
 make setup
 ```
 
-2. Testing Commands:
+## IMPORTANT: Component Changes and Testing
+When modifying a component's code (like lib.rs), you MUST rebuild the component before testing:
+
+1. Always rebuild after changes:
 ```bash
-# Run smart contract tests
-make test
+# After any change to component code:
+make wasi-build  # This compiles your changes into WebAssembly
 
-# Execute WASI component locally
-make wasi-exec
-
-# IMPORTANT: Component Input Handling
-# The COIN_MARKET_CAP_ID variable is used as the generic input for all components
-# Even if your component doesn't use CoinMarketCap, you must provide this variable unless you change it.
-# The value is converted to hex and passed as input to your component's run() function
-
-# Example: Testing the price oracle (original component)
-COIN_MARKET_CAP_ID=1 make wasi-exec  # Fetches Bitcoin price
-
-# Example: Testing a number squaring component
-COIN_MARKET_CAP_ID=5 make wasi-exec  # Will receive "5" as input to square
-
-# Example: Testing with custom component filename
-COIN_MARKET_CAP_ID=5 COMPONENT_FILENAME=number_square.wasm make wasi-exec
-
-# View latest test results
-make show-result
+# Then run your tests:
+COIN_MARKET_CAP_ID=your_input make wasi-exec
 ```
 
-3. Service Deployment:
-```bash
-# Deploy service configuration
-make deploy-service
-# Custom config file:
-SERVICE_CONFIG_FILE=path/to/config.json make deploy-service
+2. Common pitfalls:
+- Running wasi-exec without rebuilding will test the old version
+- Changes to lib.rs won't take effect until after wasi-build
+- Always rebuild when switching between different component versions
 
-# Upload component
-make upload-component
-# Specify component:
-COMPONENT_FILENAME=my_component.wasm make upload-component
-```
-
-4. Environment Management:
-```bash
-# Start local environment (anvil + WAVS)
-make start-all
-
-# Clean project files
-make clean
-
-# Clean Docker containers
-make clean-docker
-
-# Update git submodules
-make update-submodules
-```
-
-## Configuration Variables
-
-1. Component Settings:
-```bash
-# Default component filename
-COMPONENT_FILENAME=eth_price_oracle.wasm
-
-# Service configuration location
-SERVICE_CONFIG_FILE=.docker/service.json
-
-# Component input variable (required for testing)
-# Used by make wasi-exec as input data for any component
-COIN_MARKET_CAP_ID=1  # Value is converted to hex and passed to component
-```
-
-2. Network Settings:
-```bash
-# RPC endpoint
-RPC_URL=http://localhost:8545
-
-# Anvil private key
-ANVIL_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-```
-
-3. Contract Addresses:
-```bash
-# Get deployed contract addresses
-make get-service-handler-from-deploy
-make get-trigger-from-deploy
-make get-eigen-service-manager-from-deploy
-```
-
-## Best Practices
-
-1. Environment Setup:
-- Always run `make setup` after cloning
-- Use `make check-requirements` to verify system dependencies
-- Create `.env` from `.env.example` if needed
-
-2. Development Workflow:
-- Start with `make start-all` for local development
-- Use `make fmt` to format code
-- Run `make test` before deploying
-- Clean with `make clean` when switching branches
-- When testing new components, remember to use COIN_MARKET_CAP_ID
-- Understand that COIN_MARKET_CAP_ID is just an input mechanism
-
-3. Component Development:
-- Replace logic in lib.rs with your component's functionality
-- Keep the input handling code that converts COIN_MARKET_CAP_ID
-- Modify the input parsing to match your component's needs
-- Test with appropriate COIN_MARKET_CAP_ID values
-
-4. Deployment Steps:
-```bash
-# 1. Build components
-make wasi-build
-
-# 2. Start local environment
-make start-all
-
-# 3. Upload component
-make upload-component
-
-# 4. Deploy service
-make deploy-service
-
-# 5. Verify deployment
-make show-result
-```
-
-## System Requirements
-
-Required tools and versions:
-- Node.js v21+
-- Docker and Docker Compose
-- JQ
-- Cargo (Rust)
-- Make
-
-Verify requirements:
-```bash
-make check-requirements
-```
-
-## Common Patterns
-
-1. Local Testing:
-```bash
-# Start environment
-make start-all
-
-# Build and test
-make build
-make test
-
-# Execute component with input
-COIN_MARKET_CAP_ID=5 make wasi-exec
-```
-
-2. Service Deployment:
-```bash
-# Build and upload
-make wasi-build
-make upload-component
-
-# Deploy and verify
-make deploy-service
-make show-result
-```
-
-3. Maintenance:
-```bash
-# Update dependencies
-make update-submodules
-make setup
-
-# Clean and rebuild
-make clean
-make build
-```
+// ... existing code ...

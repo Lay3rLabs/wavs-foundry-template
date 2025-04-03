@@ -1,7 +1,7 @@
 ---
-description: Basic structure and requirements for WAVS components
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
  ---
 description: Basic structure and requirements for WAVS components

@@ -1,7 +1,7 @@
 ---
-description: Security guidelines for WAVS components
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
  ---
 description: Security guidelines for WAVS components

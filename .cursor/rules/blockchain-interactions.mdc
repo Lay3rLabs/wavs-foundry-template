@@ -1,7 +1,7 @@
 ---
-description: Guidelines for blockchain interactions in WAVS components
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 ---
 description: Guidelines for blockchain interactions in WAVS components
