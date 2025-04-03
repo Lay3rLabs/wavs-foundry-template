@@ -11,37 +11,161 @@ globs: Makefile,*.mk
 
 Essential commands for developing and deploying WAVS components.
 
-## Core Commands
+## Core Build Commands
 
-1. Building and Setup:
+1. Build and Setup:
 ```bash
-# Build entire project (Forge + WASI components)
+# Install initial dependencies (npm packages & submodules)
+make setup
+
+# Build entire project (Forge contracts + WASI components)
 make build
 
 # Build only WASI components
 make wasi-build
-# Optional: Specify directory
-WASI_BUILD_DIR=components/my-component make wasi-build
-
-# Install initial dependencies
-make setup
+# Optionally specify directory:
+WASI_BUILD_DIR=components/your-component make wasi-build
 ```
 
-## IMPORTANT: Component Changes and Testing
-When modifying a component's code (like lib.rs), you MUST rebuild the component before testing:
+## Testing Components
+
+1. Local Component Testing:
+```bash
+# Test component with direct input
+COIN_MARKET_CAP_ID="Portland" make wasi-exec
+
+# View the results
+make show-result
+```
+
+2. Important Testing Notes:
+- Always rebuild after code changes:
+  ```bash
+  # After modifying component code:
+  make wasi-build  # Compile changes to WebAssembly
+  
+  # Then test with your input:
+  COIN_MARKET_CAP_ID="Your City" make wasi-exec
+  ```
+- For inputs with spaces, use quotes:
+  ```bash
+  COIN_MARKET_CAP_ID="New York" make wasi-exec
+  COIN_MARKET_CAP_ID="San Francisco" make wasi-exec
+  ```
+
+## Environment and Service Management
+
+1. Start Environment:
+```bash
+# Start anvil (local Ethereum node) and WAVS services
+make start-all
+```
+
+2. Deploy Service:
+```bash
+# Get service manager address
+export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
+
+# Deploy trigger and submission contracts
+forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
+
+# Build and deploy service configuration
+COMPONENT_FILENAME=eth_price_oracle.wasm sh ./script/build_service.sh
+SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
+```
+
+## Utility Commands
+
+1. Clean and Format:
+```bash
+# Clean project files and remove docker containers
+make clean
+
+# Format Solidity and Rust code
+make fmt
+
+# Run tests
+make test
+```
+
+2. Contract Information:
+```bash
+# Get trigger contract address
+make get-trigger-from-deploy
+
+# Get service handler address
+make get-service-handler-from-deploy
+
+# Get Eigen service manager address
+make get-eigen-service-manager-from-deploy
+```
+
+## Component Deployment
+
+1. Upload and Deploy:
+```bash
+# Upload component
+make upload-component COMPONENT_FILENAME=your_component.wasm
+
+# Deploy service configuration
+make deploy-service SERVICE_CONFIG_FILE=.docker/service.json
+```
+
+## Development Workflow
+
+1. Typical Development Cycle:
+```bash
+# 1. Start environment
+make start-all
+
+# 2. Build components
+make wasi-build
+
+# 3. Test locally
+COIN_MARKET_CAP_ID="Your Input" make wasi-exec
+
+# 4. Check results
+make show-result
+```
+
+2. After Code Changes:
+```bash
+# 1. Rebuild components
+make wasi-build
+
+# 2. Test changes
+COIN_MARKET_CAP_ID="Test Input" make wasi-exec
+
+# 3. Verify results
+make show-result
+```
+
+## Environment Variables
+
+Key variables that can be customized:
+- `COMPONENT_FILENAME`: Name of the WASM component (default: eth_price_oracle.wasm)
+- `SERVICE_CONFIG_FILE`: Path to service configuration (default: .docker/service.json)
+- `WASI_BUILD_DIR`: Specific component directory to build
+- `COIN_MARKET_CAP_ID`: Input for component testing
+- `RPC_URL`: RPC endpoint (default: http://localhost:8545)
+
+## Best Practices
 
 1. Always rebuild after changes:
-```bash
-# After any change to component code:
-make wasi-build  # This compiles your changes into WebAssembly
+- Run `make wasi-build` after any component code changes
+- Changes won't take effect until rebuilt
 
-# Then run your tests:
-COIN_MARKET_CAP_ID=your_input make wasi-exec
-```
+2. Input Handling:
+- Use quotes for inputs with spaces
+- Don't create temporary input files
+- Use environment variables directly
 
-2. Common pitfalls:
-- Running wasi-exec without rebuilding will test the old version
-- Changes to lib.rs won't take effect until after wasi-build
-- Always rebuild when switching between different component versions
+3. Service Deployment:
+- Ensure environment is running (`make start-all`)
+- Deploy contracts before testing
+- Verify service configuration in .docker/service.json
 
-// ... existing code ...
+4. Testing:
+- Test components locally before deployment
+- Use `make show-result` to verify outputs
+- Check logs if issues occur
