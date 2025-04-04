@@ -1,0 +1,110 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Guidelines for error handling in WAVS components
+globs: components/**/*.rs
+alwaysApply: true
+---
+# Error Handling Guidelines
+
+Proper error handling is crucial for WAVS components. Follow these guidelines:
+
+1. Required imports:
+```rust
+use anyhow::{Result, Context, anyhow};
+```
+
+2. Error propagation patterns:
+```rust
+// Using the ? operator with map_err
+fn process_data(input: &[u8]) -> Result<String, String> {
+    let text = std::str::from_utf8(input)
+        .map_err(|e| format!("Invalid UTF-8: {}", e))?;
+        
+    let parsed = serde_json::from_str(text)
+        .map_err(|e| format!("JSON parse error: {}", e))?;
+        
+    Ok(parsed)
+}
+
+// Using anyhow for rich error context
+fn complex_operation() -> anyhow::Result<()> {
+    let config = read_config()
+        .context("Failed to read configuration")?;
+        
+    process_data(&config)
+        .context("Failed to process configuration data")?;
+        
+    Ok(())
+}
+```
+
+3. Best practices:
+- Use descriptive error messages
+- Include relevant context in errors
+- Chain errors appropriately
+- Handle all error cases explicitly
+- Log errors at appropriate levels
+- Don't expose sensitive data in errors
+
+4. Error handling in async code:
+```rust
+async fn fetch_data() -> Result<Data, String> {
+    let response = make_request()
+        .await
+        .map_err(|e| format!("Request failed: {}", e))?;
+        
+    if response.status() != 200 {
+        return Err(format!(
+            "API error: {} - {}", 
+            response.status(),
+            response.text().await.unwrap_or_default()
+        ));
+    }
+    
+    response.json()
+        .await
+        .map_err(|e| format!("Failed to parse response: {}", e))
+}
+```
+
+5. Common error patterns:
+```rust
+// Custom error enum
+pub enum ComponentError {
+    InvalidInput(String),
+    NetworkError(String),
+    ParseError(String),
+}
+
+// Converting errors
+impl From<std::io::Error> for ComponentError {
+    fn from(err: std::io::Error) -> Self {
+        ComponentError::NetworkError(err.to_string())
+    }
+}
+
+// Error handling in component run function
+fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
+    process_trigger(action.data)
+        .map_err(|e| format!("Trigger processing failed: {}", e))?;
+    Ok(None)
+}
+```
+
+6. Logging errors:
+```rust
+use wavs_wasi_chain::log::{log_error, log_info};
+
+// Log error with context
+if let Err(e) = process_data() {
+    log_error!("Data processing failed: {}", e)?;
+    return Err(e.to_string());
+}
+
+// Log success with result
+log_info!("Processing completed: {:?}", result)?;
+```

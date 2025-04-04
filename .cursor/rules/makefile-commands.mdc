@@ -1,0 +1,193 @@
+---
+description: Guidelines for using Makefile commands in WAVS projects
+globs: Makefile,*.mk
+---
+# Makefile Commands Guide
+
+Essential commands for developing and deploying WAVS components.
+
+## Initial Setup
+
+1. System Requirements:
+- Docker and Docker Compose
+- Make
+- JQ
+- Node.js v21+
+- Rust v1.84+
+
+2. Mac ARM Setup (if applicable):
+```bash
+# Set up Rosetta
+softwareupdate --install-rosetta
+
+# Enable Rosetta in Docker Desktop:
+# Settings -> General -> "Use Rosetta for x86_64/amd64 emulation on Apple Silicon"
+
+# Configure networking (choose one):
+# Option 1: Docker Desktop: Settings -> Resources -> Network -> 'Enable Host Networking'
+# Option 2: Run this command:
+brew install chipmk/tap/docker-mac-net-connect && sudo brew services start chipmk/tap/docker-mac-net-connect
+```
+
+## Core Build Commands
+
+1. Initial Setup:
+```bash
+# Install initial dependencies (npm packages & submodules)
+make setup
+
+# Build entire project (Forge contracts + WASI components)
+make build
+
+# Build only WASI components
+make wasi-build
+# Optionally specify directory:
+WASI_BUILD_DIR=components/your-component make wasi-build
+```
+
+## Complete Deployment Sequence
+
+1. Start Local Environment:
+```bash
+# Start anvil (local Ethereum node) and WAVS services
+# This must remain running in your terminal
+make start-all
+```
+
+2. Deploy Service Contracts:
+```bash
+# Get Eigenlayer service manager address
+export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
+
+# Deploy trigger and submission contracts
+forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
+
+# Verify trigger contract address (optional)
+make get-trigger-from-deploy
+```
+
+3. Deploy WAVS Service:
+```bash
+# Build service configuration
+COMPONENT_FILENAME=eth_price_oracle.wasm sh ./script/build_service.sh
+
+# Deploy service to WAVS
+SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
+```
+
+4. Trigger and Test Service:
+```bash
+# Set required environment variables
+export COIN_MARKET_CAP_ID="your_input"
+export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
+
+# Execute trigger
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig "run(string,string)" --rpc-url http://localhost:8545 --broadcast -v 4
+
+# Wait 10-15 seconds for processing
+# Then check the result
+make show-result
+```
+
+## Testing Components
+
+1. Local Component Testing:
+```bash
+# Test component with direct input
+COIN_MARKET_CAP_ID="Portland" make wasi-exec
+
+# View the results
+make show-result
+```
+
+2. Important Testing Notes:
+- Always rebuild after code changes:
+  ```bash
+  # After modifying component code:
+  make wasi-build  # Compile changes to WebAssembly
+  
+  # Then test with your input:
+  COIN_MARKET_CAP_ID="Your City" make wasi-exec
+  ```
+- For inputs with spaces, use quotes:
+  ```bash
+  COIN_MARKET_CAP_ID="New York" make wasi-exec
+  COIN_MARKET_CAP_ID="San Francisco" make wasi-exec
+  ```
+
+## Utility Commands
+
+1. Clean and Format:
+```bash
+# Clean project files and remove docker containers
+make clean
+
+# Format Solidity and Rust code
+make fmt
+
+# Run tests
+make test
+```
+
+2. Contract Information:
+```bash
+# Get trigger contract address
+make get-trigger-from-deploy
+
+# Get service handler address
+make get-service-handler-from-deploy
+
+# Get Eigen service manager address
+make get-eigen-service-manager-from-deploy
+```
+
+## Environment Variables
+
+Key variables that can be customized:
+- `COMPONENT_FILENAME`: Name of the WASM component (default: eth_price_oracle.wasm)
+- `SERVICE_CONFIG_FILE`: Path to service configuration (default: .docker/service.json)
+- `WASI_BUILD_DIR`: Specific component directory to build
+- `COIN_MARKET_CAP_ID`: Input for component testing
+- `RPC_URL`: RPC endpoint (default: http://localhost:8545)
+- `SERVICE_MANAGER_ADDR`: Eigenlayer service manager contract address
+- `SERVICE_TRIGGER_ADDR`: Address of the deployed trigger contract
+
+## Key Concepts
+
+1. Contract Components:
+- **Trigger Contract**: Emits events that WAVS monitors. When events occur, WAVS executes your WebAssembly component.
+- **Submission Contract**: Used by AVS service operator to submit component results on-chain.
+- **Service Manager**: Eigenlayer contract that verifies submissions are from authorized operators.
+
+2. Service Configuration:
+- Located in `.docker/service.json`
+- Defines component permissions and workflow
+- Configures trigger event monitoring
+- Sets up submission handling
+
+## Best Practices
+
+1. Always rebuild after changes:
+- Run `make wasi-build` after any component code changes
+- Changes won't take effect until rebuilt
+
+2. Input Handling:
+- Use quotes for inputs with spaces
+- Don't create temporary input files
+- Use environment variables directly
+
+3. Service Deployment:
+- Ensure environment is running (`make start-all`)
+- Deploy contracts before testing
+- Verify service configuration in .docker/service.json
+- Wait 10-15 seconds after triggers for processing
+
+4. Testing:
+- Test components locally before deployment
+- Use `make show-result` to verify outputs
+- Check logs if issues occur
+
+5. Environment Management:
+- Keep `make start-all` running in a separate terminal
+- Use Ctrl+C to stop services (may need to press twice on MacOS)
+- Clean up with `make clean` when switching branches

@@ -1,0 +1,173 @@
+---
+description: Guidelines for handling input data in WAVS components
+globs: components/**/*.rs
+alwaysApply: true
+---
+# Input Handling Guidelines
+
+Guidelines for handling input data in WAVS components:
+
+1. Input Format:
+```rust
+// IMPORTANT: The make command formats input as bytes32 string
+// COIN_MARKET_CAP_ID is converted using: cast format-bytes32-string $(COIN_MARKET_CAP_ID)
+// This means:
+// - Input is a decimal string padded with null bytes to 32 bytes
+// - COIN_MARKET_CAP_ID=10 becomes "10\0\0\0..." (padded to 32 bytes)
+// - Always treat as decimal string, not hex
+
+// Example: Proper decimal string parsing
+fn parse_decimal_input(input: &str) -> Result<u64, String> {
+    // Get content before first null byte and trim whitespace
+    let clean_input = input.split('\0').next().unwrap_or("").trim();
+    
+    // Check for empty input
+    if clean_input.is_empty() {
+        return Err("Empty input".to_string());
+    }
+    
+    // Parse as decimal number
+    clean_input.parse::<u64>()
+        .map_err(|_| format!("Invalid decimal number: '{}'", clean_input))
+}
+```
+
+2. Common Input Patterns:
+```rust
+// Pattern 1: Decimal string input (RECOMMENDED)
+let number = input.split('\0')
+    .next()
+    .ok_or("Empty input")?
+    .trim()
+    .parse::<u64>()
+    .map_err(|_| "Invalid decimal number")?;
+
+// Pattern 2: Raw bytes (for binary data)
+let data = req.to_vec();
+
+// Pattern 3: JSON input
+let json: YourType = serde_json::from_slice(&req)
+    .map_err(|e| format!("Invalid JSON: {}", e))?;
+```
+
+3. Best Practices:
+- Remember input is ALWAYS a bytes32 string from cast format-bytes32-string
+- Handle null byte padding by splitting on '\0'
+- Trim whitespace from input
+- Parse as decimal unless specifically handling binary/JSON data
+- Provide clear error messages
+- Log raw input for debugging
+- Add validation for your specific number ranges
+
+4. Testing Input:
+```bash
+# Test with decimal numbers
+COIN_MARKET_CAP_ID=5 make wasi-exec   # Input: "5\0\0\0..." -> 5
+COIN_MARKET_CAP_ID=10 make wasi-exec  # Input: "10\0\0\0..." -> 10
+COIN_MARKET_CAP_ID=42 make wasi-exec  # Input: "42\0\0\0..." -> 42
+
+# Test with custom component
+COMPONENT_FILENAME=your_component.wasm COIN_MARKET_CAP_ID=123 make wasi-exec
+```
+
+5. Common Pitfalls:
+```rust
+// BAD: Trying to parse as hex
+let number = u64::from_str_radix(input, 16)?;  // WRONG! Input is decimal
+
+// BAD: Not handling null bytes
+let number = input.parse::<u64>()?;  // WRONG! Will fail with null bytes
+
+// BAD: Not trimming whitespace
+let number = input.split('\0').next()?.parse::<u64>()?;  // WRONG! Might have whitespace
+
+// GOOD: Proper decimal parsing with null bytes
+let number = input
+    .split('\0')
+    .next()
+    .ok_or("Empty input")?
+    .trim()
+    .parse::<u64>()
+    .map_err(|_| "Invalid decimal number")?;
+```
+
+6. Input Validation Example:
+```rust
+fn validate_decimal_input(input: &str) -> Result<u64, String> {
+    // Get clean input before first null byte
+    let clean_input = input.split('\0').next().unwrap_or("").trim();
+    
+    // Check for empty input
+    if clean_input.is_empty() {
+        return Err("Empty input".to_string());
+    }
+    
+    // Parse decimal number
+    let number = clean_input.parse::<u64>()
+        .map_err(|_| format!("Invalid decimal number: '{}'", clean_input))?;
+    
+    // Add any range validation needed for your use case
+    if number > 1000 {
+        return Err("Number exceeds maximum value of 1000".to_string());
+    }
+    
+    Ok(number)
+}
+```
+
+7. Logging Best Practices:
+```rust
+// Log raw input for debugging
+println!("Received raw input: {:?}", input);  // Shows null bytes
+
+// Log parsed value
+println!("Parsed decimal number: {}", number);
+
+// Log validation results
+println!("Validation passed: number {} is within range", number);
+```
+
+8. Complete Component Example:
+```rust
+fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
+    // Decode trigger event
+    let (trigger_id, req, dest) = decode_trigger_event(action.data)?;
+    
+    // Convert to string and log raw input
+    let input = std::str::from_utf8(&req)?;
+    println!("Received raw input: {:?}", input);
+    
+    // Parse decimal input
+    let number = parse_decimal_input(input)?;
+    println!("Parsed decimal number: {}", number);
+    
+    // Process number
+    let result = process_number(number);
+    println!("Processing result: {}", result);
+    
+    // Format output
+    let output = result.to_string().into_bytes();
+    
+    // Return based on destination
+    Ok(Some(match dest {
+        Destination::Ethereum => encode_trigger_output(trigger_id, &output),
+        Destination::CliOutput => output,
+    }))
+}
+```
+
+9. Testing Guidelines:
+- Test with various decimal inputs
+- Test with leading/trailing whitespace
+- Test with empty input
+- Test with invalid numbers
+- Test with numbers at your min/max bounds
+- Test with malformed input
+
+10. Security Considerations:
+- Validate input size
+- Check numeric bounds
+- Handle overflow cases
+- Sanitize input before processing
+- Don't expose raw input in error messages
+- Consider rate limiting for expensive operations

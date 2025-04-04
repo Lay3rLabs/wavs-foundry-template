@@ -1,0 +1,205 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Setup and requirements for WAVS projects
+globs: **/*
+---
+# Project Structure Guidelines
+
+Guidelines for organizing WAVS projects and understanding the repository layout.
+
+## Directory Structure
+
+```
+project-root/
+├── .cursor/
+│   └── rules/              # Project-specific coding rules
+├── .docker/                # Docker configuration and deployment files
+│   ├── service.json       # Service configuration
+│   ├── deployments.json   # Contract deployment addresses
+│   └── script_deploy.json # Script deployment data
+├── components/            # WASI component implementations
+│   └── eth-price-oracle/  # Example component
+│       ├── Cargo.toml    # Rust dependencies
+│       └── src/
+│           ├── lib.rs     # Component implementation
+│           └── bindings/  # Generated WASI bindings
+├── docs/                  # Documentation files
+│   ├── tutorial/         # Step-by-step guides
+│   ├── custom-components.mdx  # Custom component documentation
+│   ├── benefits.mdx      # WAVS benefits documentation
+│   ├── design.mdx        # System design documentation
+│   ├── how-it-works.mdx  # Technical implementation details
+│   ├── index.mdx         # Documentation landing page
+│   └── overview.mdx      # WAVS platform overview
+├── src/
+│   ├── contracts/        # Solidity smart contracts
+│   │   ├── WavsTrigger.sol   # Trigger contract
+│   │   └── WavsSubmit.sol    # Submission contract
+│   └── interfaces/       # Contract interfaces
+│       └── ITypes.sol    # Shared type definitions
+├── script/              # Deployment and test scripts
+│   ├── build_components.sh  # WASI build script
+│   └── Trigger.s.sol       # Trigger deployment script
+├── compiled/            # Compiled WASM components
+├── Cargo.toml          # Workspace-level Rust dependencies
+├── Makefile           # Build and deployment commands
+└── wavs.toml         # WAVS service configuration
+```
+
+## Key Files
+
+1. Configuration Files:
+```toml
+# wavs.toml - Service configuration
+[service]
+name = "example-service"
+version = "0.1.0"
+
+[chains]
+ethereum = { rpc_url = "http://localhost:8545" }
+
+[components]
+price_oracle = { wasm = "eth_price_oracle.wasm" }
+```
+
+2. Build Configuration:
+```toml
+# Cargo.toml - Workspace configuration example
+[package]
+name = "eth-price-oracle"
+edition.workspace = true
+version.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+wit-bindgen-rt = { workspace = true }
+wavs-wasi-chain = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+alloy-sol-macro = { workspace = true }
+wstd = { workspace = true }
+alloy-sol-types = { workspace = true }
+anyhow = { workspace = true }
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+codegen-units = 1
+opt-level = "s"
+debug = false
+strip = true
+lto = true
+
+[package.metadata.component]
+package = "component:eth-price-oracle"
+target = "wavs:worker/layer-trigger-world@0.4.0-alpha.1"
+
+```
+
+## Build Commands
+
+1. Essential Makefile Targets:
+```makefile
+# Build all components
+make build
+
+# Build specific component
+make wasi-build WASI_BUILD_DIR=components/your-component
+
+# Execute component
+make wasi-exec COMPONENT_FILENAME=your_component.wasm
+
+# Deploy service
+make deploy-service
+```
+
+## Component Development
+
+1. Component Location:
+- Place new components in `components/` directory
+- Follow the template structure:
+```
+components/your-component/
+├── Cargo.toml
+└── src/
+    ├── lib.rs
+    └── bindings/
+```
+
+2. Contract Development:
+- Place contracts in `src/contracts/`
+- Place interfaces in `src/interfaces/`
+- Follow naming conventions:
+  * Trigger contracts: `*Trigger.sol`
+  * Submission contracts: `*Submit.sol`
+  * Interfaces: `I*.sol`
+
+## Environment Setup
+
+1. Required Files:
+```
+.env                # Environment variables
+.docker/service.json # Service configuration
+```
+
+2. Environment Variables:
+```bash
+# Required variables
+COINMARKETCAP_API_KEY=your_api_key
+RPC_URL=http://localhost:8545
+```
+
+## Testing and Deployment
+
+1. Local Testing:
+```bash
+# Start local environment
+make start-all
+
+# Test component
+make wasi-exec COMPONENT_FILENAME=component.wasm
+
+# View results
+make show-result
+```
+
+2. Deployment Process:
+```bash
+# 1. Build components
+make build
+
+# 2. Upload component
+make upload-component COMPONENT_FILENAME=component.wasm
+
+# 3. Deploy service
+make deploy-service
+```
+
+## Best Practices
+
+1. Project Organization:
+- Keep components isolated in their own directories
+- Share common code through workspace dependencies
+- Use consistent naming conventions
+
+2. Development Workflow:
+- Update bindings after interface changes
+- Test components locally before deployment
+- Follow the established directory structure
+
+3. Configuration Management:
+- Use environment variables for sensitive data
+- Keep chain configurations in wavs.toml
+- Store deployment addresses in .docker/deployments.json
+
+4. Version Control:
+- Include .gitignore for build artifacts
+- Track Cargo.lock for reproducible builds
+- Document breaking changes in CHANGELOG.md

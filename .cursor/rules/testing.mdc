@@ -1,0 +1,188 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Guidelines for testing WAVS components
+globs: components/**/*
+---
+# Testing Guidelines
+
+Guidelines for testing WAVS components effectively:
+
+1. Test Setup:
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::Result;
+    use wavs_wasi_chain::test_utils::{mock_trigger, mock_chain_config};
+    
+    // Test helper functions
+    fn setup_test_component() -> Component {
+        Component::default()
+    }
+    
+    fn create_test_trigger() -> TriggerAction {
+        mock_trigger(b"test data")
+    }
+}
+```
+
+2. Unit Test Patterns:
+```rust
+#[test]
+fn test_trigger_processing() -> Result<()> {
+    // Arrange
+    let component = setup_test_component();
+    let trigger = create_test_trigger();
+    
+    // Act
+    let result = component.run(trigger)?;
+    
+    // Assert
+    assert!(result.is_some());
+    assert_eq!(result.unwrap().len(), 32);
+    Ok(())
+}
+
+#[test]
+fn test_error_handling() {
+    // Arrange
+    let component = setup_test_component();
+    let invalid_trigger = TriggerAction::default();
+    
+    // Act
+    let result = component.run(invalid_trigger);
+    
+    // Assert
+    assert!(result.is_err());
+    assert!(result.unwrap_err().contains("invalid trigger"));
+}
+```
+
+3. Integration Test Patterns:
+```rust
+#[test]
+fn test_chain_interaction() -> Result<()> {
+    // Setup mock chain
+    let chain_config = mock_chain_config();
+    let provider = new_provider(&chain_config)?;
+    
+    // Create test contract call
+    let call = create_test_call();
+    
+    // Execute and verify
+    let result = block_on(async {
+        provider.send_transaction(call).await
+    })?;
+    
+    assert!(result.status.is_success());
+    Ok(())
+}
+```
+
+4. Local Component Testing:
+```bash
+# Test with specific input data
+COIN_MARKET_CAP_ID=1 make wasi-exec
+
+# View test results
+make show-result
+```
+
+5. Contract Testing:
+- Test trigger contract events
+- Verify submission contract integration
+- Test operator permissions and access controls
+- Validate event emission and handling
+- Test contract state changes
+
+6. Testing External Services:
+```rust
+#[test]
+fn test_api_integration() -> Result<()> {
+    // Mock HTTP client
+    let client = MockClient::new()
+        .expect_get()
+        .with("https://api.example.com")
+        .returns(json!({"status": "success"}));
+        
+    // Test component with mock client
+    let result = make_api_request(client)?;
+    assert_eq!(result.status, "success");
+    Ok(())
+}
+```
+
+7. Environment Testing:
+```bash
+# Test smart contracts
+forge test
+
+# Test with environment variables
+WAVS_ENV_API_KEY=test_key make wasi-exec
+
+# Test in different environments
+make test-local
+make test-testnet
+```
+
+8. Best Testing Practices:
+- Write both unit and integration tests
+- Use descriptive test names
+- Follow Arrange-Act-Assert pattern
+- Test error cases thoroughly
+- Mock external dependencies
+- Test edge cases
+- Keep tests focused and simple
+- Use test helpers for common setup
+- Test with different environment configurations
+- Validate all contract interactions
+- Test event handling and triggers
+- Verify data formats and transformations
+
+9. Common Test Scenarios:
+```rust
+#[test]
+fn test_trigger_validation() {
+    // Test invalid inputs
+    let invalid_cases = vec![
+        (vec![], "empty input"),
+        (vec![0; 1000], "input too large"),
+    ];
+    
+    for (input, expected_error) in invalid_cases {
+        let result = validate_input(&input);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains(expected_error));
+    }
+}
+
+#[test]
+fn test_environment_config() {
+    // Test environment variable handling
+    std::env::set_var("TEST_VAR", "test_value");
+    let config = load_config();
+    assert_eq!(config.test_var, "test_value");
+}
+```
+
+10. Test Organization:
+```rust
+#[cfg(test)]
+mod tests {
+    mod unit {
+        // Unit tests here
+    }
+    
+    mod integration {
+        // Integration tests here
+    }
+    
+    mod helpers {
+        // Test helpers here
+    }
+}
+```

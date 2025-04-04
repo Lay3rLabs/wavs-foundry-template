@@ -1,0 +1,169 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Guidelines for implementing submission contracts in WAVS components
+globs: src/contracts/**/*.sol
+---
+# Submission Contract Guidelines
+
+Guidelines for implementing submission contracts that handle WAVS component outputs.
+
+## Basic Structure
+
+1. Required Interfaces:
+```solidity
+// Required imports
+import {IWavsServiceManager} from "@wavs/interfaces/IWavsServiceManager.sol";
+import {IWavsServiceHandler} from "@wavs/interfaces/IWavsServiceHandler.sol";
+
+// Contract declaration
+contract YourSubmitContract is IWavsServiceHandler {
+    // Service manager instance
+    IWavsServiceManager private _serviceManager;
+
+    constructor(IWavsServiceManager serviceManager) {
+        _serviceManager = serviceManager;
+    }
+}
+```
+
+2. Required State Variables:
+```solidity
+// Mapping for tracking valid triggers
+mapping(TriggerId _triggerId => bool _isValid) internal _validTriggers;
+
+// Mapping for storing trigger data
+mapping(TriggerId _triggerId => bytes _data) internal _datas;
+
+// Mapping for storing operator signatures
+mapping(TriggerId _triggerId => bytes _signature) internal _signatures;
+```
+
+## Core Implementation
+
+1. Handle Signed Data Function:
+```solidity
+function handleSignedData(bytes calldata _data, bytes calldata _signature) external {
+    // 1. Validate operator signature
+    _serviceManager.validate(_data, _signature);
+
+    // 2. Decode data into DataWithId struct
+    DataWithId memory dataWithId = abi.decode(_data, (DataWithId));
+
+    // 3. Store results
+    _signatures[dataWithId.triggerId] = _signature;
+    _datas[dataWithId.triggerId] = dataWithId.data;
+    _validTriggers[dataWithId.triggerId] = true;
+}
+```
+
+2. Data Access Functions:
+```solidity
+// Check if trigger ID is valid
+function isValidTriggerId(TriggerId _triggerId) external view returns (bool) {
+    return _validTriggers[_triggerId];
+}
+
+// Get operator signature for trigger
+function getSignature(TriggerId _triggerId) external view returns (bytes memory) {
+    return _signatures[_triggerId];
+}
+
+// Get stored data for trigger
+function getData(TriggerId _triggerId) external view returns (bytes memory) {
+    return _datas[_triggerId];
+}
+```
+
+## Best Practices
+
+1. Validation:
+- Always validate operator signatures before processing data
+- Verify trigger IDs exist before accessing data
+- Check data format matches expected structure
+
+2. Storage:
+- Use appropriate data types for storage efficiency
+- Consider gas costs when storing large data sets
+- Implement clean-up mechanisms if needed
+
+3. Security:
+- Only accept submissions from authorized operators
+- Validate all input parameters
+- Protect against signature replay attacks
+- Implement access controls for sensitive functions
+
+4. Error Handling:
+```solidity
+// Example error definitions
+error InvalidSignature();
+error UnauthorizedOperator();
+error InvalidTriggerData();
+
+// Example validation with custom errors
+function validateSubmission(bytes calldata _data, bytes calldata _signature) internal view {
+    if (!_serviceManager.isValidSignature(_data, _signature)) {
+        revert InvalidSignature();
+    }
+}
+```
+
+## Component Integration
+
+1. Data Format:
+```solidity
+// Define data structure that matches component output
+struct DataWithId {
+    uint64 triggerId;
+    bytes data;
+}
+```
+
+2. Processing Flow:
+```solidity
+// 1. Component processes trigger and returns data
+// 2. Operator signs the data
+// 3. handleSignedData receives and validates submission
+// 4. Data is stored and accessible via getter functions
+```
+
+## Example Implementation
+
+```solidity
+contract PriceOracleSubmit is IWavsServiceHandler {
+    // State variables
+    IWavsServiceManager private _serviceManager;
+    mapping(uint64 => PriceData) private _prices;
+    
+    // Custom data structure
+    struct PriceData {
+        uint256 price;
+        uint256 timestamp;
+        bytes signature;
+    }
+    
+    function handleSignedData(bytes calldata _data, bytes calldata _signature) external {
+        // Validate operator signature
+        _serviceManager.validate(_data, _signature);
+        
+        // Decode price data
+        DataWithId memory dataWithId = abi.decode(_data, (DataWithId));
+        PriceData memory priceData = abi.decode(dataWithId.data, (PriceData));
+        
+        // Store price data
+        _prices[dataWithId.triggerId] = PriceData({
+            price: priceData.price,
+            timestamp: block.timestamp,
+            signature: _signature
+        });
+    }
+    
+    // Getter function for price data
+    function getPrice(uint64 triggerId) external view returns (PriceData memory) {
+        return _prices[triggerId];
+    }
+}
+```
