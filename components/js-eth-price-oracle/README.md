@@ -60,7 +60,7 @@ Deploy the contracts
 ```bash docci-delay-after=1
 export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
 
-forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
+forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig 'run(string)' --rpc-url http://localhost:8545 --broadcast
 ```
 
 Deploy the component
@@ -77,7 +77,7 @@ Trigger the service
 export COIN_MARKET_CAP_ID=2
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig "run(string,string)" --rpc-url http://localhost:8545 --broadcast -v 4
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast -v 4
 ```
 
 Show the result from the triggered service
