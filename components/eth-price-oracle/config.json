@@ -8,6 +8,7 @@
     "WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS": "true"
   },
   "pre_cmds": [],
+  "log_level": "ERROR",
   "cleanup_cmds": [
     "killall anvil || true",
     "docker compose rm --stop --force --volumes || true",
