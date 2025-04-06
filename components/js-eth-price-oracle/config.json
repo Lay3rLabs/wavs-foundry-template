@@ -3,9 +3,7 @@
     "paths": [
       "components/js-eth-price-oracle/README.md"
     ],
-    "env_vars": {
-      "WAVS_SCRIPT_ACCEPT_ALL_DEFAULTS": "true"
-    },
+    "env_vars": {},
     "pre_cmds": [],
     "log_level": "ERROR",
     "cleanup_cmds": [
