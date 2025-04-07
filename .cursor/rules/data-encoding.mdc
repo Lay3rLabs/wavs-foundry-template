@@ -127,20 +127,6 @@ match decode_result {
 - Check array bounds and lengths
 - Verify address formats
 
-4. Output Formatting:
-```rust
-// For Ethereum submission
-let payload = TransactionPayload {
-    data: result.abi_encode(),
-    destination: validated_address,
-    value: amount,
-};
-
-// For CLI output
-let formatted_output = serde_json::to_string(&result)
-    .map_err(|e| format!("Failed to serialize output: {}", e))?;
-```
-
 ## Data Size Limits
 
 1. Blockchain Constraints:
