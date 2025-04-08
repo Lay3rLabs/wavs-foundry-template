@@ -137,9 +137,13 @@ TODO: we need to update this service.json.template to include the aggregator pat
 
 ### Add Service.json to Service Manager
 
-TODO: upload service.json
+TODO: upload service.json (Right now, I'm just using a git commit from this template, this should be different)
 
-TODO: call set-service-uri script from wavs-middleware
+```bash
+export SERVICE_URI="https://raw.githubusercontent.com/Lay3rLabs/wavs-foundry-template/refs/heads/100-wavs-template---deploy-contract-setup/wavs-staking-template/service.json"
+
+docker run --rm --network host --env-file .env  -v ./.nodes:/root/.nodes   --entrypoint /wavs/set_service_uri.sh wavs-middleware $SERVICE_URI
+```
 
 ### Inform the aggregator of the service
 
@@ -147,7 +151,9 @@ TODO: how???
 
 ## Running as Operator
 
-All the below is for the operator.
+All the below is for the operator. This could be run multiple times on multiple machines.
+We should make a `wavs-operator` repo later with these instructions explained further when
+there is a tagged release. For now, just use a different terminal window and assume none of this happens on the dev machine.
 
 ### Start WAVS
 
@@ -160,13 +166,32 @@ docker run --rm --network host -v $(pwd):/wavs -e WAVS_SUBMISSION_MNEMONIC -e WA
 
 ### Add Service to WAVS
 
-```bash
-wavs-cli upload-component '../compiled/eth_price_oracle.wasm'
+TODO: we shouldn't need upload-component once we use the WASI registry in service.json. This is broken anyway
 
-# TODO: dies with missing chain in wavs.toml
+TODO: adding the service should be about pointing to a service manager
+
+```bash
+docker run --rm --network host -v $(pwd)/cli.toml:/wavs/cli.toml -v $(pwd)../compiled/eth_price_oracle.wasm:/eth_price_oracle.wasm ghcr.io/lay3rlabs/wavs:local wavs-cli upload-component '/eth_price_oracle.wasm'
+
+# TODO: can we fix this to run with docker? using service_uri. operator should just have the docker image
 wavs-cli deploy-service-raw --service '@service.json'
 ```
 
 ### Register Operator to AVS Service
 
-TODO: call register-operator script from wavs-middleware
+TODO:
+* This requires a query on the wavs node to get the AVS_KEY once we properly install the service above.
+* Improve the funding mechanism
+* Query the ServiceManager/StakeRegistry for the current operator stake after to ensure proper registration
+
+```bash
+# TODO: get the private AVS key (0x...) for this service from the WAVS node
+AVS_KEY=0x974b676703542ff93841c3daeeabcbfdb6ba62101856e22d5fb6b9d2f9db42fd
+
+AVS_ADDR=$(cast wallet address --private-key $AVS_KEY)
+# unseure why this fails, maybe not needed on testnet fork script
+cast rpc anvil_setBalance $AVS_ADDR 0x10000000000000000000 -r http://localhost:8545
+
+# register the operator on this AVS
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes  --entrypoint /wavs/register.sh wavs-middleware "$AVS_KEY"
+```
