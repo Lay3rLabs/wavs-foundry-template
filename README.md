@@ -188,31 +188,40 @@ Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https:
 anvil --fork-url https://ethereum-holesky-rpc.publicnode.com
 ```
 
-Run WAVS & the aggregator
-
-```bash
-docker compose up --remove-orphans
-```
-
-### Deploy eigen middleware
+Deploy eigen middleware
 
 ```bash
 cp .env.example .env
 
 docker run --rm --network host --env-file .env  -v ./.nodes:/root/.nodes wavs-middleware:local
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
-
-# call getServiceURI
 cast call ${SERVICE_MANAGER_ADDRESS} 'getServiceURI()'
+
+export PRIVATE_KEY=$(cat .nodes/deployer)
+export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
+cast rpc anvil_setBalance $MY_ADDR 0x10000000000000000000 -r http://localhost:8545
 ```
+
+Update the WAVS env variables so we are the owner (who deployed the ServiceManager)
+
+```bash
+sed -i 's/test test test test test test test test test test test junk/'$PRIVATE_KEY'/' .env
+```
+
+Run WAVS & the aggregator in a new tab, or background
+
+```bash
+docker compose up --remove-orphans &
+```
+
+
 
 Deployer private key
 
 ```bash
 # export PRIVATE_KEY=$(cast wallet new --json | jq -r .[0].private_key)
-export PRIVATE_KEY=$(cat .nodes/deployer)
-export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
-cast rpc anvil_setBalance $MY_ADDR 0x10000000000000000000 -r http://localhost:8545
+
+
 ```
 
 ### Deploy Service Contracts
