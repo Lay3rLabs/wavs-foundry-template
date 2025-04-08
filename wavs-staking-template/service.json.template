@@ -16,7 +16,7 @@
     "prices": {
       "trigger": {
         "eth_contract_event": {
-          "address": "0xBc4c584Bf0A09D6295CB66b739dB7936D06C520d",
+          "address": "TRIGGER_ADDRESS",
           "chain_name": "holesky-fork",
           "event_hash": "0x86eacd23610d81706516de1ed0476c87772fdf939c7c771fbbd7f0230d619e68"
         }
@@ -25,7 +25,7 @@
       "submit": {
         "ethereum_contract": {
           "chain_name": "holesky-fork",
-          "address": "0x815428Fa3E0714adCF3933516e23Db16a4123e24",
+          "address": "SERVICE_HANDLER_ADDRESS",
           "max_gas": null
         }
       },
