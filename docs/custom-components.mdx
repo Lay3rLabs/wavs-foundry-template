@@ -58,7 +58,7 @@ impl Guest for Component {
 
 Components must implement the `Guest` trait, which is the main interface between your component and the WAVS runtime. The `run` function is the entry point for processing triggers: it receives the trigger data, decodes it, processes it according to your component's logic, and returns the results. Results can be sent back to Ethereum (when triggered by a contract event) or returned as CLI output (when triggered manually during testing). Error handling is done through the `Result` type. In the foundry template, bindings are automatically generated for any files in the `/components` and `/src` directories when the `make build` command is run.
 
-### Building Components
+## Building Components
 
 Dependencies for components are added to the `Cargo.toml` file in the `components` directory.
 
@@ -76,7 +76,7 @@ alloy-sol-types = { workspace = true }  # For Ethereum ABI handling
 anyhow = { workspace = true }           # For enhanced error handling
 ```
 
-#### Testing
+## Testing
 
 Components can be built for local testing using the following commands. The `wasi-exec` command allows you to simulate triggers, and you can view the component's logs in stdout/stderr to debug its execution.
 
@@ -88,13 +88,13 @@ make build
 make wasi-exec
 ```
 
-### `wavs-wasi-chain` crate
+## `wavs-wasi-chain` crate
 
 The `wavs-wasi-chain` crate provides a set of helpful functions for making HTTP requests and interacting with the blockchain. It also provides a macro for decoding trigger data for use in the component.
 
 Learn more in the [crate documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions).
 
-### Network requests
+## Network requests
 
 Components can make network requests to external APIs using the `wavs-wasi-chain` crate.
 
@@ -149,7 +149,7 @@ async fn make_post_request() -> Result<PostResponse, String> {
 
 Other functions are available in the [crate documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions).
 
-### Logging
+## Logging
 
 Components can use logging to debug and track the execution of the component.
 
@@ -169,7 +169,7 @@ For production, you can use a `host::log()` function which takes a `LogLevel` an
 host::log(LogLevel::Info, "Production logging message");
 ```
 
-### Blockchain interactions
+## Blockchain interactions
 
 The following dependencies are required in `Cargo.toml` for Ethereum interactions:
 
@@ -211,7 +211,7 @@ let provider = new_eth_provider::<Ethereum>(
 
 Visit the [wavs-wasi-chain documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) for more information on the functions available for interacting with the blockchain.
 
-### Sol! macro
+## Sol! macro
 
 The `sol!` macro from `alloy-sol-macro` allows you to generate Rust types from Solidity interface files. This is useful for handling blockchain events and data structures in components.
 
@@ -235,29 +235,19 @@ The macro reads a Solidity interface file and generates corresponding Rust types
 
 Documentation for the `sol!` macro can be found at: https://docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html
 
-### Environment and Configuration Variables
+## Environment and Configuration Variables
 
 Components can be configured with two types of variables:
 
-#### KV: public variables
+### KV: public variables
 
 These variables can be used for non-sensitive information that can be viewed publicly. These variables can be configured in the makefile and are set during service deployment. They are accessed using `std::env::var` in the component.
 
-To add public variables, modify the `"kv"` section in the `SERVICE_CONFIG` in your `Makefile`:
+To add public variables, modify the `"kv"` section in the `SERVICE_CONFIG` in your `Makefile`. The following example adds `max_retries`, `timeout_seconds`, and `api_endpoint` variables with values:
 
-```makefile
-SERVICE_CONFIG='{
-  "fuel_limit": 100000000,
-  "max_gas": 5000000,
-  "host_envs": ["WAVS_ENV_MY_API_KEY"],
-  "kv": [
-    ["max_retries", "3"],
-    ["timeout_seconds", "30"],
-    ["api_endpoint", "https://api.example.com"]
-  ],
-  "workflow_id": "default",
-  "component_id": "default"
-}'
+```bash
+# makefile
+SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv":[["max_retries","3"],["timeout_seconds","30"],["api_endpoint","https://api.example.com"]],"workflow_id":"default","component_id":"default"}'
 ```
 
 Then use these variables in your component:
@@ -268,7 +258,7 @@ let timeout = std::env::var("timeout_seconds")?;
 let endpoint = std::env::var("api_endpoint")?;
 ```
 
-#### Host environment variables (Secrets)
+### Host environment variables (Secrets)
 
 Private Environment Variables (`host_envs`) can be used for sensitive data like API keys. These variables are set by operators in their environment and are not viewable by anyone. These variables must be prefixed with `WAVS_ENV_`. Each operator must set these variables in their environment before deploying the service. Only variables listed in `host_envs` will be available to the component.
 
@@ -281,26 +271,14 @@ WAVS_ENV_MY_API_KEY=your_secret_key_here
 
 Variables can also be set in your `~/.bashrc` , `~/.zshrc` , or `~/.profile` files.
 
-Then modify `"host_envs"` in the `SERVICE_CONFIG` section of your `Makefile`:
+Then modify `"host_envs"` in the `SERVICE_CONFIG` section of your `Makefile`. The following example adds `WAVS_ENV_MY_API_KEY` to the `host_envs` array. Remember to add the `WAVS_ENV_` prefix to the variable name:
 
-   ```bash
-   # makefile
-
-   SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_MY_API_KEY"],"kv":[],"workflow_id":"default","component_id":"default"}'
-   ```
-
-Configuration is set during service deployment:
-
-```json
-SERVICE_CONFIG='{
-  "fuel_limit": 100000000,
-  "max_gas": 5000000,
-  "host_envs": ["WAVS_ENV_MY_API_KEY"],
-  "kv": [["max_retries", "3"]],
-  "workflow_id": "default",
-  "component_id": "default"
-}'
+```bash
+# makefile
+SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_MY_API_KEY"],"kv":[],"workflow_id":"default","component_id":"default"}'
 ```
+
+This configuration is used during local testing with `make wasi-exec` and will also be applied when your service is deployed.
 
 The following example shows how to access a private environment variable in a component:
 
