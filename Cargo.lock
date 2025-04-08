@@ -1097,7 +1097,7 @@ dependencies = [
  "anyhow",
  "serde",
  "serde_json",
- "wavs-wasi-chain",
+ "wavs-wasi-utils",
  "wit-bindgen-rt 0.39.0",
  "wstd",
 ]
@@ -3142,10 +3142,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "wavs-wasi-chain"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "adabf0e7d9d50f63bd7537d9b90acc05d3e3bd35468aed5379fccc740f7d0540"
+name = "wavs-wasi-utils"
+version = "0.4.0-alpha.1"
+source = "git+https://github.com/Lay3rLabs/wavs-wasi#f9d1dea11404d0e73abf22e85e01520cf2cdfc47"
 dependencies = [
  "alloy-json-rpc",
  "alloy-primitives",

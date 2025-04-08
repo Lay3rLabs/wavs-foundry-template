@@ -23,7 +23,7 @@ The [trigger.rs](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/
 use crate::bindings::wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent};
 use alloy_sol_types::SolValue;
 use anyhow::Result;
-use wavs_wasi_chain::decode_event_log_data;
+use wavs_wasi_utils::decode_event_log_data;
 
 pub enum Destination {
     Ethereum,
@@ -64,7 +64,7 @@ The [`lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/co
 // !focus(1:13)
 mod trigger;
 use trigger::{decode_trigger_event, encode_trigger_output, Destination};
-use wavs_wasi_chain::http::{fetch_json, http_request_get};
+use wavs_wasi_utils::http::{fetch_json, http_request_get};
 pub mod bindings;
 use crate::bindings::{export, Guest, TriggerAction};
 use serde::{Deserialize, Serialize};
@@ -191,7 +191,7 @@ The next section decodes the event sent from the trigger and extracts the `trigg
 ```rust ! lib.rs
 mod trigger;
 use trigger::{decode_trigger_event, encode_trigger_output, Destination};
-use wavs_wasi_chain::http::{fetch_json, http_request_get};
+use wavs_wasi_utils::http::{fetch_json, http_request_get};
 pub mod bindings;
 use crate::bindings::{export, Guest, TriggerAction};
 use serde::{Deserialize, Serialize};
