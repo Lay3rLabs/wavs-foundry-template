@@ -214,16 +214,6 @@ Run WAVS & the aggregator in a new tab, or background
 docker compose up --remove-orphans &
 ```
 
-
-
-Deployer private key
-
-```bash
-# export PRIVATE_KEY=$(cast wallet new --json | jq -r .[0].private_key)
-
-
-```
-
 ### Deploy Service Contracts
 
 **Key Concepts:**
