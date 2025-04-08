@@ -268,7 +268,7 @@ let timeout = std::env::var("timeout_seconds")?;
 let endpoint = std::env::var("api_endpoint")?;
 ```
 
-#### Host environment variables
+#### Host environment variables (Secrets)
 
 Private Environment Variables (`host_envs`) can be used for sensitive data like API keys. These variables are set by operators in their environment and are not viewable by anyone. These variables must be prefixed with `WAVS_ENV_`. Each operator must set these variables in their environment before deploying the service. Only variables listed in `host_envs` will be available to the component.
 
@@ -277,6 +277,8 @@ To add private variables, set the environment variable in your `.env` file:
 ```bash
 WAVS_ENV_MY_API_KEY=your_secret_key_here
 ```
+
+Variables can also be set in your `~/.bashrc` , `~/.zshrc` , or `~/.profile` files.
 
 Then modify `"host_envs"` in the `SERVICE_CONFIG` section of your `Makefile`:
 

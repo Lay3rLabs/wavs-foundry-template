@@ -1,107 +1,199 @@
 ---
-description: 
-globs: 
-alwaysApply: true
----
----
 description: Guidelines for handling environment variables in WAVS components
 globs: components/**/*.rs
 alwaysApply: true
 ---
-# Environment Variable Handling
+---
+description: 
+globs: 
+alwaysApply: true
+---
 
-Guidelines for managing environment variables in WAVS components:
+# Environment Variable Guidelines
 
-1. Required setup:
-```toml
-# In wavs.toml
-[service]
-name = "your-service"
-version = "0.1.0"
+Components can be configured with two types of variables:
 
-[environment]
-# Public variables
-MAX_RETRIES = "3"
-TIMEOUT_SECONDS = "30"
+## KV: Public Variables
 
-# Private variables (must be prefixed with WAVS_ENV_)
-WAVS_ENV_API_KEY = "${API_KEY}"
-WAVS_ENV_SECRET_TOKEN = "${SECRET_TOKEN}"
+These variables can be used for non-sensitive information that can be viewed publicly. They are configured in the Makefile and set during service deployment.
+
+1. Configuration in Makefile:
+```makefile
+SERVICE_CONFIG='{
+  "fuel_limit": 100000000,
+  "max_gas": 5000000,
+  "host_envs": ["WAVS_ENV_MY_API_KEY"],
+  "kv": [
+    ["max_retries", "3"],
+    ["timeout_seconds", "30"],
+    ["api_endpoint", "https://api.example.com"]
+  ],
+  "workflow_id": "default",
+  "component_id": "default"
+}'
 ```
 
-2. Accessing environment variables:
+2. Usage in Components:
 ```rust
-// Basic access pattern
-fn get_api_key() -> Result<String, String> {
-    std::env::var("WAVS_ENV_API_KEY")
-        .map_err(|e| format!("Failed to get API key: {}", e))
-}
-
-// With default value
-fn get_timeout() -> u64 {
-    std::env::var("TIMEOUT_SECONDS")
-        .unwrap_or_else(|_| "30".to_string())
-        .parse()
-        .unwrap_or(30)
-}
+// Access public variables
+let max_retries = std::env::var("max_retries")?;
+let timeout = std::env::var("timeout_seconds")?;
+let endpoint = std::env::var("api_endpoint")?;
 ```
 
-3. Best practices:
-- Prefix sensitive variables with `WAVS_ENV_`
-- Use descriptive variable names
-- Document all required variables
-- Provide sensible defaults where appropriate
-- Validate environment variables at startup
-- Handle missing variables gracefully
+## Host Environment Variables (Private)
 
-4. Configuration validation:
+Private environment variables (`host_envs`) are used for sensitive data like API keys. These variables:
+- Must be prefixed with `WAVS_ENV_`
+- Are set by operators in their environment
+- Are not viewable by anyone
+- Only variables listed in `host_envs` will be available to the component
+
+1. Setting Private Variables:
+You can set these variables in any of these locations:
+```bash
+#  In .env file (Recommeded)
+WAVS_ENV_MY_API_KEY=your_secret_key_here
+
+# Or in ~/.bashrc
+export WAVS_ENV_MY_API_KEY=your_secret_key_here
+
+# Or in ~/.zshrc
+export WAVS_ENV_MY_API_KEY=your_secret_key_here
+
+# Or in ~/.profile
+export WAVS_ENV_MY_API_KEY=your_secret_key_here
+```
+
+2. Configure in Makefile:
+```makefile
+SERVICE_CONFIG='{
+  "fuel_limit": 100000000,
+  "max_gas": 5000000,
+  "host_envs": ["WAVS_ENV_MY_API_KEY"],
+  "kv": [["max_retries", "3"]],
+  "workflow_id": "default",
+  "component_id": "default"
+}'
+```
+
+3. Usage in Components:
+```rust
+// Access private variables
+let api_key = std::env::var("WAVS_ENV_MY_API_KEY")?;
+```
+
+## Best Practices
+
+1. Security:
+- Never commit sensitive variables to version control
+- Use appropriate file permissions for secret files
+- Rotate sensitive keys regularly
+- Use descriptive variable names
+- Document required variables
+
+2. Organization:
+- Group related variables together
+- Use consistent naming conventions
+- Document variable purposes
+- Keep sensitive and non-sensitive variables separate
+
+3. Error Handling:
+```rust
+fn get_required_var(name: &str) -> Result<String, String> {
+    std::env::var(name).map_err(|e| format!("Missing required variable {}: {}", name, e))
+}
+
+// Usage
+let api_key = get_required_var("WAVS_ENV_MY_API_KEY")?;
+```
+
+4. Validation:
 ```rust
 fn validate_config() -> Result<(), String> {
     // Check required variables
     let required_vars = [
-        "WAVS_ENV_API_KEY",
-        "WAVS_ENV_SECRET_TOKEN",
+        "WAVS_ENV_MY_API_KEY",
+        "max_retries",
+        "timeout_seconds"
     ];
 
     for var in required_vars {
-        std::env::var(var).map_err(|_| {
-            format!("Missing required environment variable: {}", var)
-        })?;
+        std::env::var(var)
+            .map_err(|_| format!("Missing required variable: {}", var))?;
     }
 
-    // Validate variable formats
-    let timeout = get_timeout();
-    if timeout < 1 || timeout > 300 {
-        return Err("TIMEOUT_SECONDS must be between 1 and 300".to_string());
+    // Validate values
+    let max_retries: u32 = std::env::var("max_retries")
+        .unwrap()
+        .parse()
+        .map_err(|_| "Invalid max_retries value")?;
+
+    if max_retries < 1 || max_retries > 10 {
+        return Err("max_retries must be between 1 and 10".to_string());
     }
 
     Ok(())
 }
 ```
 
-5. Security considerations:
-- Never log sensitive environment variables
-- Don't expose secrets in error messages
-- Validate environment variable content
-- Use appropriate access patterns for different variable types
-- Handle environment changes gracefully
+## Common Patterns
 
-6. Example usage in components:
+1. Default Values:
 ```rust
-fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
-    // Validate configuration on startup
-    validate_config()?;
+fn get_with_default(name: &str, default: &str) -> String {
+    std::env::var(name).unwrap_or_else(|_| default.to_string())
+}
 
-    // Use environment variables
-    let api_key = get_api_key()?;
-    let timeout = get_timeout();
+// Usage
+let timeout = get_with_default("timeout_seconds", "30");
+```
 
-    // Configure client with environment
-    let client = Client::new()
-        .timeout(Duration::from_secs(timeout))
-        .header("Authorization", format!("Bearer {}", api_key));
+2. Type Conversion:
+```rust
+fn get_numeric<T>(name: &str) -> Result<T, String> 
+where 
+    T: std::str::FromStr,
+    T::Err: std::fmt::Display
+{
+    std::env::var(name)
+        .map_err(|e| format!("Missing variable {}: {}", name, e))?
+        .parse()
+        .map_err(|e| format!("Invalid value for {}: {}", name, e))
+}
 
-    // Process request
-    Ok(None)
+// Usage
+let max_retries: u32 = get_numeric("max_retries")?;
+```
+
+3. Required vs Optional:
+```rust
+fn get_optional(name: &str) -> Option<String> {
+    std::env::var(name).ok()
+}
+
+// Usage
+if let Some(api_key) = get_optional("WAVS_ENV_OPTIONAL_KEY") {
+    // Use optional API key
 }
 ```
+
+## Deployment Considerations
+
+1. Environment Setup:
+- Document all required variables
+- Provide example .env file
+- Include validation in deployment process
+- Test with different configurations
+
+2. Production Setup:
+- Use different values per environment
+- Implement proper secret management
+- Monitor variable usage
+- Plan for key rotation
+
+3. Troubleshooting:
+- Log missing variables
+- Validate on startup
+- Provide clear error messages
+- Document common issues

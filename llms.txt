@@ -1560,28 +1560,3 @@ pub struct ContractInfo {
     pub abi: String,
 }
 ```
-
-### Configuration Examples
-
-```toml
-# Example wavs.toml for component configuration
-[service]
-name = "example-service"
-version = "0.1.0"
-
-[chains]
-ethereum = { rpc_url = "http://localhost:8545" }
-cosmos = { rpc_url = "http://localhost:26657" }
-
-[components]
-prediction_market = { wasm = "prediction_market.wasm" }
-safe_guard = { wasm = "safe_guard.wasm" }
-dao_agent = { wasm = "dao_agent.wasm" }
-bridge = { wasm = "bridge.wasm" }
-telegram_bot = { wasm = "telegram_bot.wasm" }
-
-[environment]
-TELEGRAM_BOT_TOKEN = "${TELEGRAM_BOT_TOKEN}"
-TELEGRAM_CHAT_ID = "${TELEGRAM_CHAT_ID}"
-COINMARKETCAP_API_KEY = "${COINMARKETCAP_API_KEY}"
-```
