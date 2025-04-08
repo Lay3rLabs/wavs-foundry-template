@@ -255,6 +255,8 @@ COMPONENT_FILENAME=eth_price_oracle.wasm SERVICE_MANAGER_ADDRESS=${SERVICE_MANAG
 # Deploy the service JSON to WAVS so it now watches and submits
 # the results based on the service json configuration.
 SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
+
+# curl http://localhost:8000/service/019616c0-2c31-7c11-a8ec-8e3409101628
 ```
 
 ## Trigger the Service
