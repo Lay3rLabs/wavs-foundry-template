@@ -235,7 +235,7 @@ The macro reads a Solidity interface file and generates corresponding Rust types
 
 Documentation for the `sol!` macro can be found at: https://docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html
 
-## Environment and Configuration Variables
+## Environment Variables
 
 Components can be configured with two types of variables:
 
@@ -260,7 +260,7 @@ let endpoint = std::env::var("api_endpoint")?;
 
 ### Host environment variables (Secrets)
 
-Private Environment Variables (`host_envs`) can be used for sensitive data like API keys. These variables are set by operators in their environment and are not viewable by anyone. These variables must be prefixed with `WAVS_ENV_`. Each operator must set these variables in their environment before deploying the service. Only variables listed in `host_envs` will be available to the component.
+Private environment variables (`host_envs`) can be used for sensitive data like API keys. These variables are set by operators in their environment and are not viewable by anyone. These variables must be prefixed with `WAVS_ENV_`. Each operator must set these variables in their environment before deploying the service. Only variables listed in `host_envs` will be available to the component.
 
 To add private variables, set the environment variable in your `.env` file:
 
