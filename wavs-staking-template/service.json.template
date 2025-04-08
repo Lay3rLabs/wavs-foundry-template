@@ -1,0 +1,40 @@
+{
+  "id": "0195d86f-1650-7192-932a-2c44b",
+  "name": "wavs-staking-template",
+  "components": {
+    "price_oracle": {
+      "source": {
+        "Digest": "629ae3418057c57dff6b88c1ddae02204604ef296730b5a3001c330b9508885d"
+      },
+      "permissions": {
+        "allowed_http_hosts": "none",
+        "file_system": false
+      }
+    }
+  },
+  "workflows": {
+    "prices": {
+      "trigger": {
+        "eth_contract_event": {
+          "address": "TRIGGER_ADDRESS",
+          "chain_name": "holesky-fork",
+          "event_hash": "0x86eacd23610d81706516de1ed0476c87772fdf939c7c771fbbd7f0230d619e68"
+        }
+      },
+      "component": "price_oracle",
+      "submit": {
+        "ethereum_contract": {
+          "chain_name": "holesky-fork",
+          "address": "SERVICE_HANDLER_ADDRESS",
+          "max_gas": null
+        }
+      },
+      "fuel_limit": null
+    }
+  },
+  "status": "active",
+  "config": {
+    "host_envs": [],
+    "kv": []
+  }
+}

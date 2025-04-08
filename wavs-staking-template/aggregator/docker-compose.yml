@@ -1,0 +1,13 @@
+services:
+  aggregator:
+    image: "ghcr.io/lay3rlabs/wavs:local"
+    container_name: "wavs-aggregator"
+    stop_signal: SIGKILL
+    env_file: "./.wavs_env"
+    ports:
+      - "8001:8001"
+    command: ["wavs-aggregator"]
+    volumes:
+      - ".:/wavs"
+    network_mode: "host"
+
