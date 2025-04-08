@@ -183,7 +183,36 @@ Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https:
 #
 # This must remain running in your terminal. Use another terminal to run other commands.
 # You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
-make start-all
+# make start-all
+
+anvil --fork-url https://ethereum-holesky-rpc.publicnode.com
+```
+
+Run WAVS & the aggregator
+
+```bash
+docker compose up --remove-orphans
+```
+
+### Deploy eigen middleware
+
+```bash
+cp .env.example .env
+
+docker run --rm --network host --env-file .env  -v ./.nodes:/root/.nodes wavs-middleware:local
+export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
+
+# call getServiceURI
+cast call ${SERVICE_MANAGER_ADDRESS} 'getServiceURI()'
+```
+
+Deployer private key
+
+```bash
+# export PRIVATE_KEY=$(cast wallet new --json | jq -r .[0].private_key)
+export PRIVATE_KEY=$(cat .nodes/deployer)
+export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
+cast rpc anvil_setBalance $MY_ADDR 0x10000000000000000000 -r http://localhost:8545
 ```
 
 ### Deploy Service Contracts
@@ -196,8 +225,11 @@ make start-all
 `SERVICE_MANAGER_ADDR` is the address of the Eigenlayer service manager contract. It was deployed in the previous step. Then you deploy the trigger and submission contracts which depends on the service manager. The service manager will verify that a submission is valid (from an authorized operator) before saving it to the blockchain. The trigger contract is any arbitrary contract that emits some event that WAVS will watch for. Yes, this can be on another chain (e.g. an L2) and then the submission contract on the L1 *(Ethereum for now because that is where Eigenlayer is deployed)*.
 
 ```bash
-export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
-forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig 'run(string)' --rpc-url http://localhost:8545 --broadcast
+forge create SimpleSubmit --json --broadcast --rpc-url http://127.0.0.1:8545 --private-key "$PRIVATE_KEY" --constructor-args "$SERVICE_MANAGER_ADDRESS" > .docker/submit.json
+export SUBMIT_ADDR=`jq -r .deployedTo .docker/submit.json`
+
+forge create SimpleTrigger --json --broadcast --rpc-url http://127.0.0.1:8545 --private-key "$PRIVATE_KEY" > .docker/trigger.json
+export TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 ```
 
 > [!TIP]
@@ -209,7 +241,7 @@ Deploy the compiled component with the contract information from the previous st
 
 ```bash docci-delay-per-cmd=1
 # Build your service JSON with optional overrides in the script
-COMPONENT_FILENAME=eth_price_oracle.wasm sh ./script/build_service.sh
+COMPONENT_FILENAME=eth_price_oracle.wasm SERVICE_MANAGER_ADDRESS=${SERVICE_MANAGER_ADDRESS} sh ./script/build_service.sh
 
 # Deploy the service JSON to WAVS so it now watches and submits
 # the results based on the service json configuration.

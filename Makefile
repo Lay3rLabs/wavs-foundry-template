@@ -83,14 +83,14 @@ start-all: clean-docker setup-env
 
 ## get-service-handler: getting the service handler address from the script deploy
 get-service-handler-from-deploy:
-	@jq -r '.service_handler' "./.docker/script_deploy.json"
+	@jq -r '.deployedTo' "./.docker/submit.json"
 
 get-eigen-service-manager-from-deploy:
 	@jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json
 
 ## get-trigger: getting the trigger address from the script deploy
 get-trigger-from-deploy:
-	@jq -r '.trigger' "./.docker/script_deploy.json"
+	@jq -r '.deployedTo' "./.docker/trigger.json"
 
 ## wavs-cli: running wavs-cli in docker
 wavs-cli:
@@ -98,11 +98,12 @@ wavs-cli:
 
 ## upload-component: uploading the WAVS component | COMPONENT_FILENAME
 upload-component:
-	@curl --silent -X POST http://127.0.0.1:8000/upload --data-binary @./compiled/$(COMPONENT_FILENAME) -H "Content-Type: application/wasm" | jq -r .digest
+# @curl -X POST http://127.0.0.1:8000/upload --data-binary @./compiled/${COMPONENT_FILENAME} -H "Content-Type: application/wasm" | jq -r .digest
+	@wavs-cli upload-component ./compiled/${COMPONENT_FILENAME}
 
 ## deploy-service: deploying the WAVS component service json | SERVICE_CONFIG_FILE
 deploy-service:
-	@$(WAVS_CMD) deploy-service-raw --log-level=info --data /data/.docker --home /data --service `jq -c . < $(SERVICE_CONFIG_FILE)`
+	@$(WAVS_CMD) deploy-service-raw --service `jq . -cr ${SERVICE_CONFIG_FILE}` --log-level=info --data /data/.docker --home /data
 
 ## show-result: showing the result | SERVICE_TRIGGER_ADDR, SERVICE_SUBMISSION_ADDR, RPC_URL
 show-result:

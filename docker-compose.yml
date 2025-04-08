@@ -7,23 +7,10 @@
 ###################################
 
 services:
-  # anvil:
-  #   image: "ghcr.io/foundry-rs/foundry:stable"
-  #   platform: linux/amd64
-  #   container_name: "anvil"
-  #   network_mode: "host"
-  #   ports:
-  #     - "8545:8545"
-  #   environment:
-  #     ANVIL_IP_ADDR: 0.0.0.0
-  #   command: ["anvil", "--no-cors"]
-
-  # The main instance all WAVS interaction will happen from
   wavs:
     image: "ghcr.io/lay3rlabs/wavs:local"
     container_name: "wavs"
     stop_signal: SIGKILL
-    # depends_on: ["anvil"]
     network_mode: "host"
     env_file: "./.env"
     ports:
@@ -39,39 +26,13 @@ services:
 
   aggregator:
     image: "ghcr.io/lay3rlabs/wavs:local"
+    depends_on: ["wavs"] # "anvil",
     container_name: "wavs-aggregator"
     stop_signal: SIGKILL
-    depends_on: ["wavs"]
     env_file: "./.env"
     ports:
       - "8001:8001"
     command: ["wavs-aggregator"]
     volumes:
-      - "./:/wavs"
-    network_mode: "host"
-
-  deploy-eigenlayer:
-    image: "ghcr.io/lay3rlabs/wavs:local"
-    container_name: "wavs-deploy-eigenlayer"
-    depends_on: ["wavs", "aggregator"] # "anvil",
-    restart: "no"
-    env_file: "./.env"
-    command: ["wavs-cli", "deploy-eigen-core"]
-    volumes:
-      - "./:/wavs"
-      - "./.docker:/root/wavs/cli/"
-    network_mode: "host"
-
-  deploy-eigenlayer-service-manager:
-    image: "ghcr.io/lay3rlabs/wavs:local"
-    container_name: "wavs-deploy-service-manager"
-    depends_on:
-      deploy-eigenlayer:
-        condition: service_completed_successfully
-    restart: "no"
-    env_file: "./.env"
-    command: ["wavs-cli", "deploy-eigen-service-manager"]
-    volumes:
-      - "./:/wavs"
-      - "./.docker:/root/wavs/cli/"
+      - ".:/wavs"
     network_mode: "host"
