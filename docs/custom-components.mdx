@@ -275,6 +275,7 @@ Private Environment Variables (`host_envs`) can be used for sensitive data like 
 To add private variables, set the environment variable in your `.env` file:
 
 ```bash
+# .env file
 WAVS_ENV_MY_API_KEY=your_secret_key_here
 ```
 
@@ -282,8 +283,10 @@ Variables can also be set in your `~/.bashrc` , `~/.zshrc` , or `~/.profile` fil
 
 Then modify `"host_envs"` in the `SERVICE_CONFIG` section of your `Makefile`:
 
-   ```json
-   "host_envs": ["MY_API_KEY"]
+   ```bash
+   # makefile
+
+   SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_MY_API_KEY"],"kv":[],"workflow_id":"default","component_id":"default"}'
    ```
 
 Configuration is set during service deployment:
