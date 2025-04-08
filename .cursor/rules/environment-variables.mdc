@@ -19,18 +19,8 @@ These variables can be used for non-sensitive information that can be viewed pub
 
 1. Configuration in Makefile:
 ```makefile
-SERVICE_CONFIG='{
-  "fuel_limit": 100000000,
-  "max_gas": 5000000,
-  "host_envs": ["WAVS_ENV_MY_API_KEY"],
-  "kv": [
-    ["max_retries", "3"],
-    ["timeout_seconds", "30"],
-    ["api_endpoint", "https://api.example.com"]
-  ],
-  "workflow_id": "default",
-  "component_id": "default"
-}'
+# makefile variable
+SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv":[["max_retries","3"],["timeout_seconds","30"],["api_endpoint","https://api.example.com"]],"workflow_id":"default","component_id":"default"}'
 ```
 
 2. Usage in Components:
@@ -67,14 +57,7 @@ export WAVS_ENV_MY_API_KEY=your_secret_key_here
 
 2. Configure in Makefile:
 ```makefile
-SERVICE_CONFIG='{
-  "fuel_limit": 100000000,
-  "max_gas": 5000000,
-  "host_envs": ["WAVS_ENV_MY_API_KEY"],
-  "kv": [["max_retries", "3"]],
-  "workflow_id": "default",
-  "component_id": "default"
-}'
+SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_MY_API_KEY"],"kv":[["max_retries","3"],["timeout_seconds","30"],["api_endpoint","https://api.example.com"]],"workflow_id":"default","component_id":"default"}'
 ```
 
 3. Usage in Components:
