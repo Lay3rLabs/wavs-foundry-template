@@ -1,0 +1,89 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Basic structure and requirements for WAVS components
+globs: components/**/*.rs
+alwaysApply: true
+---
+# WAVS Component Structure
+
+WASI components contain the main logic of a WAVS service. They are responsible for processing the trigger data and executing the business logic of a service.
+
+A basic component has three main parts:
+
+1. Decoding incoming trigger data
+2. Processing the data (custom logic specific to the component)
+3. Encoding and returning the result for submission
+
+Basic WAVS components follow this common structure:
+
+1. Imports and module declarations:
+```rust
+use wavs_wasi_chain::http::{fetch_json, http_request_get};
+pub mod bindings;
+use crate::bindings::{export, Guest, TriggerAction};
+use anyhow::Result;
+```
+
+2. Component declaration and export:
+```rust
+struct Component;
+export!(Component with_types_in bindings);
+
+impl Guest for Component {
+    fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
+        // 1. Decode the trigger data
+        let (trigger_id, req, dest) = decode_trigger_event(action.data)?;
+        
+        // 2. Process the data (Your custom logic here)
+        let result = process_data(req)?;
+        
+        // 3. Encode and return the result
+        let output = match dest {
+            Destination::Ethereum => Some(encode_trigger_output(trigger_id, &result)),
+            Destination::CliOutput => Some(result),
+        };
+        Ok(output)
+    }
+}
+```
+
+3. Core structure requirements:
+- Must implement the `Guest` trait, which is the main interface between your component and the WAVS runtime
+- Must have a `run` function that handles `TriggerAction`
+- Returns `Result<Option<Vec<u8>>, String>`
+- Must use proper error handling with `Result` types
+- Results can be sent back to Ethereum (when triggered by a contract event) or returned as CLI output (when triggered manually during testing).
+
+4. Best practices:
+- Use descriptive error messages
+- Implement proper logging
+- Handle all trigger data types appropriately
+- Document public functions and complex logic
+- Use async/await for network operations
+- Properly decode and validate trigger data
+- Handle both Ethereum and CLI output destinations
+
+5. Common patterns:
+```rust
+// Pattern for handling different trigger types
+match trigger_action.data {
+    TriggerData::EthContractEvent(event) => {
+        // Handle Ethereum events
+    }
+    TriggerData::Raw(data) => {
+        // Handle raw data
+    }
+    _ => Err("Unsupported trigger type".to_string())
+}
+
+// Pattern for async operations
+block_on(async move {
+    // Async operations here
+})?
+```
+
+Note: In the foundry template, bindings are automatically generated for any files in the `/components` and `/src` directories when the `make build` command is run.

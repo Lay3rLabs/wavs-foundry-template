@@ -1,0 +1,155 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+ ---
+description: Security guidelines for WAVS components
+globs: components/**/*.rs
+alwaysApply: true
+---
+# Security Guidelines
+
+Essential security practices for WAVS components:
+
+1. Environment Variables:
+```rust
+// GOOD: Use WAVS_ENV_ prefix for sensitive data
+let api_key = std::env::var("WAVS_ENV_API_KEY")
+    .map_err(|_| "API key not found")?;
+
+// BAD: Never hardcode secrets
+let api_key = "1234567890abcdef"; // NEVER DO THIS
+
+// GOOD: Validate environment variables
+fn validate_secrets() -> Result<(), String> {
+    let required = ["WAVS_ENV_API_KEY", "WAVS_ENV_PRIVATE_KEY"];
+    for var in required {
+        std::env::var(var)
+            .map_err(|_| format!("Missing required secret: {}", var))?;
+    }
+    Ok(())
+}
+```
+
+2. Input Validation:
+```rust
+// GOOD: Validate all inputs
+fn validate_input(data: &[u8]) -> Result<(), String> {
+    if data.is_empty() {
+        return Err("Empty input data".to_string());
+    }
+    if data.len() > MAX_INPUT_SIZE {
+        return Err("Input data too large".to_string());
+    }
+    Ok(())
+}
+
+// GOOD: Sanitize user input
+fn sanitize_address(address: &str) -> Result<String, String> {
+    if !address.starts_with("0x") || address.len() != 42 {
+        return Err("Invalid address format".to_string());
+    }
+    Ok(address.to_lowercase())
+}
+```
+
+3. Blockchain Security:
+```rust
+// GOOD: Validate chain IDs
+fn validate_chain_id(chain_id: u64) -> Result<(), String> {
+    let allowed_chains = [1, 5, 137];
+    if !allowed_chains.contains(&chain_id) {
+        return Err("Unsupported chain ID".to_string());
+    }
+    Ok(())
+}
+
+// GOOD: Verify transaction data
+fn verify_transaction(tx: &Transaction) -> Result<(), String> {
+    // Check destination
+    if !ALLOWED_ADDRESSES.contains(&tx.to) {
+        return Err("Unauthorized destination".to_string());
+    }
+    
+    // Validate amount
+    if tx.value > MAX_TRANSACTION_VALUE {
+        return Err("Amount exceeds maximum".to_string());
+    }
+    
+    Ok(())
+}
+```
+
+4. Error Handling:
+```rust
+// GOOD: Don't expose internal errors
+fn handle_error(error: &Error) -> String {
+    // Log full error internally
+    log_error!("Internal error: {:?}", error)?;
+    
+    // Return safe message to user
+    "Operation failed. Please try again.".to_string()
+}
+
+// BAD: Don't expose stack traces
+if let Err(e) = process() {
+    return Err(format!("{:?}", e)); // NEVER DO THIS
+}
+```
+
+5. Data Protection:
+```rust
+// GOOD: Mask sensitive data in logs
+fn log_transaction(tx: &Transaction) {
+    log_info!(
+        "Processing transaction to: {}... amount: {}",
+        &tx.to[0..8],
+        tx.value
+    )?;
+}
+
+// GOOD: Clear sensitive data
+fn cleanup(data: &mut Vec<u8>) {
+    data.fill(0);
+    data.clear();
+}
+```
+
+6. Security checklist:
+- Use WAVS_ENV_ prefix for secrets
+- Validate all input data
+- Implement proper access control
+- Use secure communication channels
+- Validate blockchain addresses
+- Implement rate limiting
+- Log security events
+- Clear sensitive data
+- Use secure dependencies
+- Keep components updated
+
+7. Rate Limiting:
+```rust
+// GOOD: Implement rate limiting
+struct RateLimit {
+    count: u32,
+    window_start: std::time::Instant,
+}
+
+impl RateLimit {
+    fn check(&mut self) -> Result<(), String> {
+        let now = std::time::Instant::now();
+        if now.duration_since(self.window_start).as_secs() > 60 {
+            self.count = 0;
+            self.window_start = now;
+        }
+        
+        if self.count >= MAX_REQUESTS_PER_MINUTE {
+            return Err("Rate limit exceeded".to_string());
+        }
+        
+        self.count += 1;
+        Ok(())
+    }
+}
+```

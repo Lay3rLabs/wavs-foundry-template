@@ -1,0 +1,183 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Guidelines for blockchain interactions in WAVS components
+globs: components/**/*.rs
+alwaysApply: true
+---
+# Blockchain Interaction Guidelines
+
+Guidelines for interacting with blockchain networks in WAVS components:
+
+1. Required imports and dependencies:
+```rust
+// Core imports
+use alloy_primitives::{Address, Bytes, U256};
+use alloy_sol_types::{sol, SolCall, SolType, SolValue};
+use wavs_wasi_chain::ethereum::new_eth_provider;
+
+// Additional imports for RPC interactions
+use alloy_network::{AnyNetwork, Ethereum, Network};
+use alloy_provider::{Provider, RootProvider};
+use alloy_rpc_types::{TransactionInput, eth::TransactionRequest};
+```
+
+2. Dependencies in Cargo.toml:
+```toml
+[dependencies]
+# Essential dependencies
+wavs-wasi-chain = { workspace = true }  # Core WAVS blockchain functionality
+alloy-sol-types = { workspace = true }  # For Solidity type handling
+alloy-sol-macro = { workspace = true }  # For Solidity interface generation
+
+# RPC and network interaction dependencies
+alloy-network = "0.11.1"
+alloy-provider = { version = "0.11.1", default-features = false, features = ["rpc-api"] }
+alloy-rpc-types = "0.11.1"
+alloy-primitives = { workspace = true }
+```
+
+3. Chain Configuration:
+```toml
+# In wavs.toml
+[chains.eth.local]
+chain_id = "31337"
+http_endpoint = "http://localhost:8545"
+ws_endpoint = "ws://localhost:8545"
+
+[chains.eth.mainnet]
+chain_id = "1"
+http_endpoint = "https://eth-mainnet.example.com"
+ws_endpoint = "wss://eth-mainnet.example.com"
+```
+
+4. Provider Setup Pattern:
+```rust
+// Get chain configuration
+let chain_config = host::get_eth_chain_config("eth.mainnet")
+    .map_err(|e| format!("Failed to get chain config: {}", e))?;
+
+// Create provider
+let provider: RootProvider<Ethereum> = new_eth_provider::<Ethereum>(
+    chain_config.http_endpoint
+        .context("http_endpoint is missing")?
+);
+```
+
+5. Contract Interface Definition:
+```rust
+// Define contract interface using sol! macro
+sol! {
+    interface IContract {
+        function someFunction(address param) external view returns (uint256);
+    }
+}
+
+// Create contract call
+let contract_call = IContract::someFunctionCall { param: address };
+let tx = TransactionRequest {
+    to: Some(TxKind::Call(contract_address)),
+    input: TransactionInput { 
+        input: Some(contract_call.abi_encode().into()), 
+        data: None 
+    },
+    ..Default::default()
+};
+```
+
+6. Making Contract Calls:
+```rust
+// Read-only call example
+async fn query_contract<T: Network>(
+    provider: &RootProvider<T>,
+    contract: Address,
+    call_data: Vec<u8>
+) -> Result<Vec<u8>, String> {
+    let tx = TransactionRequest {
+        to: Some(TxKind::Call(contract)),
+        input: TransactionInput { 
+            input: Some(call_data.into()), 
+            data: None 
+        },
+        ..Default::default()
+    };
+
+    provider.call(&tx)
+        .await
+        .map_err(|e| e.to_string())
+}
+```
+
+7. Best Practices:
+- Always handle chain configuration errors gracefully
+- Use proper error handling for async operations
+- Implement retry logic for network issues
+- Handle chain reorgs appropriately
+- Validate all input addresses and parameters
+- Use appropriate gas limits
+- Monitor transaction status
+- Handle failed transactions gracefully
+
+8. Security Considerations:
+- Validate chain IDs before transactions
+- Check contract addresses
+- Verify transaction data
+- Handle chain forks appropriately
+- Monitor gas costs
+- Implement proper access control
+- Log important transactions
+
+9. Example Implementation Pattern:
+```rust
+pub async fn query_contract_data(
+    address: Address,
+    contract: Address
+) -> Result<bool, String> {
+    // Get chain configuration
+    let chain_config = get_eth_chain_config("local")
+        .map_err(|e| format!("Failed to get chain config: {}", e))?;
+    
+    // Create provider
+    let provider: RootProvider<Ethereum> = new_eth_provider::<Ethereum>(
+        chain_config.http_endpoint
+            .context("http_endpoint is missing")?
+    );
+
+    // Create and encode call
+    let call = IContract::someMethodCall { param: address };
+    let tx = TransactionRequest {
+        to: Some(TxKind::Call(contract)),
+        input: TransactionInput { 
+            input: Some(call.abi_encode().into()), 
+            data: None 
+        },
+        ..Default::default()
+    };
+
+    // Execute call and process result
+    let result = provider.call(&tx)
+        .await
+        .map_err(|e| e.to_string())?;
+    
+    // Decode and return result
+    let value = U256::from_be_slice(&result);
+    Ok(value > U256::ZERO)
+}
+```
+
+10. Error Handling:
+```rust
+// Pattern for handling blockchain errors
+fn handle_chain_error(error: impl std::error::Error) -> String {
+    match error.to_string().as_str() {
+        s if s.contains("gas required exceeds allowance") => 
+            "Transaction would exceed gas limit".to_string(),
+        s if s.contains("nonce too low") => 
+            "Transaction nonce is invalid".to_string(),
+        _ => format!("Chain error: {}", error)
+    }
+}
+```

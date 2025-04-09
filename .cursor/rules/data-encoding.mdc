@@ -1,0 +1,327 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Guidelines for encoding and decoding data in WAVS components
+globs: components/**/*.rs
+alwaysApply: true
+---
+# Data Encoding and Decoding Guidelines
+
+Guidelines for handling data encoding and decoding in WAVS components.
+
+## Input Decoding
+
+1. Trigger Event Decoding:
+```rust
+fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, Destination)> {
+    match trigger_data {
+        // Handle Ethereum contract events
+        TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+            // Decode event using generated types
+            let event: solidity::NewTrigger = decode_event_log_data!(log)?;
+            let trigger_info = solidity::TriggerInfo::abi_decode(&event._triggerInfo, false)?;
+            Ok((trigger_info.triggerId, trigger_info.data.to_vec(), Destination::Ethereum))
+        }
+        // Handle raw CLI input
+        TriggerData::Raw(data) => Ok((0, data.clone(), Destination::CliOutput)),
+        _ => Err(anyhow::anyhow!("Unsupported trigger data type")),
+    }
+}
+```
+
+2. Raw Input Processing:
+```rust
+// Convert bytes to string
+let input = std::str::from_utf8(&req)
+    .map_err(|e| e.to_string())?;
+
+// Parse first character as hex digit
+let value = input
+    .chars()
+    .next()
+    .ok_or("Empty input")?
+    .to_digit(16)
+    .ok_or("Invalid hex digit")? as u64;
+```
+
+## Output Encoding
+
+1. WAVS Result Structure:
+```rust
+// WAVS requires results to be encoded in a specific format using DataWithId
+// This structure is defined in the ITypes.sol interface and generated via the sol! macro
+sol! {
+    struct DataWithId {
+        uint64 triggerId;  // Links result back to original trigger
+        bytes data;        // Actual component output data
+    }
+}
+
+// Basic encoding pattern (required for WAVS to process submission)
+fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> Vec<u8> {
+    solidity::DataWithId {
+        triggerId: trigger_id,
+        data: output.as_ref().to_vec().into()
+    }.abi_encode()
+}
+```
+
+2. Custom Solidity Types:
+```rust
+// Components can define and encode any custom Solidity types for their specific needs
+sol! {
+    // Example: Eligibility check result type
+    struct EligibilityResult {
+        uint64 triggerId;
+        bool eligible;
+        bool standing;
+    }
+
+    // Example: Price feed result type
+    struct PriceData {
+        uint64 triggerId;
+        uint256 price;
+        uint256 timestamp;
+    }
+}
+
+// However, when submitting to WAVS, these must be wrapped in DataWithId
+fn encode_eligibility_result(trigger_id: u64, eligible: bool, standing: bool) -> Vec<u8> {
+    // First encode the custom result
+    let result = EligibilityResult { 
+        triggerId: trigger_id,
+        eligible,
+        standing 
+    }.abi_encode();
+
+    // Then wrap in DataWithId for WAVS submission
+    solidity::DataWithId {
+        triggerId: trigger_id,
+        data: result.into()
+    }.abi_encode()
+}
+```
+
+3. Destination-based Encoding:
+```rust
+let output = match dest {
+    // For Ethereum: Must use DataWithId format
+    Destination::Ethereum => Some(encode_trigger_output(trigger_id, &result)),
+    // For CLI: Can return raw output
+    Destination::CliOutput => Some(result),
+};
+```
+
+Note: While components can define and use any Solidity types internally, WAVS requires the final output to be wrapped in the `DataWithId` structure for proper submission processing. This ensures consistent handling of results and maintains the link between triggers and their responses.
+
+## Common Patterns
+
+1. Event Data Decoding:
+```rust
+// Decode Solidity string from event data
+let decoded = alloy_sol_types::sol_data::String::abi_decode(&log.data, false)
+    .map_err(|e| format!("Failed to decode ABI string: {}", e))?;
+
+let message = decoded.to_string();
+```
+
+2. Bridge Event Handling:
+```rust
+// Handle different event types
+match trigger_data {
+    TriggerData::EthContractEvent(event) => {
+        // Decode Ethereum event
+        let event: solidity::NewTrigger = decode_event_log_data!(log)?;
+    }
+    TriggerData::CosmosContractEvent(event) => {
+        // Parse Cosmos event attributes
+        if event.ty.as_str() == NewDepositEvent::KEY {
+            for (key, value) in event.attributes {
+                match key.as_str() {
+                    "amount" => amount = Some(value),
+                    "sender" => sender = Some(value),
+                    "recipient" => recipient = Some(value),
+                }
+            }
+        }
+    }
+}
+```
+
+## Best Practices
+
+1. Input Validation:
+- Always validate decoded input before processing
+- Handle empty or malformed input gracefully
+- Provide clear error messages for decoding failures
+
+2. Error Handling:
+```rust
+// Use descriptive error messages
+.map_err(|e| format!("Failed to decode event log data: {}", e))?;
+
+// Handle specific error cases
+match decode_result {
+    Ok(data) => process_data(data),
+    Err(e) => handle_error(e),
+}
+```
+
+3. Type Safety:
+- Use generated Solidity types for contract interactions
+- Validate numeric conversions
+- Check array bounds and lengths
+- Verify address formats
+
+## Data Size Limits
+
+1. Blockchain Constraints:
+```rust
+// Maximum transaction data size is ~24KB (24,576 bytes)
+// Recommended to stay under 5KB for optimal performance
+const MAX_RECOMMENDED_SIZE: usize = 5 * 1024; // 5KB
+
+// Gas costs per byte:
+// - 16 gas for non-zero bytes
+// - 4 gas for zero bytes
+```
+
+2. Best Practices for Large Datasets:
+```rust
+// Use pagination for API responses
+let url = format!(
+    "https://api.example.com/data?page={}&per_page=5",
+    page_number
+);
+
+// Limit response size
+if response.len() > MAX_RECOMMENDED_SIZE {
+    return Err("Response exceeds recommended size limit".to_string());
+}
+```
+
+3. Optimization Strategies:
+- Use pagination when fetching data from APIs
+- Limit number of items in response (e.g., top 5)
+- Remove optional fields if not essential
+- Consider data compression for large responses
+- Cache frequently requested data if possible
+- Use shorter field names in JSON responses
+
+
+## Common Encoding Scenarios
+
+1. Number Encoding:
+```rust
+// Input: Hex string to number
+let number = input.chars().next()
+    .and_then(|c| c.to_digit(16))
+    .map(|n| n as u64)
+    .ok_or("Invalid hex input")?;
+
+// Output: Number to bytes
+let bytes = number.to_string().into_bytes();
+```
+
+2. JSON Data:
+```rust
+// Decode JSON response
+let json: Root = fetch_json(req).await
+    .map_err(|e| e.to_string())?;
+
+// Encode structured data
+let output = serde_json::to_vec(&response_data)
+    .map_err(|e| e.to_string())?;
+```
+
+3. Contract Events:
+```rust
+// Define Solidity types
+sol! {
+    event NewTrigger(TriggerInfo _triggerInfo);
+    struct TriggerInfo {
+        uint64 triggerId;
+        bytes data;
+    }
+}
+
+// Encode for contract submission
+let encoded = solidity::DataWithId {
+    triggerId: id,
+    data: result.into()
+}.abi_encode();
+```
+
+## Data Size Limits
+
+1. Blockchain Constraints:
+```rust
+// Maximum transaction data size is ~24KB (24,576 bytes)
+// Recommended to stay under 5KB for optimal performance
+const MAX_RECOMMENDED_SIZE: usize = 5 * 1024; // 5KB
+
+// Gas costs per byte:
+// - 16 gas for non-zero bytes
+// - 4 gas for zero bytes
+```
+
+2. Best Practices for Large Datasets:
+```rust
+// Use pagination for API responses
+let url = format!(
+    "https://api.example.com/data?page={}&per_page=5",
+    page_number
+);
+
+// Limit response size
+if response.len() > MAX_RECOMMENDED_SIZE {
+    return Err("Response exceeds recommended size limit".to_string());
+}
+```
+
+3. Optimization Strategies:
+- Use pagination when fetching data from APIs
+- Limit number of items in response (e.g., top 5)
+- Remove optional fields if not essential
+- Consider data compression for large responses
+- Cache frequently requested data if possible
+- Use shorter field names in JSON responses
+
+4. Real-World Example:
+```rust
+// Example from brewery finder component
+async fn get_breweries_by_city(city: &str) -> Result<Vec<Brewery>, String> {
+    // Use pagination to limit response size
+    let url = format!(
+        "https://api.openbrewerydb.org/v1/breweries?by_city={}&per_page=5",
+        encoded_city
+    );
+    
+    // Fetch and validate response size
+    let breweries: Vec<Brewery> = fetch_json(req).await?;
+    println!("Limiting response to first 5 breweries for blockchain size constraints");
+    
+    Ok(breweries)
+}
+```
+
+5. Size Validation Helper:
+```rust
+fn validate_response_size(data: &[u8]) -> Result<(), String> {
+    const MAX_SIZE: usize = 5 * 1024; // 5KB recommended limit
+    
+    if data.len() > MAX_SIZE {
+        return Err(format!(
+            "Response size ({} bytes) exceeds recommended limit ({} bytes)",
+            data.len(),
+            MAX_SIZE
+        ));
+    }
+    Ok(())
+}
+```
+
+

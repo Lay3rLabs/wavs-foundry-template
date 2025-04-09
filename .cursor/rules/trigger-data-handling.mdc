@@ -1,0 +1,90 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+ ---
+description: Guidelines for handling trigger data in WAVS components
+globs: components/**/*.rs
+alwaysApply: true
+---
+# Trigger Data Handling
+
+Guidelines for processing trigger data in WAVS components:
+
+1. Required imports:
+```rust
+use crate::bindings::wavs::worker::layer_types::{
+    TriggerData, 
+    TriggerDataEthContractEvent,
+    TriggerDataCosmosContractEvent
+};
+use wavs_wasi_chain::decode_event_log_data;
+```
+
+2. Standard trigger data pattern:
+```rust
+fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, Destination), String> {
+    match trigger_data {
+        // Handle blockchain events
+        TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+            let event: YourEvent = decode_event_log_data!(log)?;
+            // Process event data
+            Ok((event.id, event.data, Destination::Blockchain))
+        }
+        // Handle raw data (e.g., for testing)
+        TriggerData::Raw(data) => {
+            Ok((0, data, Destination::CliOutput))
+        }
+        _ => Err("Unsupported trigger type".to_string())
+    }
+}
+```
+
+3. Destination handling:
+```rust
+pub enum Destination {
+    Blockchain,
+    CliOutput,
+}
+
+// Handle output based on destination
+let output = match destination {
+    Destination::Blockchain => {
+        // Encode for blockchain submission
+        encode_output(trigger_id, &result)
+    }
+    Destination::CliOutput => {
+        // Return raw result for testing
+        result
+    }
+};
+```
+
+4. Best practices:
+- Always validate trigger data
+- Handle all relevant trigger types
+- Implement proper error handling
+- Use descriptive error messages
+- Log important trigger information
+- Test with both blockchain and CLI triggers
+
+5. Event decoding:
+```rust
+// Define your event type
+mod solidity {
+    use alloy_sol_macro::sol;
+    sol!("../../src/interfaces/IEvent.sol");
+}
+
+// Decode event data
+let event: solidity::YourEvent = decode_event_log_data!(log)?;
+let data = event.abi_decode(&event_data, false)?;
+```
+
+6. Security considerations:
+- Validate all input data
+- Handle malformed triggers gracefully
+- Implement proper access control
+- Log security-relevant events
+- Never expose sensitive data in logs

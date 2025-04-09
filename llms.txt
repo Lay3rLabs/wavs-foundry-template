@@ -1,0 +1,1562 @@
+# WAVS Component Development Guide for LLMs
+
+You are a specialized coding assistant for the WAVS (WASI Autonomous Verifiable Services) framework. Your role is to help developers build components that interact with blockchain networks and external services.
+
+## Core Rules
+
+1. Never invent or hallucinate code or functionality - only use what is explicitly shown in the examples
+2. Only use information from verified examples in the codebase
+3. Clearly state when information is missing or unclear
+4. Provide code examples based solely on verified patterns
+5. Handle input as bytes32-encoded data and ensure proper error handling
+6. Ground responses in actual codebase examples
+7. Include proper error handling and logging
+8. Clearly state when functionality is not shown in examples
+
+## Component Development Flow
+
+1. Setup:
+   - Create component directory in `components/`
+   - Add required dependencies to `Cargo.toml`
+   - Configure environment variables in `.env` and `wavs.toml`
+
+2. Input Handling:
+   - Decode trigger events using `decode_trigger_event`
+   - Clean and validate input data
+   - Handle both Ethereum and CLI inputs
+
+3. Processing:
+   - Implement business logic
+   - Make external API calls if needed
+   - Handle blockchain interactions
+
+4. Output:
+   - Encode results for submission
+   - Handle both Ethereum and CLI outputs
+   - Implement proper error handling
+
+## Essential Dependencies
+
+```toml
+[dependencies]
+wit-bindgen-rt = "0.8.0"
+wavs-wasi-chain = "0.4.0-alpha.2"
+alloy-sol-types = "0.5.0"
+alloy-sol-macro = "0.5.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+```
+
+## Common Component Structure
+
+```rust
+pub mod bindings;
+use crate::bindings::{export, Guest, TriggerAction};
+
+struct Component;
+export!(Component with_types_in bindings);
+
+impl Guest for Component {
+    fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
+        // 1. Decode trigger event
+        let (trigger_id, data, dest) = decode_trigger_event(action.data)?;
+        
+        // 2. Process data
+        let result = process_data(data)?;
+        
+        // 3. Encode and return result
+        let output = match dest {
+            Destination::Ethereum => Some(encode_trigger_output(trigger_id, &result)),
+            Destination::CliOutput => Some(result),
+        };
+        Ok(output)
+    }
+}
+```
+
+## Key Concepts
+
+### Trigger System
+- Triggers are events emitted by smart contracts
+- Components receive trigger data through the `run` function
+- Each trigger has a unique ID and data payload
+- Triggers can come from Ethereum or CLI
+
+### Input/Output Format
+- Input is received as bytes32-encoded data
+- Output must be ABI-encoded for Ethereum submission
+- CLI output can be raw bytes
+- All data must be properly cleaned and validated
+
+## Common Patterns
+
+### HTTP Requests
+```rust
+use wavs_wasi_chain::http::{fetch_json, http_request_get};
+use wstd::http::HeaderValue;
+
+async fn make_request(url: &str) -> Result<Response, String> {
+    let mut req = http_request_get(url)?;
+    req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
+    req.headers_mut().insert("Content-Type", HeaderValue::from_static("application/json"));
+    fetch_json(req).await
+}
+```
+
+### Logging
+```rust
+// Development
+println!("Debug info: {:?}", data);
+
+// Production
+use wavs_wasi_chain::log::{log_error, log_info};
+log_info!("Processing data: {:?}", data)?;
+log_error!("Error occurred: {}", error)?;
+```
+
+### Blockchain Interaction
+```rust
+use wavs_wasi_chain::chain::{new_eth_provider, Ethereum};
+
+// Get chain config
+let chain_config = wavs_wasi_chain::chain::get_chain_config::<Ethereum>()?;
+
+// Create provider
+let provider = new_eth_provider::<Ethereum>(
+    chain_config
+        .http_endpoint
+        .context("http_endpoint is missing")?
+)?;
+```
+
+## Testing Guide
+
+### Local Testing
+1. Build component:
+```bash
+make build
+```
+
+2. Test with input:
+```bash
+make wasi-exec --input cast format-bytes32-string "5"
+```
+
+### On-Chain Testing
+1. Deploy contracts:
+```bash
+make deploy-trigger
+make deploy-submit
+```
+
+2. Deploy service:
+```bash
+make deploy-service
+```
+
+3. Trigger component:
+```bash
+make trigger --input cast format-bytes32-string "5"
+```
+
+## Error Handling Best Practices
+
+1. Input Cleaning:
+```rust
+// Bad - fails with null bytes
+let input = std::str::from_utf8(&req)?;
+
+// Good - handles null bytes
+let input = std::str::from_utf8(&req)
+    .map_err(|e| format!("Invalid UTF-8: {}", e))?
+    .trim()
+    .to_string();
+```
+
+2. Common Error Cases:
+- Invalid UTF-8 in input
+- Missing environment variables
+- Failed API requests
+- Invalid blockchain data
+- Encoding/decoding errors
+
+## Environment Variables
+
+### Public Variables (KV)
+Configure in Makefile:
+```makefile
+SERVICE_CONFIG='{
+  "kv": [
+    ["max_retries", "3"],
+    ["timeout_seconds", "30"]
+  ]
+}'
+```
+
+Access in component:
+```rust
+let max_retries = std::env::var("max_retries")?;
+```
+
+### Private Variables
+Set in `.env`:
+```bash
+WAVS_ENV_API_KEY=your_secret_key
+```
+
+Configure in Makefile:
+```makefile
+SERVICE_CONFIG='{
+  "host_envs": ["WAVS_ENV_API_KEY"]
+}'
+```
+
+Access in component:
+```rust
+let api_key = std::env::var("WAVS_ENV_API_KEY")?;
+```
+
+## Solidity Integration
+
+### Using sol! Macro
+```rust
+use alloy_sol_macro::sol;
+
+// Define Solidity interface
+sol! {
+    interface IERC20 {
+        function transfer(address recipient, uint256 amount) external returns (bool);
+    }
+}
+
+// Define custom structs
+sol! {
+    struct TransactionPayload {
+        address to;
+        uint256 value;
+        bytes data;
+    }
+}
+```
+
+### Trigger Contract Interaction
+```rust
+// Decode trigger event
+let event: solidity::NewTrigger = decode_event_log_data!(log)?;
+let trigger_info = solidity::TriggerInfo::abi_decode(&event._triggerInfo, false)?;
+
+// Encode output
+let output = solidity::DataWithId { 
+    triggerId: trigger_id, 
+    data: output.as_ref().to_vec().into() 
+}.abi_encode();
+```
+
+## Response Guidelines
+
+1. Always reference specific examples from the codebase
+2. Use proven patterns from working components
+3. Be explicit about limitations and missing information
+4. Include error handling in all code examples
+5. Show both local and on-chain testing approaches
+6. Provide clear environment variable setup instructions
+7. Include proper logging for debugging
+8. Demonstrate proper blockchain interaction patterns
+
+Remember: Only use verified patterns and examples from the codebase. Never make assumptions about functionality not explicitly shown.
+
+Use the info in this guide to customize the template to create your own custom service. Check out the [WAVS design considerations](/design) page to learn which use-cases WAVS is best suited for.
+
+## Trigger
+
+The simple onchain trigger contract in the template is used to emit triggers to the WAVS service. The trigger data is encoded as a bytes object. When a WAVS component receives this trigger, it uses the `decode_event_log_data!` macro from the [`wavs-wasi-chain`](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) crate to decode the event data for processing.
+
+In the template, each trigger has a unique ID that links it to its data. The component processes the trigger data and returns results. Results are submitted back to the blockchain via the submission contract.
+
+The [trigger contract in the WAVS foundry template](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/src/contracts/WavsTrigger.sol) is a simple example that takes generic bytes and passes them to the component. When developing a custom trigger, you will need to update the template code in a few places:
+
+1. The trigger contract itself in [`src/WavsTrigger.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsTrigger.sol), which defines how triggers are created and emitted on-chain.
+2. The trigger script in [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/script/Trigger.s.sol#L15), which calls the `addTrigger` function with the `coinMarketCapID`.
+3. The `decode_trigger_event` function in [`/components/eth-price-oracle/src/trigger.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/trigger.rs#L11-L21), which processes the trigger data and extracts the `trigger_id` and `data`.
+4. The `run` function in [`/components/eth-price-oracle/src/lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/lib.rs#L13), which calls `decode_trigger_event`, processes the extracted trigger data, and determines how to handle it.
+5. The `wasi-exec` command in the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L39-L43), which passes input data when testing WAVS components via `--input cast format-bytes32-string $(COIN_MARKET_CAP_ID)`. This simulates an Ethereum event during local execution.
+
+## Component
+
+WASI components contain the main logic of a WAVS service. They are responsible for processing the trigger data and executing the business logic of a service.
+
+A basic component has three main parts:
+
+1. Decoding incoming trigger data.
+2. Processing the data (this is the custom logic of your component).
+3. Encoding and returning the result for submission.
+
+```rust lib.rs
+pub mod bindings;
+use crate::bindings::{export, Guest, TriggerAction};
+struct Component;
+export!(Component with_types_in bindings);
+
+impl Guest for Component {
+    fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
+        // 1. Decode the trigger data
+        let (trigger_id, req, dest) = decode_trigger_event(action.data)?;
+        
+        // 2. Process the data (Your custom logic here)
+        let result = process_data(req)?;
+        
+        // 3. Encode and return the result
+        let output = match dest {
+            Destination::Ethereum => Some(encode_trigger_output(trigger_id, &result)),
+            Destination::CliOutput => Some(result),
+        };
+        Ok(output)
+    }
+}
+```
+
+Components must implement the `Guest` trait, which is the main interface between your component and the WAVS runtime. The `run` function is the entry point for processing triggers: it receives the trigger data, decodes it, processes it according to your component's logic, and returns the results. Results can be sent back to Ethereum (when triggered by a contract event) or returned as CLI output (when triggered manually during testing). Error handling is done through the `Result` type. In the foundry template, bindings are automatically generated for any files in the `/components` and `/src` directories when the `make build` command is run.
+
+### Building Components
+
+Dependencies for components are added to the `Cargo.toml` file in the `components` directory.
+
+```toml
+[dependencies]
+# Essential dependencies
+wit-bindgen-rt = {workspace = true}    # Required for WASI bindings and Guest trait
+wavs-wasi-chain = { workspace = true }  # Required for core WAVS functionality
+# Optional dependencies
+serde = { workspace = true }            # For serialization (if working with JSON)
+serde_json = { workspace = true }       # For JSON handling
+alloy-sol-macro = { workspace = true }  # For Ethereum contract interactions
+wstd = { workspace = true }             # For WASI standard library features
+alloy-sol-types = { workspace = true }  # For Ethereum ABI handling
+anyhow = { workspace = true }           # For enhanced error handling
+```
+
+#### Testing
+
+Components can be built for local testing using the following commands. The `wasi-exec` command allows you to simulate triggers, and you can view the component's logs in stdout/stderr to debug its execution.
+
+```bash
+# Build the component
+make build
+
+# Test locally
+make wasi-exec
+```
+
+### `wavs-wasi-chain` crate
+
+The `wavs-wasi-chain` crate provides a set of helpful functions for making HTTP requests and interacting with the blockchain. It also provides a macro for decoding trigger data for use in the component.
+
+Learn more in the [crate documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions).
+
+### Network requests
+
+Components can make network requests to external APIs using the `wavs-wasi-chain` crate.
+
+The following dependencies are useful for making HTTP requests from a component. These are added to a component's `Cargo.toml` file:
+
+```toml Cargo.toml
+[dependencies]
+wavs-wasi-chain = { workspace = true }  # HTTP utilities
+wstd = { workspace = true }             # Runtime utilities
+serde = { workspace = true }            # Serialization
+serde_json = { workspace = true }       # JSON handling
+```
+
+The following example shows how to make a basic HTTP GET request from a component:
+
+```rust lib.rs
+async fn make_request() -> Result<YourResponseType, String> {
+    // Create the request
+    let url = "https://api.example.com/endpoint";
+    let mut req = http_request_get(&url).map_err(|e| e.to_string())?;
+    
+    // Add headers
+    req.headers_mut().insert(
+        "Accept",
+        HeaderValue::from_static("application/json")
+    );
+    
+    // Make the request and parse JSON response
+    let json: YourResponseType = fetch_json(req)
+        .await
+        .map_err(|e| e.to_string())?;
+        
+    Ok(json)
+}
+```
+
+For making POST requests with JSON data, you can use the [`http_request_post_json` helper function](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/http/fn.http_request_post_json.html), which automatically handles JSON serialization and sets header to `application/json`:
+
+```rust lib.rs
+async fn make_post_request() -> Result<PostResponse, String> {
+    let url = "https://api.example.com/endpoint"; // The URL of the endpoint to make the request to
+    let post_data = ("key1", "value1"); // any serializable data can be passed in
+    
+    // Make POST request and parse JSON response
+    let response: PostResponse = fetch_json(
+        http_request_post_json(&url, &post_data)?
+    ).await.map_err(|e| e.to_string())?;
+    
+    Ok(response)
+}
+```
+
+Other functions are available in the [crate documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions).
+
+### Logging
+
+Components can use logging to debug and track the execution of the component.
+
+**Logging in development**:
+
+Use `println!()` to write to stdout/stderr. This is visible when running `wasi-exec` locally.
+
+```rust lib.rs
+println!("Debug message: {:?}", data);
+```
+
+**Logging in production**
+
+For production, you can use a `host::log()` function which takes a `LogLevel` and writes its output via the tracing mechanism. Along with the string that the developer provides, it attaches additional context such as the `ServiceID`, `WorkflowID`, and component `Digest`.
+
+```rust lib.rs
+host::log(LogLevel::Info, "Production logging message");
+```
+
+### Blockchain interactions
+
+The following dependencies are required in `Cargo.toml` for Ethereum interactions:
+
+```toml
+[dependencies]
+wavs-wasi-chain = { workspace = true }  # Blockchain interactions
+alloy-sol-types = { workspace = true }  # ABI handling
+alloy-sol-macro = { workspace = true }  # For Solidity type generation
+```
+
+Chain configs are defined in the `wavs.toml` file:
+
+```toml wavs.toml
+[chains.eth.local]
+chain_id = "31337"
+ws_endpoint = "ws://localhost:8545"
+http_endpoint = "http://localhost:8545"
+```
+
+WAVS provides host bindings to get the chain config for a given chain name in the `wavs.toml` file:
+
+```rust lib.rs
+// Get the chain config for an Ethereum chain
+let chain_config = host::get_eth_chain_config(&chain_name)?;
+
+// Get the chain config for a Cosmos chain
+let chain_config = host::get_cosmos_chain_config(&chain_name)?;
+```
+
+The `wavs-wasi-chain` crate provides the [`new_eth_provider` function](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/ethereum/fn.new_eth_provider.html) which creates a new Ethereum provider along with other basic helpers to create an alloy client for interacting with the blockchain that can be used in a component:
+
+```rust lib.rs
+let provider = new_eth_provider::<Ethereum>(
+    chain_config
+        .http_endpoint
+        .context("http_endpoint is missing")?
+)?;
+```
+
+Visit the [wavs-wasi-chain documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) for more information on the functions available for interacting with the blockchain.
+
+### Sol! macro
+
+The `sol!` macro from `alloy-sol-macro` allows you to generate Rust types from Solidity interface files. This is useful for handling blockchain events and data structures in components.
+
+In the template, the `sol!` macro is used in the `trigger.rs` component file to generate Rust types from the `ITypes.sol` file.
+
+```rust trigger.rs
+mod solidity {
+    use alloy_sol_macro::sol;
+    pub use ITypes::*;
+
+    // The objects here will be generated automatically into Rust types.
+    // If you update the .sol file, you must re-run `cargo build` to see the changes.
+    sol!("../../src/interfaces/ITypes.sol");
+}
+```
+
+The macro reads a Solidity interface file and generates corresponding Rust types and encoding/decoding functions. In the example above, it reads `ITypes.sol` which defines:
+- `NewTrigger` event
+- `TriggerInfo` struct
+- `DataWithId` struct
+
+Documentation for the `sol!` macro can be found at: https://docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html
+
+### Environment and Configuration Variables
+
+Components can be configured with two types of variables:
+
+#### KV: public variables
+
+These variables can be used for non-sensitive information that can be viewed publicly. These variables can be configured in the makefile and are set during service deployment. They are accessed using `std::env::var` in the component.
+
+To add public variables, modify the `"kv"` section in the `SERVICE_CONFIG` in your `Makefile`:
+
+```makefile
+SERVICE_CONFIG='{
+  "fuel_limit": 100000000,
+  "max_gas": 5000000,
+  "host_envs": ["WAVS_ENV_MY_API_KEY"],
+  "kv": [
+    ["max_retries", "3"],
+    ["timeout_seconds", "30"],
+    ["api_endpoint", "https://api.example.com"]
+  ],
+  "workflow_id": "default",
+  "component_id": "default"
+}'
+```
+
+Then use these variables in your component:
+
+```rust
+let max_retries = std::env::var("max_retries")?;
+let timeout = std::env::var("timeout_seconds")?;
+let endpoint = std::env::var("api_endpoint")?;
+```
+
+#### Host environment variables
+
+Private Environment Variables (`host_envs`) can be used for sensitive data like API keys. These variables are set by operators in their environment and are not viewable by anyone. These variables must be prefixed with `WAVS_ENV_`. Each operator must set these variables in their environment before deploying the service. Only variables listed in `host_envs` will be available to the component.
+
+To add private variables, set the environment variable in your `.env` file:
+
+```bash
+WAVS_ENV_MY_API_KEY=your_secret_key_here
+```
+
+Then modify `"host_envs"` in the `SERVICE_CONFIG` section of your `Makefile`:
+
+   ```json
+   "host_envs": ["MY_API_KEY"]
+   ```
+
+Configuration is set during service deployment:
+
+```json
+SERVICE_CONFIG='{
+  "fuel_limit": 100000000,
+  "max_gas": 5000000,
+  "host_envs": ["WAVS_ENV_MY_API_KEY"],
+  "kv": [["max_retries", "3"]],
+  "workflow_id": "default",
+  "component_id": "default"
+}'
+```
+
+The following example shows how to access a private environment variable in a component:
+
+```rust
+let api_key = std::env::var("WAVS_ENV_MY_API_KEY")?;
+```
+
+### Submission
+
+A service handler or submission contract handles the logic for submitting a component's output to the blockchain. A submission contract must implement the `handleSignedData()` function using the `IWavsServiceHandler` interface. This interface is defined in the `@wavs` package: https://www.npmjs.com/package/@wavs/solidity?activeTab=code
+
+In the template, the [submission contract](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsSubmit.sol) uses the `handleSignedData()` function to validate the operator's signature and store the processed data from the component. The `DataWithId` struct must match the output format from the component. Each trigger has a unique ID that links the data to its source.
+
+```solidity
+function handleSignedData(bytes calldata _data, bytes calldata _signature) external {
+    // 1. Validate the operator's signature by calling the `validate` function on the `_serviceManager` contract
+    _serviceManager.validate(_data, _signature);
+
+    // 2. Decode the data into a DataWithId struct defined in the `ITypes` interface
+    DataWithId memory dataWithId = abi.decode(_data, (DataWithId));
+
+    // 3. Store the result in state
+    _signatures[dataWithId.triggerId] = _signature;      // 1. Store operator signature
+    _datas[dataWithId.triggerId] = dataWithId.data;      // 2. Store the data
+    _validTriggers[dataWithId.triggerId] = true;         // 3. Mark trigger as valid
+}
+```
+
+
+## Example Components
+
+This first component is the main example. It is found in components/eth-price-oracle/src/lib.rs in this repo.
+
+```
+use wavs_wasi_chain::http::{fetch_json, http_request_get};
+pub mod bindings;
+use crate::bindings::{
+    export,
+    wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent},
+    Guest, TriggerAction,
+};
+use alloy_sol_types::SolValue;
+use anyhow::Result;
+use serde::{Deserialize, Serialize};
+use wavs_wasi_chain::decode_event_log_data;
+use wstd::{http::HeaderValue, runtime::block_on};
+
+/// Represents the destination where the trigger output should be sent
+///
+/// # Variants
+/// - `Ethereum`: Output will be ABI encoded and sent to an Ethereum contract
+/// - `CliOutput`: Raw output for local testing/debugging
+/// Note: Cosmos destination is also possible but not implemented in this example
+pub enum Destination {
+    Ethereum,
+    CliOutput,
+}
+
+/// Decodes incoming trigger event data into its components
+///
+/// # Arguments
+/// * `trigger_data` - The raw trigger data received from WAVS
+///
+/// # Returns
+/// A tuple containing:
+/// * `u64` - Trigger ID for tracking the request
+/// * `Vec<u8>` - The actual data payload
+/// * `Destination` - Where the processed result should be sent
+///
+/// # Implementation Details
+/// Handles two types of triggers:
+/// 1. EthContractEvent - Decodes Ethereum event logs using the NewTrigger ABI
+/// 2. Raw - Used for direct CLI testing with no encoding
+fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, Destination)> {
+    match trigger_data {
+        TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+            let event: solidity::NewTrigger = decode_event_log_data!(log)?;
+            let trigger_info = solidity::TriggerInfo::abi_decode(&event._triggerInfo, false)?;
+            Ok((trigger_info.triggerId, trigger_info.data.to_vec(), Destination::Ethereum))
+        }
+        TriggerData::Raw(data) => Ok((0, data.clone(), Destination::CliOutput)),
+        _ => Err(anyhow::anyhow!("Unsupported trigger data type")),
+    }
+}
+
+/// Encodes the output data for submission back to Ethereum
+///
+/// # Arguments
+/// * `trigger_id` - The ID of the original trigger request
+/// * `output` - The data to be encoded, must implement AsRef<[u8]>
+///
+/// # Returns
+/// ABI encoded bytes ready for submission to Ethereum
+fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> Vec<u8> {
+    solidity::DataWithId { triggerId: trigger_id, data: output.as_ref().to_vec().into() }
+        .abi_encode()
+}
+
+/// Private module containing Solidity type definitions
+///
+/// The `sol!` macro from alloy_sol_macro reads a Solidity interface file
+/// and generates corresponding Rust types and encoding/decoding functions.
+///
+/// In this case, it reads "../../src/interfaces/ITypes.sol" which defines:
+/// - NewTrigger event
+/// - TriggerInfo struct
+/// - DataWithId struct
+///
+/// Documentation:
+/// - <https://docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html>
+/// (You can also just sol! arbitrary solidity types like `event` or `struct` too)
+mod solidity {
+    use alloy_sol_macro::sol;
+    pub use ITypes::*;
+
+    // The objects here will be generated automatically into Rust types.
+    // If you update the .sol file, you must re-run `cargo build` to see the changes.
+    // or restart your editor / language server.
+    sol!("../../src/interfaces/ITypes.sol");
+}
+
+struct Component;
+export!(Component with_types_in bindings);
+
+impl Guest for Component {
+    /// Main entry point for the price oracle component.
+    /// WAVS is subscribed to watch for events emitted by the blockchain.
+    /// When WAVS observes an event is emitted, it will internally route the event and its data to this function (component).
+    /// The processing then occurs before the output is returned back to WAVS to be submitted to the blockchain by the operator(s).
+    ///
+    /// This is why the `Destination::Ethereum` requires the encoded trigger output, it must be ABI encoded for the solidity contract.
+    /// Failure to do so will result in a failed submission as the signature will not match the saved output.
+    ///
+    /// After the data is properly set by the operator through WAVS, any user can query the price data from the blockchain in the solidity contract.
+    /// You can also return `None` as the output if nothing needs to be saved to the blockchain. (great for performing some off chain action)
+    ///
+    /// This function:
+    /// 1. Receives a trigger action containing encoded data
+    /// 2. Decodes the input to get a cryptocurrency ID (in hex)
+    /// 3. Fetches current price data from CoinMarketCap
+    /// 4. Returns the encoded response based on the destination
+    fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
+        let (trigger_id, req, dest) =
+            decode_trigger_event(action.data).map_err(|e| e.to_string())?;
+
+        // Convert bytes to string and parse first char as u64
+        let input = std::str::from_utf8(&req).map_err(|e| e.to_string())?;
+        println!("input id: {}", input);
+
+        let id = input.chars().next().ok_or("Empty input")?;
+        let id = id.to_digit(16).ok_or("Invalid hex digit")? as u64;
+
+        let res = block_on(async move {
+            let resp_data = get_price_feed(id).await?;
+            println!("resp_data: {:?}", resp_data);
+            serde_json::to_vec(&resp_data).map_err(|e| e.to_string())
+        })?;
+
+        let output = match dest {
+            Destination::Ethereum => Some(encode_trigger_output(trigger_id, &res)),
+            Destination::CliOutput => Some(res),
+        };
+        Ok(output)
+    }
+}
+
+/// Fetches cryptocurrency price data from CoinMarketCap's API
+///
+/// # Arguments
+/// * `id` - CoinMarketCap's unique identifier for the cryptocurrency
+///
+/// # Returns
+/// * `PriceFeedData` containing:
+///   - symbol: The cryptocurrency's ticker symbol (e.g., "BTC")
+///   - price: Current price in USD
+///   - timestamp: Server timestamp of the price data
+///
+/// # Implementation Details
+/// - Uses CoinMarketCap's v3 API endpoint
+/// - Includes necessary headers to avoid rate limiting:
+///   * User-Agent to mimic a browser
+///   * Random cookie with current timestamp
+///   * JSON content type headers
+///
+/// As of writing (Mar 31, 2025), the CoinMarketCap API is free to use and has no rate limits.
+/// This may change in the future so be aware of issues that you may encounter going forward.
+/// There is a more proper API for pro users that you can use
+/// - <https://coinmarketcap.com/api/documentation/v1/>
+async fn get_price_feed(id: u64) -> Result<PriceFeedData, String> {
+    let url = format!(
+        "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id={}&range=1h",
+        id
+    );
+
+    let current_time = std::time::SystemTime::now().elapsed().unwrap().as_secs();
+
+    let mut req = http_request_get(&url).map_err(|e| e.to_string())?;
+    req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
+    req.headers_mut().insert("Content-Type", HeaderValue::from_static("application/json"));
+    req.headers_mut()
+        .insert("User-Agent", HeaderValue::from_static("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"));
+    req.headers_mut().insert(
+        "Cookie",
+        HeaderValue::from_str(&format!("myrandom_cookie={}", current_time)).unwrap(),
+    );
+
+    let json: Root = fetch_json(req).await.map_err(|e| e.to_string())?;
+
+    Ok(PriceFeedData {
+        symbol: json.data.symbol,
+        price: json.data.statistics.price,
+        timestamp: json.status.timestamp,
+    })
+}
+
+/// Represents the price feed response data structure
+/// This is the simplified version of the data that will be sent to the blockchain
+/// via the Submission of the operator(s).
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PriceFeedData {
+    symbol: String,
+    timestamp: String,
+    price: f64,
+}
+
+/// Root response structure from CoinMarketCap API
+/// Generated from the API response using <https://transform.tools/json-to-rust-serde>
+/// Contains detailed cryptocurrency information including price statistics
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Root {
+    pub data: Data,
+    pub status: Status,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Data {
+    pub id: f64,
+    pub name: String,
+    pub symbol: String,
+    pub statistics: Statistics,
+    pub description: String,
+    pub category: String,
+    pub slug: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Statistics {
+    pub price: f64,
+    #[serde(rename = "totalSupply")]
+    pub total_supply: f64,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CoinBitesVideo {
+    pub id: String,
+    pub category: String,
+    #[serde(rename = "videoUrl")]
+    pub video_url: String,
+    pub title: String,
+    pub description: String,
+    #[serde(rename = "previewImage")]
+    pub preview_image: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Status {
+    pub timestamp: String,
+    pub error_code: String,
+    pub error_message: String,
+    pub elapsed: String,
+    pub credit_count: f64,
+}
+
+```
+
+### Other examples
+
+The following components are supplemental examples.
+
+### Prediction Market Oracle
+```rust
+#[allow(warnings)]
+mod bindings;
+use bindings::{export, Guest, TriggerAction};
+mod trigger;
+use serde::{Deserialize, Serialize};
+use trigger::{decode_trigger_event, encode_trigger_output};
+use wavs_wasi_chain::http::{fetch_json, http_request_get};
+use wstd::{http::HeaderValue, runtime::block_on};
+
+struct Component;
+export!(Component with_types_in bindings);
+
+impl Guest for Component {
+    fn run(action: TriggerAction) -> std::result::Result<Vec<u8>, String> {
+        // Decode trigger data containing market parameters
+        let (trigger_info, data) = decode_trigger_event(action.data)?;
+
+        // Fetch current Bitcoin price from CoinMarketCap
+        let bitcoin_price = block_on(get_price_feed(1))?;
+
+        // Market resolution logic: YES if Bitcoin price > $1
+        let result = bitcoin_price > 1.0;
+
+        // Encode result with market parameters for on-chain submission
+        Ok(encode_trigger_output(
+            trigger_info.triggerId,
+            data.lmsrMarketMaker,
+            data.conditionalTokens,
+            result,
+        ))
+    }
+}
+
+// Fetches price data from CoinMarketCap API
+async fn get_price_feed(id: u64) -> Result<f64, String> {
+    let url = format!(
+        "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id={}&range=1h",
+        id
+    );
+
+    // Add required headers for API request
+    let current_time = std::time::SystemTime::now().elapsed().unwrap().as_secs();
+    let mut req = http_request_get(&url).map_err(|e| e.to_string())?;
+    req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
+    req.headers_mut().insert("Content-Type", HeaderValue::from_static("application/json"));
+    req.headers_mut()
+        .insert("User-Agent", HeaderValue::from_static("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"));
+    req.headers_mut().insert(
+        "Cookie",
+        HeaderValue::from_str(&format!("myrandom_cookie={}", current_time)).unwrap(),
+    );
+
+    // Parse JSON response into structured data
+    let json: Root = fetch_json(req).await.map_err(|e| e.to_string())?;
+    Ok(json.data.statistics.price)
+}
+
+// API response data structures
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Root {
+    pub data: Data,
+    pub status: Status,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Data {
+    pub id: f64,
+    pub name: String,
+    pub symbol: String,
+    pub statistics: Statistics,
+    pub description: String,
+    pub category: String,
+    pub slug: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Statistics {
+    pub price: f64,
+    #[serde(rename = "totalSupply")]
+    pub total_supply: f64,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Status {
+    pub timestamp: String,
+    pub error_code: String,
+    pub error_message: String,
+    pub elapsed: String,
+    pub credit_count: f64,
+}
+```
+
+Key features:
+- Fetches Bitcoin price from CoinMarketCap API
+- Resolves market based on price threshold
+- Uses LMSR market maker and conditional tokens for settlement
+- Handles API authentication and rate limiting
+- Structured response parsing with Serde
+
+### Safe-Guard Component
+```rust
+#[allow(warnings)]
+mod bindings;
+use alloy_sol_types::{sol, SolValue};  // For Solidity type definitions and ABI encoding
+use bindings::{
+    export,
+    wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent},
+    Guest, TriggerAction,
+};
+use wavs_wasi_chain::decode_event_log_data;  // For decoding Ethereum event logs
+
+// Define Solidity event and struct types using alloy-sol-types
+sol! {
+    #[derive(Debug)]
+    event ApproveHash(bytes32 indexed approvedHash, address indexed owner);
+
+    #[derive(Debug)]
+    struct ValidationPayload {
+        bytes32 approvedHash;
+        bool approved;
+    }
+}
+
+struct Component;
+
+impl Guest for Component {
+    fn run(trigger_action: TriggerAction) -> std::result::Result<Vec<u8>, String> {
+        match trigger_action.data {
+            // Handle Ethereum contract events
+            TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+                // Decode ApproveHash event from log data
+                let ApproveHash { approvedHash, .. } = decode_event_log_data!(log)
+                    .map_err(|e| format!("Failed to decode event log data: {}", e))?;
+
+                // Create and encode validation payload
+                Ok(ValidationPayload { approvedHash, approved: true }.abi_encode())
+            }
+            _ => Err("Unsupported trigger data".to_string()),
+        }
+    }
+}
+
+export!(Component with_types_in bindings);
+```
+
+Key features:
+- Decodes Ethereum contract events using `decode_event_log_data!` macro
+- Uses `alloy-sol-types` for Solidity type definitions and ABI encoding
+- Implements validation logic for transaction approval
+- Returns encoded validation payload for on-chain processing
+- Handles only Ethereum contract events, rejects other trigger types
+
+### DAO Agent Component
+```rust
+mod bindings;
+mod context;
+mod integration_tests;
+mod models;
+mod ollama;
+
+use alloy_primitives::{Address, Bytes, U256};  // For Ethereum primitive types
+use alloy_sol_types::{sol, SolCall, SolType, SolValue};  // For Solidity type definitions
+use anyhow::Result;
+use bindings::{
+    export,
+    wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent},
+    Guest, TriggerAction,
+};
+use models::{DaoContext, SafeTransaction};  // Custom types for DAO context and transactions
+use ollama::OllamaChatResponse;  // For Ollama API responses
+use serde_json::json;
+use std::str::FromStr;
+use wstd::{
+    http::{Client, IntoBody, Request},
+    io::AsyncRead,
+    runtime::block_on,
+};
+
+// Define Solidity interface for ERC20 token interactions
+sol! {
+    interface IERC20 {
+        function transfer(address recipient, uint256 amount) external returns (bool);
+    }
+
+    #[derive(Debug)]
+    struct TransactionPayload {
+        address to;
+        uint256 value;
+        bytes data;
+    }
+}
+
+struct Component;
+
+impl Guest for Component {
+    fn run(trigger_action: TriggerAction) -> std::result::Result<Vec<u8>, String> {
+        match trigger_action.data {
+            TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+                // Decode the prompt from the event data
+                let decoded = alloy_sol_types::sol_data::String::abi_decode(&log.data, false)
+                    .map_err(|e| format!("Failed to decode ABI string: {}", e))?;
+
+                let prompt = decoded.to_string();
+
+                return block_on(async move {
+                    // Query Ollama for transaction decision
+                    let response = query_ollama(&prompt).await?;
+
+                    println!("Response: {}", response);
+
+                    // Extract tool call or return no-op if none found
+                    let tool_call = match response
+                        .split("<tool_call>")
+                        .nth(1)
+                        .and_then(|s| s.split("</tool_call>").next())
+                    {
+                        Some(call) => call,
+                        None => {
+                            // Return no-op transaction if no tool call found
+                            let no_op = create_no_op_transaction("No action needed");
+                            let payload = create_payload_from_safe_tx(&no_op)?;
+                            return Ok(payload.abi_encode().to_vec());
+                        }
+                    };
+
+                    // Parse and validate transaction
+                    let transaction: SafeTransaction = serde_json::from_str(tool_call)
+                        .map_err(|e| format!("Failed to parse transaction: {}", e))?;
+
+                    // Validate destination address
+                    if transaction.to.is_empty()
+                        || transaction.to == "0x"
+                        || transaction.to.len() < 42
+                    {
+                        let no_op = create_no_op_transaction("Invalid or missing destination address");
+                        let payload = create_payload_from_safe_tx(&no_op)?;
+                        return Ok(payload.abi_encode().to_vec());
+                    }
+
+                    // Create and encode transaction payload
+                    let payload = create_payload_from_safe_tx(&transaction)?;
+                    println!("Payload: {:?}", payload);
+                    Ok(payload.abi_encode().to_vec())
+                });
+            }
+            _ => Err("Unsupported trigger data".to_string()),
+        }
+    }
+}
+
+// Helper function to create no-op transactions
+fn create_no_op_transaction(reason: &str) -> SafeTransaction {
+    SafeTransaction {
+        to: "0x0000000000000000000000000000000000000000".to_string(),
+        value: "0".to_string(),
+        contract_call: None,
+        data: "0x".to_string(),
+        description: format!("No action taken: {}", reason),
+    }
+}
+
+// Convert SafeTransaction to TransactionPayload
+fn create_payload_from_safe_tx(tx: &SafeTransaction) -> Result<TransactionPayload, String> {
+    // Parse and validate address
+    let to: Address = tx.to.parse().map_err(|e| format!("Invalid address: {}", e))?;
+    let value = U256::from_str(&tx.value).map_err(|e| format!("Invalid value: {}", e))?;
+
+    // Handle contract calls (e.g., ERC20 transfers)
+    let data = if let Some(contract_call) = &tx.contract_call {
+        match contract_call.function.as_str() {
+            "transfer" => {
+                let recipient = contract_call.args[0]
+                    .as_str()
+                    .ok_or("Missing recipient")?
+                    .parse::<Address>()
+                    .map_err(|e| format!("Invalid recipient address: {}", e))?;
+                let amount = U256::from_str(contract_call.args[1].as_str().ok_or("Missing amount")?)
+                    .map_err(|e| format!("Invalid amount: {}", e))?;
+
+                let call = IERC20::transferCall { recipient, amount };
+                Bytes::from(call.abi_encode())
+            }
+            _ => Bytes::default(),
+        }
+    } else {
+        Bytes::default()
+    };
+
+    Ok(TransactionPayload { to, value, data })
+}
+
+// Query Ollama API for transaction decisions
+async fn query_ollama(prompt: &str) -> Result<String, String> {
+    let context = DaoContext::default();
+
+    // Format contract information for system prompt
+    let contract_descriptions = context
+        .contracts
+        .iter()
+        .map(|contract| {
+            format!(
+                "Contract: {}\nAddress: {}\nABI:\n{}",
+                contract.name, contract.address, contract.abi
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n\n");
+
+    // Construct system prompt with DAO context and security rules
+    let system_prompt = format!(
+        r#"
+        You are a function calling AI model with a list of smart contracts and their ABIs in <tools></tools> XML tags, a DAO agent 
+        responsible for making and executing decisions through a Gnosis Safe Module.
+
+        Current DAO Context:
+        - Safe Address: {}
+        - Current Balances:
+        {}
+        - Allowed Addresses: {}
+        - DAO Mission: {}
+        - Allowed Tokens: ONLY native ETH and USDC are supported. All other token requests should be rejected.
+
+        Available Smart Contracts:
+        <tools>
+        {}
+        </tools>
+
+        REQUIRED JSON FIELDS - ALL MUST BE INCLUDED:
+        1. "to": destination address
+        2. "value": amount in wei
+        3. "data": MUST be included and set to "0x" for simple transfers
+        4. "description": explanation of the action
+        5. "contract_call": (optional) only for token transfers
+
+        STRICT JSON RULES:
+        - NO comments in JSON
+        - NO trailing commas
+        - NO explanatory text inside JSON
+        - ALL fields above must be present
+        - The "data" field must ALWAYS be included
+        - JSON must be strictly valid
+
+        Examples:
+
+        1. Simple ETH transfer:
+        <tool_call>
+        {{
+            "to": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+            "value": "1000000000000000000",
+            "data": "0x",
+            "description": "Sending 1 ETH to specified address"
+        }}
+        </tool_call>
+
+        2. USDC transfer:
+        <tool_call>
+        {{
+            "to": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            "value": "0",
+            "data": "0x",
+            "contract_call": {{
+                "function": "transfer",
+                "args": ["0x742d35Cc6634C0532925a3b844Bc454e4438f44e", "1000000"]
+            }},
+            "description": "Sending 1 USDC to specified address"
+        }}
+        </tool_call>
+
+        3. No action needed:
+        <tool_call>
+        {{
+            "to": "0x0000000000000000000000000000000000000000",
+            "value": "0",
+            "data": "0x",
+            "description": "No action needed: [reason]"
+        }}
+        </tool_call>
+
+        Security Guidelines:
+        - Always verify addresses are in the allowed list or contract list
+        - Include the contract_call field in the JSON if a contract call is needed
+        - When making a smart contract call, ALWAYS use the contract address in the "to" field
+        - If using an ERC20 token (such as USDC), ALWAYS use the contract address in the "to" field
+        - Never approve transactions that would spend more than the current balance
+        - Be extremely cautious with value transfers
+        - Reject any suspicious or unclear requests
+        - Don't allow transfers of amounts greater than 1 ETH
+        - IMMEDIATELY REJECT any requests for tokens other than ETH or USDC with a no-op transaction
+        - ALWAYS output JSON within <tool_call></tool_call> XML tags
+        - ALWAYS end your response with JSON wrapped in <tool_call></tool_call> XML tags
+        - NEVER wrap <tool_call></tool_call> with anything including markdown formatting
+    "#,
+        context.safe_address,
+        context.format_balances(),
+        context.allowed_addresses.join(", "),
+        context.dao_description,
+        contract_descriptions,
+    );
+
+    // Make request to Ollama API
+    let req = Request::post("http://localhost:11434/api/chat")
+        .body(
+            serde_json::to_vec(&json!({
+                "model": "llama3.1",
+                "messages": [{
+                    "role": "system",
+                    "content": system_prompt
+                }, {
+                    "role": "user",
+                    "content": prompt
+                }],
+                "options": {
+                    "temperature": 0.0,        // Deterministic output
+                    "top_k": 1,               // Strict selection
+                    "top_p": 0.1,             // Narrow sampling
+                    "min_p": 0.0,             // Disabled
+                    "num_ctx": 4096,          // Context window
+                    "num_predict": 500,       // Max tokens
+                    "seed": 42,               // Fixed seed
+                },
+                "stream": false
+            }))
+            .unwrap()
+            .into_body(),
+        )
+        .unwrap();
+
+    // Send request and handle response
+    let mut res = Client::new().send(req).await.map_err(|e| e.to_string())?;
+
+    if res.status() != 200 {
+        return Err(format!("Ollama API error: status {}", res.status()));
+    }
+
+    let mut body_buf = Vec::new();
+    res.body_mut().read_to_end(&mut body_buf).await.unwrap();
+
+    let resp = String::from_utf8_lossy(&body_buf);
+    let resp = serde_json::from_str::<OllamaChatResponse>(format!(r#"{}"#, resp).as_str());
+
+    match resp {
+        Ok(OllamaChatResponse::Success(success)) => Ok(success.message.content),
+        Ok(OllamaChatResponse::Error { error }) => Err(error),
+        Err(e) => Err(format!("Failed to parse response: {}", e)),
+    }
+}
+
+export!(Component with_types_in bindings);
+```
+
+Key features:
+- Uses Ollama API for AI-powered transaction decisions
+- Implements strict security rules for transaction validation
+- Supports ETH and USDC transfers with proper contract calls
+- Handles no-op transactions for rejected requests
+- Uses deterministic AI parameters for consistent decisions
+- Validates addresses and amounts before execution
+- Provides detailed transaction descriptions
+- Implements proper error handling and logging
+
+### ETH-Cosmos Bridge Component
+```rust
+use alloy_sol_macro::sol;  // For Solidity type definitions
+use alloy_sol_types::SolValue;  // For ABI encoding
+use bindings::{
+    export,
+    wavs::worker::layer_types::{
+        TriggerData, TriggerDataCosmosContractEvent, TriggerDataEthContractEvent,
+    },
+    Guest, TriggerAction,
+};
+use trigger_contract::event::NewDepositEvent;  // For Cosmos deposit event handling
+
+mod bindings;
+
+struct Component;
+
+impl Guest for Component {
+    fn run(trigger_action: TriggerAction) -> std::result::Result<Vec<u8>, String> {
+        match trigger_action.data {
+            // Handle Ethereum contract events (placeholder for future implementation)
+            TriggerData::EthContractEvent(TriggerDataEthContractEvent { .. }) => {}
+            
+            // Handle Cosmos contract events
+            TriggerData::CosmosContractEvent(TriggerDataCosmosContractEvent { event, .. }) => {
+                // Check for deposit events from Cosmos chain
+                if event.ty.as_str() == NewDepositEvent::KEY
+                    || event.ty.as_str() == format!("wasm-{}", NewDepositEvent::KEY)
+                {
+                    // Extract event attributes
+                    let mut amount = None;
+                    let mut sender = None;
+                    let mut recipient = None;
+
+                    // Parse event attributes
+                    for (key, value) in event.attributes.into_iter() {
+                        match key.as_str() {
+                            "amount" => amount = Some(value),
+                            "sender" => sender = Some(value),
+                            "recipient" => recipient = Some(value),
+                            _ => {}
+                        }
+                    }
+
+                    // Process deposit event if all required fields are present
+                    match (amount, sender, recipient) {
+                        (Some(amount), Some(sender), Some(recipient)) => {
+                            let response = BridgeDeposit {
+                                amount: amount
+                                    .parse()
+                                    .map_err(|e| format!("Failed to parse amount: {}", e))?,
+                                sender,
+                                recipient: alloy_primitives::Address::parse_checksummed(
+                                    recipient, None,
+                                )
+                                .map_err(|e| format!("Failed to parse recipient: {}", e))?,
+                            };
+
+                            return Ok(response.abi_encode());
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            // Handle raw trigger data (placeholder for future implementation)
+            TriggerData::Raw(_) => {}
+        };
+
+        Ok(Vec::new())
+    }
+}
+
+// Import Solidity types from contract
+sol!("../contracts/solidity/Types.sol",);
+
+export!(Component with_types_in bindings);
+```
+
+Key features:
+- Handles cross-chain bridge events between Ethereum and Cosmos
+- Processes Cosmos deposit events with amount, sender, and recipient
+- Validates and parses Ethereum addresses
+- Supports both standard and WASM event types
+- Returns encoded bridge deposit data for on-chain processing
+- Implements proper error handling for parsing failures
+- Uses Solidity type definitions for consistent data structures
+- Extensible for future ETH-to-Cosmos event handling
+
+### Telegram Bot Component
+```rust
+mod bindings;
+mod telegram;  // Module for Telegram API interactions
+
+use alloy_sol_types::SolValue;  // For ABI encoding
+use bindings::{
+    export,
+    wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent},
+    Guest, TriggerAction,
+};
+use serde_json::json;  // For JSON handling
+use std::str::FromStr;
+use wstd::{
+    http::{Client, IntoBody, Request},
+    io::AsyncRead,
+    runtime::block_on,
+};
+
+struct Component;
+
+impl Guest for Component {
+    fn run(trigger_action: TriggerAction) -> std::result::Result<Vec<u8>, String> {
+        match trigger_action.data {
+            // Handle Ethereum contract events
+            TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+                // Decode the message from the event data
+                let decoded = alloy_sol_types::sol_data::String::abi_decode(&log.data, false)
+                    .map_err(|e| format!("Failed to decode ABI string: {}", e))?;
+
+                let message = decoded.to_string();
+
+                return block_on(async move {
+                    // Send message to Telegram
+                    let response = send_telegram_message(&message).await?;
+
+                    println!("Telegram response: {}", response);
+
+                    // Return success response
+                    Ok(Vec::new())
+                });
+            }
+            _ => Err("Unsupported trigger data".to_string()),
+        }
+    }
+}
+
+// Send message to Telegram API
+async fn send_telegram_message(message: &str) -> Result<String, String> {
+    // Get bot token from environment
+    let bot_token = std::env::var("TELEGRAM_BOT_TOKEN")
+        .map_err(|e| format!("Failed to get TELEGRAM_BOT_TOKEN: {}", e))?;
+
+    // Get chat ID from environment
+    let chat_id = std::env::var("TELEGRAM_CHAT_ID")
+        .map_err(|e| format!("Failed to get TELEGRAM_CHAT_ID: {}", e))?;
+
+    // Construct Telegram API URL
+    let url = format!(
+        "https://api.telegram.org/bot{}/sendMessage",
+        bot_token
+    );
+
+    // Create request body
+    let body = json!({
+        "chat_id": chat_id,
+        "text": message,
+        "parse_mode": "HTML"
+    });
+
+    // Create HTTP request
+    let req = Request::post(&url)
+        .body(
+            serde_json::to_vec(&body)
+                .unwrap()
+                .into_body(),
+        )
+        .unwrap();
+
+    // Send request
+    let mut res = Client::new().send(req).await.map_err(|e| e.to_string())?;
+
+    if res.status() != 200 {
+        return Err(format!("Telegram API error: status {}", res.status()));
+    }
+
+    // Read response body
+    let mut body_buf = Vec::new();
+    res.body_mut().read_to_end(&mut body_buf).await.unwrap();
+
+    // Parse response
+    let resp = String::from_utf8_lossy(&body_buf);
+    Ok(resp.to_string())
+}
+
+export!(Component with_types_in bindings);
+```
+
+Key features:
+- Handles Ethereum contract events for message triggers
+- Sends messages to Telegram using Bot API
+- Uses environment variables for bot configuration
+- Supports HTML formatting in messages
+- Implements proper error handling
+- Uses async/await for API requests
+- Returns empty vector on success (no on-chain data needed)
+- Logs API responses for debugging
+
+### Common Data Structures and Interfaces
+
+```rust
+// Trigger data structure used across components
+pub struct TriggerData {
+    pub trigger_id: [u8; 32],
+    pub data: Vec<u8>,
+    pub destination: Destination,
+}
+
+// Market resolution interface
+sol! {
+    interface IMarketResolver {
+        function resolveMarket(bytes32 marketId, bool outcome) external;
+    }
+}
+
+// Bridge deposit structure
+sol! {
+    struct BridgeDeposit {
+        uint256 amount;
+        string sender;
+        address recipient;
+    }
+}
+
+// Safe transaction interface
+sol! {
+    struct SafeTransaction {
+        address to;
+        uint256 value;
+        bytes data;
+        string description;
+        ContractCall contract_call;
+    }
+
+    struct ContractCall {
+        string function;
+        string[] args;
+    }
+}
+
+// Telegram message structure
+#[derive(Serialize, Deserialize)]
+pub struct TelegramMessage {
+    pub chat_id: String,
+    pub text: String,
+    pub parse_mode: Option<String>,
+}
+
+// DAO context structure
+#[derive(Default)]
+pub struct DaoContext {
+    pub safe_address: String,
+    pub balances: HashMap<String, String>,
+    pub allowed_addresses: Vec<String>,
+    pub dao_description: String,
+    pub contracts: Vec<ContractInfo>,
+}
+
+#[derive(Default)]
+pub struct ContractInfo {
+    pub name: String,
+    pub address: String,
+    pub abi: String,
+}
+```

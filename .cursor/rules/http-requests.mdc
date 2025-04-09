@@ -1,0 +1,183 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+ ---
+description: Guidelines for making HTTP requests in WAVS components
+globs: components/**/*.rs
+alwaysApply: false
+---
+# HTTP Request Guidelines
+
+When making HTTP requests in WAVS components, follow these guidelines:
+
+1. Required imports:
+```rust
+use wavs_wasi_chain::http::{fetch_json, http_request_get};
+use wstd::{http::HeaderValue, runtime::block_on};
+```
+
+2. Basic GET request pattern:
+```rust
+async fn make_request() -> Result<YourResponseType, String> {
+    let url = "https://api.example.com/endpoint";
+    let mut req = http_request_get(&url).map_err(|e| e.to_string())?;
+    
+    // Add required headers
+    req.headers_mut().insert(
+        "Accept", 
+        HeaderValue::from_static("application/json")
+    );
+    req.headers_mut().insert(
+        "Content-Type", 
+        HeaderValue::from_static("application/json")
+    );
+
+    // Make request and parse response
+    let response: YourResponseType = fetch_json(req)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(response)
+}
+```
+
+3. Best practices:
+- Always use proper error handling with `map_err`
+- Set appropriate headers (Content-Type, Accept)
+- Use type-safe response parsing with serde
+- Implement timeouts and retries for reliability
+- Handle rate limiting with appropriate delays
+- Log request failures appropriately
+
+4. Common headers to include:
+```rust
+// User agent to prevent blocking
+req.headers_mut().insert(
+    "User-Agent",
+    HeaderValue::from_static("Mozilla/5.0 ...")
+);
+
+// API keys (from environment)
+req.headers_mut().insert(
+    "Authorization",
+    HeaderValue::from_str(&format!("Bearer {}", api_key))?
+);
+```
+
+5. Response handling:
+```rust
+// Check status code
+if response.status() != 200 {
+    return Err(format!("API error: status {}", response.status()));
+}
+
+// Parse JSON response
+let data: ResponseType = serde_json::from_str(&response_text)?;
+```
+
+6. Security considerations:
+- Never hardcode API keys
+- Use HTTPS for all requests
+- Validate all response data
+- Handle sensitive data appropriately
+- Implement proper error handling
+
+## Response Size Management
+
+1. Blockchain Size Constraints:
+- Keep responses under 5KB for optimal blockchain storage
+- Use pagination parameters in API requests
+- Limit number of items in response
+
+2. Pagination Best Practices:
+```rust
+// Always use pagination for potentially large datasets
+let url = format!(
+    "https://api.example.com/endpoint?per_page=5&page={}",
+    page_number
+);
+
+// Example with OpenBreweryDB API
+let url = format!(
+    "https://api.openbrewerydb.org/v1/breweries?by_city={}&per_page=5",
+    encoded_city
+);
+```
+
+3. Response Size Optimization:
+- Remove unnecessary fields from API responses
+- Use field filtering when APIs support it
+- Consider implementing response compression
+- Cache frequently requested data
+
+# Data Encoding Guidelines
+
+## Blockchain Data Limits
+
+1. Technical Constraints:
+- Maximum transaction data: ~24KB (24,576 bytes)
+- Recommended limit: 5KB for optimal performance
+- Gas costs: 16 gas per non-zero byte, 4 gas per zero byte
+
+2. Implementation Example:
+```rust
+const MAX_RECOMMENDED_SIZE: usize = 5 * 1024; // 5KB
+
+fn validate_data_size(data: &[u8]) -> Result<(), String> {
+    if data.len() > MAX_RECOMMENDED_SIZE {
+        return Err("Data exceeds recommended size limit".to_string());
+    }
+    Ok(())
+}
+```
+
+3. Optimization Strategies:
+- Minimize encoded data size
+- Remove optional fields when possible
+- Use efficient encoding formats
+- Consider compression for large datasets
+
+## Async Operations
+
+1. Basic Pattern:
+```rust
+block_on(async move {
+    // Async operations here
+})?
+```
+
+2. Purpose and Usage:
+- `block_on` is from `wstd::runtime` module
+- Allows running async code in synchronous contexts
+- Required because WASI components' `run` function is synchronous
+- Essential for operations that need to wait for responses
+
+3. Common Use Cases:
+```rust
+// HTTP Request Example
+let result = block_on(async move {
+    // Make the HTTP request
+    let response = fetch_json(request).await?;
+    // Process the response
+    process_data(response)
+})?;
+
+// Multiple Async Operations
+let result = block_on(async move {
+    // Fetch data from multiple endpoints
+    let data1 = fetch_json(request1).await?;
+    let data2 = fetch_json(request2).await?;
+    // Combine and process results
+    combine_data(data1, data2)
+})?;
+```
+
+4. Best Practices:
+- Always use error handling with `?` operator
+- Keep async blocks focused and concise
+- Consider timeouts for long-running operations
+- Log async operation progress and errors
+- Handle cancellation appropriately
+- Use proper error propagation

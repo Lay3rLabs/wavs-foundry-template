@@ -222,7 +222,7 @@ Anyone can now call the [trigger contract](./src/contracts/WavsTrigger.sol) whic
 
 ```bash
 # Request BTC from CMC
-export COIN_MARKET_CAP_ID=1
+export COIN_MARKET_CAP_ID="portland"
 # Get the trigger address from previous Deploy forge script
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 # Execute on the trigger contract, WAVS will pick this up and submit the result

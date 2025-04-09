@@ -1,0 +1,171 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+ ---
+description: Documentation standards for WAVS components
+globs: components/**/*.rs
+alwaysApply: true
+---
+# Documentation Standards
+
+Guidelines for documenting WAVS components:
+
+1. Component Documentation:
+```rust
+//! Price Oracle Component
+//! 
+//! This component fetches cryptocurrency price data from external APIs
+//! and makes it available on-chain through WAVS.
+//! 
+//! # Architecture
+//! - Listens for trigger events from the blockchain
+//! - Fetches current price data from CoinMarketCap
+//! - Validates and processes the data
+//! - Returns encoded data for on-chain submission
+//! 
+//! # Configuration
+//! Required environment variables:
+//! - `WAVS_ENV_API_KEY`: CoinMarketCap API key
+//! - `TIMEOUT_SECONDS`: Request timeout (default: 30)
+
+/// Main component implementation
+pub struct Component;
+
+impl Guest for Component {
+    /// Process incoming trigger events and return price data
+    /// 
+    /// # Arguments
+    /// * `action` - Trigger action containing event data
+    /// 
+    /// # Returns
+    /// * `Ok(Some(Vec<u8>))` - Encoded price data for blockchain
+    /// * `Ok(None)` - No data to submit
+    /// * `Err(String)` - Processing error
+    fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
+        // Implementation
+    }
+}
+```
+
+2. Function Documentation:
+```rust
+/// Fetches current price data from CoinMarketCap
+/// 
+/// # Arguments
+/// * `id` - CoinMarketCap currency ID
+/// 
+/// # Returns
+/// Price data structure containing:
+/// - Symbol (e.g., "BTC")
+/// - Current price in USD
+/// - Timestamp of the price
+/// 
+/// # Errors
+/// - Network request failures
+/// - API rate limiting
+/// - Invalid response format
+/// 
+/// # Example
+/// ```rust
+/// let btc_price = get_price_feed(1).await?;
+/// println!("BTC: ${:.2}", btc_price.price);
+/// ```
+async fn get_price_feed(id: u64) -> Result<PriceFeedData, String> {
+    // Implementation
+}
+```
+
+3. Type Documentation:
+```rust
+/// Represents price feed data from external API
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PriceFeedData {
+    /// Currency symbol (e.g., "BTC")
+    pub symbol: String,
+    
+    /// Current price in USD
+    pub price: f64,
+    
+    /// ISO timestamp of the price data
+    pub timestamp: String,
+}
+
+/// Destination for processed trigger data
+pub enum Destination {
+    /// Submit to blockchain contract
+    Blockchain,
+    
+    /// Return raw data (for testing)
+    CliOutput,
+}
+```
+
+4. Module Documentation:
+```rust
+//! Trigger handling module
+//! 
+//! Contains functionality for processing and validating
+//! trigger events from the blockchain.
+
+use crate::types::*;
+
+/// Processes incoming trigger events
+pub mod processing {
+    /// Validates trigger data format
+    pub fn validate(data: &[u8]) -> Result<(), String> {
+        // Implementation
+    }
+    
+    /// Decodes trigger event data
+    pub fn decode(data: &[u8]) -> Result<TriggerData, String> {
+        // Implementation
+    }
+}
+```
+
+5. Best Practices:
+- Document all public items
+- Include examples where helpful
+- Explain error conditions
+- Document configuration requirements
+- Keep documentation up to date
+- Use proper markdown formatting
+- Include links to external docs
+- Document security considerations
+
+6. README.md Template:
+```markdown
+# Component Name
+
+Brief description of the component's purpose.
+
+## Features
+- Key feature 1
+- Key feature 2
+- Key feature 3
+
+## Configuration
+Environment variables:
+- `WAVS_ENV_API_KEY`: Description
+- `TIMEOUT`: Description (default: value)
+
+## Usage
+```rust
+// Example usage code
+```
+
+## Testing
+```bash
+make test
+```
+
+## Security Considerations
+- Security note 1
+- Security note 2
+
+## Dependencies
+- Dependency 1 (version)
+- Dependency 2 (version)
+```

@@ -1,0 +1,109 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Guidelines for logging in WAVS components
+globs: components/**/*.rs
+alwaysApply: true
+---
+# Logging Guidelines
+
+Guidelines for implementing logging in WAVS components:
+
+1. Required imports:
+```rust
+use wavs_wasi_chain::log::{log_error, log_info, log_debug, log_warn};
+```
+
+2. Log levels and usage:
+```rust
+// Error: Use for failures that prevent normal operation
+log_error!("Failed to process transaction: {}", error)?;
+
+// Warning: Use for concerning but non-fatal issues
+log_warn!("Rate limit approaching: {}/{}", current, limit)?;
+
+// Info: Use for important operational events
+log_info!("Processing trigger: id={}", trigger_id)?;
+
+// Debug: Use for detailed troubleshooting
+log_debug!("Request parameters: {:?}", params)?;
+```
+
+3. Best practices:
+- Use appropriate log levels
+- Include relevant context
+- Structure messages consistently
+- Avoid logging sensitive data
+- Include correlation IDs
+- Keep messages concise and clear
+- Use proper error formatting
+
+4. Structured logging pattern:
+```rust
+// Component initialization
+log_info!("Initializing component: {}", component_name)?;
+
+// Operation start/end
+log_info!("Starting operation: {} [id={}]", operation, id)?;
+// ... operation code ...
+log_info!("Completed operation: {} [id={}] duration={}ms", operation, id, duration)?;
+
+// Error handling
+if let Err(e) = process() {
+    log_error!("Operation failed: {} error={}", operation, e)?;
+    return Err(e.to_string());
+}
+```
+
+5. Security considerations:
+- Never log API keys or secrets
+- Mask sensitive data
+- Don't log personal information
+- Be careful with error details
+- Follow data privacy regulations
+- Implement log rotation
+- Control log access
+
+6. Common logging patterns:
+```rust
+// Function entry/exit
+fn process_trigger(trigger: TriggerData) -> Result<(), String> {
+    log_info!("Processing trigger: type={:?}", trigger.type_name())?;
+    
+    let result = match do_process(trigger) {
+        Ok(res) => {
+            log_info!("Trigger processed successfully")?;
+            Ok(res)
+        }
+        Err(e) => {
+            log_error!("Trigger processing failed: {}", e)?;
+            Err(e)
+        }
+    };
+    
+    log_debug!("Trigger processing complete")?;
+    result
+}
+
+// Performance monitoring
+let start = std::time::Instant::now();
+let result = operation();
+log_info!(
+    "Operation completed in {}ms",
+    start.elapsed().as_millis()
+)?;
+```
+
+7. Development vs Production:
+```rust
+// Development: Use println for local testing
+#[cfg(debug_assertions)]
+println!("Debug: {:?}", data);
+
+// Production: Use proper logging
+#[cfg(not(debug_assertions))]
+log_debug!("Processing data: {:?}", data)?;
+```
