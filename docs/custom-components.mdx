@@ -149,6 +149,169 @@ async fn make_post_request() -> Result<PostResponse, String> {
 
 Other functions are available in the [crate documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions).
 
+## Blockchain interactions
+
+Interacting with blockchains like Ethereum requires specific dependencies and setup within your component.
+
+### Dependencies
+
+The following dependencies are commonly required in your component's `Cargo.toml` for Ethereum interactions:
+
+```toml
+[dependencies]
+# Core WAVS blockchain functionality
+wavs-wasi-chain = { workspace = true }
+
+# Alloy crates for Ethereum interaction
+alloy-sol-types = { workspace = true }  # ABI handling & type generation
+alloy-sol-macro = { workspace = true }  # sol! macro for interfaces
+alloy-primitives = { workspace = true } # Core primitive types (Address, U256, etc.)
+alloy-network = "0.11.1"                 # Network trait and Ethereum network type
+alloy-provider = { version = "0.11.1", default-features = false, features = ["rpc-api"] } # RPC provider
+alloy-rpc-types = "0.11.1"                # RPC type definitions (TransactionRequest, etc.)
+
+# Other useful crates
+anyhow = { workspace = true }          # Error handling
+serde = { workspace = true }           # Serialization/deserialization
+serde_json = { workspace = true }      # JSON handling
+```
+
+*Note: Ensure you have the necessary workspace dependencies defined in the root `Cargo.toml`.*
+
+### Chain Configuration
+
+Chain configurations are defined in the root `wavs.toml` file. This allows components to access RPC endpoints and chain IDs without hardcoding them.
+
+```toml wavs.toml
+[chains.eth.local]
+chain_id = "31337"
+ws_endpoint = "ws://localhost:8545"
+http_endpoint = "http://localhost:8545"
+
+[chains.eth.mainnet]
+chain_id = "1"
+ws_endpoint = "wss://mainnet.infura.io/ws/v3/YOUR_INFURA_ID"
+http_endpoint = "https://mainnet.infura.io/v3/YOUR_INFURA_ID"
+```
+
+### Accessing Configuration and Provider
+
+WAVS provides host bindings to get the chain config for a given chain name in the wavs.toml file:
+
+```rust lib.rs
+// Get the chain config for an Ethereum chain
+let chain_config = host::get_eth_chain_config(&chain_name)?;
+
+// Get the chain config for a Cosmos chain
+let chain_config = host::get_cosmos_chain_config(&chain_name)?;
+```
+
+You can then use `wavs-wasi-chain` to create an RPC provider using the [`new_eth_provider` function](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/ethereum/fn.new_eth_provider.html):
+
+```rust lib.rs
+use crate::bindings::host::{get_eth_chain_config, get_cosmos_chain_config}; // Import host functions
+use wavs_wasi_chain::ethereum::new_eth_provider;
+use alloy_provider::{Provider, RootProvider};
+use alloy_network::Ethereum;
+use anyhow::Context; // For context() error handling
+
+// Get the chain config for a specific chain defined in wavs.toml
+let chain_config = get_eth_chain_config("eth.local") // Use the key from wavs.toml (e.g., "eth.local" or "eth.mainnet")
+    .map_err(|e| format!("Failed to get chain config: {}", e))?;
+
+// Create an Alloy provider instance using the HTTP endpoint
+let provider: RootProvider<Ethereum> = new_eth_provider::<Ethereum>(
+    chain_config.http_endpoint
+        .context("http_endpoint is missing in chain config")? // Ensure endpoint exists
+)?;
+```
+
+### Example: Querying NFT Balance
+
+Here's an example demonstrating how to query the balance of an ERC721 NFT contract for a given owner address.
+
+```rust lib.rs
+use crate::bindings::host::get_eth_chain_config;
+use alloy_network::{Ethereum, Network};
+use alloy_primitives::{Address, Bytes, TxKind, U256};
+use alloy_provider::{Provider, RootProvider};
+use alloy_rpc_types::{TransactionInput, eth::TransactionRequest}; // Note: use eth::TransactionRequest
+use alloy_sol_types::{sol, SolCall}; // Removed unused SolType, SolValue
+use wavs_wasi_chain::ethereum::new_eth_provider;
+use anyhow::Context;
+use wstd::runtime::block_on; // Required to run async code
+
+// Define the ERC721 interface subset needed
+sol! {
+    interface IERC721 {
+        function balanceOf(address owner) external view returns (uint256);
+    }
+}
+
+// Function to query NFT ownership (must be async)
+pub async fn query_nft_ownership(owner_address: Address, nft_contract: Address) -> Result<bool, String> {
+    // 1. Get chain configuration (using "eth.local" as an example)
+    let chain_config = get_eth_chain_config("eth.local")
+        .map_err(|e| format!("Failed to get eth.local chain config: {}", e))?;
+
+    // 2. Create Ethereum provider
+    let provider: RootProvider<Ethereum> = new_eth_provider::<Ethereum>(
+        chain_config.http_endpoint
+            .context("http_endpoint missing for eth.local")?
+    ).map_err(|e| format!("Failed to create provider: {}", e))?; // Handle provider creation error
+
+    // 3. Prepare the contract call using the generated interface
+    let balance_call = IERC721::balanceOfCall { owner: owner_address };
+
+    // 4. Construct the transaction request for a read-only call
+    let tx = TransactionRequest {
+        to: Some(TxKind::Call(nft_contract)), // Specify the contract to call
+        input: TransactionInput {
+            input: Some(balance_call.abi_encode().into()), // ABI-encoded call data
+            data: None // `data` is deprecated, use `input`
+        },
+        // Other fields like nonce, gas, value are not needed for eth_call
+        ..Default::default()
+    };
+
+    // 5. Execute the read-only call using the provider
+    // Note: provider.call() returns the raw bytes result
+    let result_bytes = provider.call(&tx)
+        .await
+        .map_err(|e| format!("Provider call failed: {}", e))?;
+
+    // 6. Decode the result (balanceOf returns uint256)
+    // Ensure the result is exactly 32 bytes for U256::from_be_slice
+    if result_bytes.len() != 32 {
+        return Err(format!("Unexpected result length: {}", result_bytes.len()));
+    }
+    let balance = U256::from_be_slice(&result_bytes);
+
+    // 7. Determine ownership based on balance
+    Ok(balance > U256::ZERO)
+}
+
+// Example of how to call the async function from the main sync component logic
+fn main_logic(owner: Address, contract: Address) -> Result<bool, String> {
+    let is_owner = block_on(async move {
+        query_nft_ownership(owner, contract).await
+    })?; // Use block_on to run the async function
+    Ok(is_owner)
+}
+```
+
+This example covers:
+1.  **Defining the Interface**: Using `sol!` to create Rust bindings for the `balanceOf` function.
+2.  **Provider Setup**: Getting configuration and creating an `alloy` provider.
+3.  **Call Preparation**: Encoding the function call data using generated types.
+4.  **Transaction Request**: Building the request for an `eth_call`.
+5.  **Execution**: Using `provider.call()` to interact with the node.
+6.  **Decoding**: Parsing the returned bytes into the expected `U256` type.
+7.  **Async Handling**: Using `async fn` and `block_on` for asynchronous network operations within the synchronous component environment.
+
+Visit the [wavs-wasi-chain documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/index.html) and the [Alloy documentation](https://docs.rs/alloy/latest/alloy/) for more detailed information.
+
+
 ## Logging
 
 Components can use logging to debug and track the execution of the component.
@@ -169,47 +332,6 @@ For production, you can use a `host::log()` function which takes a `LogLevel` an
 host::log(LogLevel::Info, "Production logging message");
 ```
 
-## Blockchain interactions
-
-The following dependencies are required in `Cargo.toml` for Ethereum interactions:
-
-```toml
-[dependencies]
-wavs-wasi-chain = { workspace = true }  # Blockchain interactions
-alloy-sol-types = { workspace = true }  # ABI handling
-alloy-sol-macro = { workspace = true }  # For Solidity type generation
-```
-
-Chain configs are defined in the `wavs.toml` file:
-
-```toml wavs.toml
-[chains.eth.local]
-chain_id = "31337"
-ws_endpoint = "ws://localhost:8545"
-http_endpoint = "http://localhost:8545"
-```
-
-WAVS provides host bindings to get the chain config for a given chain name in the `wavs.toml` file:
-
-```rust lib.rs
-// Get the chain config for an Ethereum chain
-let chain_config = host::get_eth_chain_config(&chain_name)?;
-
-// Get the chain config for a Cosmos chain
-let chain_config = host::get_cosmos_chain_config(&chain_name)?;
-```
-
-The `wavs-wasi-chain` crate provides the [`new_eth_provider` function](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/ethereum/fn.new_eth_provider.html) which creates a new Ethereum provider along with other basic helpers to create an alloy client for interacting with the blockchain that can be used in a component:
-
-```rust lib.rs
-let provider = new_eth_provider::<Ethereum>(
-    chain_config
-        .http_endpoint
-        .context("http_endpoint is missing")?
-)?;
-```
-
-Visit the [wavs-wasi-chain documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) for more information on the functions available for interacting with the blockchain.
 
 ## Sol! macro
 
