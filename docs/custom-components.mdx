@@ -45,26 +45,30 @@ The makefile contains several commands for building, testing, and deploying WAVS
 #### Building and Testing Components
 
 
+1. Build your components
 
 ```bash
 make wasi-build
 ```
-- Builds the WAVS WASI components.
-- **Under the hood**: 
-  - Iterates over each component in the `components` directory.
-  - Runs `cargo component build --release` to compile the component and generate bindings automatically. 
+**Under the hood**: 
+  - Iterates over all components found in the `components` directory.
+  - Automatically generates WASI bindings for each component.
+  - Runs `cargo component build --release` to compile the components.
   - Formats the code using `cargo fmt`.
   - Copies the compiled `.wasm` files to the `compiled` directory.
+
+2. Test your component directly without deploying to a chain.
 
 ```bash
 make wasi-exec
 ```
-- **Purpose**: Executes the WAVS WASI component(s) for testing.
-- **Under the hood**: 
-  - Uses the `wavs-cli` Docker image to run the component.
-  - Executes the component with the specified input data.
-  - Simulates an Ethereum event using the `COIN_MARKET_CAP_ID`.
-- **Variables**:
+
+**Under the hood**: 
+  - Uses the `wavs-cli` Docker image to run the component specified by `COMPONENT_FILENAME`.
+  - Simulates the trigger event using the `COIN_MARKET_CAP_ID` as input data.
+  - Executes the component with the input data.
+
+**Variables**:
   - `COMPONENT_FILENAME`: The name of the compiled WASM file to execute.
   - `COIN_MARKET_CAP_ID`: The input data used to simulate the Ethereum event (default is `1`).
 
