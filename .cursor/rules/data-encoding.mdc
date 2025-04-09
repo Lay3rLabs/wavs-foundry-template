@@ -3,9 +3,10 @@ description:
 globs: 
 alwaysApply: true
 ---
- ---
+---
 description: Guidelines for encoding and decoding data in WAVS components
-globs: components/**/*
+globs: components/**/*.rs
+alwaysApply: true
 ---
 # Data Encoding and Decoding Guidelines
 
@@ -48,8 +49,18 @@ let value = input
 
 ## Output Encoding
 
-1. Basic Output Encoding:
+1. WAVS Result Structure:
 ```rust
+// WAVS requires results to be encoded in a specific format using DataWithId
+// This structure is defined in the ITypes.sol interface and generated via the sol! macro
+sol! {
+    struct DataWithId {
+        uint64 triggerId;  // Links result back to original trigger
+        bytes data;        // Actual component output data
+    }
+}
+
+// Basic encoding pattern (required for WAVS to process submission)
 fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> Vec<u8> {
     solidity::DataWithId {
         triggerId: trigger_id,
@@ -58,15 +69,53 @@ fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> Vec<u8> {
 }
 ```
 
-2. Destination-based Encoding:
+2. Custom Solidity Types:
+```rust
+// Components can define and encode any custom Solidity types for their specific needs
+sol! {
+    // Example: Eligibility check result type
+    struct EligibilityResult {
+        uint64 triggerId;
+        bool eligible;
+        bool standing;
+    }
+
+    // Example: Price feed result type
+    struct PriceData {
+        uint64 triggerId;
+        uint256 price;
+        uint256 timestamp;
+    }
+}
+
+// However, when submitting to WAVS, these must be wrapped in DataWithId
+fn encode_eligibility_result(trigger_id: u64, eligible: bool, standing: bool) -> Vec<u8> {
+    // First encode the custom result
+    let result = EligibilityResult { 
+        triggerId: trigger_id,
+        eligible,
+        standing 
+    }.abi_encode();
+
+    // Then wrap in DataWithId for WAVS submission
+    solidity::DataWithId {
+        triggerId: trigger_id,
+        data: result.into()
+    }.abi_encode()
+}
+```
+
+3. Destination-based Encoding:
 ```rust
 let output = match dest {
-    // For Ethereum: Encode with trigger ID
+    // For Ethereum: Must use DataWithId format
     Destination::Ethereum => Some(encode_trigger_output(trigger_id, &result)),
-    // For CLI: Return raw output
+    // For CLI: Can return raw output
     Destination::CliOutput => Some(result),
 };
 ```
+
+Note: While components can define and use any Solidity types internally, WAVS requires the final output to be wrapped in the `DataWithId` structure for proper submission processing. This ensures consistent handling of results and maintains the link between triggers and their responses.
 
 ## Common Patterns
 
