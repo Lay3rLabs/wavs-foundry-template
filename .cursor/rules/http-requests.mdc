@@ -138,4 +138,46 @@ fn validate_data_size(data: &[u8]) -> Result<(), String> {
 - Remove optional fields when possible
 - Use efficient encoding formats
 - Consider compression for large datasets
-- 
+
+## Async Operations
+
+1. Basic Pattern:
+```rust
+block_on(async move {
+    // Async operations here
+})?
+```
+
+2. Purpose and Usage:
+- `block_on` is from `wstd::runtime` module
+- Allows running async code in synchronous contexts
+- Required because WASI components' `run` function is synchronous
+- Essential for operations that need to wait for responses
+
+3. Common Use Cases:
+```rust
+// HTTP Request Example
+let result = block_on(async move {
+    // Make the HTTP request
+    let response = fetch_json(request).await?;
+    // Process the response
+    process_data(response)
+})?;
+
+// Multiple Async Operations
+let result = block_on(async move {
+    // Fetch data from multiple endpoints
+    let data1 = fetch_json(request1).await?;
+    let data2 = fetch_json(request2).await?;
+    // Combine and process results
+    combine_data(data1, data2)
+})?;
+```
+
+4. Best Practices:
+- Always use error handling with `?` operator
+- Keep async blocks focused and concise
+- Consider timeouts for long-running operations
+- Log async operation progress and errors
+- Handle cancellation appropriately
+- Use proper error propagation
