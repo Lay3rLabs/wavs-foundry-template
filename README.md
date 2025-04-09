@@ -195,18 +195,33 @@ cp .env.example .env
 
 docker run --rm --network host --env-file .env  -v ./.nodes:/root/.nodes wavs-middleware:local
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
-cast call ${SERVICE_MANAGER_ADDRESS} 'getServiceURI()'
+# cast call ${SERVICE_MANAGER_ADDRESS} 'getServiceURI()'
+
 
 export PRIVATE_KEY=$(cat .nodes/deployer)
 export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
 cast rpc anvil_setBalance $MY_ADDR 0x10000000000000000000 -r http://localhost:8545
+
+# this fails bc it is actually set by some anvil address
+cast send --private-key ${PRIVATE_KEY} ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "https://wavs.xyz"
+
+docker run --rm --network host --env-file .env  -v ./.nodes:/root/.nodes --entrypoint /wavs/set_service_uri.sh wavs-middleware:local https://ipfs.url/for-custom-service.json
+
+cast c ${SERVICE_MANAGER_ADDRESS} "owner()"
+
+
+export AVS_KEY=0x974b676703542ff93841c3daeeabcbfdb6ba62101856e22d5fb6b9d2f9db42fd
+
+docker run --network host --env-file .env -v ./.nodes:/root/.nodes  --entrypoint /wavs/register.sh wavs-middleware:local "$AVS_KEY"
+
 ```
 
-Update the WAVS env variables so we are the owner (who deployed the ServiceManager)
+<!-- TODO: this does not work anyways because the owner is a different anvil account -->
+<!-- Update the WAVS env variables so we are the owner (who deployed the ServiceManager)
 
 ```bash
 sed -i 's/test test test test test test test test test test test junk/'$PRIVATE_KEY'/' .env
-```
+``` -->
 
 Run WAVS & the aggregator in a new tab, or background
 
