@@ -202,26 +202,30 @@ export PRIVATE_KEY=$(cat .nodes/deployer)
 export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
 cast rpc anvil_setBalance $MY_ADDR 0x10000000000000000000 -r http://localhost:8545
 
-# this fails bc it is actually set by some anvil address
+
+cast c ${SERVICE_MANAGER_ADDRESS} "owner()" # should be PRIVATE_KEY
+
+# this will be updated when we deploy the service
 cast send --private-key ${PRIVATE_KEY} ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "https://wavs.xyz"
-
-docker run --rm --network host --env-file .env  -v ./.nodes:/root/.nodes --entrypoint /wavs/set_service_uri.sh wavs-middleware:local https://ipfs.url/for-custom-service.json
-
-cast c ${SERVICE_MANAGER_ADDRESS} "owner()"
+# docker run --rm --network host --env-file .env  -v ./.nodes:/root/.nodes --entrypoint /wavs/set_service_uri.sh wavs-middleware:local https://ipfs.url/for-custom-service.json
+cast c ${SERVICE_MANAGER_ADDRESS} "getServiceURI()(string)"
 
 
-export AVS_KEY=0x974b676703542ff93841c3daeeabcbfdb6ba62101856e22d5fb6b9d2f9db42fd
+# upstream:
+# TODO: get the private AVS key (0x...) for this service from the WAVS node
+# Generate a new private key for the AVS
+# Does this require PK support in WAVS?: https://github.com/Lay3rLabs/WAVS/pull/517
+AVS_KEY=$(cast wallet new --json | jq -r '.[0].private_key')
+# cast wallet address --private-key $AVS_KEY
 
 docker run --network host --env-file .env -v ./.nodes:/root/.nodes  --entrypoint /wavs/register.sh wavs-middleware:local "$AVS_KEY"
 
 ```
 
-<!-- TODO: this does not work anyways because the owner is a different anvil account -->
-<!-- Update the WAVS env variables so we are the owner (who deployed the ServiceManager)
 
 ```bash
 sed -i 's/test test test test test test test test test test test junk/'$PRIVATE_KEY'/' .env
-``` -->
+```
 
 Run WAVS & the aggregator in a new tab, or background
 
@@ -259,6 +263,7 @@ COMPONENT_FILENAME=eth_price_oracle.wasm SERVICE_MANAGER_ADDRESS=${SERVICE_MANAG
 
 # Deploy the service JSON to WAVS so it now watches and submits
 # the results based on the service json configuration.
+# TODO: this requires the PRIVATE_KEY, not AVS key
 SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
 
 # curl http://localhost:8000/service/019616c0-2c31-7c11-a8ec-8e3409101628
