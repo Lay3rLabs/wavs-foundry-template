@@ -50,7 +50,7 @@ The makefile contains several commands for building, testing, and deploying WAVS
 ```bash
 make wasi-build
 ```
-**Under the hood**: 
+**Under the hood**:
   - Iterates over all components found in the `components` directory.
   - Automatically generates WASI bindings for each component.
   - Runs `cargo component build --release` to compile the components.
@@ -63,7 +63,7 @@ make wasi-build
 make wasi-exec
 ```
 
-**Under the hood**: 
+**Under the hood**:
   - Uses the `wavs-cli` Docker image to run the component specified by `COMPONENT_FILENAME`.
   - Simulates the trigger event using the `COIN_MARKET_CAP_ID` as input data and the `SERVICE_CONFIG` to configure the service.
   - Executes the component with the input data.
@@ -74,7 +74,6 @@ make wasi-exec
   - `SERVICE_CONFIG`: The service configuration for the component containing the `host_envs` and `kv` variables.
 
 #### Setup
-
 
 ```bash
 make setup
@@ -175,12 +174,12 @@ COMPONENT_FILENAME ?= eth_price_oracle.wasm
 - Used by `wasi-exec` and `deploy-service` commands to identify which component to run or deploy.
 - Change this filename to run a different service.
 
-
 #### Service config
 
 ```bash
 SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv":[],"workflow_id":"default","component_id":"default"}'
 ```
+
 - Configures the WAVS service.
   - `fuel_limit`: Maximum computational resources the service can use
   - `max_gas`: Maximum gas limit for blockchain transactions
@@ -193,9 +192,11 @@ SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv"
 ```bash
 RPC_URL ?= http://localhost:8545
 ```
+
 - Specifies the Ethereum RPC endpoint URL.
 
 #### Trigger event
+
 ```bash
 TRIGGER_EVENT ?= NewTrigger(bytes)
 ```
@@ -254,14 +255,16 @@ The basic service is made up of a trigger, a component, and submission logic.
 
 Trigger: any onchain event emitted from a contract.
 
-Component: the main logic of a WAVS service. They are responsible for processing the trigger data and executing the business logic.
+Component: the main logic of a WAVS service. Components are responsible for processing the trigger data and executing the business logic.
 
-Submission: the logic that executes after a component has processed the trigger data.
+Submission: handles the logic for submitting a component's output to the blockchain.
 
 
 ## Trigger
 
-The simple onchain trigger contract in the template is used to emit triggers to the WAVS service. The trigger data is encoded as a bytes object. When a WAVS component receives this trigger, it uses the `decode_event_log_data!` macro from the [`wavs-wasi-chain`](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) crate to decode the event data for processing.
+The simple onchain trigger contract in the template is used to emit triggers to the WAVS service. The trigger data is encoded as a bytes object.
+
+When a WAVS component receives this trigger, it uses the `decode_event_log_data!` macro from the [`wavs-wasi-chain`](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) crate to decode the event data for processing.
 
 In the template, each trigger has a unique ID that links it to its data. The component processes the trigger data and returns results. Results are submitted back to the blockchain via the submission contract.
 
@@ -331,6 +334,7 @@ function handleSignedData(bytes calldata _data, bytes calldata _signature) exter
 }
 ```
 
+
 Note: submission contracts are not required for a WAVS service. If you don't need to submit data back to the blockchain, you can modify the makefile `deploy-service` command to use the `--submit none` flag when deploying the service.
 
 ```
@@ -341,10 +345,7 @@ deploy-service:
 	--trigger-address "${SERVICE_TRIGGER_ADDR}" \
 	--service-config ${SERVICE_CONFIG} \
   --submit none
-
 ```
-
-
 
 ## Building Components
 
