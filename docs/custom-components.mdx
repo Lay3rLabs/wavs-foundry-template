@@ -8,7 +8,7 @@ docsignore-->
 
 Use the info in this guide to customize the template to create your own custom service. Check out the [WAVS design considerations](/design) page to learn which use-cases WAVS is best suited for.
 
-## Template structure
+## Foundry Template structure
 
 ```bash
 wavs-foundry-template/
@@ -33,7 +33,7 @@ wavs-foundry-template/
 ```
 
 - The `README` file contains the tutorial commands.
-- The makefile contains commands for building and deploying the service. It also contains variables and configs for the service.
+- The `makefile` contains commands for building and deploying the service. It also contains variables and configs for the service.
 - The components directory contains the component logic for your service. Running `make wasi-build` will automatically generate bindings and compile components into the `compiled` directory.
 - The src directory contains the Solidity contract and interfaces.
 - The script directory contains the scripts used in the makefile commands to deploy, trigger and test the service.
@@ -45,7 +45,7 @@ The makefile contains several commands for building, testing, and deploying WAVS
 #### Building and Testing Components
 
 
-1. Build your components
+1. Build your WASI components
 
 ```bash
 make wasi-build
@@ -57,7 +57,7 @@ make wasi-build
   - Formats the code using `cargo fmt`.
   - Copies the compiled `.wasm` files to the `compiled` directory.
 
-2. Test your component directly without deploying to a chain.
+2. Test your WASI components directly without deploying to a chain.
 
 ```bash
 make wasi-exec
@@ -65,20 +65,22 @@ make wasi-exec
 
 **Under the hood**: 
   - Uses the `wavs-cli` Docker image to run the component specified by `COMPONENT_FILENAME`.
-  - Simulates the trigger event using the `COIN_MARKET_CAP_ID` as input data.
+  - Simulates the trigger event using the `COIN_MARKET_CAP_ID` as input data and the `SERVICE_CONFIG` to configure the service.
   - Executes the component with the input data.
 
 **Variables**:
   - `COMPONENT_FILENAME`: The name of the compiled WASM file to execute.
-  - `COIN_MARKET_CAP_ID`: The input data used to simulate the Ethereum event (default is `1`).
+  - `COIN_MARKET_CAP_ID`: The input data used to simulate the trigger event. Formatted as a bytes32 string using `cast format-bytes32-string`.
+  - `SERVICE_CONFIG`: The service configuration for the component containing the `host_envs` and `kv` variables.
 
 #### Setup
+
 
 ```bash
 make setup
 ```
 - **Purpose**: Installs initial dependencies required for the project.
-- **Under the hood**: 
+- **Under the hood**:
   - Checks for system requirements like Node.js, jq, and cargo.
   - Installs dependencies using `forge install` and `npm install`.
 
@@ -86,14 +88,14 @@ make setup
 forge build
 ```
 - **Purpose**: Builds the Solidity contracts.
-- **Under the hood**: 
+- **Under the hood**:
   - Compiles the Solidity contracts using Foundry's `forge` tool.
 
 ```bash
 forge test
 ```
 - **Purpose**: Runs tests for the Solidity contracts.
-- **Under the hood**: 
+- **Under the hood**:
   - Executes the test suite using Foundry's `forge test` command.
 
 #### Starting Services
@@ -101,159 +103,161 @@ forge test
 ```bash
 make start-all
 ```
-- **Purpose**: Starts the Anvil Ethereum node and WAVS services using Docker Compose.
-- **Under the hood**: 
+
+- Starts the Anvil Ethereum node and WAVS using Docker Compose. Keep this running and open another terminal to execute other commands.
+- **Under the hood**:
   - Cleans up any existing Docker containers.
-  - Starts the Anvil Ethereum node.
-  - Runs Docker Compose to start the WAVS services.
+  - Starts the Anvil Ethereum node directly on the host.
+  - Runs `docker compose up` which:
+    - Starts the main `wavs` service and the `aggregator` service.
+    - Deploys EigenLayer core contracts for local development and your Service Manager contract which manages your AVS.
 
 #### Deployment and Execution
 
 ```bash
-export SERVICE_MANAGER_ADDR=\`make get-eigen-service-manager-from-deploy\``
-```
-- **Purpose**: Retrieves the service manager address from the deployment JSON.
-- **Under the hood**: 
-  - Uses `jq` to extract the service manager address from `.docker/deployments.json`.
-
-```bash
+export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
 forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url http://localhost:8545 --broadcast
 ```
-- **Purpose**: Deploys the service using a Foundry script.
-- **Under the hood**: 
-  - Executes the `Deploy.s.sol` script with the service manager address.
-  - Uses the specified RPC URL to interact with the Ethereum node.
-  - Broadcasts the transaction to the network.
+
+- **Under the hood**:
+  1. Retrieves the deployed service manager address from `.docker/deployments.json`.
+  2. Deploys the on-chain trigger and submission contracts.
+  3. Links the submission contract to the Service Manager by passing the `_serviceManagerAddr` to its constructor.
+  4. Saves the deployed contract addresses in `.docker/script_deploy.json`
+  5. Uses the specified RPC URL to interact with the Ethereum node.
+  6. Broadcasts the transaction to the network.
 
 ```bash
 TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
 ```
-- **Purpose**: Deploys the WAVS component service.
-- **Under the hood**: 
-  - Uses the `wavs-cli` to deploy the service with the specified trigger event.
-  - Configures the service with the trigger and submission addresses.
+- **Purpose**: Registers the WASI component as a service with the WAVS network.
+- **Under the hood**:
+  1. Registers the service with the following configuration:
+    - Specifies the compiled component to run (`--component`)
+    - Sets the trigger event to watch for (`--trigger-event-name`)
+    - Configures the trigger contract address (`--trigger-address`)
+    - Configures the submission contract address (`--submit-address`)
+    - Applies service configuration including fuel limits, gas limits, and environment variables (`--service-config`).
+  2. The service configuration is stored off-chain and used by the WAVS operator to run the component
 
 ```bash
 export COIN_MARKET_CAP_ID=1
-```
-- **Purpose**: Sets the CoinMarketCap ID for testing.
-- **Under the hood**: 
-  - Exports the `COIN_MARKET_CAP_ID` environment variable for use in subsequent commands.
-
-```bash
-export SERVICE_TRIGGER_ADDR=\`make get-trigger-from-deploy\``
-```
-- **Purpose**: Retrieves the trigger address from the deployment JSON.
-- **Under the hood**: 
-  - Uses `jq` to extract the trigger address from `.docker/script_deploy.json`.
-
-```bash
+export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig "run(string,string)" --rpc-url http://localhost:8545 --broadcast -v 4
 ```
-- **Purpose**: Triggers the service using a Foundry script.
-- **Under the hood**: 
+
+- **Under the hood**:
+  - Exports the `COIN_MARKET_CAP_ID` environment variable for use in subsequent commands.
+  - Uses `jq` to extract the trigger address from `.docker/script_deploy.json`.
   - Executes the `Trigger.s.sol` script with the trigger address and CoinMarketCap ID.
-  - Uses the specified RPC URL to interact with the Ethereum node.
-  - Broadcasts the transaction to the network with verbose output.
+  - Uses the specified RPC URL to interact with the local Anvil node.
+  - Broadcasts the transaction to the network.
 
 #### Viewing Results
 
 ```bash
 make show-result
 ```
-- **Purpose**: Displays the result of the service execution.
-- **Under the hood**: 
-  - Uses a Foundry script to retrieve and display the result from the service.
-  - Interacts with the Ethereum node using the specified RPC URL.
+
+- Uses the `ShowResult.s.sol` script to retrieve and display the result from the service.
+
 
 ### Makefile variables
 
-The Makefile contains several important variables that control the behavior of the WAVS service. Here's a detailed explanation of each:
+The Makefile contains several important variables that control the behavior of the WAVS service.
 
-#### Component Configuration
+#### Component
+
 ```bash
 COMPONENT_FILENAME ?= eth_price_oracle.wasm
 ```
-- **Purpose**: Specifies the name of the compiled WASM file to use.
-- **Default**: `eth_price_oracle.wasm`
-- **Usage**: Used by `wasi-exec` and `deploy-service` commands to identify which component to run or deploy.
-- **Why**: Allows you to work with different components without modifying the Makefile.
 
-#### Trigger Configuration
-```bash
-TRIGGER_EVENT ?= NewTrigger(bytes)
-```
-- **Purpose**: Defines the event signature that WAVS will watch for on the blockchain.
-- **Default**: `NewTrigger(bytes)`
-- **Usage**: Used by `deploy-service` to configure the service's event listener.
-- **Why**: Enables the service to respond to specific events emitted by the trigger contract.
+- Used by `wasi-exec` and `deploy-service` commands to identify which component to run or deploy.
+- Change this filename to run a different service.
 
-#### Service Configuration
+
+#### Service config
+
 ```bash
 SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv":[],"workflow_id":"default","component_id":"default"}'
 ```
-- **Purpose**: Configures the WAVS service with various parameters.
-- **Components**:
+- Configures the WAVS service.
   - `fuel_limit`: Maximum computational resources the service can use
   - `max_gas`: Maximum gas limit for blockchain transactions
-  - `host_envs`: List of environment variables to expose to the component
+  - `host_envs`: List of private environment variables to expose to the component (values must be prefixed with `WAVS_ENV_`)
   - `kv`: Key-value pairs for public configuration
-  - `workflow_id`: Identifier for the service workflow
-  - `component_id`: Identifier for the component
-- **Usage**: Used by `deploy-service` to configure the service.
-- **Why**: Provides fine-grained control over service behavior and resource limits.
+  - `workflow_id` and `component_id` are set as `default` in the template for simple services.
 
-#### Network Configuration
+#### Network configuration
+
 ```bash
 RPC_URL ?= http://localhost:8545
 ```
-- **Purpose**: Specifies the Ethereum RPC endpoint URL.
-- **Default**: `http://localhost:8545`
-- **Usage**: Used by various commands to interact with the Ethereum network.
-- **Why**: Allows connection to different Ethereum networks (local, testnet, mainnet).
+- Specifies the Ethereum RPC endpoint URL.
 
-#### Contract Addresses
+#### Trigger event
+```bash
+TRIGGER_EVENT ?= NewTrigger(bytes)
+```
+
+- Defines the event signature that WAVS will watch for on the blockchain.
+- `NewTrigger(bytes)` is the default trigger event from the template's trigger contract.
+
+#### Trigger data
+
+```bash
+COIN_MARKET_CAP_ID ?= 1
+```
+- Specifies the CoinMarketCap ID for testing the price oracle in `wasi-exec` and trigger scripts (`1` is Bitcoin).
+
+#### Contract addresses
+
 ```bash
 SERVICE_MANAGER_ADDR ?= `jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json`
 SERVICE_TRIGGER_ADDR ?= `jq -r '.trigger' "./.docker/script_deploy.json"`
 SERVICE_SUBMISSION_ADDR ?= `jq -r '.service_handler' "./.docker/script_deploy.json"`
 ```
-- **Purpose**: Store addresses of deployed contracts.
-- **Source**: Automatically populated from deployment JSON files.
-- **Usage**: Used by deployment and interaction commands.
-- **Why**: Enables the system to locate and interact with the correct contracts.
+- Automatically populated from deployment JSON files. Used by deployment and interaction commands.
+- You can view the addresses of your deployed contracts using these commands:
 
-#### Testing Variables
+View the addresses of your deployed contracts using these commands:
+
 ```bash
-COIN_MARKET_CAP_ID ?= 1
+# View the trigger contract address
+make get-trigger-from-deploy
+# View the submission contract address
+make get-service-handler-from-deploy
+# View the service manager address
+make get-eigen-service-manager-from-deploy
 ```
-- **Purpose**: Specifies the CoinMarketCap ID for testing the price oracle.
-- **Default**: `1` (Bitcoin)
-- **Usage**: Used by `wasi-exec` and trigger scripts.
-- **Why**: Allows testing with different cryptocurrencies.
 
-#### Docker Configuration
-```bash
-SUDO := $(shell if groups | grep -q docker; then echo ''; else echo 'sudo'; fi)
-```
-- **Purpose**: Determines if `sudo` is needed for Docker commands.
-- **Usage**: Automatically added to Docker commands when needed.
-- **Why**: Ensures Docker commands work regardless of user permissions.
+#### Customizing Makefile variables
 
-#### Build Tools
-```bash
-CARGO ?= cargo
-WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ghcr.io/lay3rlabs/wavs:0.3.0 wavs-cli
-```
-- **Purpose**: Define paths to build tools and commands.
-- **Usage**: Used throughout the Makefile for building and running components.
-- **Why**: Allows for tool version management and consistent command execution.
+Makefile variables can be overridden when running make commands. For example, running the following in your terminal will use a different component when testing:
 
-These variables can be overridden when running make commands:
 ```bash
 COMPONENT_FILENAME=my_component.wasm make wasi-exec
-TRIGGER_EVENT="MyCustomEvent(bytes)" make deploy-service
 ```
+
+To trigger the component from an external contract, you can set the trigger address and trigger event manually in the makefile:
+
+```bash
+TRIGGER_ADDRESS ?= 0x1234567890123456789012345678901234567890
+TRIGGER_EVENT ?= MyCustomEvent(bytes)
+```
+{/* todo: link here: */}
+You can also add variables to the makefile, such as public variables to be referenced in your component or reference private variables like API keys. Read more here: [Makefile variables](#)
+
+## WAVS services
+
+The basic service is made up of a trigger, a component, and submission logic.
+
+Trigger: any onchain event emitted from a contract.
+
+Component: the main logic of a WAVS service. They are responsible for processing the trigger data and executing the business logic.
+
+Submission: the logic that executes after a component has processed the trigger data.
+
 
 ## Trigger
 
@@ -268,6 +272,7 @@ The [trigger contract in the WAVS foundry template](https://github.com/Lay3rLabs
 3. The `decode_trigger_event` function in [`/components/eth-price-oracle/src/trigger.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/trigger.rs#L11-L21), which processes the trigger data and extracts the `trigger_id` and `data`.
 4. The `run` function in [`/components/eth-price-oracle/src/lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/lib.rs#L13), which calls `decode_trigger_event`, processes the extracted trigger data, and determines how to handle it.
 5. The `wasi-exec` command in the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L39-L43), which passes input data when testing WAVS components via `--input cast format-bytes32-string $(COIN_MARKET_CAP_ID)`. This simulates an Ethereum event during local execution.
+
 
 ## Component
 
@@ -304,6 +309,42 @@ impl Guest for Component {
 ```
 
 Components must implement the `Guest` trait, which is the main interface between your component and the WAVS runtime. The `run` function is the entry point for processing triggers: it receives the trigger data, decodes it, processes it according to your component's logic, and returns the results. Results can be sent back to Ethereum (when triggered by a contract event) or returned as CLI output (when triggered manually during testing). Error handling is done through the `Result` type. In the foundry template, bindings are automatically generated for any files in the `/components` and `/src` directories when the `make build` command is run.
+
+### Submission
+
+A service handler or submission contract handles the logic for submitting a component's output to the blockchain. A submission contract must implement the `handleSignedData()` function using the `IWavsServiceHandler` interface. This interface is defined in the `@wavs` package: https://www.npmjs.com/package/@wavs/solidity?activeTab=code
+
+In the template, the [submission contract](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsSubmit.sol) uses the `handleSignedData()` function to validate the operator's signature and store the processed data from the component. The `DataWithId` struct must match the output format from the component. Each trigger has a unique ID that links the data to its source.
+
+```solidity
+function handleSignedData(bytes calldata _data, bytes calldata _signature) external {
+    // 1. Validate the operator's signature by calling the `validate` function on the `_serviceManager` contract
+    _serviceManager.validate(_data, _signature);
+
+    // 2. Decode the data into a DataWithId struct defined in the `ITypes` interface
+    DataWithId memory dataWithId = abi.decode(_data, (DataWithId));
+
+    // 3. Store the result in state
+    _signatures[dataWithId.triggerId] = _signature;      // 1. Store operator signature
+    _datas[dataWithId.triggerId] = dataWithId.data;      // 2. Store the data
+    _validTriggers[dataWithId.triggerId] = true;         // 3. Mark trigger as valid
+}
+```
+
+Note: submission contracts are not required for a WAVS service. If you don't need to submit data back to the blockchain, you can modify the makefile `deploy-service` command to use the `--submit none` flag when deploying the service.
+
+```
+deploy-service:
+	@$(WAVS_CMD) deploy-service --log-level=info --data /data/.docker --home /data \
+	--component "/data/compiled/${COMPONENT_FILENAME}" \
+	--trigger-event-name "${TRIGGER_EVENT}" \
+	--trigger-address "${SERVICE_TRIGGER_ADDR}" \
+	--service-config ${SERVICE_CONFIG} \
+  --submit none
+
+```
+
+
 
 ## Building Components
 
@@ -655,24 +696,4 @@ The following example shows how to access a private environment variable in a co
 let api_key = std::env::var("WAVS_ENV_MY_API_KEY")?;
 ```
 
-### Submission
-
-A service handler or submission contract handles the logic for submitting a component's output to the blockchain. A submission contract must implement the `handleSignedData()` function using the `IWavsServiceHandler` interface. This interface is defined in the `@wavs` package: https://www.npmjs.com/package/@wavs/solidity?activeTab=code
-
-In the template, the [submission contract](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsSubmit.sol) uses the `handleSignedData()` function to validate the operator's signature and store the processed data from the component. The `DataWithId` struct must match the output format from the component. Each trigger has a unique ID that links the data to its source.
-
-```solidity
-function handleSignedData(bytes calldata _data, bytes calldata _signature) external {
-    // 1. Validate the operator's signature by calling the `validate` function on the `_serviceManager` contract
-    _serviceManager.validate(_data, _signature);
-
-    // 2. Decode the data into a DataWithId struct defined in the `ITypes` interface
-    DataWithId memory dataWithId = abi.decode(_data, (DataWithId));
-
-    // 3. Store the result in state
-    _signatures[dataWithId.triggerId] = _signature;      // 1. Store operator signature
-    _datas[dataWithId.triggerId] = dataWithId.data;      // 2. Store the data
-    _validTriggers[dataWithId.triggerId] = true;         // 3. Mark trigger as valid
-}
-```
 
