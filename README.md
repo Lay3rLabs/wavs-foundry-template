@@ -195,20 +195,22 @@ cp .env.example .env
 
 docker run --rm --network host --env-file .env  -v ./.nodes:/root/.nodes wavs-middleware:local
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
-# cast call ${SERVICE_MANAGER_ADDRESS} 'getServiceURI()'
+```
 
-
+```bash
 export PRIVATE_KEY=$(cat .nodes/deployer)
 export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
-cast rpc anvil_setBalance $MY_ADDR 0x10000000000000000000 -r http://localhost:8545
+# cast rpc anvil_setBalance $MY_ADDR 0x10000000000000000000 -r http://localhost:8545
+```
 
+<!-- Extra debugging
+```bash docci-ignore
+cast c ${SERVICE_MANAGER_ADDRESS} "owner()" # should be PRIVATE_KEY address
 
-cast c ${SERVICE_MANAGER_ADDRESS} "owner()" # should be PRIVATE_KEY
-
-# this will be updated when we deploy the service
-cast send --private-key ${PRIVATE_KEY} ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "https://wavs.xyz"
+# this will be updated when we deploy the service, not needed to be set now
+# cast send --private-key ${PRIVATE_KEY} ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "https://wavs.xyz"
 # docker run --rm --network host --env-file .env  -v ./.nodes:/root/.nodes --entrypoint /wavs/set_service_uri.sh wavs-middleware:local https://ipfs.url/for-custom-service.json
-cast c ${SERVICE_MANAGER_ADDRESS} "getServiceURI()(string)"
+# cast c ${SERVICE_MANAGER_ADDRESS} "getServiceURI()(string)"
 
 
 # upstream:
@@ -219,9 +221,11 @@ AVS_KEY=$(cast wallet new --json | jq -r '.[0].private_key')
 # cast wallet address --private-key $AVS_KEY
 
 docker run --network host --env-file .env -v ./.nodes:/root/.nodes  --entrypoint /wavs/register.sh wavs-middleware:local "$AVS_KEY"
-
 ```
+-->
 
+
+Update the operator to use the private key we generated
 
 ```bash
 sed -i 's/test test test test test test test test test test test junk/'$PRIVATE_KEY'/' .env
@@ -229,7 +233,7 @@ sed -i 's/test test test test test test test test test test test junk/'$PRIVATE_
 
 Run WAVS & the aggregator in a new tab, or background
 
-```bash
+```bash docci-background docci-delay-after=5
 docker compose up --remove-orphans &
 ```
 
@@ -243,11 +247,11 @@ docker compose up --remove-orphans &
 `SERVICE_MANAGER_ADDR` is the address of the Eigenlayer service manager contract. It was deployed in the previous step. Then you deploy the trigger and submission contracts which depends on the service manager. The service manager will verify that a submission is valid (from an authorized operator) before saving it to the blockchain. The trigger contract is any arbitrary contract that emits some event that WAVS will watch for. Yes, this can be on another chain (e.g. an L2) and then the submission contract on the L1 *(Ethereum for now because that is where Eigenlayer is deployed)*.
 
 ```bash
-forge create SimpleSubmit --json --broadcast --rpc-url http://127.0.0.1:8545 --private-key "$PRIVATE_KEY" --constructor-args "$SERVICE_MANAGER_ADDRESS" > .docker/submit.json
-export SUBMIT_ADDR=`jq -r .deployedTo .docker/submit.json`
+forge create SimpleSubmit --json --broadcast --rpc-url http://127.0.0.1:8545 --private-key "${PRIVATE_KEY}" --constructor-args "${SERVICE_MANAGER_ADDRESS}" > .docker/submit.json
+export SERVICE_SUBMISSION_ADDR=`jq -r .deployedTo .docker/submit.json`
 
-forge create SimpleTrigger --json --broadcast --rpc-url http://127.0.0.1:8545 --private-key "$PRIVATE_KEY" > .docker/trigger.json
-export TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
+forge create SimpleTrigger --json --broadcast --rpc-url http://127.0.0.1:8545 --private-key "${PRIVATE_KEY}" > .docker/trigger.json
+export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 ```
 
 > [!TIP]
@@ -287,7 +291,10 @@ forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID
 
 Query the latest submission contract id from the previous request made.
 
+```bash docci-delay-per-cmd=2 docci-output-contains="1"
+make get-trigger
+```
+
 ```bash docci-delay-per-cmd=2 docci-output-contains="BTC"
-# Get the latest TriggerId and show the result via `script/ShowResult.s.sol`
-make show-result
+TRIGGER_ID=1 make show-result
 ```
