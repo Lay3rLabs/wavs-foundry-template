@@ -260,9 +260,96 @@ Component: the main logic of a WAVS service. Components are responsible for proc
 Submission: handles the logic for submitting a component's output to the blockchain.
 
 
+
+## Lifecycle
+
+1. A service is deployed. The service is configured with a trigger address and event, a wasi component, and a submission contract (optional).
+
+2. Registered operators listen to chain logs, waiting for the specific trigger event.
+
+3. When a trigger event is emitted, operators pick up the event and verify the event matches the registered trigger.
+
+4. If a match is found, WAVS creates a TriggerAction:
+
+```rust
+// Bundle of trigger info and event data
+TriggerAction {
+    // Identifies which service/workflow this trigger belongs to
+    config: TriggerConfig {
+        service_id: "...",  // Generated during deployment
+        workflow_id: "...",   // Set as default in template
+        trigger: Trigger::EthContractEvent { ... }  // Type of trigger
+    },
+    // The actual raw event data from the chain
+    data: TriggerData::EthContractEvent {
+        contract_address: "...",  // Address that emitted event
+        chain_name: "local",      // Chain where event occurred
+        log: [...],               // Raw event data
+        block_height: 12345       // Block number
+    }
+}
+```
+
+5. The TriggerAction is converted to a WASI-compatible format and passed to the component.
+
+for the specific trigger event and 
+
+2. An event is emitted from the trigger contract. This event contains 
+
+
 ## Trigger
 
+A trigger is what prompts a WAVS service to run. Operators listen for the trigger event specified by the service and execute the corresponding component off-chain. Triggers can be any onchain event emitted from any contract.
+
+{/* todo: update for cosmos chains, etc. */}
+To configure a trigger for a service, you'll need to specify:
+
+1. The event signature/name that identifies which specific event should trigger the service. This can either be a hex-encoded event signature or an event name.
+2. The contract address where the event will be emitted from.
+
+In the template, the trigger event is set in the `Makefile` as `TRIGGER_EVENT ?= NewTrigger(bytes)` and the trigger address of the example trigger contract is automatically populated during deployment. To change the trigger event or address, you can manually [update the `Makefile` variables](#customizing-makefile-variables) and redeploy the service.
+
+Triggers can pass data
+
+In the template, the component can receive the trigger data in two ways:
+
+1. Manually via the `wasi-exec` command
+2. Triggered by an onchain event from a contract
+
+The wasi-exec command simulates an onchain event and passes the trigger data to the component as trigger::raw
+
+
+
+
+
+
 The simple onchain trigger contract in the template is used to emit triggers to the WAVS service. The trigger data is encoded as a bytes object.
+
+
+
+
+
+
+
+1. The script takes the coinMarketCapID (1) and encodes it using `abi.encodePacked()` which creates a bytes array. This becomes the data field in the TriggerInfo struct
+
+2. The trigger contract creates a TriggerInfo struct. The data field contains the encoded "1" and Emits a NewTrigger event with the encoded TriggerInfo.
+
+
+In the template, the trigger event is `NewTrigger(bytes)`. When a WAVS component receives this trigger, it uses the `decode_event_log_data!` macro from the [`wavs-wasi-chain`](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) crate to decode the event data for processing.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 When a WAVS component receives this trigger, it uses the `decode_event_log_data!` macro from the [`wavs-wasi-chain`](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) crate to decode the event data for processing.
 
