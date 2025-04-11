@@ -263,7 +263,7 @@ Deploy the compiled component with the contract information from the previous st
 
 ```bash docci-delay-per-cmd=1
 # Build your service JSON with optional overrides in the script
-COMPONENT_FILENAME=eth_price_oracle.wasm SERVICE_MANAGER_ADDRESS=${SERVICE_MANAGER_ADDRESS} sh ./script/build_service.sh
+COMPONENT_FILENAME=eth_price_oracle.wasm sh ./script/build_service.sh
 
 # Deploy the service JSON to WAVS so it now watches and submits
 # the results based on the service json configuration.
