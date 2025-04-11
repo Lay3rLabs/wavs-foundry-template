@@ -271,5 +271,5 @@ make get-trigger
 ```
 
 ```bash docci-delay-per-cmd=2 docci-output-contains="BTC"
-TRIGGER_ID=3 make show-result
+TRIGGER_ID=1 make show-result
 ```
