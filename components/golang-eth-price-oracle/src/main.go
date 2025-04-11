@@ -59,12 +59,12 @@ func compute(input []uint8, dest types.Destination) ([]byte, error) {
 func routeResult(triggerID uint64, result []byte, dest types.Destination) types.TriggerResult {
 	switch dest {
 	case types.CliOutput:
-		return types.Ok(result)
+		return types.Ok(result, cm.None[uint64]())
 	case types.Ethereum:
 		// WAVS & the contract expects abi encoded data
 		encoded := types.EncodeTriggerOutput(triggerID, result)
 		fmt.Printf("Encoded output (raw): %x\n", encoded)
-		return types.Ok(encoded)
+		return types.Ok(encoded, cm.None[uint64]())
 	default:
 		return cm.Err[types.TriggerResult](fmt.Sprintf("unsupported destination: %s", dest))
 	}
@@ -74,7 +74,9 @@ func routeResult(triggerID uint64, result []byte, dest types.Destination) types.
 func decodeTriggerEvent(triggerAction trigger.TriggerData) (trigger_id uint64, req cm.List[uint8], dest types.Destination) {
 	// Handle CLI input case
 	if triggerAction.Raw() != nil {
-		return 0, *triggerAction.Raw(), types.CliOutput
+		raw := *triggerAction.Raw()
+		fmt.Printf("Raw input: %s\n", string(raw.Slice()))
+		return 0, raw, types.CliOutput
 	}
 
 	// Handle Ethereum event case

@@ -1,8 +1,8 @@
 mod trigger;
 use trigger::{decode_trigger_event, encode_trigger_output, Destination};
-use wavs_wasi_chain::http::{fetch_json, http_request_get};
+use wavs_wasi_utils::http::{fetch_json, http_request_get};
 pub mod bindings;
-use crate::bindings::{export, Guest, TriggerAction};
+use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
 use serde::{Deserialize, Serialize};
 use wstd::{http::HeaderValue, runtime::block_on};
 
@@ -26,7 +26,7 @@ impl Guest for Component {
     /// 2. Decodes the input to get a cryptocurrency ID (in hex)
     /// 3. Fetches current price data from CoinMarketCap
     /// 4. Returns the encoded response based on the destination
-    fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
+    fn run(action: TriggerAction) -> std::result::Result<Option<WasmResponse>, String> {
         let (trigger_id, req, dest) =
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
 
@@ -45,7 +45,7 @@ impl Guest for Component {
 
         let output = match dest {
             Destination::Ethereum => Some(encode_trigger_output(trigger_id, &res)),
-            Destination::CliOutput => Some(res),
+            Destination::CliOutput => Some(WasmResponse { payload: res.into(), ordering: None }),
         };
         Ok(output)
     }

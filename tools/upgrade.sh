@@ -30,7 +30,7 @@ sed -E -i "s/ghcr.io\/lay3rlabs\/wavs:[^ ]+/ghcr.io\/lay3rlabs\/wavs:${VERSION}/
 sed -E -i "s/ghcr.io\/lay3rlabs\/wavs:[^\"]+/ghcr.io\/lay3rlabs\/wavs:${VERSION}/g" docker-compose.yml
 
 # Update Cargo.toml (for crates dependencies)
-sed -E -i "s/wavs-wasi-chain = \"[^\"]+/wavs-wasi-chain = \"${VERSION}/g" Cargo.toml
+sed -E -i "s/wavs-wasi-utils = \"[^\"]+/wavs-wasi-utils = \"${VERSION}/g" Cargo.toml
 
 # Update [package.metadata.component] in components/*/Cargo.toml (for wit)
 sed -E -i "s/wavs:worker\/layer-trigger-world@[^\"]+/wavs:worker\/layer-trigger-world@${VERSION}/g" components/*/Cargo.toml

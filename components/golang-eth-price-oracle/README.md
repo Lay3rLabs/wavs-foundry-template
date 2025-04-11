@@ -78,7 +78,7 @@ COMPONENT_FILENAME=golang_eth_price_oracle.wasm COIN_MARKET_CAP_ID=2 make wasi-e
 Start all services
 
 ```bash docci-background docci-delay-after=5
-make start-all
+anvil --fork-url https://ethereum-holesky-rpc.publicnode.com
 ```
 
 Build your smart contracts
@@ -87,12 +87,36 @@ Build your smart contracts
 forge build
 ```
 
+Deploy eigen middleware
+
+```bash
+cp .env.example .env
+
+docker run --rm --network host --env-file .env  -v ./.nodes:/root/.nodes wavs-middleware:local
+export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
+```
+
+```bash
+export PRIVATE_KEY=$(cat .nodes/deployer)
+export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
+sed -i 's/test test test test test test test test test test test junk/'$PRIVATE_KEY'/' .env
+```
+
+Run WAVS & the aggregator
+
+```bash docci-background docci-delay-after=5
+docker compose up --remove-orphans &
+```
+
+
 Deploy the contracts
 
 ```bash docci-delay-after=1
-export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
+forge create SimpleSubmit --json --broadcast --rpc-url http://127.0.0.1:8545 --private-key "${PRIVATE_KEY}" --constructor-args "${SERVICE_MANAGER_ADDRESS}" > .docker/submit.json
+export SERVICE_SUBMISSION_ADDR=`jq -r .deployedTo .docker/submit.json`
 
-forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig 'run(string)' --rpc-url http://localhost:8545 --broadcast
+forge create SimpleTrigger --json --broadcast --rpc-url http://127.0.0.1:8545 --private-key "${PRIVATE_KEY}" > .docker/trigger.json
+export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 ```
 
 Deploy the component

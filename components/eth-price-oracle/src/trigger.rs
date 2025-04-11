@@ -1,7 +1,9 @@
-use crate::bindings::wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent};
+use crate::bindings::wavs::worker::layer_types::{
+    TriggerData, TriggerDataEthContractEvent, WasmResponse,
+};
 use alloy_sol_types::SolValue;
 use anyhow::Result;
-use wavs_wasi_chain::decode_event_log_data;
+use wavs_wasi_utils::decode_event_log_data;
 
 /// Represents the destination where the trigger output should be sent
 ///
@@ -49,9 +51,15 @@ pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, 
 ///
 /// # Returns
 /// ABI encoded bytes ready for submission to Ethereum
-pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> Vec<u8> {
-    solidity::DataWithId { triggerId: trigger_id, data: output.as_ref().to_vec().into() }
-        .abi_encode()
+pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> WasmResponse {
+    WasmResponse {
+        payload: solidity::DataWithId {
+            triggerId: trigger_id,
+            data: output.as_ref().to_vec().into(),
+        }
+        .abi_encode(),
+        ordering: None,
+    }
 }
 
 /// Private module containing Solidity type definitions

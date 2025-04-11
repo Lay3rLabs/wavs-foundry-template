@@ -10,7 +10,7 @@ Use the info in this guide to customize the template to create your own custom s
 
 ## Trigger
 
-The simple onchain trigger contract in the template is used to emit triggers to the WAVS service. The trigger data is encoded as a bytes object. When a WAVS component receives this trigger, it uses the `decode_event_log_data!` macro from the [`wavs-wasi-chain`](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) crate to decode the event data for processing.
+The simple onchain trigger contract in the template is used to emit triggers to the WAVS service. The trigger data is encoded as a bytes object. When a WAVS component receives this trigger, it uses the `decode_event_log_data!` macro from the [`wavs-wasi-chain`](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_utils/all.html#functions) crate to decode the event data for processing.
 
 In the template, each trigger has a unique ID that links it to its data. The component processes the trigger data and returns results. Results are submitted back to the blockchain via the submission contract.
 
@@ -42,10 +42,10 @@ impl Guest for Component {
     fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
         // 1. Decode the trigger data
         let (trigger_id, req, dest) = decode_trigger_event(action.data)?;
-        
+
         // 2. Process the data (Your custom logic here)
         let result = process_data(req)?;
-        
+
         // 3. Encode and return the result
         let output = match dest {
             Destination::Ethereum => Some(encode_trigger_output(trigger_id, &result)),
@@ -92,7 +92,7 @@ make wasi-exec
 
 The `wavs-wasi-chain` crate provides a set of helpful functions for making HTTP requests and interacting with the blockchain. It also provides a macro for decoding trigger data for use in the component.
 
-Learn more in the [crate documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions).
+Learn more in the [crate documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_utils/all.html#functions).
 
 ### Network requests
 
@@ -115,39 +115,39 @@ async fn make_request() -> Result<YourResponseType, String> {
     // Create the request
     let url = "https://api.example.com/endpoint";
     let mut req = http_request_get(&url).map_err(|e| e.to_string())?;
-    
+
     // Add headers
     req.headers_mut().insert(
         "Accept",
         HeaderValue::from_static("application/json")
     );
-    
+
     // Make the request and parse JSON response
     let json: YourResponseType = fetch_json(req)
         .await
         .map_err(|e| e.to_string())?;
-        
+
     Ok(json)
 }
 ```
 
-For making POST requests with JSON data, you can use the [`http_request_post_json` helper function](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/http/fn.http_request_post_json.html), which automatically handles JSON serialization and sets header to `application/json`:
+For making POST requests with JSON data, you can use the [`http_request_post_json` helper function](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_utils/http/fn.http_request_post_json.html), which automatically handles JSON serialization and sets header to `application/json`:
 
 ```rust lib.rs
 async fn make_post_request() -> Result<PostResponse, String> {
     let url = "https://api.example.com/endpoint"; // The URL of the endpoint to make the request to
     let post_data = ("key1", "value1"); // any serializable data can be passed in
-    
+
     // Make POST request and parse JSON response
     let response: PostResponse = fetch_json(
         http_request_post_json(&url, &post_data)?
     ).await.map_err(|e| e.to_string())?;
-    
+
     Ok(response)
 }
 ```
 
-Other functions are available in the [crate documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions).
+Other functions are available in the [crate documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_utils/all.html#functions).
 
 ### Logging
 
@@ -199,7 +199,7 @@ let chain_config = host::get_eth_chain_config(&chain_name)?;
 let chain_config = host::get_cosmos_chain_config(&chain_name)?;
 ```
 
-The `wavs-wasi-chain` crate provides the [`new_eth_provider` function](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/ethereum/fn.new_eth_provider.html) which creates a new Ethereum provider along with other basic helpers to create an alloy client for interacting with the blockchain that can be used in a component:
+The `wavs-wasi-chain` crate provides the [`new_eth_provider` function](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_utils/ethereum/fn.new_eth_provider.html) which creates a new Ethereum provider along with other basic helpers to create an alloy client for interacting with the blockchain that can be used in a component:
 
 ```rust lib.rs
 let provider = new_eth_provider::<Ethereum>(
@@ -209,7 +209,7 @@ let provider = new_eth_provider::<Ethereum>(
 )?;
 ```
 
-Visit the [wavs-wasi-chain documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) for more information on the functions available for interacting with the blockchain.
+Visit the [wavs-wasi-chain documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_utils/all.html#functions) for more information on the functions available for interacting with the blockchain.
 
 ### Sol! macro
 

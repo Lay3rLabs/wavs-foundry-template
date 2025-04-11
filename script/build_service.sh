@@ -27,18 +27,23 @@ COMPONENT_FILENAME=${COMPONENT_FILENAME:-"eth_price_oracle.wasm"}
 TRIGGER_EVENT=${TRIGGER_EVENT:-"NewTrigger(bytes)"}
 TRIGGER_CHAIN=${TRIGGER_CHAIN:-"local"}
 SUBMIT_CHAIN=${SUBMIT_CHAIN:-"local"}
+AGGREGATOR_URL=${AGGREGATOR_URL:-""}
 
-BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-alpha1-amd64 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
+BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:reece_priv_key_signing_apr_10 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 if [ -z "$TRIGGER_ADDRESS" ]; then
-    TRIGGER_ADDRESS=`jq -r '.trigger' ".docker/script_deploy.json"`
+    TRIGGER_ADDRESS=`jq -r '.deployedTo' ".docker/trigger.json"`
 fi
 if [ -z "$SUBMIT_ADDRESS" ]; then
-    SUBMIT_ADDRESS=`jq -r '.service_handler' ".docker/script_deploy.json"`
+    SUBMIT_ADDRESS=`jq -r '.deployedTo' ".docker/submit.json"`
 fi
 if [ -z "$WASM_DIGEST" ]; then
     WASM_DIGEST=`make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME`
     WASM_DIGEST=$(echo ${WASM_DIGEST} | cut -d':' -f2)
+fi
+if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
+    echo "SERVICE_MANAGER_ADDRESS is not set. Please set it to the address of the service manager."
+    exit 1
 fi
 
 # === Core ===
@@ -48,18 +53,33 @@ TRIGGER_EVENT_HASH=`cast keccak ${TRIGGER_EVENT}`
 SERVICE_ID=`$BASE_CMD init --name demo | jq -r .id`
 echo "Service ID: ${SERVICE_ID}"
 
-COMPONENT_ID=`$BASE_CMD component add --digest ${WASM_DIGEST} | jq -r '.components | keys | .[0]'`
-echo "Component ID: ${COMPONENT_ID}"
 
-$BASE_CMD component permissions --id ${COMPONENT_ID} --http-hosts '*' --file-system true > /dev/null
-
-WORKFLOW_ID=`$BASE_CMD workflow add --fuel-limit ${FUEL_LIMIT} --component-id ${COMPONENT_ID} | jq -r '.workflows | keys | .[0]'`
+WORKFLOW_ID=`$BASE_CMD workflow add | jq -r '.workflows | keys | .[0]'`
 echo "Workflow ID: ${WORKFLOW_ID}"
 
-$BASE_CMD trigger set-ethereum --workflow-id ${WORKFLOW_ID} --address ${TRIGGER_ADDRESS} --chain-name ${TRIGGER_CHAIN} --event-hash ${TRIGGER_EVENT_HASH} > /dev/null
+$BASE_CMD workflow trigger --id ${WORKFLOW_ID} set-ethereum --address ${TRIGGER_ADDRESS} --chain-name ${TRIGGER_CHAIN} --event-hash ${TRIGGER_EVENT_HASH} > /dev/null
 
-$BASE_CMD submit set-ethereum --workflow-id ${WORKFLOW_ID} --address ${SUBMIT_ADDRESS} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
+# If no aggregator is set, use the default set-ethereum workflow
+SUB_CMD="set-ethereum"
+if [ -n "$AGGREGATOR_URL" ]; then
+    SUB_CMD="set-aggregator --url ${AGGREGATOR_URL}"
+fi
+$BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDRESS} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
 
+COMPONENT_ID=`$BASE_CMD workflow component --id ${WORKFLOW_ID} set --digest ${WASM_DIGEST} | jq -r '.workflows | keys | .[0]'`
+echo "Component ID: ${COMPONENT_ID}"
+
+$BASE_CMD workflow component --id ${COMPONENT_ID} permissions --http-hosts '*' --file-system true > /dev/null
+$BASE_CMD workflow component --id ${COMPONENT_ID} time-limit --seconds 30 > /dev/null
+$BASE_CMD workflow component --id ${COMPONENT_ID} env --values WAVS_ENV_SOME_SECRET > /dev/null
+$BASE_CMD workflow component --id ${COMPONENT_ID} config --values 'key=value,key2=value2' > /dev/null
+
+$BASE_CMD manager set-ethereum ${SUBMIT_CHAIN} `cast --to-checksum ${SERVICE_MANAGER_ADDRESS}`
 $BASE_CMD validate > /dev/null
+
+# inform aggregator if set
+if [ -n "$AGGREGATOR_URL" ]; then
+    curl -X POST ${AGGREGATOR_URL}/register-service -H "Content-Type: application/json" -d '{"service": '"$(cat ${FILE_LOCATION})"'}'
+fi
 
 echo "Configuration file created at ${FILE_LOCATION}"

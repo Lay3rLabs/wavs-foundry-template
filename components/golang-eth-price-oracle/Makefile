@@ -6,10 +6,10 @@ GO_MOD_NAME?=$(shell head -n 1 go.mod | cut -d' ' -f2 | rev | cut -d'/' -f1 | re
 OUTPUT_DIR?=../../compiled
 
 check-package:
-# TODO: fix import to use the $(WAVS_PACKAGE) instead
+# TODO: fix import to use the $(WAVS_PACKAGE) instead. Temp testing: `wkg publish wavs\:worker@0.4.0-alpha.2.wasm --package reecepbcups:wavs-testing@0.4.0-alpha.3`
 	@if [ ! -f $(WAVS_PACKAGE).wasm ]; then \
 		echo "Downloading WAVS package: $(WAVS_PACKAGE)"; \
-		wkg get reecepbcups:wavs-testing@0.4.0-alpha.2 --overwrite --format wasm --output $(WAVS_PACKAGE).wasm; \
+		wkg get reecepbcups:wavs-testing@0.4.0-alpha.3 --overwrite --format wasm --output $(WAVS_PACKAGE).wasm; \
 	fi
 
 ## wasi-build: building the WAVS wasi component

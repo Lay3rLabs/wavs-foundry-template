@@ -51,29 +51,5 @@ main() {
     fi
 }
 
-test_data() {
-    # Example test data
-    TEST_DATA="
-    Running container ghcr.io/lay3rlabs/wavs:latest-beta
-    Pulling ghcr.io/lay3rlabs/wavs:latest
-    Found ghcr.io/lay3rlabs/wavs:0.1.0
-    Invalid: docker.io/other/image:1.0
-    Using ghcr.io/lay3rlabs/wavs:sha-abc123
-    ghcr.io/lay3rlabs/wavs:rc.1.0.0
-    Pulling ghcr.io/lay3rlabs/wavs:latest
-    Found ghcr.io/lay3rlabs/wavs:0.1.0
-    Invalid: docker.io/other/image:1.0
-    Using ghcr.io/lay3rlabs/wavs:sha-abc123
-    ghcr.io/lay3rlabs/wavs:rc.1.0.0
-    ghcr.io/lay3rlabs/wavs:latest-beta
-    ghcr.io/lay3rlabs/wavs:1.0.0-alpha
-    "
-
-    # Find all matches_set with line numbers (-n) and print the pattern at the top
-    echo "Pattern being used: $GREP_PATTERN"
-    echo -e "\nmatches_set found:"
-    echo "$TEST_DATA" | grep -P -o "$GREP_PATTERN"
-}
-
 # test_data
 main

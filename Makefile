@@ -14,7 +14,7 @@ SERVICE_CONFIG_FILE?=.docker/service.json
 CARGO=cargo
 # the directory to build, or "" for all
 WASI_BUILD_DIR ?= ""
-DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:0.4.0-alpha1-amd64
+DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:reece_priv_key_signing_apr_10
 WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ${DOCKER_IMAGE} wavs-cli
 ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 RPC_URL?=http://localhost:8545
@@ -83,14 +83,14 @@ start-all: clean-docker setup-env
 
 ## get-service-handler: getting the service handler address from the script deploy
 get-service-handler-from-deploy:
-	@jq -r '.service_handler' "./.docker/script_deploy.json"
+	@jq -r '.deployedTo' "./.docker/submit.json"
 
 get-eigen-service-manager-from-deploy:
 	@jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json
 
 ## get-trigger: getting the trigger address from the script deploy
 get-trigger-from-deploy:
-	@jq -r '.trigger' "./.docker/script_deploy.json"
+	@jq -r '.deployedTo' "./.docker/trigger.json"
 
 ## wavs-cli: running wavs-cli in docker
 wavs-cli:
@@ -98,15 +98,21 @@ wavs-cli:
 
 ## upload-component: uploading the WAVS component | COMPONENT_FILENAME
 upload-component:
-	@curl --silent -X POST http://127.0.0.1:8000/upload --data-binary @./compiled/$(COMPONENT_FILENAME) -H "Content-Type: application/wasm" | jq -r .digest
+# @curl -X POST http://127.0.0.1:8000/upload --data-binary @./compiled/${COMPONENT_FILENAME} -H "Content-Type: application/wasm" | jq -r .digest
+	@wavs-cli upload-component ./compiled/${COMPONENT_FILENAME}
 
 ## deploy-service: deploying the WAVS component service json | SERVICE_CONFIG_FILE
 deploy-service:
-	@$(WAVS_CMD) deploy-service-raw --log-level=info --data /data/.docker --home /data --service `jq -c . < $(SERVICE_CONFIG_FILE)`
+	@$(WAVS_CMD) deploy-service-raw --service `jq . -cr ${SERVICE_CONFIG_FILE}` --log-level=info --data /data/.docker --home /data
 
-## show-result: showing the result | SERVICE_TRIGGER_ADDR, SERVICE_SUBMISSION_ADDR, RPC_URL
+## get-trigger: get the trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
+get-trigger:
+	@forge script ./script/ShowResult.s.sol ${SERVICE_TRIGGER_ADDR} --sig 'trigger(string)' --rpc-url $(RPC_URL) --broadcast -v 4
+
+TRIGGER_ID?=1
+## show-result: showing the result | SERVICE_SUBMISSION_ADDR, TRIGGER_ID, RPC_URL
 show-result:
-	@forge script ./script/ShowResult.s.sol ${SERVICE_TRIGGER_ADDR} ${SERVICE_SUBMISSION_ADDR} --sig 'run(string,string)' --rpc-url $(RPC_URL) --broadcast -v 4
+	@forge script ./script/ShowResult.s.sol ${SERVICE_SUBMISSION_ADDR} ${TRIGGER_ID} --sig 'data(string,uint64)' --rpc-url $(RPC_URL) --broadcast -v 4
 
 _build_forge:
 	@forge build
