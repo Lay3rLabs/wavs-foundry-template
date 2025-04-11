@@ -195,35 +195,10 @@ cp .env.example .env
 
 docker run --rm --network host --env-file .env  -v ./.nodes:/root/.nodes wavs-middleware:local
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
-```
-
-```bash
 export PRIVATE_KEY=$(cat .nodes/deployer)
 export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
-# cast rpc anvil_setBalance $MY_ADDR 0x10000000000000000000 -r http://localhost:8545
+cast rpc anvil_setBalance $MY_ADDR 0x10000000000000000000 -r http://localhost:8545 > /dev/null
 ```
-
-<!-- Extra debugging
-```bash docci-ignore
-cast c ${SERVICE_MANAGER_ADDRESS} "owner()" # should be PRIVATE_KEY address
-
-# this will be updated when we deploy the service, not needed to be set now
-# cast send --private-key ${PRIVATE_KEY} ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "https://wavs.xyz"
-# docker run --rm --network host --env-file .env  -v ./.nodes:/root/.nodes --entrypoint /wavs/set_service_uri.sh wavs-middleware:local https://ipfs.url/for-custom-service.json
-# cast c ${SERVICE_MANAGER_ADDRESS} "getServiceURI()(string)"
-
-
-# upstream:
-# TODO: get the private AVS key (0x...) for this service from the WAVS node
-# Generate a new private key for the AVS
-# Does this require PK support in WAVS?: https://github.com/Lay3rLabs/WAVS/pull/517
-AVS_KEY=$(cast wallet new --json | jq -r '.[0].private_key')
-# cast wallet address --private-key $AVS_KEY
-
-docker run --network host --env-file .env -v ./.nodes:/root/.nodes  --entrypoint /wavs/register.sh wavs-middleware:local "$AVS_KEY"
-```
--->
-
 
 Update the operator to use the private key we generated
 
@@ -296,5 +271,5 @@ make get-trigger
 ```
 
 ```bash docci-delay-per-cmd=2 docci-output-contains="BTC"
-TRIGGER_ID=1 make show-result
+TRIGGER_ID=3 make show-result
 ```
