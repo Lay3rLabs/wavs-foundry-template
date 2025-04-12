@@ -29,7 +29,6 @@ wavs-foundry-template/
 ├── script/               # Scripts used in makefile commands
 ├── cli.toml              # CLI configuration
 ├── wavs.toml             # WAVS service configuration
-├── Cargo.toml            # Root project dependencies
 ├── docs/                 # Documentation
 └── .env                  # Private environment variables
 ```
@@ -45,7 +44,6 @@ wavs-foundry-template/
 The makefile contains several commands for building, testing, and deploying WAVS components. Here's a detailed explanation of the most commonly used commands:
 
 #### Building and Testing Components
-
 
 1. Build your WASI components
 
@@ -301,36 +299,30 @@ TriggerAction {
 }
 ```
 
-5. The TriggerAction is converted to a WASI-compatible format and passed to the component.
+5. The TriggerAction is converted to a WASI-compatible format and passed to the component where it is decoded and processed.
 
 ### Developing triggers
+
+WAVS doesn't interpret the contents of event triggers. Instead, it passes the raw log data to components, which can decode and process the data according to their specific needs.
 
 To configure a trigger for a service, you'll need to specify:
 
 - The event signature/name that identifies which specific event should trigger the service. This can either be a hex-encoded event signature or an event name.
 - The contract address where the event will be emitted from.
 
-WAVS doesn't interpret the contents of Ethereum event triggers. Instead, it passes the raw log data to components, which can decode and process the data according to their specific needs.
-
 In the template, the trigger event is set in the `Makefile` as `TRIGGER_EVENT ?= NewTrigger(bytes)` and the trigger address of the example trigger contract is automatically populated during deployment. To change the trigger event or address, you can manually [update the `Makefile` variables](#customizing-makefile-variables) and redeploy the service.
-
-
-In the template, the trigger event is `NewTrigger(bytes)`. When a WAVS component receives this trigger, it uses the `decode_event_log_data!` macro from the [`wavs-wasi-chain`](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) crate to decode the event data for processing.
 
 When a WAVS component receives this trigger, it uses the `decode_event_log_data!` macro from the [`wavs-wasi-chain`](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) crate to decode the event data for processing.
 
-In the template, each trigger has a unique ID that links it to its data. The component processes the trigger data and returns results. Results are submitted back to the blockchain via the submission contract.
+The [trigger contract in the WAVS foundry template](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/src/contracts/WavsTrigger.sol) is a simple example that takes generic bytes and passes them to the component. The flow for triggers is located in several places in the template:
 
-The [trigger contract in the WAVS foundry template](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/src/contracts/WavsTrigger.sol) is a simple example that takes generic bytes and passes them to the component. The logic for triggers is located in several places in the template:
+- The trigger contract in [`src/WavsTrigger.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsTrigger.sol) defines how triggers are created and emitted on-chain.
+- The trigger script in [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/script/Trigger.s.sol#L15) calls the `addTrigger` function with the `coinMarketCapID`.
+- The `decode_trigger_event` function in [`/components/eth-price-oracle/src/trigger.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/trigger.rs#L11-L21) processes the trigger data and extracts the `trigger_id` and `data`.
+- The `run` function in [`/components/eth-price-oracle/src/lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/lib.rs#L13) calls `decode_trigger_event`, processes the extracted trigger data, and determines how to handle it.
+- When testing, the `wasi-exec` command in the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L39-L43) passes input data when testing WAVS components via `--input cast format-bytes32-string $(COIN_MARKET_CAP_ID)`. This simulates an Ethereum event during local execution.
 
-1. The trigger contract in [`src/WavsTrigger.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsTrigger.sol) defines how triggers are created and emitted on-chain.
-2. The trigger script in [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/script/Trigger.s.sol#L15) calls the `addTrigger` function with the `coinMarketCapID`.
-3. The `decode_trigger_event` function in [`/components/eth-price-oracle/src/trigger.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/trigger.rs#L11-L21) processes the trigger data and extracts the `trigger_id` and `data`.
-4. The `run` function in [`/components/eth-price-oracle/src/lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/lib.rs#L13) calls `decode_trigger_event`, processes the extracted trigger data, and determines how to handle it.
-5. When testing, the `wasi-exec` command in the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L39-L43) passes input data when testing WAVS components via `--input cast format-bytes32-string $(COIN_MARKET_CAP_ID)`. This simulates an Ethereum event during local execution.
-
-
-### Component
+## Components
 
 WASI components contain the main logic of a WAVS service. They are responsible for processing the trigger data and executing the business logic of a service.
 
@@ -426,67 +418,215 @@ deploy-service:
   --submit none
 ```
 
-## Input and output
+## Input and Output
+
+When building WASI components, keep in mind that the component can receive the trigger data in two ways:
+
+1. Triggered by an onchain event from a contract after service deployment. Components receive a `TriggerAction` containing event data which is then decoded.
+
+2. Manually via the `wasi-exec` command. The wasi-exec command simulates an onchain event and passes the trigger data directly to the component as `trigger::raw`. No abi decoding is required, and the output is returned as raw bytes.
+
+### Data Processing Pattern
+
+The example below shows a basic generic pattern for processing input data and returning output. In the example, the `sol!` macro generates Rust types from Solidity definitions, adds ABI encoding/decoding methods, and handles type conversions (e.g., `uint64` → `u64`). ABI encoding/decoding converts Rust structs to bytes and vice versa. The `decode_event_log_data!` macro decodes the raw event log data and returns a Rust struct matching your Solidity event. This is used for on-chain events.
 
 
-In the template, the component can receive the trigger data in two ways:
+```rust
+// 1. Define your Solidity types using the `sol!` macro
+sol! {
+    event MyEvent(uint64 indexed triggerId, bytes data);
+    struct MyResult {
+        uint64 triggerId;
+        bytes processedData;
+    }
+}
 
-1. Triggered by an onchain event from a contract after service deployment.
-2. Manually via the `wasi-exec` command. The wasi-exec command simulates an onchain event and passes the trigger data to the component as `trigger::raw`
-
-Components can be built for local testing using the following commands. The `wasi-exec` command allows you to simulate triggers, and you can view the component's logs in stdout/stderr to debug its execution.
-
-```bash
-# Build the component
-make build
-
-# Test locally
-make wasi-exec
+// 2. Handle on-chain event trigger and raw trigger types
+impl Guest for Component {
+    fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
+        match action.data {
+            // On-chain event handling
+            TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+                // Decode the event
+                let event: MyEvent = decode_event_log_data!(log)?;
+                
+                // Process the data
+                let result = MyResult {
+                    triggerId: event.triggerId,
+                    processedData: process_data(&event.data)?,
+                };
+                
+                // Encode for submission
+                Ok(Some(result.abi_encode()))
+            }
+            // Manual trigger handling for testing
+            TriggerData::Raw(data) => {
+                // Process raw data directly
+                let result = process_data(&data)?;
+                Ok(Some(result))
+            }
+            _ => Err("Unsupported trigger type".to_string())
+        }
+    }
+}
 ```
 
-## Toml files
+In the template, encoding and decoding is handled in the `trigger.rs` file using a `Destination` enum to determine how to process and return data based on the trigger source. The `decode_trigger_event` function in `trigger.rs` determines the destination:
 
-There are several toml files in the template that are used to configure the service:
+- For `TriggerData::EthContractEvent`, it returns `Destination::Ethereum`
+- For `TriggerData::Raw` (used in testing), it returns `Destination::CliOutput`
 
-- `wavs.toml` is used to configure the WAVS service itself, including chain configurations (local, testnets, mainnet) and maximum WASM fuel limits.
-- `cli.toml` is used to configure the WAVS CLI tool, and also includes chain configurations (local, testnets, mainnet), maximum WASM fuel limits, and log levels.
-- `Cargo.toml` in each component directory is used to configure the Rust component and includes dependencies, build settings, and component metadata.
+This allows the component to handle both production and testing scenarios appropriately.
 
-These files can be customized to suit your specific needs, and many settings can be overridden using environment variables.
+## Logging
 
-The following is an example of dependencies added to the `Cargo.toml` file in the `components` directory:
+Components can use logging to debug and track the execution of the component.
 
-```toml
-[dependencies]
-# Essential dependencies
-wit-bindgen-rt = {workspace = true}    # Required for WASI bindings and Guest trait
-wavs-wasi-chain = { workspace = true }  # Required for core WAVS functionality
-# Optional dependencies
-serde = { workspace = true }            # For serialization (if working with JSON)
-serde_json = { workspace = true }       # For JSON handling
-alloy-sol-macro = { workspace = true }  # For Ethereum contract interactions
-wstd = { workspace = true }             # For WASI standard library features
-alloy-sol-types = { workspace = true }  # For Ethereum ABI handling
-anyhow = { workspace = true }           # For enhanced error handling
+**Logging in development**:
+
+Use `println!()` to write to stdout/stderr. This is visible when running `wasi-exec` locally.
+
+```rust lib.rs
+println!("Debug message: {:?}", data);
 ```
 
+**Logging in production**
 
-## `wavs-wasi-chain` crate
+For production, you can use a `host::log()` function which takes a `LogLevel` and writes its output via the tracing mechanism. Along with the string that the developer provides, it attaches additional context such as the `ServiceID`, `WorkflowID`, and component `Digest`.
+
+```rust lib.rs
+host::log(LogLevel::Info, "Production logging message");
+```
+
+## Helpers and utilities
+
+### `wavs-wasi-chain` crate
 
 The `wavs-wasi-chain` crate provides a set of helpful functions for making HTTP requests and interacting with the blockchain. It also provides a macro for decoding trigger data for use in the component.
 
 Learn more in the [crate documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions).
 
+### Sol! macro
+
+The `sol!` macro from `alloy-sol-macro` allows you to generate Rust types from Solidity interface files. This is useful for handling blockchain events and data structures in components.
+
+
+You can write Solidity definitions (interfaces, structs, enums, custom errors, events, and function signatures) directly inside the `sol! { ... }` macro invocation in your Rust code.
+
+At compile time, the `sol!` macro parses that Solidity syntax and automatically generates the equivalent Rust types, structs, enums, and associated functions (like `abi_encode()` for calls or `abi_decode()` for return data/events) needed to interact with smart contracts based on those definitions.
+
+Required Dependencies:
+
+```toml
+[dependencies]
+alloy-sol-macro = { workspace = true }  # For Solidity type generation
+alloy-sol-types = { workspace = true }  # For ABI handling
+```
+
+Basic Pattern:
+
+```rust
+mod solidity {
+    use alloy_sol_macro::sol;
+    
+    // Generate types from Solidity file
+    sol!("../../src/interfaces/ITypes.sol");
+    
+    // Or define types inline
+    sol! {
+        struct TriggerInfo {
+            uint64 triggerId;
+            bytes data;
+        }
+        
+        event NewTrigger(TriggerInfo _triggerInfo);
+    }
+}
+```
+
+In the template, the `sol!` macro is used in the `trigger.rs` component file to generate Rust types from the `ITypes.sol` file.
+
+```rust trigger.rs
+mod solidity {
+    use alloy_sol_macro::sol;
+    pub use ITypes::*;
+
+    // The objects here will be generated automatically into Rust types.
+    // If you update the .sol file, you must re-run `cargo build` to see the changes.
+    sol!("../../src/interfaces/ITypes.sol");
+}
+```
+
+The macro reads a Solidity interface file and generates corresponding Rust types and encoding/decoding functions. In the example above, it reads `ITypes.sol` which defines:
+- `NewTrigger` event
+- `TriggerInfo` struct
+- `DataWithId` struct
+
+More documentation on the `sol!` macro can be found at: https://docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html
+
+## Environment Variables
+
+Components can be configured with two types of variables:
+
+### Public variables: `kv`
+
+These variables can be used for non-sensitive information that can be viewed publicly. These variables can be configured in the makefile and are set during service deployment. They are accessed using `std::env::var` in the component.
+
+To add public variables, modify the `"kv"` section in the `SERVICE_CONFIG` in your `Makefile`. The following example adds `max_retries`, `timeout_seconds`, and `api_endpoint` variables with values:
+
+```bash
+# makefile
+SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv":[["max_retries","3"],["timeout_seconds","30"],["api_endpoint","https://api.example.com"]],"workflow_id":"default","component_id":"default"}'
+```
+
+Then use these variables in your component:
+
+```rust
+let max_retries = std::env::var("max_retries")?;
+let timeout = std::env::var("timeout_seconds")?;
+let endpoint = std::env::var("api_endpoint")?;
+```
+
+### Private variables: `host_envs`
+
+Private environment variables (`host_envs`) can be used for sensitive data like API keys. These variables are set by operators in their environment and are not viewable by anyone. These variables must be prefixed with `WAVS_ENV_`. Each operator must set these variables in their environment before deploying the service. Only variables listed in `host_envs` will be available to the component.
+
+To add private variables, set the environment variable in your `.env` file:
+
+```bash
+# .env file
+WAVS_ENV_MY_API_KEY=your_secret_key_here
+```
+
+Variables can also be set in your `~/.bashrc` , `~/.zshrc` , or `~/.profile` files.
+
+Then modify `"host_envs"` in the `SERVICE_CONFIG` section of your `Makefile`. The following example adds `WAVS_ENV_MY_API_KEY` to the `host_envs` array. Remember to add the `WAVS_ENV_` prefix to the variable name:
+
+```bash
+# makefile
+SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_MY_API_KEY"],"kv":[],"workflow_id":"default","component_id":"default"}'
+```
+
+This configuration is used during local testing with `make wasi-exec` and will also be applied when your service is deployed.
+
+The following example shows how to access a private environment variable in a component:
+
+```rust
+let api_key = std::env::var("WAVS_ENV_MY_API_KEY")?;
+```
+
 ## Network requests
 
-Components can make network requests to external APIs using the `wavs-wasi-chain` crate.
+Components can make network requests to external APIs using the `wavs-wasi-chain` crate. Since WASI components run in a synchronous environment but network requests are asynchronous, you can use `block_on` from the `wstd` crate to bridge this gap. The `block_on` function allows you to run async code within a synchronous context, which is essential for making HTTP requests in WAVS components.
+
+To learn how to use private environment variables like API keys in a component, see the [Private Variables](#private-variables-host_envs) section.
 
 The following dependencies are useful for making HTTP requests from a component. These are added to a component's `Cargo.toml` file:
 
 ```toml Cargo.toml
 [dependencies]
 wavs-wasi-chain = { workspace = true }  # HTTP utilities
-wstd = { workspace = true }             # Runtime utilities
+wstd = { workspace = true }             # Runtime utilities (includes block_on)
 serde = { workspace = true }            # Serialization
 serde_json = { workspace = true }       # JSON handling
 ```
@@ -494,6 +634,9 @@ serde_json = { workspace = true }       # JSON handling
 The following example shows how to make a basic HTTP GET request from a component:
 
 ```rust lib.rs
+use wstd::runtime::block_on;  // Required for running async code
+
+// Async function for the HTTP request
 async fn make_request() -> Result<YourResponseType, String> {
     // Create the request
     let url = "https://api.example.com/endpoint";
@@ -512,6 +655,14 @@ async fn make_request() -> Result<YourResponseType, String> {
         
     Ok(json)
 }
+
+// Main component logic that uses block_on
+fn process_data() -> Result<YourResponseType, String> {
+    // Use block_on to run the async function
+    block_on(async move {
+        make_request().await
+    })?
+}
 ```
 
 For making POST requests with JSON data, you can use the [`http_request_post_json` helper function](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/http/fn.http_request_post_json.html), which automatically handles JSON serialization and sets header to `application/json`:
@@ -527,6 +678,14 @@ async fn make_post_request() -> Result<PostResponse, String> {
     ).await.map_err(|e| e.to_string())?;
     
     Ok(response)
+}
+
+// Main component logic that uses block_on
+fn process_data() -> Result<PostResponse, String> {
+    // Use block_on to run the async function
+    block_on(async move {
+        make_post_request().await
+    })?
 }
 ```
 
@@ -691,136 +850,3 @@ This example covers:
 7.  **Async Handling**: Using `async fn` and `block_on` for asynchronous network operations within the synchronous component environment.
 
 Visit the [wavs-wasi-chain documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/index.html) and the [Alloy documentation](https://docs.rs/alloy/latest/alloy/) for more detailed information.
-
-
-## Logging
-
-Components can use logging to debug and track the execution of the component.
-
-**Logging in development**:
-
-Use `println!()` to write to stdout/stderr. This is visible when running `wasi-exec` locally.
-
-```rust lib.rs
-println!("Debug message: {:?}", data);
-```
-
-**Logging in production**
-
-For production, you can use a `host::log()` function which takes a `LogLevel` and writes its output via the tracing mechanism. Along with the string that the developer provides, it attaches additional context such as the `ServiceID`, `WorkflowID`, and component `Digest`.
-
-```rust lib.rs
-host::log(LogLevel::Info, "Production logging message");
-```
-
-
-## Sol! macro
-
-The `sol!` macro from `alloy-sol-macro` allows you to generate Rust types from Solidity interface files. This is useful for handling blockchain events and data structures in components.
-
-
-You can write Solidity definitions (interfaces, structs, enums, custom errors, events, and function signatures) directly inside the `sol! { ... }` macro invocation in your Rust code.
-
-At compile time, the `sol!` macro parses that Solidity syntax and automatically generates the equivalent Rust types, structs, enums, and associated functions (like `abi_encode()` for calls or `abi_decode()` for return data/events) needed to interact with smart contracts based on those definitions.
-
-Required Dependencies:
-
-```toml
-[dependencies]
-alloy-sol-macro = { workspace = true }  # For Solidity type generation
-alloy-sol-types = { workspace = true }  # For ABI handling
-```
-
-Basic Pattern:
-
-```rust
-mod solidity {
-    use alloy_sol_macro::sol;
-    
-    // Generate types from Solidity file
-    sol!("../../src/interfaces/ITypes.sol");
-    
-    // Or define types inline
-    sol! {
-        struct TriggerInfo {
-            uint64 triggerId;
-            bytes data;
-        }
-        
-        event NewTrigger(TriggerInfo _triggerInfo);
-    }
-}
-```
-
-In the template, the `sol!` macro is used in the `trigger.rs` component file to generate Rust types from the `ITypes.sol` file.
-
-```rust trigger.rs
-mod solidity {
-    use alloy_sol_macro::sol;
-    pub use ITypes::*;
-
-    // The objects here will be generated automatically into Rust types.
-    // If you update the .sol file, you must re-run `cargo build` to see the changes.
-    sol!("../../src/interfaces/ITypes.sol");
-}
-```
-
-The macro reads a Solidity interface file and generates corresponding Rust types and encoding/decoding functions. In the example above, it reads `ITypes.sol` which defines:
-- `NewTrigger` event
-- `TriggerInfo` struct
-- `DataWithId` struct
-
-More documentation on the `sol!` macro can be found at: https://docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html
-
-## Environment Variables
-
-Components can be configured with two types of variables:
-
-### KV: public variables
-
-These variables can be used for non-sensitive information that can be viewed publicly. These variables can be configured in the makefile and are set during service deployment. They are accessed using `std::env::var` in the component.
-
-To add public variables, modify the `"kv"` section in the `SERVICE_CONFIG` in your `Makefile`. The following example adds `max_retries`, `timeout_seconds`, and `api_endpoint` variables with values:
-
-```bash
-# makefile
-SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv":[["max_retries","3"],["timeout_seconds","30"],["api_endpoint","https://api.example.com"]],"workflow_id":"default","component_id":"default"}'
-```
-
-Then use these variables in your component:
-
-```rust
-let max_retries = std::env::var("max_retries")?;
-let timeout = std::env::var("timeout_seconds")?;
-let endpoint = std::env::var("api_endpoint")?;
-```
-
-### Host environment variables (Secrets)
-
-Private environment variables (`host_envs`) can be used for sensitive data like API keys. These variables are set by operators in their environment and are not viewable by anyone. These variables must be prefixed with `WAVS_ENV_`. Each operator must set these variables in their environment before deploying the service. Only variables listed in `host_envs` will be available to the component.
-
-To add private variables, set the environment variable in your `.env` file:
-
-```bash
-# .env file
-WAVS_ENV_MY_API_KEY=your_secret_key_here
-```
-
-Variables can also be set in your `~/.bashrc` , `~/.zshrc` , or `~/.profile` files.
-
-Then modify `"host_envs"` in the `SERVICE_CONFIG` section of your `Makefile`. The following example adds `WAVS_ENV_MY_API_KEY` to the `host_envs` array. Remember to add the `WAVS_ENV_` prefix to the variable name:
-
-```bash
-# makefile
-SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_MY_API_KEY"],"kv":[],"workflow_id":"default","component_id":"default"}'
-```
-
-This configuration is used during local testing with `make wasi-exec` and will also be applied when your service is deployed.
-
-The following example shows how to access a private environment variable in a component:
-
-```rust
-let api_key = std::env::var("WAVS_ENV_MY_API_KEY")?;
-```
-
-
