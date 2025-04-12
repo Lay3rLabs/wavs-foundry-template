@@ -207,7 +207,7 @@ docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entryp
 docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh wavs-middleware:local
 ```
 
-Run WAVS & the aggregator in a new tab, or background
+Run WAVS & the aggregator in the background
 
 ```bash docci-background docci-delay-after=5
 docker compose up --remove-orphans &
