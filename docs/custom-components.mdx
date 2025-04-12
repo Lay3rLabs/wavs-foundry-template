@@ -39,6 +39,32 @@ wavs-foundry-template/
 - The src directory contains the Solidity contract and interfaces.
 - The script directory contains the scripts used in the makefile commands to deploy, trigger and test the service.
 
+## Toml files
+
+There are several toml files in the template that are used to configure the service:
+
+- `wavs.toml` is used to configure the WAVS service itself, including chain configurations (local, testnets, mainnet) and maximum WASM fuel limits.
+- `cli.toml` is used to configure the WAVS CLI tool, and also includes chain configurations (local, testnets, mainnet), maximum WASM fuel limits, and log levels.
+- `Cargo.toml` in each component directory is used to configure the Rust component and includes dependencies, build settings, and component metadata.
+
+These files can be customized to suit your specific needs, and many settings can be overridden using environment variables.
+
+The following is an example of dependencies added to the `Cargo.toml` file in the `components` directory:
+
+```toml
+[dependencies]
+# Core dependencies
+wit-bindgen-rt = {workspace = true}    # Required for WASI bindings and Guest trait
+wavs-wasi-chain = { workspace = true }  # Required for core WAVS functionality
+# Helpful dependencies
+serde = { workspace = true }            # For serialization (if working with JSON)
+serde_json = { workspace = true }       # For JSON handling
+alloy-sol-macro = { workspace = true }  # For Ethereum contract interactions
+wstd = { workspace = true }             # For WASI standard library features
+alloy-sol-types = { workspace = true }  # For Ethereum ABI handling
+anyhow = { workspace = true }           # For enhanced error handling
+```
+
 ## Makefile commands
 
 The makefile contains several commands for building, testing, and deploying WAVS components. Here's a detailed explanation of the most commonly used commands:
