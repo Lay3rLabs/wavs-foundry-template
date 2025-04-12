@@ -1,0 +1,106 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+ ---
+description: Guide to the WAVS Foundry Template repository structure
+globs: **/*
+alwaysApply: true
+---
+# Repository Structure
+
+The WAVS Foundry Template repository follows a well-organized structure for developing WAVS components and services.
+
+## Root Directory
+
+```
+.
+├── .cursor/                 # Cursor IDE rules and configurations
+├── .docker/                # Docker-related files and configurations
+├── .github/                # GitHub workflows and configurations
+├── broadcast/              # Broadcast transaction artifacts
+├── cache/                  # Build and dependency cache
+├── components/             # WAVS components (Rust WASI modules)
+├── compiled/               # Compiled contract artifacts
+├── docs/                   # Documentation files
+├── lib/                    # External library dependencies
+├── node_modules/           # Node.js dependencies
+├── out/                    # Foundry compilation output
+├── script/                 # Foundry scripts for deployment and testing
+├── src/                    # Source code directory
+├── target/                 # Rust build artifacts
+├── test/                   # Test files
+├── tools/                  # Development tools and utilities
+```
+
+## Key Directories
+
+### components/
+Contains WAVS components (Rust WASI modules):
+```
+components/
+└── eth-price-oracle/      # Example component
+    ├── Cargo.toml         # Component dependencies
+    ├── lib.rs             # Main component logic
+    ├── trigger.rs         # Trigger handling
+    └── bindings.rs        # Generated bindings
+```
+
+### src/
+Contains Solidity contracts and interfaces:
+```
+src/
+├── contracts/             # Solidity contracts
+└── interfaces/            # Solidity interfaces
+```
+
+### script/
+Contains Foundry scripts for deployment and testing:
+```
+script/
+├── Deploy.s.sol          # Deployment script
+├── ShowResult.s.sol      # Result viewing script
+├── Common.s.sol          # Common utilities
+└── Trigger.s.sol         # Trigger testing script
+```
+
+## Configuration Files
+
+### Root Level
+- `Makefile`: Build and deployment commands
+- `Cargo.toml`: Rust workspace configuration
+- `package.json`: Node.js dependencies
+- `foundry.toml`: Foundry configuration
+- `wavs.toml`: WAVS service configuration
+- `.env`: Environment variables
+- `.env.example`: Example environment variables
+- `docker-compose.yml`: Docker services configuration
+
+### Development Tools
+- `.solhint.json`: Solidity linting rules
+- `rustfmt.toml`: Rust formatting rules
+- `remappings.txt`: Solidity import remappings
+- `natspec-smells.config.js`: Documentation linting
+
+## Build and Cache Directories
+
+### Generated Files
+- `broadcast/`: Transaction broadcast artifacts
+- `cache/`: Build and dependency cache
+- `compiled/`: Compiled contract artifacts
+- `out/`: Foundry compilation output
+- `target/`: Rust build artifacts
+
+## Best Practices
+
+1. Keep components in the `components/` directory
+2. Place contracts and interfaces in `src/`
+3. Use `script/` for deployment and testing scripts
+4. Maintain proper separation of concerns
+5. Follow naming conventions
+6. Keep configuration files up to date
+7. Document new components and contracts
+8. Use appropriate directory for generated files
+9. Maintain clean build artifacts
+10. Follow the established structure for new features
