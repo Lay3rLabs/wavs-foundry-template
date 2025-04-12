@@ -67,6 +67,10 @@ make wasi-exec
   - Uses the `wavs-cli` Docker image to run the component specified by `COMPONENT_FILENAME`.
   - Simulates the trigger event using the `COIN_MARKET_CAP_ID` as input data and the `SERVICE_CONFIG` to configure the service.
   - Executes the component with the input data.
+  - Can handle input data in three formats:
+    - `@file`: Reads input from a file
+    - `0x`: Treats input as hex-encoded bytes
+    - Raw string: Treats input as raw bytes
 
 **Variables**:
   - `COMPONENT_FILENAME`: The name of the compiled WASM file to execute.
