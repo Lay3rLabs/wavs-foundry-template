@@ -41,47 +41,92 @@ Run the component with the `wasi-exec` command in the root of the repo
 COMPONENT_FILENAME=js_eth_price_oracle.wasm COIN_MARKET_CAP_ID=2 make wasi-exec
 ```
 
-## Run in a local environment
-
-Start all services
-
-```bash docci-background docci-delay-after=5
-make start-all
-```
-
 Build your smart contracts
 
 ```bash
 forge build
 ```
 
+### Start Environment
+
+Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https://www.eigenlayer.xyz/) contracts to the local network.
+
+```bash docci-background docci-delay-after=5
+# Start the backend
+#
+# This must remain running in your terminal. Use another terminal to run other commands.
+# You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
+# make start-all
+
+anvil --fork-url https://ethereum-holesky-rpc.publicnode.com
+```
+
+Deploy eigen middleware
+
+```bash
+cp .env.example .env
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:0.0.1
+export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
+export PRIVATE_KEY=$(cat .nodes/deployer)
+export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
+```
+
+Update the operator to use the private key we generated
+
+```bash
+sed -i 's/test test test test test test test test test test test junk/'$PRIVATE_KEY'/' .env
+```
+
+Register the operator
+
+```bash
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh ghcr.io/lay3rlabs/wavs-middleware:0.0.1 "$PRIVATE_KEY"
+
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ghcr.io/lay3rlabs/wavs-middleware:0.0.1
+```
+
+Run WAVS & the aggregator in the background
+
+```bash docci-background docci-delay-after=3
+docker compose up --remove-orphans &
+```
+
 Deploy the contracts
 
-```bash docci-delay-after=1
-export SERVICE_MANAGER_ADDR=`make get-eigen-service-manager-from-deploy`
+```bash
+forge create SimpleSubmit --json --broadcast -r http://127.0.0.1:8545 --private-key "${PRIVATE_KEY}" --constructor-args "${SERVICE_MANAGER_ADDRESS}" > .docker/submit.json
+export SERVICE_SUBMISSION_ADDR=`jq -r .deployedTo .docker/submit.json`
 
-forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig 'run(string)' --rpc-url http://localhost:8545 --broadcast
+forge create SimpleTrigger --json --broadcast -r http://127.0.0.1:8545 --private-key "${PRIVATE_KEY}" > .docker/trigger.json
+export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 ```
 
-Deploy the component
+Upload service
 
-```bash docci-delay-after=1
+```bash docci-delay-per-cmd=2
+# Build your service JSON with optional overrides in the script
 COMPONENT_FILENAME=js_eth_price_oracle.wasm sh ./script/build_service.sh
 
+# Deploy the service JSON to WAVS so it now watches and submits
+# the results based on the service json configuration.
 SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
+
+# curl http://localhost:8000/service/019616c0-2c31-7c11-a8ec-8e3409101628
 ```
 
-Trigger the service
 
 ```bash docci-delay-after=2
+# Request BTC from CMC
 export COIN_MARKET_CAP_ID=2
+# Get the trigger address from previous Deploy forge script
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
-
+# Execute on the trigger contract, WAVS will pick this up and submit the result
+# on chain via the operators.
 forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast -v 4
 ```
 
 Show the result from the triggered service
 
 ```bash docci-output-contains="LTC"
-make show-result
+TRIGGER_ID=1 make show-result
 ```

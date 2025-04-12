@@ -92,7 +92,7 @@ Deploy eigen middleware
 ```bash
 cp .env.example .env
 
-docker run --rm --network host --env-file .env  -v ./.nodes:/root/.nodes wavs-middleware:local
+docker run --rm --network host --env-file .env  -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:0.0.1
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
 ```
 
@@ -100,6 +100,14 @@ export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_
 export PRIVATE_KEY=$(cat .nodes/deployer)
 export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
 sed -i 's/test test test test test test test test test test test junk/'$PRIVATE_KEY'/' .env
+```
+
+Register the operator
+
+```bash
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh ghcr.io/lay3rlabs/wavs-middleware:0.0.1 "$PRIVATE_KEY"
+
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ghcr.io/lay3rlabs/wavs-middleware:0.0.1
 ```
 
 Run WAVS & the aggregator
@@ -129,7 +137,7 @@ SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
 
 Trigger the service
 
-```bash docci-delay-after=1
+```bash docci-delay-after=2
 export COIN_MARKET_CAP_ID=1
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 
