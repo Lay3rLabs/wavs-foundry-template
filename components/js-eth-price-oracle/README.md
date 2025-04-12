@@ -65,7 +65,7 @@ Deploy eigen middleware
 
 ```bash
 cp .env.example .env
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:0.0.1
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes wavs-middleware:local
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
 export PRIVATE_KEY=$(cat .nodes/deployer)
 export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
@@ -80,9 +80,9 @@ sed -i 's/test test test test test test test test test test test junk/'$PRIVATE_
 Register the operator
 
 ```bash
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh ghcr.io/lay3rlabs/wavs-middleware:0.0.1 "$PRIVATE_KEY"
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh wavs-middleware:local "$PRIVATE_KEY"
 
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ghcr.io/lay3rlabs/wavs-middleware:0.0.1
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh wavs-middleware:local
 ```
 
 Run WAVS & the aggregator in the background
