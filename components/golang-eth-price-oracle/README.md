@@ -83,16 +83,20 @@ forge build
 
 Start all services
 
-```bash docci-background docci-delay-after=15
+```bash docci-background docci-delay-after=20
 cp .env.example .env
 sh ./script/start_all.sh
 ```
 
 Wait for full local deployment, then grab values
 
-```bash docci-delay-after=2
+```bash docci-ignore
 while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done
+```
 
+Core values
+
+```bash
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
 export PRIVATE_KEY=$(cat .nodes/deployer)
 export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
@@ -101,9 +105,7 @@ export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
 Deploy the contracts
 
 ```bash docci-delay-per-cmd=2
-echo "Deploy the contracts"
-SIMPLE_SUBMIT=`forge create SimpleSubmit --json --broadcast -r http://127.0.0.1:8545 --private-key "${PRIVATE_KEY}" --constructor-args "${SERVICE_MANAGER_ADDRESS}"`
-echo $SIMPLE_SUBMIT > .docker/submit.json
+forge create SimpleSubmit --json --broadcast -r http://127.0.0.1:8545 --private-key "${PRIVATE_KEY}" --constructor-args "${SERVICE_MANAGER_ADDRESS}" > .docker/submit.json
 export SERVICE_SUBMISSION_ADDR=`jq -r .deployedTo .docker/submit.json`
 
 forge create SimpleTrigger --json --broadcast -r http://127.0.0.1:8545 --private-key "${PRIVATE_KEY}" > .docker/trigger.json

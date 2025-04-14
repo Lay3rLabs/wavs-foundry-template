@@ -98,8 +98,8 @@ wavs-cli:
 
 ## upload-component: uploading the WAVS component | COMPONENT_FILENAME
 upload-component:
-# @curl -X POST http://127.0.0.1:8000/upload --data-binary @./compiled/${COMPONENT_FILENAME} -H "Content-Type: application/wasm" | jq -r .digest
-	@$(WAVS_CMD) upload-component ./compiled/${COMPONENT_FILENAME}
+# TODO: move to $(WAVS_CMD)  upload-component ./compiled/${COMPONENT_FILENAME}
+	@curl -X POST http://127.0.0.1:8000/upload --data-binary @./compiled/${COMPONENT_FILENAME} -H "Content-Type: application/wasm" | jq -r .digest
 
 ## deploy-service: deploying the WAVS component service json | SERVICE_CONFIG_FILE
 deploy-service:
