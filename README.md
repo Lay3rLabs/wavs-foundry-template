@@ -180,15 +180,17 @@ Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https:
 # You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
 # make start-all
 
-anvil --fork-url https://ethereum-holesky-rpc.publicnode.com
+
+sh ./script/start_all.sh
 ```
 
 Deploy eigen middleware
 
 ```bash
 cp .env.example .env
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes wavs-middleware:local
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/reecepbcups/wavs-middleware:0.0.1
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
+# TODO: can I get rid of this requirement? (or transfer the owner to another account so we dont have to modify env or anything of the sort)
 export PRIVATE_KEY=$(cat .nodes/deployer)
 export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
 ```
@@ -202,9 +204,9 @@ sed -i 's/test test test test test test test test test test test junk/'$PRIVATE_
 Register the operator
 
 ```bash
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh wavs-middleware:local "$PRIVATE_KEY"
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh ghcr.io/reecepbcups/wavs-middleware:0.0.1 "$PRIVATE_KEY"
 
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh wavs-middleware:local
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ghcr.io/reecepbcups/wavs-middleware:0.0.1
 ```
 
 Run WAVS & the aggregator in the background
