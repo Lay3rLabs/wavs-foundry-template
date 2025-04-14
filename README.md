@@ -181,7 +181,7 @@ TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
 Anyone can now call the [trigger contract](./src/contracts/WavsTrigger.sol) which emits the trigger event WAVS is watching for from the previous step. WAVS then calls the service and saves the result on-chain.
 
 ```bash
-export COIN_MARKET_CAP_ID=1
+export COIN_MARKET_CAP_ID=0x76F3f64CB3f8039D341E20E89C5e4cDC43eA3cf3
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig "run(string,string)" --rpc-url http://localhost:8545 --broadcast -v 4
 ```

@@ -49,9 +49,19 @@ There are several toml files in the template that are used to configure the serv
 
 These files can be customized to suit your specific needs, and many settings can be overridden using environment variables.
 
-The following is an example of dependencies added to the `Cargo.toml` file in the `components` directory:
+The following is an example of a component's `Cargo.toml` file structure:
 
 ```toml
+# Package metadata - inherits most values from workspace configuration
+[package]
+name = "eth-price-oracle"        # Name of the component
+edition.workspace = true         # Rust edition (inherited from workspace)
+version.workspace = true         # Version (inherited from workspace)
+authors.workspace = true         # Authors (inherited from workspace)
+rust-version.workspace = true    # Minimum Rust version (inherited from workspace)
+repository.workspace = true      # Repository URL (inherited from workspace)
+
+# Component dependencies
 [dependencies]
 # Core dependencies
 wit-bindgen-rt = {workspace = true}    # Required for WASI bindings and Guest trait
@@ -63,6 +73,23 @@ alloy-sol-macro = { workspace = true }  # For Ethereum contract interactions
 wstd = { workspace = true }             # For WASI standard library features
 alloy-sol-types = { workspace = true }  # For Ethereum ABI handling
 anyhow = { workspace = true }           # For enhanced error handling
+
+# Library configuration
+[lib]
+crate-type = ["cdylib"]  # Specifies this is a dynamic library crate
+
+# Release build optimization settings
+[profile.release]
+codegen-units = 1        # Single codegen unit for better optimization
+opt-level = "s"          # Optimize for size
+debug = false            # Disable debug information
+strip = true            # Strip symbols from binary
+lto = true              # Enable link-time optimization
+
+# WAVS component metadata
+[package.metadata.component]
+package = "component:eth-price-oracle"  # Component package name
+target = "wavs:worker/layer-trigger-world@0.3.0"  # Target WAVS world and version
 ```
 
 ## Makefile commands
@@ -100,7 +127,7 @@ make wasi-exec
 
 **Variables**:
   - `COMPONENT_FILENAME`: The name of the compiled WASM file to execute.
-  - `COIN_MARKET_CAP_ID`: The input data used to simulate the trigger event. Formatted as a bytes32 string using `cast format-bytes32-string`.
+  - `COIN_MARKET_CAP_ID`: The input data used to simulate the trigger event.
   - `SERVICE_CONFIG`: The service configuration for the component containing the `host_envs` and `kv` variables.
 
 #### Setup
@@ -157,7 +184,7 @@ forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" -
   6. Broadcasts the transaction to the network.
 
 ```bash
-TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
+TRIGGER_EVENT="NewTrigger(bytes)" COMPONENT_FILENAME=usdt_balance.wasm make deploy-service
 ```
 - **Purpose**: Registers the WASI component as a service with the WAVS network.
 - **Under the hood**:
@@ -350,7 +377,7 @@ The [trigger contract in the WAVS foundry template](https://github.com/Lay3rLabs
 - The trigger script in [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/script/Trigger.s.sol#L15) calls the `addTrigger` function with the `coinMarketCapID`.
 - The `decode_trigger_event` function in [`/components/eth-price-oracle/src/trigger.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/trigger.rs#L11-L21) processes the trigger data and extracts the `trigger_id` and `data`.
 - The `run` function in [`/components/eth-price-oracle/src/lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/lib.rs#L13) calls `decode_trigger_event`, processes the extracted trigger data, and determines how to handle it.
-- When testing, the `wasi-exec` command in the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L39-L43) passes input data when testing WAVS components via `--input cast format-bytes32-string $(COIN_MARKET_CAP_ID)`. This simulates an Ethereum event during local execution.
+- When testing, the `wasi-exec` command in the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L39-L43) passes input data when testing WAVS components via `--input $(COIN_MARKET_CAP_ID)`. This simulates an Ethereum event during local execution.
 
 ## Components
 
@@ -732,7 +759,8 @@ The following dependencies are commonly required in your component's `Cargo.toml
 ```toml
 [dependencies]
 # Core WAVS blockchain functionality
-wavs-wasi-chain = { workspace = true }
+wit-bindgen-rt = {workspace = true}    # Required for WASI bindings and Guest trait
+wavs-wasi-chain = { workspace = true }  # HTTP utilities
 
 # Alloy crates for Ethereum interaction
 alloy-sol-types = { workspace = true }  # ABI handling & type generation
