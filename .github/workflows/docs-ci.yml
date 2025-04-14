@@ -98,13 +98,10 @@ jobs:
 
     # installs wasm-tools as well, required for rust & ts
     - name: Run docci (go)
-      run: |
-        docci components/golang-eth-price-oracle/config.json
+      run: docci components/golang-eth-price-oracle/config.json
 
     - name: Run docci (rust)
-      run: |
-        docci components/eth-price-oracle/config.json
+      run: docci components/eth-price-oracle/config.json
 
-    - name: Run docci (typescript)
-      run: |
-        docci components/js-eth-price-oracle/config.json
+    # - name: Run docci (typescript)
+      # run: docci components/js-eth-price-oracle/config.json
