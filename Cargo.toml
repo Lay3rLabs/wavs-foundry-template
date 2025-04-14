@@ -18,7 +18,7 @@ wit-bindgen-rt = {version = "0.39.0", features = ["bitflags"]}
 wit-bindgen = "0.39.0"
 wstd = "0.5.1"
 wasi = "0.14.1"
-wavs-wasi-utils = { git = "https://github.com/Lay3rLabs/wavs-wasi" }
+wavs-wasi-utils = { git = "https://github.com/Lay3rLabs/wavs-wasi", rev = "c4b61e9781804a5b58c4ddd4d910a8d4cd8db1f9" }
 
 # Other
 serde = { version = "1.0.217", features = ["derive"] }

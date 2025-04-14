@@ -5,6 +5,7 @@ set -e
 PORT=8545
 MIDDLEWARE_IMAGE=ghcr.io/reecepbcups/wavs-middleware:0.0.1
 LOG_FILE=.docker/start.log
+export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
 ## == Start watcher ==
 rm $LOG_FILE 2> /dev/null || true
@@ -30,9 +31,15 @@ docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entryp
 
 ## == Setup Deployer
 echo "Using Address: $(cast wallet address --private-key ${PRIVATE_KEY})"
-sed -i "s/^WAVS_CLI_ETH_MNEMONIC=.*$/WAVS_CLI_ETH_MNEMONIC=\"$PRIVATE_KEY\"/" .env
-sed -i "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$PRIVATE_KEY\"/" .env
-sed -i "s/^WAVS_AGGREGATOR_MNEMONIC=.*$/WAVS_AGGREGATOR_MNEMONIC=\"$PRIVATE_KEY\"/" .env
+# Default case for Linux sed, just use "-i"
+sedi=(-i)
+case "$(uname)" in
+  # For macOS, use two parameters
+  Darwin*) sedi=(-i "")
+esac
+sed "${sedi[@]}" -e "s/^WAVS_CLI_ETH_MNEMONIC=.*$/WAVS_CLI_ETH_MNEMONIC=\"$PRIVATE_KEY\"/" .env
+sed "${sedi[@]}" -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$PRIVATE_KEY\"/" .env
+sed "${sedi[@]}" -e "s/^WAVS_AGGREGATOR_MNEMONIC=.*$/WAVS_AGGREGATOR_MNEMONIC=\"$PRIVATE_KEY\"/" .env
 
 
 # == WAVS & Aggregator ==

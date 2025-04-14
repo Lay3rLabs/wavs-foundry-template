@@ -126,8 +126,7 @@ Now build the WASI components into the `compiled` output directory.
 > `brew uninstall rust` & install it from <https://rustup.rs>
 
 ```bash
-# or `make build` to include solidity compilation.
-# this command only builds the rust component.
+# This command only builds the rust component.
 # Remove `WASI_BUILD_DIR` to build all components.
 WASI_BUILD_DIR=components/eth-price-oracle make wasi-build
 ```
