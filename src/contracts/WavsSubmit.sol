@@ -26,7 +26,7 @@ contract SimpleSubmit is ITypes, IWavsServiceHandler {
 
     /// @inheritdoc IWavsServiceHandler
     function handleSignedEnvelope(Envelope calldata envelope, SignatureData calldata signatureData) external {
-        // _serviceManager.validate(envelope, signatureData);
+        _serviceManager.validate(envelope, signatureData);
 
         DataWithId memory dataWithId = abi.decode(envelope.payload, (DataWithId));
 

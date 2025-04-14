@@ -19,7 +19,6 @@ contract ShowResult is Common {
     function data(string calldata serviceHandlerAddr, uint64 triggerId) public view {
         SimpleSubmit submit = SimpleSubmit(vm.parseAddress(serviceHandlerAddr));
 
-        // convert triggerId to ITypes.TriggerId
         ITypes.TriggerId triggerIdTyped = ITypes.TriggerId.wrap(triggerId);
 
         bool isValid = submit.isValidTriggerId(triggerIdTyped);
