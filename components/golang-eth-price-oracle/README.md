@@ -83,7 +83,7 @@ forge build
 
 Start all services
 
-```bash docci-background docci-delay-after=20
+```bash docci-background docci-delay-after=25
 cp .env.example .env
 sh ./script/start_all.sh
 ```
@@ -96,7 +96,7 @@ while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; do
 
 Core values
 
-```bash
+```bash docci-delay-per-cmd=1
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
 export PRIVATE_KEY=$(cat .nodes/deployer)
 export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
@@ -104,7 +104,7 @@ export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
 
 Deploy the contracts
 
-```bash docci-delay-per-cmd=2
+```bash docci-delay-per-cmd=3
 forge create SimpleSubmit --json --broadcast -r http://127.0.0.1:8545 --private-key "${PRIVATE_KEY}" --constructor-args "${SERVICE_MANAGER_ADDRESS}" > .docker/submit.json
 export SERVICE_SUBMISSION_ADDR=`jq -r .deployedTo .docker/submit.json`
 
