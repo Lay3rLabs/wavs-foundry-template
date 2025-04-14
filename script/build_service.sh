@@ -31,19 +31,21 @@ AGGREGATOR_URL=${AGGREGATOR_URL:-""}
 
 BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:reece_priv_key_signing_apr_10 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
+if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
+    echo "SERVICE_MANAGER_ADDRESS is not set. Please set it to the address of the service manager."
+    exit 1
+fi
+
+
 if [ -z "$TRIGGER_ADDRESS" ]; then
-    TRIGGER_ADDRESS=`jq -r '.deployedTo' ".docker/trigger.json"`
+    TRIGGER_ADDRESS=`make get-trigger-from-deploy`
 fi
 if [ -z "$SUBMIT_ADDRESS" ]; then
-    SUBMIT_ADDRESS=`jq -r '.deployedTo' ".docker/submit.json"`
+    SUBMIT_ADDRESS=`make get-submit-from-deploy`
 fi
 if [ -z "$WASM_DIGEST" ]; then
     WASM_DIGEST=`make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME`
     WASM_DIGEST=$(echo ${WASM_DIGEST} | cut -d':' -f2)
-fi
-if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
-    echo "SERVICE_MANAGER_ADDRESS is not set. Please set it to the address of the service manager."
-    exit 1
 fi
 
 # === Core ===

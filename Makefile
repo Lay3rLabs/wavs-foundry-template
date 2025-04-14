@@ -23,9 +23,6 @@ SERVICE_TRIGGER_ADDR?=`jq -r '.trigger' "./.docker/script_deploy.json"`
 SERVICE_SUBMISSION_ADDR?=`jq -r '.service_handler' "./.docker/script_deploy.json"`
 COIN_MARKET_CAP_ID?=1
 
-## check-requirements: verify system requirements are installed
-check-requirements: check-node check-jq check-cargo
-
 ## build: building the project
 build: _build_forge wasi-build
 
@@ -38,16 +35,6 @@ wasi-exec: pull-image
 	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
 	--component "/data/compiled/$(COMPONENT_FILENAME)" \
 	--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)`
-
-pull-image:
-	@if ! docker image inspect ${DOCKER_IMAGE} &>/dev/null; then \
-		echo "Image ${DOCKER_IMAGE} not found. Pulling..."; \
-		$(SUDO) docker pull ${DOCKER_IMAGE}; \
-	fi
-
-## update-submodules: update the git submodules
-update-submodules:
-	@git submodule update --init --recursive
 
 ## clean: cleaning the project files
 clean: clean-docker
@@ -81,16 +68,13 @@ start-all: clean-docker setup-env
 	@rm --interactive=never .docker/*.json 2> /dev/null || true
 	bash -ec 'anvil & anvil_pid=$$!; trap "kill -9 $$anvil_pid 2>/dev/null" EXIT; $(SUDO) docker compose up; wait';
 
-## get-service-handler: getting the service handler address from the script deploy
-get-service-handler-from-deploy:
-	@jq -r '.deployedTo' "./.docker/submit.json"
-
-get-eigen-service-manager-from-deploy:
-	@jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json
-
-## get-trigger: getting the trigger address from the script deploy
+## get-trigger-from-deploy: getting the trigger address from the script deploy
 get-trigger-from-deploy:
 	@jq -r '.deployedTo' "./.docker/trigger.json"
+
+## get-submit-from-deploy: getting the submit address from the script deploy
+get-submit-from-deploy:
+	@jq -r '.deployedTo' "./.docker/submit.json"
 
 ## wavs-cli: running wavs-cli in docker
 wavs-cli:
@@ -114,8 +98,9 @@ TRIGGER_ID?=1
 show-result:
 	@forge script ./script/ShowResult.s.sol ${SERVICE_SUBMISSION_ADDR} ${TRIGGER_ID} --sig 'data(string,uint64)' --rpc-url $(RPC_URL) --broadcast -v 4
 
-_build_forge:
-	@forge build
+## update-submodules: update the git submodules
+update-submodules:
+	@git submodule update --init --recursive
 
 # Declare phony targets
 .PHONY: build clean fmt bindings test
@@ -129,6 +114,8 @@ help: Makefile
 	@echo
 
 # helpers
+_build_forge:
+	@forge build
 
 .PHONY: setup-env
 setup-env:
@@ -140,7 +127,16 @@ setup-env:
 		fi; \
 	fi
 
+pull-image:
+	@if ! docker image inspect ${DOCKER_IMAGE} &>/dev/null; then \
+		echo "Image ${DOCKER_IMAGE} not found. Pulling..."; \
+		$(SUDO) docker pull ${DOCKER_IMAGE}; \
+	fi
+
 # check versions
+
+## check-requirements: verify system requirements are installed
+check-requirements: check-node check-jq check-cargo
 
 check-command:
 	@command -v $(1) > /dev/null 2>&1 || (echo "Command $(1) not found. Please install $(1), reference the System Requirements section"; exit 1)
