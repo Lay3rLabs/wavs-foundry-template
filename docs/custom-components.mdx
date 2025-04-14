@@ -377,7 +377,7 @@ The [trigger contract in the WAVS foundry template](https://github.com/Lay3rLabs
 - The trigger script in [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/script/Trigger.s.sol#L15) calls the `addTrigger` function with the `coinMarketCapID`.
 - The `decode_trigger_event` function in [`/components/eth-price-oracle/src/trigger.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/trigger.rs#L11-L21) processes the trigger data and extracts the `trigger_id` and `data`.
 - The `run` function in [`/components/eth-price-oracle/src/lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/lib.rs#L13) calls `decode_trigger_event`, processes the extracted trigger data, and determines how to handle it.
-- When testing, the `wasi-exec` command in the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L39-L43) passes input data when testing WAVS components via `--input $(COIN_MARKET_CAP_ID)`. This simulates an Ethereum event during local execution.
+- When testing, the `wasi-exec` command in the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L39-L43) passes input data when testing WAVS components via ``--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)` ``. This uses cast to format the `COIN_MARKET_CAP_ID` as a bytes32 string and simulates an Ethereum event during local execution.
 
 ## Components
 
@@ -416,13 +416,14 @@ impl Guest for Component {
     fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
         match action.data {
             TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
-                // 1. Decode event
-                let MyEvent { triggerId, data } = decode_event_log_data!(log)?;
+                // 1. Decode the event
+                let event: MyEvent = decode_event_log_data!(log)
+                    .map_err(|e| format!("Failed to decode event: {}", e))?;
                 
                 // 2. Process data (your business logic goes here)
-                let result = MyResult { 
-                    triggerId, 
-                    success: true 
+                let result = MyResult {
+                    triggerId,
+                    success: true
                 };
                 
                 // 3. Return encoded result
