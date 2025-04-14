@@ -41,7 +41,7 @@ wasi-exec:
 	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
 	--component "/data/compiled/${COMPONENT_FILENAME}" \
 	--service-config $(SERVICE_CONFIG) \
-	--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)`
+	--input $(COIN_MARKET_CAP_ID)
 
 ## update-submodules: update the git submodules
 update-submodules:
