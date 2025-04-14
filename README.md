@@ -173,46 +173,25 @@ Result (utf8):
 
 Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https://www.eigenlayer.xyz/) contracts to the local network.
 
-```bash docci-background docci-delay-after=5
+```bash docci-background docci-delay-after=15
 # Start the backend
 #
 # This must remain running in your terminal. Use another terminal to run other commands.
 # You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
 # make start-all
-
+cp .env.example .env
 
 sh ./script/start_all.sh
 ```
 
-Deploy eigen middleware
+Wait for full local deployment, then grab values
 
-```bash
-cp .env.example .env
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/reecepbcups/wavs-middleware:0.0.1
+```bash docci-delay-after=2
+while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done
+
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
-# TODO: can I get rid of this requirement? (or transfer the owner to another account so we dont have to modify env or anything of the sort)
 export PRIVATE_KEY=$(cat .nodes/deployer)
 export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
-```
-
-Update the operator to use the private key we generated
-
-```bash
-sed -i 's/test test test test test test test test test test test junk/'$PRIVATE_KEY'/' .env
-```
-
-Register the operator
-
-```bash
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh ghcr.io/reecepbcups/wavs-middleware:0.0.1 "$PRIVATE_KEY"
-
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ghcr.io/reecepbcups/wavs-middleware:0.0.1
-```
-
-Run WAVS & the aggregator in the background
-
-```bash docci-background docci-delay-after=5
-docker compose up --remove-orphans &
 ```
 
 ### Deploy Service Contracts
@@ -236,15 +215,13 @@ export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 
 Deploy the compiled component with the contract information from the previous steps. Review the [makefile](./Makefile) for more details and configuration options.`TRIGGER_EVENT` is the event that the trigger contract emits and WAVS watches for. By altering `SERVICE_TRIGGER_ADDR` you can watch events for contracts others have deployed.
 
-```bash docci-delay-per-cmd=1
+```bash docci-delay-per-cmd=2
 # Build your service JSON with optional overrides in the script
 COMPONENT_FILENAME=eth_price_oracle.wasm AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
 
 # Deploy the service JSON to WAVS so it now watches and submits
 # the results based on the service json configuration.
 SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
-
-# curl http://localhost:8000/service/019616c0-2c31-7c11-a8ec-8e3409101628
 ```
 
 ## Trigger the Service

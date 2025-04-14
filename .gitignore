@@ -4,6 +4,7 @@ cache/
 broadcast/
 compiled/*.wasm
 .docker/*.json
+.docker/*.log
 .env
 node_modules/
 lcov.info

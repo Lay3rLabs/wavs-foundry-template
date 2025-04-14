@@ -51,49 +51,24 @@ forge build
 
 Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https://www.eigenlayer.xyz/) contracts to the local network.
 
-```bash docci-background docci-delay-after=5
-# Start the backend
-#
-# This must remain running in your terminal. Use another terminal to run other commands.
-# You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
-# make start-all
-
-anvil --fork-url https://ethereum-holesky-rpc.publicnode.com
+```bash docci-background docci-delay-after=15
+cp .env.example .env
+sh ./script/start_all.sh
 ```
 
-Deploy eigen middleware
+Wait for full local deployment, then grab values
 
-```bash
-cp .env.example .env
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/reecepbcups/wavs-middleware:0.0.1
+```bash docci-delay-after=2
+while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done
+
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
 export PRIVATE_KEY=$(cat .nodes/deployer)
 export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
 ```
 
-Update the operator to use the private key we generated
-
-```bash
-sed -i 's/test test test test test test test test test test test junk/'$PRIVATE_KEY'/' .env
-```
-
-Register the operator
-
-```bash
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh ghcr.io/reecepbcups/wavs-middleware:0.0.1 "$PRIVATE_KEY"
-
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ghcr.io/reecepbcups/wavs-middleware:0.0.1
-```
-
-Run WAVS & the aggregator in the background
-
-```bash docci-background docci-delay-after=3
-docker compose up --remove-orphans &
-```
-
 Deploy the contracts
 
-```bash
+```bash docci-delay-after=1
 forge create SimpleSubmit --json --broadcast -r http://127.0.0.1:8545 --private-key "${PRIVATE_KEY}" --constructor-args "${SERVICE_MANAGER_ADDRESS}" > .docker/submit.json
 export SERVICE_SUBMISSION_ADDR=`jq -r .deployedTo .docker/submit.json`
 
@@ -101,17 +76,14 @@ forge create SimpleTrigger --json --broadcast -r http://127.0.0.1:8545 --private
 export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 ```
 
+
 Upload service
 
 ```bash docci-delay-per-cmd=2
 # Build your service JSON with optional overrides in the script
 COMPONENT_FILENAME=js_eth_price_oracle.wasm sh ./script/build_service.sh
 
-# Deploy the service JSON to WAVS so it now watches and submits
-# the results based on the service json configuration.
 SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
-
-# curl http://localhost:8000/service/019616c0-2c31-7c11-a8ec-8e3409101628
 ```
 
 

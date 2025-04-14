@@ -79,7 +79,7 @@ $BASE_CMD validate > /dev/null
 
 # inform aggregator if set
 if [ -n "$AGGREGATOR_URL" ]; then
-    curl -X POST ${AGGREGATOR_URL}/register-service -H "Content-Type: application/json" -d '{"service": '"$(cat ${FILE_LOCATION})"'}'
+    wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(cat ${FILE_LOCATION})"'}' ${AGGREGATOR_URL}/register-service -O -
 fi
 
 echo "Configuration file created at ${FILE_LOCATION}"
