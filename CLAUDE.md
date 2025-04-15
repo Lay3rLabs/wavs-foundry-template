@@ -259,6 +259,14 @@ Once your component is working locally:
 
 When testing components with `make wasi-exec`, the input is processed as follows:
 
+```makefile
+## found in the makefile. Modify input format as needed for your component.
+wasi-exec:
+	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
+	--component "/data/compiled/${COMPONENT_FILENAME}" \
+	--service-config $(SERVICE_CONFIG) \
+	--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)`
+```
 1. The input value is provided via the `COIN_MARKET_CAP_ID` environment variable
 2. The Makefile passes this through `cast format-bytes32-string` before sending to your component
 3. Your component receives the formatted bytes as input data
@@ -310,112 +318,224 @@ COIN_MARKET_CAP_ID=5 make wasi-exec COMPONENT_FILENAME=your_component.wasm
 - **Filename mismatch**: Ensure your COMPONENT_FILENAME uses underscores (not hyphens) and the .wasm extension
 - **Unused imports warnings**: For components that don't use HTTP or async, remove unnecessary imports
 
-## Next Steps
+## Environment Variables
 
-1. Study the example eth-price-oracle component for a complete implementation
-2. Modify it to create your own service
-3. Create a new component from scratch for your specific use case
 
-Good luck with your WAVS development!
+### Public Variables (`kv`)
+- Used for non-sensitive configuration
+- Set in the Makefile's `SERVICE_CONFIG` variable
+- Example:
+```bash
+SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv":[["max_retries","3"],["timeout_seconds","30"],["api_endpoint","https://api.example.com"]],"workflow_id":"default","component_id":"default"}'
+```
+- Access in component: `std::env::var("max_retries")?`
 
-## Advanced
+### Private Variables (`host_envs`)
 
-This section covers best practices and common pitfalls when developing more complex WAVS components.
+- Used for sensitive data like API keys
+- Must be prefixed with `WAVS_ENV_`
+- Set in `.env` file:
+```bash
+WAVS_ENV_MY_API_KEY=your_secret_key_here
+```
+- Add to `SERVICE_CONFIG`:
+```bash
+SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_MY_API_KEY"],"kv":[],"workflow_id":"default","component_id":"default"}'
+```
+- Access in component: `std::env::var("WAVS_ENV_MY_API_KEY")?`
 
-### Working with Environment Variables
+## Network Requests
 
-Environment variables may come with quotes or other unexpected formatting:
+Components can make HTTP requests using the `wavs-wasi-chain` crate. Since WASI components run synchronously but network requests are async, use `block_on` from `wstd` to bridge this gap.
 
-```rust
-// Always trim quotes from environment variables, especially API keys
-let api_key = std::env::var("WAVS_ENV_MY_API_KEY")
-    .map_err(|_| "API key not found".to_string())?
-    .trim_matches('"'); // Removes any surrounding quotes
+Required dependencies in `Cargo.toml`:
+```toml
+# make sure these are in your toml file when working with network requests.
+[dependencies]
+wavs-wasi-chain = { workspace = true }  # HTTP utilities
+wstd = { workspace = true }             # Runtime utilities
+serde = { workspace = true }            # Serialization
+serde_json = { workspace = true }       # JSON handling
 ```
 
-### API Integration Best Practices
-
-#### URL Construction
-
-When constructing URLs for API calls:
-
+Example GET request:
 ```rust
-// 1. Always use proper URL encoding for special characters
-let url = format!(
-    "https://api.example.com/endpoint?param1={}&param2={}",
-    url_encode(param1), url_encode(param2)
-);
+use wstd::runtime::block_on;
 
-// 2. For fixed special characters, use their encoded values directly
-// Comma (,) → %2C, Space → %20, etc.
-let url = format!(
-    "https://api.example.com/locations?zip={}%2CUS", // %2C is encoded comma
-    zip_code
-);
+async fn make_request() -> Result<YourResponseType, String> {
+    let url = "https://api.example.com/endpoint";
+    let mut req = http_request_get(&url).map_err(|e| e.to_string())?;
+    req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
+    let response: YourResponseType = fetch_json(req).await.map_err(|e| e.to_string())?;
+    Ok(response)
+}
 
-// 3. Always log complete URLs to help with debugging
-println!("API URL: {}", url);
+// In your component:
+fn process_data() -> Result<YourResponseType, String> {
+    block_on(async move {
+        make_request().await
+    })?
+}
 ```
 
-#### Error Handling
+Example POST request:
+```rust
+async fn make_post_request() -> Result<PostResponse, String> {
+    let url = "https://api.example.com/endpoint";
+    let post_data = ("key1", "value1");
+    let response: PostResponse = fetch_json(
+        http_request_post_json(&url, &post_data)?
+    ).await.map_err(|e| e.to_string())?;
+    Ok(response)
+}
+```
 
-Implement robust error handling for API calls:
+For more functions, see the [wavs-wasi-chain documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions).
+
+## Input and Output Handling
+
+WAVS components can receive input in two ways:
+
+1. **On-chain Events**: Triggered by contract events after deployment
+   - Component receives a `TriggerAction` containing event data
+   - Use `decode_event_log_data!` macro to decode the event data
+
+2. **Manual Testing**: Using `make wasi-exec` command
+   - Simulates on-chain events
+   - Passes data directly as `trigger::raw`
+   - You may need to modify the makefile `--input` to format input for your component correctly.
+
+### Data Processing Pattern
 
 ```rust
-// Detailed error context
-let response = match fetch_json::<serde_json::Value>(req).await {
-    Ok(json) => {
-        println!("Received API response: {}", json);
-        
-        // Check for API-level errors in successful HTTP responses
-        if let Some(error) = json.get("error") {
-            return Err(format!("API returned error: {}", error));
+// 1. Define Solidity types using sol! macro
+sol! {
+    event MyEvent(uint64 indexed triggerId, bytes data);
+    struct MyResult {
+        uint64 triggerId;
+        bytes processedData;
+    }
+}
+
+// 2. Handle both trigger types
+impl Guest for Component {
+    fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
+        match action.data {
+            // On-chain event handling
+            TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+                let event: MyEvent = decode_event_log_data!(log)?;
+                let result = MyResult {
+                    triggerId: event.triggerId,
+                    processedData: process_data(&event.data)?,
+                };
+                Ok(Some(result.abi_encode()))
+            }
+            // Manual trigger handling
+            TriggerData::Raw(data) => {
+                let result = process_data(&data)?;
+                Ok(Some(result))
+            }
+            _ => Err("Unsupported trigger type".to_string())
         }
-        
-        json
-    },
-    Err(e) => return Err(format!("API request failed: {}", e)),
-};
-
-// Then parse into your type
-let typed_response: MyResponseType = serde_json::from_value(response)
-    .map_err(|e| format!("Failed to parse API response: {}", e))?;
+    }
+}
 ```
 
-#### HTTP Request Limitations
+The template uses a `Destination` enum in `trigger.rs` to determine how to process and return data:
+- `Destination::Ethereum` for on-chain events
+- `Destination::CliOutput` for testing
 
-Important limitations when working with HTTP requests:
+## Helpers and Utilities
 
-```rust
-// INCORRECT: HTTP request objects cannot be cloned
-let req = http_request_get(&url)?;
-let response1 = fetch_json::<Value>(req.clone()).await?; // ❌ Will not compile
+### `wavs-wasi-chain` Crate
 
-// CORRECT: Create new request objects for each API call
-let req1 = http_request_get(&url)?;
-let response1 = fetch_json::<Value>(req1).await?;
+The `wavs-wasi-chain` crate provides essential functions for:
+- Making HTTP requests
+- Interacting with blockchains
+- Decoding trigger data
+- Handling Ethereum ABI encoding/decoding
 
-// If needed again:
-let req2 = http_request_get(&url)?;
-let response2 = fetch_json::<Value>(req2).await?;
+Key functions include:
+- `http_request_get` and `http_request_post_json` for HTTP requests
+- `fetch_json` for JSON responses
+- `decode_event_log_data!` macro for trigger decoding
+- `new_eth_provider` for Ethereum interactions
+
+## Blockchain Interactions
+
+Interacting with blockchains requires specific dependencies and setup:
+
+### Dependencies
+```toml
+[dependencies]
+# Core WAVS blockchain functionality
+wit-bindgen-rt = {workspace = true}    # Required for WASI bindings
+wavs-wasi-chain = { workspace = true }  # HTTP utilities
+# other dependencies..
+
+# Alloy crates for Ethereum interaction
+alloy-sol-types = { workspace = true }  # ABI handling & type generation
+alloy-sol-macro = { workspace = true }  # sol! macro for interfaces
+alloy-primitives = { workspace = true } # Core primitive types
+alloy-network = "0.11.1"               # Network trait and types
+alloy-provider = { version = "0.11.1", default-features = false, features = ["rpc-api"] }
+alloy-rpc-types = "0.11.1"            # RPC type definitions
 ```
 
-### Multi-Step Processing Pattern
+### Chain Configuration
+Chain configs are defined in `wavs.toml`:
+```toml
+[chains.eth.local]
+chain_id = "31337"
+ws_endpoint = "ws://localhost:8545"
+http_endpoint = "http://localhost:8545"
+```
 
-For components requiring multiple sequential operations:
-
+### Accessing Configuration
 ```rust
-async fn process_data(input: &str) -> Result<FinalOutput, String> {
-    // Step 1: First operation (e.g., API call or data processing)
-    println!("Starting step 1...");
-    let intermediate_result = step_one(input).await?;
-    println!("Step 1 completed: {:?}", intermediate_result);
+// Get chain config
+let chain_config = host::get_eth_chain_config(&chain_name)?;
+
+// Create provider
+let provider: RootProvider<Ethereum> = new_eth_provider::<Ethereum>(
+    chain_config.http_endpoint
+        .context("http_endpoint is missing")?
+)?;
+```
+
+### Example: Querying NFT Balance
+```rust
+sol! {
+    interface IERC721 {
+        function balanceOf(address owner) external view returns (uint256);
+    }
+}
+
+async fn query_nft_ownership(owner: Address, contract: Address) -> Result<bool, String> {
+    // 1. Get chain config
+    let chain_config = get_eth_chain_config("eth.local")?;
     
-    // Step 2: Second operation using results from step 1
-    println!("Starting step 2...");
-    let final_result = step_two(&intermediate_result).await?;
-    println!("Step 2 completed: {:?}", final_result);
+    // 2. Create provider
+    let provider = new_eth_provider::<Ethereum>(chain_config.http_endpoint?)?;
     
-    Ok(final_result)
+    // 3. Prepare contract call
+    let balance_call = IERC721::balanceOfCall { owner };
+    
+    // 4. Construct transaction request
+    let tx = TransactionRequest {
+        to: Some(TxKind::Call(contract)),
+        input: TransactionInput {
+            input: Some(balance_call.abi_encode().into()),
+            data: None
+        },
+        ..Default::default()
+    };
+    
+    // 5. Execute call
+    let result_bytes = provider.call(&tx).await?;
+    
+    // 6. Decode result
+    let balance = U256::from_be_slice(&result_bytes);
+    Ok(balance > U256::ZERO)
 }
 ```
