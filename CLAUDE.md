@@ -39,6 +39,10 @@ components/your-component-name/
     ├── bindings.rs      # Auto-generated during build
 ```
 
+### Before you start
+
+- Review the Makefile of this repo and the files in /components/eth-price-oracle to see how they work.
+
 ### Step 1: Set up your Cargo.toml
 
 The Cargo.toml file defines your component's dependencies:
@@ -190,16 +194,28 @@ The build process:
 2. Generates WASI bindings automatically
 3. Places compiled `.wasm` files in the `compiled/` directory
 
+When your component builds successfully, the compiled WebAssembly file will be available at:
+```
+/target/wasm32-wasip1/release/your_component_name.wasm
+```
+
+Note the conversion from hyphenated name to underscore format (e.g., "number-squarer" becomes "number_squarer.wasm").
+
 ### Step 2: Test your component locally
 
 ```bash
 # Test with a specific input parameter (in this example, "1" is the input)
-COIN_MARKET_CAP_ID=1 make wasi-exec
+COIN_MARKET_CAP_ID=1 make wasi-exec COMPONENT_FILENAME=your_component_name.wasm
 ```
+
+Important notes about this command:
+1. `COMPONENT_FILENAME` must match the actual compiled filename (with underscores, not hyphens)
+2. Make sure to include the `.wasm` extension
+3. The component file must be in the `compiled/` directory or specified in the Makefile
 
 This command:
 1. Uses Docker to run your component in a simulated environment
-2. Passes the input value to your component
+2. Passes the input value to your component via the Makefile
 3. Shows the output of your component's processing
 
 You don't need to deploy anything on-chain for this test!
@@ -250,11 +266,61 @@ Once your component is working locally:
    make show-result
    ```
 
+## Input Handling and Testing
+
+### Understanding Input Processing
+
+When testing components with `make wasi-exec`, the input is processed as follows:
+
+1. The input value is provided via the `COIN_MARKET_CAP_ID` environment variable
+2. The Makefile passes this through `cast format-bytes32-string` before sending to your component
+3. Your component receives the formatted bytes as input data
+
+This process can introduce formatting quirks that your component must handle, including:
+- Newline characters
+- Non-printable characters
+- Padding or special formatting
+
+### Robust Input Parsing
+
+For components that expect numeric inputs, implement robust parsing like this:
+
+```rust
+// Parse input, handling potential non-digit characters
+let input_str = std::str::from_utf8(&input_data).map_err(|e| e.to_string())?;
+println!("Raw input: {}", input_str);
+
+// Extract digits from the string to handle formatted inputs
+let digits: String = input_str.chars().filter(|c| c.is_digit(10)).collect();
+println!("Filtered to digits: {}", digits);
+
+// Parse the filtered string or fall back to original
+let input_number: i64 = if !digits.is_empty() {
+    digits.parse().map_err(|e| format!("Failed to parse digits as number: {}", e))?
+} else {
+    input_str.trim().parse().map_err(|e| format!("Failed to parse input as number: {}", e))?
+};
+```
+
+### Testing Commands
+
+To test your component correctly:
+
+```bash
+# The correct format for testing (replace with your component's filename)
+COIN_MARKET_CAP_ID=5 make wasi-exec COMPONENT_FILENAME=your_component.wasm
+
+# Make sure to use the .wasm extension and underscore format in the filename
+# Example: components/my-component → my_component.wasm
+```
+
 ## Common Issues and Solutions
 
 - **Component doesn't build**: Make sure you have the correct Rust and cargo-component versions
 - **Component crashes during test**: Check your error handling and debug with println!() statements
+- **Input parsing errors**: Add filtering for expected input types (numbers, strings, etc.)
 - **HTTP requests fail**: Verify network connectivity and URL format
+- **Filename mismatch**: Ensure your COMPONENT_FILENAME uses underscores (not hyphens) and the .wasm extension
 
 ## Next Steps
 
