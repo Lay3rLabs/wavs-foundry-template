@@ -8,11 +8,16 @@ import {console} from "forge-std/console.sol";
 
 /// @dev Script to add a new trigger
 contract Trigger is Common {
-    function run(string calldata serviceTriggerAddr, string calldata coinMarketCapID) public {
+    function run(
+        string calldata serviceTriggerAddr,
+        string calldata triggerInputData
+    ) public {
         vm.startBroadcast(_privateKey);
-        SimpleTrigger trigger = SimpleTrigger(vm.parseAddress(serviceTriggerAddr));
+        SimpleTrigger trigger = SimpleTrigger(
+            vm.parseAddress(serviceTriggerAddr)
+        );
 
-        trigger.addTrigger(abi.encodePacked(coinMarketCapID));
+        trigger.addTrigger(abi.encodePacked(triggerInputData));
         ITypes.TriggerId triggerId = trigger.nextTriggerId();
         console.log("TriggerId", ITypes.TriggerId.unwrap(triggerId));
         vm.stopBroadcast();

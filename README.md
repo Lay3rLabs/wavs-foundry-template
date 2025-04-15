@@ -124,10 +124,10 @@ make wasi-build # or `make build` to include solidity compilation.
 
 ### Execute WASI component directly
 
-Test run the component locally to validate the business logic works. An ID of 1 is Bitcoin. Nothing will be saved on-chain, just the output of the component is shown.
+Test run the component locally to validate the business logic works. An ID of 1 is Bitcoin. Nothing will be saved on-chain, just the output of the component is shown. The input is formatted into a `bytes32` string using `cast` before being used in the component.
 
 ```bash
-COIN_MARKET_CAP_ID=1 make wasi-exec
+TRIGGER_INPUT_DATA=`cast format-bytes32-string 1` make wasi-exec
 ```
 
 ## WAVS
@@ -181,9 +181,9 @@ TRIGGER_EVENT="NewTrigger(bytes)" make deploy-service
 Anyone can now call the [trigger contract](./src/contracts/WavsTrigger.sol) which emits the trigger event WAVS is watching for from the previous step. WAVS then calls the service and saves the result on-chain.
 
 ```bash
-export COIN_MARKET_CAP_ID=1
+export TRIGGER_INPUT_DATA=1
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig "run(string,string)" --rpc-url http://localhost:8545 --broadcast -v 4
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${TRIGGER_INPUT_DATA} --sig "run(string,string)" --rpc-url http://localhost:8545 --broadcast -v 4
 ```
 
 ## Show the result
