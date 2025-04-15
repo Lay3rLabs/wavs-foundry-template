@@ -32,14 +32,14 @@ docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entryp
 ## == Setup Deployer
 echo "Using Address: $(cast wallet address --private-key ${PRIVATE_KEY})"
 
-sed_opt=(-i)
+SP=""
 if [[ "$(uname)" == *"Darwin"* ]]; then
-  sed_opt=(-i '')
+  SP=" "
 fi
 
-sed $sed_opt -e "s/^WAVS_CLI_ETH_MNEMONIC=.*$/WAVS_CLI_ETH_MNEMONIC=\"$PRIVATE_KEY\"/" .env
-sed $sed_opt -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$PRIVATE_KEY\"/" .env
-sed $sed_opt -e "s/^WAVS_AGGREGATOR_MNEMONIC=.*$/WAVS_AGGREGATOR_MNEMONIC=\"$PRIVATE_KEY\"/" .env
+sed -i${SP}'' -e "s/^WAVS_CLI_ETH_MNEMONIC=.*$/WAVS_CLI_ETH_MNEMONIC=\"$PRIVATE_KEY\"/" .env
+sed -i${SP}'' -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$PRIVATE_KEY\"/" .env
+sed -i${SP}'' -e "s/^WAVS_AGGREGATOR_MNEMONIC=.*$/WAVS_AGGREGATOR_MNEMONIC=\"$PRIVATE_KEY\"/" .env
 
 
 # == WAVS & Aggregator ==
