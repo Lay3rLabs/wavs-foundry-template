@@ -38,6 +38,7 @@ wavs-foundry-template/
 - The components directory contains the component logic for your service. Running `make wasi-build` will automatically generate bindings and compile components into the `compiled` directory.
 - The src directory contains the Solidity contract and interfaces.
 - The script directory contains the scripts used in the makefile commands to deploy, trigger and test the service.
+- The `.env` file contains private environment variables and keys. Use `cp .env.example .env` to copy the example `.env` file.
 
 ## Toml files
 
@@ -113,21 +114,22 @@ make wasi-build
 2. Test your WASI components directly without deploying to a chain.
 
 ```bash
-make wasi-exec
+TRIGGER_INPUT_DATA=`cast format-bytes32-string 1` make wasi-exec
 ```
 
 **Under the hood**:
   - Uses the `wavs-cli` Docker image to run the component specified by `COMPONENT_FILENAME`.
-  - Simulates the trigger event using the `COIN_MARKET_CAP_ID` as input data and the `SERVICE_CONFIG` to configure the service.
+  - Simulates the trigger event using the `TRIGGER_INPUT_DATA` as the input and the `SERVICE_CONFIG` to configure the service.
   - Executes the component with the input data.
   - Can handle input data in three formats:
     - `@file`: Reads input from a file
     - `0x`: Treats input as hex-encoded bytes
     - Raw string: Treats input as raw bytes
+  - In the `ETH_PRICE_ORACLE` component, the input data needs to be formatted into a `bytes32` string using the `cast format-bytes32-string` command before being passed to the component. When creating your own components, use an appropriate format for your use case.
 
 **Variables**:
   - `COMPONENT_FILENAME`: The name of the compiled WASM file to execute.
-  - `COIN_MARKET_CAP_ID`: The input data used to simulate the trigger event.
+  - `TRIGGER_INPUT_DATA`: The input data used to simulate the trigger event.
   - `SERVICE_CONFIG`: The service configuration for the component containing the `host_envs` and `kv` variables.
 
 #### Setup
@@ -197,15 +199,15 @@ TRIGGER_EVENT="NewTrigger(bytes)" COMPONENT_FILENAME=usdt_balance.wasm make depl
   2. The service configuration is stored off-chain and used by the WAVS operator to run the component
 
 ```bash
-export COIN_MARKET_CAP_ID=1
+export TRIGGER_INPUT_DATA=1
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig "run(string,string)" --rpc-url http://localhost:8545 --broadcast -v 4
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${TRIGGER_INPUT_DATA} --sig "run(string,string)" --rpc-url http://localhost:8545 --broadcast -v 4
 ```
 
 - **Under the hood**:
-  - Exports the `COIN_MARKET_CAP_ID` environment variable for use in subsequent commands.
+  - Exports the `TRIGGER_INPUT_DATA` environment variable for use in subsequent commands.
   - Uses `jq` to extract the trigger address from `.docker/script_deploy.json`.
-  - Executes the `Trigger.s.sol` script with the trigger address and CoinMarketCap ID.
+  - Executes the `Trigger.s.sol` script with the trigger address and TRIGGER_INPUT_DATA.
   - Uses the specified RPC URL to interact with the local Anvil node.
   - Broadcasts the transaction to the network.
 
@@ -265,9 +267,10 @@ TRIGGER_EVENT ?= NewTrigger(bytes)
 #### Trigger data
 
 ```bash
-COIN_MARKET_CAP_ID ?= 1
+TRIGGER_INPUT_DATA ?= 1
 ```
-- Specifies the CoinMarketCap ID for testing the price oracle in `wasi-exec` and trigger scripts (`1` is Bitcoin).
+- Specifies the `TRIGGER_INPUT_DATA` for testing the price oracle in `wasi-exec` and trigger scripts (`1` is the ID of Bitcoin in the `Eth-price-oracle` example).
+  - In the `ETH_PRICE_ORACLE` component, the input data needs to be formatted into a `bytes32` string using the `cast format-bytes32-string` when using the `make wasi-exec` command. When creating your own components, use an appropriate format for your use case.
 
 #### Contract addresses
 
@@ -295,7 +298,7 @@ make get-eigen-service-manager-from-deploy
 Makefile variables can be overridden when running make commands. For example, running the following in your terminal will use a different component when testing:
 
 ```bash
-COMPONENT_FILENAME=my_component.wasm make wasi-exec
+COMPONENT_FILENAME=my_component.wasm TRIGGER_INPUT_DATA=`cast format-bytes32-string 1` make wasi-exec
 ```
 
 To trigger the component from an external contract, you can set the trigger address and trigger event manually in the makefile:
@@ -305,17 +308,17 @@ TRIGGER_ADDRESS ?= 0x1234567890123456789012345678901234567890
 TRIGGER_EVENT ?= MyCustomEvent(bytes)
 ```
 {/* todo: link here: */}
-You can also add variables to the makefile, such as public variables to be referenced in your component or reference private variables like API keys. Read more here: [Makefile variables](#)
+You can also add variables to the makefile, such as public variables to be referenced in your component or reference private variables like API keys. Find out more in the [Environment Variables](#environment-variables) section.
 
 ## WAVS services
 
 The basic service is made up of a trigger, a component, and submission logic (optional).
 
-Trigger: any onchain event emitted from a contract.
+[Trigger](#triggers): any onchain event emitted from a contract.
 
-Component: the main logic of a WAVS service. Components are responsible for processing the trigger data and executing the business logic.
+[Component](#components): the main logic of a WAVS service. Components are responsible for processing the trigger data and executing the business logic.
 
-Submission: handles the logic for submitting a component's output to the blockchain.
+[Submission](#submission): handles the logic for submitting a component's output to the blockchain.
 
 ## Triggers
 
@@ -374,10 +377,10 @@ When a WAVS component receives this trigger, it uses the `decode_event_log_data!
 The [trigger contract in the WAVS foundry template](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/src/contracts/WavsTrigger.sol) is a simple example that takes generic bytes and passes them to the component. The flow for triggers is located in several places in the template:
 
 - The trigger contract in [`src/WavsTrigger.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsTrigger.sol) defines how triggers are created and emitted on-chain.
-- The trigger script in [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/script/Trigger.s.sol#L15) calls the `addTrigger` function with the `coinMarketCapID`.
+- The trigger script in [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/script/Trigger.s.sol#L15) calls the `addTrigger` function with the `triggerInputData`.
 - The `decode_trigger_event` function in [`/components/eth-price-oracle/src/trigger.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/trigger.rs#L11-L21) processes the trigger data and extracts the `trigger_id` and `data`.
 - The `run` function in [`/components/eth-price-oracle/src/lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/lib.rs#L13) calls `decode_trigger_event`, processes the extracted trigger data, and determines how to handle it.
-- When testing, the `wasi-exec` command in the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L39-L43) passes input data when testing WAVS components via ``--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)` ``. This uses cast to format the `COIN_MARKET_CAP_ID` as a bytes32 string and simulates an Ethereum event during local execution.
+- When testing, the `wasi-exec` command in the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L39-L43) passes input data when testing WAVS components via ``--input `cast format-bytes32-string $(TRIGGER_INPUT_DATA)` ``. This uses cast to format the `TRIGGER_INPUT_DATA` as a bytes32 string and simulates an Ethereum event during local execution.
 
 ## Components
 
@@ -483,6 +486,7 @@ When building WASI components, keep in mind that the component can receive the t
 1. Triggered by an onchain event from a contract after service deployment. Components receive a `TriggerAction` containing event data which is then decoded.
 
 2. Manually via the `wasi-exec` command. The wasi-exec command simulates an onchain event and passes the trigger data directly to the component as `trigger::raw`. No abi decoding is required, and the output is returned as raw bytes.
+  - In the `ETH_PRICE_ORACLE` component, the input data needs to be formatted into a `bytes32` string using the `cast format-bytes32-string` when using the `make wasi-exec` command. When creating your own components, use an appropriate format for your use case to use the `wasi-exec` command.
 
 ### Data Processing Pattern
 
@@ -649,7 +653,14 @@ let endpoint = std::env::var("api_endpoint")?;
 
 Private environment variables (`host_envs`) can be used for sensitive data like API keys. These variables are set by operators in their environment and are not viewable by anyone. These variables must be prefixed with `WAVS_ENV_`. Each operator must set these variables in their environment before deploying the service. Only variables listed in `host_envs` will be available to the component.
 
-To add private variables, set the environment variable in your `.env` file:
+To add private variables to your .env file, copy the `.env.example` file to `.env`:
+
+```bash
+# copy the example file
+cp .env.example .env
+```
+
+Then set the environment variable in your `.env` file:
 
 ```bash
 # .env file
