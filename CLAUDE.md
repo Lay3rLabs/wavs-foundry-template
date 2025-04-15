@@ -36,7 +36,7 @@ components/your-component-name/
 ├── src/
     ├── lib.rs           # Main logic
     ├── trigger.rs       # Trigger handling
-    ├── bindings.rs      # Auto-generated during build
+    ├── bindings.rs      # Auto-generated during build (don't create this file)
 ```
 
 ### Before you start
@@ -191,7 +191,7 @@ make wasi-build
 
 The build process:
 1. Compiles all components in the `components/` directory
-2. Generates WASI bindings automatically
+2. Generates WASI bindings automatically (creating the `bindings.rs` file)
 3. Places compiled `.wasm` files in the `compiled/` directory
 
 When your component builds successfully, the compiled WebAssembly file will be available at:
