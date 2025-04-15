@@ -321,6 +321,7 @@ COIN_MARKET_CAP_ID=5 make wasi-exec COMPONENT_FILENAME=your_component.wasm
 - **Input parsing errors**: Add filtering for expected input types (numbers, strings, etc.)
 - **HTTP requests fail**: Verify network connectivity and URL format
 - **Filename mismatch**: Ensure your COMPONENT_FILENAME uses underscores (not hyphens) and the .wasm extension
+- **Unused imports warnings**: For components that don't use HTTP or async, remove unnecessary imports
 
 ## Next Steps
 
