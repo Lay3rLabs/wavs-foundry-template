@@ -124,7 +124,7 @@ make wasi-build # or `make build` to include solidity compilation.
 
 ### Execute WASI component directly
 
-Test run the component locally to validate the business logic works. An ID of 1 is Bitcoin. Nothing will be saved on-chain, just the output of the component is shown. This input is formatted into a `bytes32` string using `cast format-bytes32-string` before being used in the component.
+Test run the component locally to validate the business logic works. An ID of 1 is Bitcoin. Nothing will be saved on-chain, just the output of the component is shown. This input is formatted using `cast format-bytes32-string` in the makefile command.
 
 ```bash
 COIN_MARKET_CAP_ID=1 make wasi-exec
