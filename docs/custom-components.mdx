@@ -43,7 +43,7 @@ wavs-foundry-template/
 - The `makefile` contains commands for building and deploying the service. It also contains variables and configs for the service.
 - The components directory contains the component logic for your service. Running `make wasi-build` will automatically generate bindings and compile components into the `compiled` directory.
 - The src directory contains the Solidity contract and interfaces.
-- The script directory contains the scripts used in the makefile commands to deploy, trigger and test the service.
+- The script directory contains the scripts used in the makefile commands to deploy, trigger, and test the service.
 - The `.env` file contains private environment variables and keys. Use `cp .env.example .env` to copy the example `.env` file.
 
 ## WAVS services
@@ -58,13 +58,13 @@ The basic service is made up of a trigger, a component, and submission logic (op
 
 ## Triggers
 
-A trigger is what prompts a WAVS service to run. Operators listen for the trigger event specified by the service and execute the corresponding component off-chain. Triggers can be any onchain event emitted from any contract.
+A trigger prompts a WAVS service to run. Operators listen for the trigger event specified by the service and execute the corresponding component off-chain. Triggers can be any onchain event emitted from any contract.
 
 ### Trigger lifecycle
 
-1. When a service is deployed, the service is configured with a trigger address and event, a wasi component, and a submission contract (optional).
+1. When a service is deployed, it is configured with a trigger address and event, a wasi component, and a submission contract (optional).
 
-2. Registered operators listen to chain logs. Each operator maintains lookup maps for triggers and verifies events against registered triggers.
+2. Registered operators listen to chain logs. Each operator maintains lookup maps and verifies events against registered triggers.
 
 3. When a trigger event is emitted, operators pick up the event and verify the event matches the registered trigger.
 
@@ -246,8 +246,8 @@ COIN_MARKET_CAP_ID=1 make wasi-exec
   - Can handle input data in three formats:
     - `@file`: Reads input from a file
     - `0x`: Treats input as hex-encoded bytes
-    - Raw string: Treats input as raw bytes (you may need to format the input data before passing it to the component)
-  - In the `ETH_PRICE_ORACLE` component, the input data needs to be formatted into a `bytes32` string using ``--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)``` in the `wasi-exec` command in the makefile before being passed to the component. When creating your own components, update the makefile to use an appropriate format for your use case.
+    - Raw string: Treats input as raw bytes (you may need to format the input data appropriately before passing it to the component)
+  - For the `ETH_PRICE_ORACLE` component, the input data must be formatted into a `bytes32` string. This is done in the makefile's `wasi-exec` command using ``--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)```. When creating your own components, update the makefile to use the appropriate format for your use case.
 
 **Variables**:
   - `COMPONENT_FILENAME`: The path of the compiled WASM file to execute.
@@ -346,7 +346,7 @@ make show-result
 
 The Makefile contains several important variables that control the behavior of the WAVS service.
 
-#### Component
+#### Component variable
 
 ```bash
 COMPONENT_FILENAME ?= eth_price_oracle.wasm
