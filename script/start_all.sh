@@ -31,15 +31,15 @@ docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entryp
 
 ## == Setup Deployer
 echo "Using Address: $(cast wallet address --private-key ${PRIVATE_KEY})"
-# Default case for Linux sed, just use "-i"
-sedi=(-i)
-case "$(uname)" in
-  # For macOS, use two parameters
-  Darwin*) sedi=(-i "")
-esac
-sed "${sedi[@]}" -e "s/^WAVS_CLI_ETH_MNEMONIC=.*$/WAVS_CLI_ETH_MNEMONIC=\"$PRIVATE_KEY\"/" .env
-sed "${sedi[@]}" -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$PRIVATE_KEY\"/" .env
-sed "${sedi[@]}" -e "s/^WAVS_AGGREGATOR_MNEMONIC=.*$/WAVS_AGGREGATOR_MNEMONIC=\"$PRIVATE_KEY\"/" .env
+
+sed_opt=(-i)
+if [[ "$(uname)" == *"Darwin"* ]]; then
+  sed_opt=(-i '')
+fi
+
+sed $sed_opt -e "s/^WAVS_CLI_ETH_MNEMONIC=.*$/WAVS_CLI_ETH_MNEMONIC=\"$PRIVATE_KEY\"/" .env
+sed $sed_opt -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$PRIVATE_KEY\"/" .env
+sed $sed_opt -e "s/^WAVS_AGGREGATOR_MNEMONIC=.*$/WAVS_AGGREGATOR_MNEMONIC=\"$PRIVATE_KEY\"/" .env
 
 
 # == WAVS & Aggregator ==
