@@ -40,6 +40,175 @@ wavs-foundry-template/
 - The script directory contains the scripts used in the makefile commands to deploy, trigger and test the service.
 - The `.env` file contains private environment variables and keys. Use `cp .env.example .env` to copy the example `.env` file.
 
+## WAVS services
+
+The basic service is made up of a trigger, a component, and submission logic (optional).
+
+[Trigger](#triggers): any onchain event emitted from a contract.
+
+[Component](#components): the main logic of a WAVS service. Components are responsible for processing the trigger data and executing the business logic.
+
+[Submission](#submission): handles the logic for submitting a component's output to the blockchain.
+
+## Triggers
+
+A trigger is what prompts a WAVS service to run. Operators listen for the trigger event specified by the service and execute the corresponding component off-chain. Triggers can be any onchain event emitted from any contract.
+
+### Trigger lifecycle
+
+1. When a service is deployed, the service is configured with a trigger address and event, a wasi component, and a submission contract (optional).
+
+2. Registered operators listen to chain logs. Each operator maintains lookup maps for triggers and verifies events against registered triggers.
+
+3. When a trigger event is emitted, operators pick up the event and verify the event matches the registered trigger.
+
+4. If a match is found, WAVS creates a `TriggerAction` that wraps the trigger event data:
+
+```rust
+TriggerAction {
+    // Service and workflow identification
+    config: TriggerConfig {
+       service_id: ServiceID,      // Generated during deployment
+        workflow_id: WorkflowID,    // Default or specified
+        trigger: Trigger::EthContractEvent {
+           address: Address,       // Contract address
+            chain_name: ChainName,  // Chain identifier
+            event_hash: ByteArray<32> // Event signature
+        }
+    },
+   // The actual event data
+    data: TriggerData::EthContractEvent {
+        contract_address: Address,  // Emitting contract
+        chain_name: ChainName,      // Source chain
+        log: LogData {             // Raw event data
+            topics: Vec<Vec<u8>>,  // Event signature + indexed params
+            data: Vec<u8>         // ABI-encoded event data
+        },
+        block_height: u64         // Block number
+    }
+}
+```
+
+5. The TriggerAction is converted to a WASI-compatible format and passed to the component where it is decoded and processed.
+
+### Developing triggers
+
+WAVS doesn't interpret the contents of event triggers. Instead, it passes the raw log data to components, which can decode and process the data according to their specific needs.
+
+To configure a trigger for a service, you'll need to specify:
+
+- The event signature/name that identifies which specific event should trigger the service. This can either be a hex-encoded event signature or an event name.
+- The contract address where the event will be emitted from.
+
+In the template, the trigger event is set in the `Makefile` as `TRIGGER_EVENT ?= NewTrigger(bytes)` and the trigger address of the example trigger contract is automatically populated during deployment. To change the trigger event or address, you can manually [update the `Makefile` variables](#customizing-makefile-variables) and redeploy the service.
+
+When a WAVS component receives this trigger, it uses the `decode_event_log_data!` macro from the [`wavs-wasi-chain`](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) crate to decode the event data for processing.
+
+The [trigger contract in the WAVS foundry template](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/src/contracts/WavsTrigger.sol) is a simple example that takes generic bytes and passes them to the component. The flow for triggers is located in several places in the template:
+
+- The trigger contract in [`src/WavsTrigger.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsTrigger.sol) defines how triggers are created and emitted on-chain.
+- The trigger script in [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/script/Trigger.s.sol#L15) calls the `addTrigger` function with the `coinMarketCapID`.
+- The `decode_trigger_event` function in [`/components/eth-price-oracle/src/trigger.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/trigger.rs#L11-L21) processes the trigger data and extracts the `trigger_id` and `data`.
+- The `run` function in [`/components/eth-price-oracle/src/lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/lib.rs#L13) calls `decode_trigger_event`, processes the extracted trigger data, and determines how to handle it.
+- When testing, the `wasi-exec` command in the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L39-L43) passes input data when testing WAVS components via ``--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)` ``. This uses cast to format the `COIN_MARKET_CAP_ID` as a bytes32 string and simulates an Ethereum event during local execution.
+
+## Components
+
+WASI components contain the main logic of a WAVS service. They are responsible for processing the trigger data and executing the business logic of a service.
+
+A basic component has three main parts:
+
+- Decoding incoming trigger data.
+- Processing the data (this is the custom logic of your component).
+- Encoding and returning the result for submission (if applicable).
+
+After being passed the `TriggerAction`, the component decodes it using the `decode_event_log_data!` macro from the [`wavs-wasi-chain`](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) crate.
+
+```rust
+
+#[allow(warnings)]
+mod bindings;
+use alloy_sol_types::{sol, SolValue};
+use bindings::{export, wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent}, Guest, TriggerAction};
+use wavs_wasi_chain::decode_event_log_data;
+
+// Solidity types for the incoming trigger event using the `sol!` macro
+sol! {
+    event MyEvent(uint64 indexed triggerId, bytes data);
+    struct MyResult {
+        uint64 triggerId;
+        bool success;
+    }
+}
+
+// Define the component
+struct Component;
+export!(Component with_types_in bindings);
+
+impl Guest for Component {
+    fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
+        match action.data {
+            TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+                // 1. Decode the event
+                let event: MyEvent = decode_event_log_data!(log)
+                    .map_err(|e| format!("Failed to decode event: {}", e))?;
+                
+                // 2. Process data (your business logic goes here)
+                let result = MyResult {
+                    triggerId,
+                    success: true
+                };
+                
+                // 3. Return encoded result
+                Ok(Some(result.abi_encode()))
+            }
+            _ => Err("Unsupported trigger type".to_string())
+        }
+    }
+}
+```
+
+Components must implement the `Guest` trait, which is the main interface between your component and the WAVS runtime. The `run` function is the entry point for processing triggers: it should receive the trigger data, decode it, process it according to your component's logic, and return the results. If you need to submit results to the blockchain, results need to be encoded using `abi_encode()`.
+
+The `sol!` macro from `alloy_sol_types` is used to define Solidity types in Rust. It generates Rust structs and implementations that match your Solidity types, including ABI encoding/decoding methods.
+
+Bindings are automatically generated for any files in the `/components` and `/src` directories when the `make build` command is run.
+
+## Submission
+
+A service handler or submission contract handles the logic for submitting a component's output to the blockchain. A submission contract must implement the `handleSignedData()` function using the `IWavsServiceHandler` interface. This interface is defined in the `@wavs` package: https://www.npmjs.com/package/@wavs/solidity?activeTab=code
+
+In the template, the [submission contract](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsSubmit.sol) uses the `handleSignedData()` function to validate the operator's signature and store the processed data from the component. The `DataWithId` struct must match the output format from the component. Each trigger has a unique ID that links the data to its source.
+
+Template submission example:
+
+```solidity
+function handleSignedData(bytes calldata _data, bytes calldata _signature) external {
+    // 1. Validate the operator's signature by calling the `validate` function on the `_serviceManager` contract
+    _serviceManager.validate(_data, _signature);
+
+    // 2. Decode the data into a DataWithId struct defined in the `ITypes` interface
+    DataWithId memory dataWithId = abi.decode(_data, (DataWithId));
+
+    // 3. Store the result in state
+    _signatures[dataWithId.triggerId] = _signature;      // 1. Store operator signature
+    _datas[dataWithId.triggerId] = dataWithId.data;      // 2. Store the data
+    _validTriggers[dataWithId.triggerId] = true;         // 3. Mark trigger as valid
+}
+```
+
+Note: submission contracts are not required for a WAVS service. If you don't need to submit data back to the blockchain, you can modify the makefile `deploy-service` command to use the `--submit none` flag when deploying the service:
+
+```bash
+deploy-service:
+	@$(WAVS_CMD) deploy-service --log-level=info --data /data/.docker --home /data \
+	--component "/data/compiled/${COMPONENT_FILENAME}" \
+	--trigger-event-name "${TRIGGER_EVENT}" \
+	--trigger-address "${SERVICE_TRIGGER_ADDR}" \
+	--service-config ${SERVICE_CONFIG} \
+  --submit none
+```
+
 ## Toml files
 
 There are several toml files in the template that are used to configure the service:
@@ -309,175 +478,6 @@ TRIGGER_EVENT ?= MyCustomEvent(bytes)
 ```
 {/* todo: link here: */}
 You can also add variables to the makefile, such as public variables to be referenced in your component or reference private variables like API keys. Find out more in the [Environment Variables](#environment-variables) section.
-
-## WAVS services
-
-The basic service is made up of a trigger, a component, and submission logic (optional).
-
-[Trigger](#triggers): any onchain event emitted from a contract.
-
-[Component](#components): the main logic of a WAVS service. Components are responsible for processing the trigger data and executing the business logic.
-
-[Submission](#submission): handles the logic for submitting a component's output to the blockchain.
-
-## Triggers
-
-A trigger is what prompts a WAVS service to run. Operators listen for the trigger event specified by the service and execute the corresponding component off-chain. Triggers can be any onchain event emitted from any contract.
-
-### Trigger lifecycle
-
-1. When a service is deployed, the service is configured with a trigger address and event, a wasi component, and a submission contract (optional).
-
-2. Registered operators listen to chain logs. Each operator maintains lookup maps for triggers and verifies events against registered triggers.
-
-3. When a trigger event is emitted, operators pick up the event and verify the event matches the registered trigger.
-
-4. If a match is found, WAVS creates a `TriggerAction` that wraps the trigger event data:
-
-```rust
-TriggerAction {
-    // Service and workflow identification
-    config: TriggerConfig {
-       service_id: ServiceID,      // Generated during deployment
-        workflow_id: WorkflowID,    // Default or specified
-        trigger: Trigger::EthContractEvent {
-           address: Address,       // Contract address
-            chain_name: ChainName,  // Chain identifier
-            event_hash: ByteArray<32> // Event signature
-        }
-    },
-   // The actual event data
-    data: TriggerData::EthContractEvent {
-        contract_address: Address,  // Emitting contract
-        chain_name: ChainName,      // Source chain
-        log: LogData {             // Raw event data
-            topics: Vec<Vec<u8>>,  // Event signature + indexed params
-            data: Vec<u8>         // ABI-encoded event data
-        },
-        block_height: u64         // Block number
-    }
-}
-```
-
-5. The TriggerAction is converted to a WASI-compatible format and passed to the component where it is decoded and processed.
-
-### Developing triggers
-
-WAVS doesn't interpret the contents of event triggers. Instead, it passes the raw log data to components, which can decode and process the data according to their specific needs.
-
-To configure a trigger for a service, you'll need to specify:
-
-- The event signature/name that identifies which specific event should trigger the service. This can either be a hex-encoded event signature or an event name.
-- The contract address where the event will be emitted from.
-
-In the template, the trigger event is set in the `Makefile` as `TRIGGER_EVENT ?= NewTrigger(bytes)` and the trigger address of the example trigger contract is automatically populated during deployment. To change the trigger event or address, you can manually [update the `Makefile` variables](#customizing-makefile-variables) and redeploy the service.
-
-When a WAVS component receives this trigger, it uses the `decode_event_log_data!` macro from the [`wavs-wasi-chain`](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) crate to decode the event data for processing.
-
-The [trigger contract in the WAVS foundry template](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/src/contracts/WavsTrigger.sol) is a simple example that takes generic bytes and passes them to the component. The flow for triggers is located in several places in the template:
-
-- The trigger contract in [`src/WavsTrigger.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsTrigger.sol) defines how triggers are created and emitted on-chain.
-- The trigger script in [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/script/Trigger.s.sol#L15) calls the `addTrigger` function with the `coinMarketCapID`.
-- The `decode_trigger_event` function in [`/components/eth-price-oracle/src/trigger.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/trigger.rs#L11-L21) processes the trigger data and extracts the `trigger_id` and `data`.
-- The `run` function in [`/components/eth-price-oracle/src/lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/lib.rs#L13) calls `decode_trigger_event`, processes the extracted trigger data, and determines how to handle it.
-- When testing, the `wasi-exec` command in the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L39-L43) passes input data when testing WAVS components via ``--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)` ``. This uses cast to format the `COIN_MARKET_CAP_ID` as a bytes32 string and simulates an Ethereum event during local execution.
-
-## Components
-
-WASI components contain the main logic of a WAVS service. They are responsible for processing the trigger data and executing the business logic of a service.
-
-A basic component has three main parts:
-
-- Decoding incoming trigger data.
-- Processing the data (this is the custom logic of your component).
-- Encoding and returning the result for submission (if applicable).
-
-After being passed the `TriggerAction`, the component decodes it using the `decode_event_log_data!` macro from the [`wavs-wasi-chain`](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) crate.
-
-```rust
-
-#[allow(warnings)]
-mod bindings;
-use alloy_sol_types::{sol, SolValue};
-use bindings::{export, wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent}, Guest, TriggerAction};
-use wavs_wasi_chain::decode_event_log_data;
-
-// Solidity types for the incoming trigger event using the `sol!` macro
-sol! {
-    event MyEvent(uint64 indexed triggerId, bytes data);
-    struct MyResult {
-        uint64 triggerId;
-        bool success;
-    }
-}
-
-// Define the component
-struct Component;
-export!(Component with_types_in bindings);
-
-impl Guest for Component {
-    fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
-        match action.data {
-            TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
-                // 1. Decode the event
-                let event: MyEvent = decode_event_log_data!(log)
-                    .map_err(|e| format!("Failed to decode event: {}", e))?;
-                
-                // 2. Process data (your business logic goes here)
-                let result = MyResult {
-                    triggerId,
-                    success: true
-                };
-                
-                // 3. Return encoded result
-                Ok(Some(result.abi_encode()))
-            }
-            _ => Err("Unsupported trigger type".to_string())
-        }
-    }
-}
-```
-
-Components must implement the `Guest` trait, which is the main interface between your component and the WAVS runtime. The `run` function is the entry point for processing triggers: it should receive the trigger data, decode it, process it according to your component's logic, and return the results. If you need to submit results to the blockchain, results need to be encoded using `abi_encode()`.
-
-The `sol!` macro from `alloy_sol_types` is used to define Solidity types in Rust. It generates Rust structs and implementations that match your Solidity types, including ABI encoding/decoding methods.
-
-Bindings are automatically generated for any files in the `/components` and `/src` directories when the `make build` command is run.
-
-### Submission
-
-A service handler or submission contract handles the logic for submitting a component's output to the blockchain. A submission contract must implement the `handleSignedData()` function using the `IWavsServiceHandler` interface. This interface is defined in the `@wavs` package: https://www.npmjs.com/package/@wavs/solidity?activeTab=code
-
-In the template, the [submission contract](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsSubmit.sol) uses the `handleSignedData()` function to validate the operator's signature and store the processed data from the component. The `DataWithId` struct must match the output format from the component. Each trigger has a unique ID that links the data to its source.
-
-Template submission example:
-
-```solidity
-function handleSignedData(bytes calldata _data, bytes calldata _signature) external {
-    // 1. Validate the operator's signature by calling the `validate` function on the `_serviceManager` contract
-    _serviceManager.validate(_data, _signature);
-
-    // 2. Decode the data into a DataWithId struct defined in the `ITypes` interface
-    DataWithId memory dataWithId = abi.decode(_data, (DataWithId));
-
-    // 3. Store the result in state
-    _signatures[dataWithId.triggerId] = _signature;      // 1. Store operator signature
-    _datas[dataWithId.triggerId] = dataWithId.data;      // 2. Store the data
-    _validTriggers[dataWithId.triggerId] = true;         // 3. Mark trigger as valid
-}
-```
-
-Note: submission contracts are not required for a WAVS service. If you don't need to submit data back to the blockchain, you can modify the makefile `deploy-service` command to use the `--submit none` flag when deploying the service:
-
-```bash
-deploy-service:
-	@$(WAVS_CMD) deploy-service --log-level=info --data /data/.docker --home /data \
-	--component "/data/compiled/${COMPONENT_FILENAME}" \
-	--trigger-event-name "${TRIGGER_EVENT}" \
-	--trigger-address "${SERVICE_TRIGGER_ADDR}" \
-	--service-config ${SERVICE_CONFIG} \
-  --submit none
-```
 
 ## Input and Output
 
