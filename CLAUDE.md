@@ -4,18 +4,16 @@ This guide will help you build your first WAVS (WebAssembly AVS) service using o
 
 ## Overview
 
-WAVS allows you to build off-chain services that:
+WAVS off-chain services:
 1. Get triggered by on-chain events
 2. Perform off-chain computation/data fetching
 3. Submit results back to the blockchain
 
-Our template includes a sample cryptocurrency price oracle that:
+this template includes a sample price oracle:
 - Fetches prices from CoinMarketCap based on coin IDs
 - Stores the data on-chain for other contracts to use
 
 ## Components of a WAVS Service
-
-A typical WAVS service consists of:
 
 1. **Rust Component** (off-chain logic)
    - Receives trigger data
@@ -26,9 +24,7 @@ A typical WAVS service consists of:
    - Trigger Contract: Emits events that activate your service
    - Submission Contract: Receives and verifies your component's output
 
-## Building Your First Component
-
-Let's start by understanding the component structure:
+## Component structure:
 
 ```
 components/your-component-name/
@@ -36,16 +32,19 @@ components/your-component-name/
 ├── src/
     ├── lib.rs           # Main logic
     ├── trigger.rs       # Trigger handling
-    ├── bindings.rs      # Auto-generated during build (don't create this file)
+    ├── bindings.rs      # Auto-generated during make wasi-build
 ```
 
-### Before you start
+## Build a service
 
-- Review the Makefile of this repo and the files in /components/eth-price-oracle to see how they work.
+### 1. Read the following files
 
-### Step 1: Set up your Cargo.toml
+1. /makefile
+2. files in /components/eth-price-oracle/
 
-The Cargo.toml file defines your component's dependencies:
+### 2. Cargo.toml
+
+This file defines component dependencies:
 
 ```toml
 [package]
@@ -74,9 +73,9 @@ package = "component:your-component-name"
 target = "wavs:worker/layer-trigger-world@0.3.0"
 ```
 
-### Step 2: Create your trigger.rs
+### 3. trigger.rs
 
-This file handles decoding incoming trigger data and encoding outgoing results:
+Handles decoding incoming trigger data and encoding outgoing results:
 
 ```rust
 use crate::bindings::wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent};
@@ -114,9 +113,9 @@ mod solidity {
 }
 ```
 
-### Step 3: Implement your lib.rs
+### 4. lib.rs
 
-This is the main component file with your business logic:
+Main component file with business logic:
 
 ```rust
 mod trigger;
@@ -180,38 +179,26 @@ struct YourResponseType {
 
 Replace the `make_api_call` function with your own business logic!
 
-## Building and Testing Your Component
+## Build and Test
 
-### Step 1: Build the component
+### 1. Build
 
 ```bash
 make wasi-build
-# or use `make build` to build both Solidity and Rust components
 ```
+- Compiles all components in the `components/` directory
+- Creates bindings.rs automatically
+- builds `.wasm` files in the `compiled/` directory: "components/number-squarer/" becomes "compiled/number_squarer.wasm".
 
-The build process:
-1. Compiles all components in the `components/` directory
-2. Generates WASI bindings automatically (creating the `bindings.rs` file)
-3. Places compiled `.wasm` files in the `compiled/` directory
-
-When your component builds successfully, the compiled WebAssembly file will be available at:
-```
-/target/wasm32-wasip1/release/your_component_name.wasm
-```
-
-Note the conversion from hyphenated name to underscore format (e.g., "number-squarer" becomes "number_squarer.wasm").
-
-### Step 2: Test your component locally
+### Step 2: Test
 
 ```bash
 # Test with a specific input parameter (in this example, "1" is the input)
 COIN_MARKET_CAP_ID=1 make wasi-exec COMPONENT_FILENAME=your_component_name.wasm
 ```
 
-Important notes about this command:
-1. `COMPONENT_FILENAME` must match the actual compiled filename (with underscores, not hyphens)
-2. Make sure to include the `.wasm` extension
-3. The component file must be in the `compiled/` directory or specified in the Makefile
+1. `COMPONENT_FILENAME` must match the compiled filename (number_squarer.wasm)
+2. The component file must be in the `compiled/` directory or specified in the Makefile
 
 This command:
 1. Uses Docker to run your component in a simulated environment
@@ -330,3 +317,105 @@ COIN_MARKET_CAP_ID=5 make wasi-exec COMPONENT_FILENAME=your_component.wasm
 3. Create a new component from scratch for your specific use case
 
 Good luck with your WAVS development!
+
+## Advanced
+
+This section covers best practices and common pitfalls when developing more complex WAVS components.
+
+### Working with Environment Variables
+
+Environment variables may come with quotes or other unexpected formatting:
+
+```rust
+// Always trim quotes from environment variables, especially API keys
+let api_key = std::env::var("WAVS_ENV_MY_API_KEY")
+    .map_err(|_| "API key not found".to_string())?
+    .trim_matches('"'); // Removes any surrounding quotes
+```
+
+### API Integration Best Practices
+
+#### URL Construction
+
+When constructing URLs for API calls:
+
+```rust
+// 1. Always use proper URL encoding for special characters
+let url = format!(
+    "https://api.example.com/endpoint?param1={}&param2={}",
+    url_encode(param1), url_encode(param2)
+);
+
+// 2. For fixed special characters, use their encoded values directly
+// Comma (,) → %2C, Space → %20, etc.
+let url = format!(
+    "https://api.example.com/locations?zip={}%2CUS", // %2C is encoded comma
+    zip_code
+);
+
+// 3. Always log complete URLs to help with debugging
+println!("API URL: {}", url);
+```
+
+#### Error Handling
+
+Implement robust error handling for API calls:
+
+```rust
+// Detailed error context
+let response = match fetch_json::<serde_json::Value>(req).await {
+    Ok(json) => {
+        println!("Received API response: {}", json);
+        
+        // Check for API-level errors in successful HTTP responses
+        if let Some(error) = json.get("error") {
+            return Err(format!("API returned error: {}", error));
+        }
+        
+        json
+    },
+    Err(e) => return Err(format!("API request failed: {}", e)),
+};
+
+// Then parse into your type
+let typed_response: MyResponseType = serde_json::from_value(response)
+    .map_err(|e| format!("Failed to parse API response: {}", e))?;
+```
+
+#### HTTP Request Limitations
+
+Important limitations when working with HTTP requests:
+
+```rust
+// INCORRECT: HTTP request objects cannot be cloned
+let req = http_request_get(&url)?;
+let response1 = fetch_json::<Value>(req.clone()).await?; // ❌ Will not compile
+
+// CORRECT: Create new request objects for each API call
+let req1 = http_request_get(&url)?;
+let response1 = fetch_json::<Value>(req1).await?;
+
+// If needed again:
+let req2 = http_request_get(&url)?;
+let response2 = fetch_json::<Value>(req2).await?;
+```
+
+### Multi-Step Processing Pattern
+
+For components requiring multiple sequential operations:
+
+```rust
+async fn process_data(input: &str) -> Result<FinalOutput, String> {
+    // Step 1: First operation (e.g., API call or data processing)
+    println!("Starting step 1...");
+    let intermediate_result = step_one(input).await?;
+    println!("Step 1 completed: {:?}", intermediate_result);
+    
+    // Step 2: Second operation using results from step 1
+    println!("Starting step 2...");
+    let final_result = step_two(&intermediate_result).await?;
+    println!("Step 2 completed: {:?}", final_result);
+    
+    Ok(final_result)
+}
+```
