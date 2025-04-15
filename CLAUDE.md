@@ -1,6 +1,6 @@
 # WAVS Development Guide
 
-This guide will help you build your first WAVS (WebAssembly AVS) service using our template.
+It's important that you read this guide in its entirety before creating a component.
 
 ## Overview
 
@@ -332,7 +332,7 @@ SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv"
 
 ### Private Variables (`host_envs`)
 
-- Used for sensitive data like API keys
+- Used for sensitive data like API keys. NEVER PUT AN API KEY DIRECTLY IN A COMPONENT.
 - Must be prefixed with `WAVS_ENV_`
 - Set in `.env` file:
 ```bash
