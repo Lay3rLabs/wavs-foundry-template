@@ -493,7 +493,7 @@ When building WASI components, keep in mind that the component can receive the t
 1. Triggered by an onchain event from a contract after service deployment. Components receive a `TriggerAction` containing event data which is then decoded.
 
 2. Manually via the `wasi-exec` command. The wasi-exec command simulates an onchain event and passes the trigger data directly to the component as `trigger::raw`. No abi decoding is required, and the output is returned as raw bytes.
-  - In the `ETH_PRICE_ORACLE` component, the input data needs to be formatted into a `bytes32` string using the `cast format-bytes32-string` when using the `make wasi-exec` command. When creating your own components, use an appropriate format for your use case to use the `wasi-exec` command.
+    - In the `ETH_PRICE_ORACLE` component, the input data needs to be formatted into a `bytes32` string using the `cast format-bytes32-string` when using the `make wasi-exec` command. When creating your own components, use an appropriate format for your use case to use the `wasi-exec` command.
 
 ### Data Processing Pattern
 
