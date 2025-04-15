@@ -390,6 +390,16 @@ async fn make_post_request() -> Result<PostResponse, String> {
 }
 ```
 
+-  **Error Handling**:
+   - Never assume an API request will succeed
+   - Provide informative error messages or fallback functionality
+   - Verify environment variables are properly loaded in the service config
+
+-  **URL Handling**:
+   - Be cautious with special characters in URLs (commas, spaces, etc.)
+   - Properly encode URL parameters to avoid "invalid URI" errors
+   - Follow best practices when writing in rust.
+
 For more functions, see the [wavs-wasi-chain documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions).
 
 ## Input and Output Handling
