@@ -1,0 +1,32 @@
+[package]
+name = "zip-weather-oracle"
+edition = "2021"
+version = "0.1.0"
+authors = ["Claude"]
+repository = "https://github.com/Lay3rLabs/wavs-foundry-template"
+rust-version = "1.70"
+
+[dependencies]
+wit-bindgen-rt = {workspace = true}    # Required for WASI bindings and Guest trait
+wavs-wasi-chain = { workspace = true }  # Required for core WAVS functionality
+# Helpful dependencies
+serde = { workspace = true, features = ["derive"] }  # For serialization
+serde_json = { workspace = true }       # For JSON handling
+alloy-sol-macro = { workspace = true }  # For Ethereum contract interactions
+alloy-sol-types = { workspace = true }  # For Ethereum ABI handling
+wstd = { workspace = true }             # For WASI standard library features
+anyhow = { workspace = true }           # For enhanced error handling
+
+[lib]
+crate-type = ["cdylib"]  # Specifies this is a dynamic library crate
+
+[profile.release]
+codegen-units = 1        # Single codegen unit for better optimization
+opt-level = "s"          # Optimize for size
+debug = false            # Disable debug information
+strip = true             # Strip symbols from binary
+lto = true               # Enable link-time optimization
+
+[package.metadata.component]
+package = "component:zip-weather-oracle"
+target = "wavs:worker/layer-trigger-world@0.3.0"

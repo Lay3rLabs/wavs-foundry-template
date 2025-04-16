@@ -3472,3 +3472,17 @@ dependencies = [
  "quote",
  "syn 2.0.99",
 ]
+
+[[package]]
+name = "zip-weather-oracle"
+version = "0.1.0"
+dependencies = [
+ "alloy-sol-macro",
+ "alloy-sol-types",
+ "anyhow",
+ "serde",
+ "serde_json",
+ "wavs-wasi-chain",
+ "wit-bindgen-rt 0.39.0",
+ "wstd",
+]
