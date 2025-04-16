@@ -420,7 +420,7 @@ make get-eigen-service-manager-from-deploy
 Makefile variables can be overridden when running make commands. For example, running the following in your terminal will use a different component when testing:
 
 ```bash
-COMPONENT_FILENAME=my_component.wasm COIN_MARKET_CAP_ID=`cast format-bytes32-string 1` make wasi-exec
+COMPONENT_FILENAME=my_component.wasm COIN_MARKET_CAP_ID=1 make wasi-exec
 ```
 
 To trigger the component from an external contract, you can set the trigger address and trigger event manually in the makefile:
