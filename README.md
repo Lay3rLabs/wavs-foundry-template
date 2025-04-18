@@ -180,7 +180,7 @@ Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https:
 # make start-all
 cp .env.example .env
 
-sh ./script/start_all.sh
+make start-all
 ```
 
 Wait for full local deployment, then grab values

@@ -66,7 +66,7 @@ setup: check-requirements
 # running anvil out of compose is a temp work around for MacOS
 start-all: clean-docker setup-env
 	@rm --interactive=never .docker/*.json 2> /dev/null || true
-	bash -ec 'anvil & anvil_pid=$$!; trap "kill -9 $$anvil_pid 2>/dev/null" EXIT; $(SUDO) docker compose up; wait';
+	@sh ./script/start_all.sh
 
 ## get-trigger-from-deploy: getting the trigger address from the script deploy
 get-trigger-from-deploy:
