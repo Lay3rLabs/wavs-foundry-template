@@ -38,7 +38,7 @@ WASI_BUILD_DIR=js-eth-price-oracle make wasi-build
 Run the component with the `wasi-exec` command in the root of the repo
 
 ```bash docci-output-contains="LTC"
-COMPONENT_FILENAME=js_eth_price_oracle.wasm COIN_MARKET_CAP_ID=2 make wasi-exec
+COMPONENT_FILENAME=js_eth_price_oracle.wasm TRIGGER_INPUT=2 make wasi-exec
 ```
 
 Build your smart contracts
@@ -89,12 +89,12 @@ SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
 
 ```bash docci-delay-after=2
 # Request BTC from CMC
-export COIN_MARKET_CAP_ID=2
+export TRIGGER_INPUT=2
 # Get the trigger address from previous Deploy forge script
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 # Execute on the trigger contract, WAVS will pick this up and submit the result
 # on chain via the operators.
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast -v 4
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${TRIGGER_INPUT} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast -v 4
 ```
 
 Show the result from the triggered service

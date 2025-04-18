@@ -21,7 +21,7 @@ RPC_URL?=http://localhost:8545
 SERVICE_MANAGER_ADDR?=`jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json`
 SERVICE_TRIGGER_ADDR?=`jq -r '.trigger' "./.docker/script_deploy.json"`
 SERVICE_SUBMISSION_ADDR?=`jq -r '.service_handler' "./.docker/script_deploy.json"`
-COIN_MARKET_CAP_ID?=1
+TRIGGER_INPUT?=1
 
 ## build: building the project
 build: _build_forge wasi-build
@@ -30,11 +30,11 @@ build: _build_forge wasi-build
 wasi-build:
 	@./script/build_components.sh $(WASI_BUILD_DIR)
 
-## wasi-exec: executing the WAVS wasi component(s) | COMPONENT_FILENAME, COIN_MARKET_CAP_ID
+## wasi-exec: executing the WAVS wasi component(s) | COMPONENT_FILENAME, TRIGGER_INPUT
 wasi-exec: pull-image
 	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
 	--component "/data/compiled/$(COMPONENT_FILENAME)" \
-	--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)`
+	--input `cast format-bytes32-string $(TRIGGER_INPUT)`
 
 ## clean: cleaning the project files
 clean: clean-docker
