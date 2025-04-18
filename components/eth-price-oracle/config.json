@@ -1,7 +1,8 @@
 {
   "__tool": "github.com/reecepbcups/docci",
   "paths": [
-    "README.md"
+    "README.md",
+    "docs/tutorial"
   ],
   "env_vars": {},
   "pre_cmds": [],
