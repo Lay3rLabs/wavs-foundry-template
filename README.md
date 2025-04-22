@@ -227,6 +227,7 @@ SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
 
 ```bash docci-ignore
 # TODO: requires component upload to a registry (i.e. do this before the deploy)
+# TODO: put this in the build service / deploy service to use instead?
 
 source .env
 if [ -z "${PINATA_JWT}" ]; then

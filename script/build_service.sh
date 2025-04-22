@@ -28,6 +28,7 @@ TRIGGER_EVENT=${TRIGGER_EVENT:-"NewTrigger(bytes)"}
 TRIGGER_CHAIN=${TRIGGER_CHAIN:-"local"}
 SUBMIT_CHAIN=${SUBMIT_CHAIN:-"local"}
 AGGREGATOR_URL=${AGGREGATOR_URL:-""}
+UPLOAD_REGISTRY_VERSION=${UPLOAD_REGISTRY_VERSION:-""}
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
 BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:reece_priv_key_signing_apr_10 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
@@ -56,7 +57,6 @@ TRIGGER_EVENT_HASH=`cast keccak ${TRIGGER_EVENT}`
 SERVICE_ID=`$BASE_CMD init --name demo | jq -r .id`
 echo "Service ID: ${SERVICE_ID}"
 
-
 WORKFLOW_ID=`$BASE_CMD workflow add | jq -r '.workflows | keys | .[0]'`
 echo "Workflow ID: ${WORKFLOW_ID}"
 
@@ -69,8 +69,38 @@ if [ -n "$AGGREGATOR_URL" ]; then
 fi
 $BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDRESS} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
 
-COMPONENT_ID=`$BASE_CMD workflow component --id ${WORKFLOW_ID} set --digest ${WASM_DIGEST} | jq -r '.workflows | keys | .[0]'`
-echo "Component ID: ${COMPONENT_ID}"
+if [ -n "$UPLOAD_REGISTRY_VERSION" ]; then
+    echo "Uploading component to registry..."
+
+    # TODO: rm me (testing)
+    UPLOAD_REGISTRY_VERSION=0.0.3
+    WORKFLOW_ID=123
+    echo "REMOVE ME ABOVE (WORKFLOW AND UPLOAD REGISTRY VERSIONS)"
+
+    # replace any - or _ with no space
+    COMPONENT_FILENAME_NORMALIZED=`echo ${COMPONENT_FILENAME} | sed 's/_/-/g'`
+    # COMPONENT_FILENAME_NORMALIZED=`echo ${COMPONENT_FILENAME_NORMALIZED} | sed 's/-//g'`
+    COMPONENT_FILENAME_NORMALIZED=`echo ${COMPONENT_FILENAME_NORMALIZED} | sed 's/.wasm//g'`
+    if [[ ${UPLOAD_REGISTRY_VERSION} == v* ]]; then
+        UPLOAD_REGISTRY_VERSION=${UPLOAD_REGISTRY_VERSION:1}
+    fi
+
+
+    # TODO: change package name as well
+    BASE_PACKAGE=reecepbcups:${COMPONENT_FILENAME_NORMALIZED}; echo $BASE_PACKAGE
+    wkg publish --registry wa.dev --package ${BASE_PACKAGE}@${UPLOAD_REGISTRY_VERSION} ./compiled/${COMPONENT_FILENAME}
+
+    # TODO:
+    wavs-cli service workflow component --id ${WORKFLOW_ID} set-source-registry --package ${BASE_PACKAGE} --domain wa.dev --version ${UPLOAD_REGISTRY_VERSION}
+
+    echo "Component ID: ${COMPONENT_ID}"
+else
+    echo "Using existing component digest: ${WASM_DIGEST}"
+    COMPONENT_ID=`$BASE_CMD workflow component --id ${WORKFLOW_ID} set --digest ${WASM_DIGEST} | jq -r '.workflows | keys | .[0]'`
+    echo "Component ID: ${COMPONENT_ID}"
+fi
+
+
 
 $BASE_CMD workflow component --id ${COMPONENT_ID} permissions --http-hosts '*' --file-system true > /dev/null
 $BASE_CMD workflow component --id ${COMPONENT_ID} time-limit --seconds 30 > /dev/null
