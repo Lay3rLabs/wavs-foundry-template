@@ -38,8 +38,9 @@ if [[ "$(uname)" == *"Darwin"* ]]; then
 fi
 
 sed -i${SP}'' -e "s/^WAVS_CLI_ETH_CREDENTIAL=.*$/WAVS_CLI_ETH_CREDENTIAL=\"$PRIVATE_KEY\"/" .env
-sed -i${SP}'' -e "s/^WAVS_SUBMISSION_CREDENTIAL=.*$/WAVS_SUBMISSION_CREDENTIAL=\"$PRIVATE_KEY\"/" .env
 sed -i${SP}'' -e "s/^WAVS_AGGREGATOR_CREDENTIAL=.*$/WAVS_AGGREGATOR_CREDENTIAL=\"$PRIVATE_KEY\"/" .env
+# TODO: WAVS_SUBMISSION_MNEMONIC CAN NOT BE A PRIVATE KEY, need to figure out which / how to register
+# https://github.com/Lay3rLabs/WAVS/issues/555#issuecomment-2821757422
 
 
 # == WAVS & Aggregator ==
