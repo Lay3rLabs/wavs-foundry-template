@@ -223,6 +223,46 @@ COMPONENT_FILENAME=eth_price_oracle.wasm AGGREGATOR_URL=http://127.0.0.1:8001 sh
 SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
 ```
 
+## (optional) Upload to IPFS
+
+```bash docci-ignore
+# TODO: requires component upload to a registry (i.e. do this before the deploy)
+
+source .env
+if [ -z "${PINATA_JWT}" ]; then
+  echo "PINATA_JWT is not set. Please set it in .env"
+  exit 1
+fi
+
+# Upload the service JSON to IPFS
+# {"data":{"id":"01965e4a-01e0-790e-8b40-756a7c889850","user_id":"b45a8a32-1fcf-4372-8cf5-ad4f0a02fbe7","name":"service-id-apr-22-12-13.json","network":"public","vectorized":false,"created_at":"2025-04-22T16:17:10.917Z","updated_at":"2025-04-22T16:17:10.917Z","accept_duplicates":false,"cid":"bafkreih7qefpplveuf3kqk7wedpo3vgwan7p65xof64cx5jjurnkgvgu7m","mime_type":"application/json","size":1319,"number_of_files":1}}
+curl --request POST \
+  --url https://uploads.pinata.cloud/v3/files \
+  --header "Authorization: Bearer ${PINATA_JWT}" \
+  --header 'Content-Type: multipart/form-data' \
+  --form file=@.docker/service.json \
+  --form network=public \
+  --form name=service-id-apr-22-12-13.json
+
+# Verify it is uploaded
+CID=`curl --request GET --url https://api.pinata.cloud/v3/files/public/01965e4a-01e0-790e-8b40-756a7c889850 --header "Authorization: Bearer ${PINATA_JWT}" | jq -r .data.cid`
+echo "CID: ${CID}"
+
+# pin
+curl --request POST \
+  --url https://api.pinata.cloud/pinning/pinByHash \
+  --header 'Content-Type: application/json' \
+  --header "Authorization: Bearer ${PINATA_JWT}" \
+  --data "{
+    \"hashToPin\": \"${CID}\"
+}"
+
+# ipfs query cid
+# Visit https://app.pinata.cloud/gateway
+
+curl https://azure-internal-xerinae-429.mypinata.cloud/files/bafkreih7qefpplveuf3kqk7wedpo3vgwan7p65xof64cx5jjurnkgvgu7m
+```
+
 ## Trigger the Service
 
 Anyone can now call the [trigger contract](./src/contracts/WavsTrigger.sol) which emits the trigger event WAVS is watching for from the previous step. WAVS then calls the service and saves the result on-chain.
