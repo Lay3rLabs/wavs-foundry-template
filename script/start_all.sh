@@ -37,9 +37,9 @@ if [[ "$(uname)" == *"Darwin"* ]]; then
   SP=" "
 fi
 
-sed -i${SP}'' -e "s/^WAVS_CLI_ETH_MNEMONIC=.*$/WAVS_CLI_ETH_MNEMONIC=\"$PRIVATE_KEY\"/" .env
-sed -i${SP}'' -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$PRIVATE_KEY\"/" .env
-sed -i${SP}'' -e "s/^WAVS_AGGREGATOR_MNEMONIC=.*$/WAVS_AGGREGATOR_MNEMONIC=\"$PRIVATE_KEY\"/" .env
+sed -i${SP}'' -e "s/^WAVS_CLI_ETH_CREDENTIAL=.*$/WAVS_CLI_ETH_CREDENTIAL=\"$PRIVATE_KEY\"/" .env
+sed -i${SP}'' -e "s/^WAVS_SUBMISSION_CREDENTIAL=.*$/WAVS_SUBMISSION_CREDENTIAL=\"$PRIVATE_KEY\"/" .env
+sed -i${SP}'' -e "s/^WAVS_AGGREGATOR_CREDENTIAL=.*$/WAVS_AGGREGATOR_CREDENTIAL=\"$PRIVATE_KEY\"/" .env
 
 
 # == WAVS & Aggregator ==

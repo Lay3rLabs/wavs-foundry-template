@@ -8,7 +8,7 @@
 
 services:
   wavs:
-    image: "ghcr.io/lay3rlabs/wavs:reece_priv_key_signing_apr_10"
+    image: "ghcr.io/lay3rlabs/wavs:april-21-unified-config"
     container_name: "wavs"
     stop_signal: SIGKILL
     network_mode: "host"
@@ -25,8 +25,8 @@ services:
       - "./.docker:/root/wavs/cli/"
 
   aggregator:
-    image: "ghcr.io/lay3rlabs/wavs:reece_priv_key_signing_apr_10"
-    depends_on: ["wavs"] # "anvil",
+    image: "ghcr.io/lay3rlabs/wavs:april-21-unified-config"
+    depends_on: ["wavs"]
     container_name: "wavs-aggregator"
     stop_signal: SIGKILL
     env_file: "./.env"

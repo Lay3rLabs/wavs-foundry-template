@@ -30,7 +30,7 @@ SUBMIT_CHAIN=${SUBMIT_CHAIN:-"local"}
 AGGREGATOR_URL=${AGGREGATOR_URL:-""}
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
-BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:reece_priv_key_signing_apr_10 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
+BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:april-21-unified-config wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
     echo "SERVICE_MANAGER_ADDRESS is not set. Please set it to the address of the service manager."
@@ -69,10 +69,10 @@ if [ -n "$AGGREGATOR_URL" ]; then
 fi
 $BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDRESS} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
 
-COMPONENT_ID=`$BASE_CMD workflow component --id ${WORKFLOW_ID} set --digest ${WASM_DIGEST} | jq -r '.workflows | keys | .[0]'`
+COMPONENT_ID=`$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST} | jq -r '.workflows | keys | .[0]'`
 echo "Component ID: ${COMPONENT_ID}"
 
-$BASE_CMD workflow component --id ${COMPONENT_ID} permissions --http-hosts '*' --file-system true > /dev/null
+$BASE_CMD workflow component --id ${COMPONENT_ID} permissions --help --http-hosts '*' --file-system true > /dev/null
 $BASE_CMD workflow component --id ${COMPONENT_ID} time-limit --seconds 30 > /dev/null
 $BASE_CMD workflow component --id ${COMPONENT_ID} env --values WAVS_ENV_SOME_SECRET > /dev/null
 $BASE_CMD workflow component --id ${COMPONENT_ID} config --values 'key=value,key2=value2' > /dev/null
