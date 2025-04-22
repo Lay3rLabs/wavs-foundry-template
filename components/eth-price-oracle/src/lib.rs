@@ -30,6 +30,8 @@ impl Guest for Component {
         let (trigger_id, req, dest) =
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
 
+        // TODO: impl `crate::bindings::host::config_var` to showcase example binding
+
         // Convert bytes to string and parse first char as u64
         let input = std::str::from_utf8(&req).map_err(|e| e.to_string())?;
         println!("input id: {}", input);
