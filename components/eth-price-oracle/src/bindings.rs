@@ -16141,7 +16141,7 @@ macro_rules! __export_layer_trigger_world_impl {
 #[doc(inline)]
 pub(crate) use __export_layer_trigger_world_impl as export;
 #[cfg(target_arch = "wasm32")]
-#[unsafe(link_section = "component-type:wit-bindgen:0.41.0:wavs:worker@0.4.0-alpha.3:layer-trigger-world:encoded world")]
+#[unsafe(link_section = "component-type:wit-bindgen:0.41.0:wavs:worker@0.4.0-alpha.5:layer-trigger-world:encoded world")]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
 pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 17440] = *b"\
@@ -16172,7 +16172,7 @@ block-interval\x01%\0\x04cron\x01'\0\x03raw\x01\x0b\0\x04\0\x0ctrigger-data\x03\
 (\x01r\x02\x06config\x1f\x04data)\x04\0\x0etrigger-action\x03\0*\x01kw\x01r\x02\x07\
 payload\x0b\x08ordering,\x04\0\x0dwasm-response\x03\0-\x01q\x05\x05error\0\0\x04\
 warn\0\0\x04info\0\0\x05debug\0\0\x05trace\0\0\x04\0\x09log-level\x03\0/\x03\0%w\
-avs:worker/layer-types@0.4.0-alpha.3\x05\0\x02\x03\0\0\x0etrigger-action\x03\0\x0e\
+avs:worker/layer-types@0.4.0-alpha.5\x05\0\x02\x03\0\0\x0etrigger-action\x03\0\x0e\
 trigger-action\x03\0\x01\x02\x03\0\0\x0dwasm-response\x03\0\x0dwasm-response\x03\
 \0\x03\x01B\x0a\x04\0\x08pollable\x03\x01\x01h\0\x01@\x01\x04self\x01\0\x7f\x04\0\
 \x16[method]pollable.ready\x01\x02\x01@\x01\x04self\x01\x01\0\x04\0\x16[method]p\
@@ -16489,7 +16489,7 @@ andom-u64\x01\x02\x03\0\x18wasi:random/random@0.2.0\x058\x01B\x05\x01p}\x01@\x01
 nsecure-random-u64\x01\x02\x03\0\x1awasi:random/insecure@0.2.0\x059\x01B\x03\x01\
 o\x02ww\x01@\0\0\0\x04\0\x0dinsecure-seed\x01\x01\x03\0\x1fwasi:random/insecure-\
 seed@0.2.0\x05:\x01k\x04\x01j\x01;\x01s\x01@\x01\x0etrigger-action\x02\0<\x04\0\x03\
-run\x01=\x04\0-wavs:worker/layer-trigger-world@0.4.0-alpha.3\x04\0\x0b\x19\x01\0\
+run\x01=\x04\0-wavs:worker/layer-trigger-world@0.4.0-alpha.5\x04\0\x0b\x19\x01\0\
 \x13layer-trigger-world\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-c\
 omponent\x070.227.1\x10wit-bindgen-rust\x060.41.0";
 #[inline(never)]

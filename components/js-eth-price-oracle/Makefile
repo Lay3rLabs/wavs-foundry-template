@@ -1,12 +1,11 @@
-WAVS_PACKAGE=wavs:worker@0.4.0-alpha.2
+WAVS_PACKAGE=wavs:worker@0.4.0-alpha.5
 WAVS_WIT_WORLD=wavs:worker/layer-trigger-world
 OUTPUT_DIR?=../../compiled
 
 check-package:
-# TODO: fix import to use the $(WAVS_PACKAGE) instead (same for golang)
 	@if [ ! -f $(WAVS_PACKAGE).wasm ]; then \
 		echo "Downloading WAVS package: $(WAVS_PACKAGE)"; \
-		wkg get reecepbcups:wavs-testing@0.4.0-alpha.3 --overwrite --format wasm --output $(WAVS_PACKAGE).wasm; \
+		wkg get ${WAVS_PACKAGE} --overwrite --format wasm --output $(WAVS_PACKAGE).wasm; \
 	fi
 
 # if @bytecodealliance/jco is not installed, then run npm i here

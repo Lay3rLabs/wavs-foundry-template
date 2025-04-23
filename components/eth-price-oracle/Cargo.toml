@@ -7,7 +7,7 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
-wit-bindgen-rt = {workspace = true}
+wit-bindgen-rt ={ workspace = true }
 wavs-wasi-utils = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -28,4 +28,4 @@ lto = true
 
 [package.metadata.component]
 package = "component:eth-price-oracle"
-target = "wavs:worker/layer-trigger-world@0.4.0-alpha.3"
+target = "wavs:worker/layer-trigger-world@0.4.0-alpha.5"
