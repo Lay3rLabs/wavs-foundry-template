@@ -8,7 +8,7 @@
 
 services:
   wavs:
-    image: "ghcr.io/reecepbcups/wavs:april-23-0.4.0-alpha.5"
+    image: "ghcr.io/lay3rlabs/wavs:april-23-0.4.0-alpha.5"
     container_name: "wavs"
     stop_signal: SIGKILL
     network_mode: "host"
@@ -25,7 +25,7 @@ services:
       - "./.docker:/root/wavs/cli/"
 
   aggregator:
-    image: "ghcr.io/reecepbcups/wavs:april-23-0.4.0-alpha.5"
+    image: "ghcr.io/lay3rlabs/wavs:april-23-0.4.0-alpha.5"
     depends_on: ["wavs"]
     container_name: "wavs-aggregator"
     stop_signal: SIGKILL
