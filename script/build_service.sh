@@ -72,7 +72,7 @@ $BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDR
 COMPONENT_ID=`$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST} | jq -r '.workflows | keys | .[0]'`
 echo "Component ID: ${COMPONENT_ID}"
 
-$BASE_CMD workflow component --id ${COMPONENT_ID} permissions --help --http-hosts '*' --file-system true > /dev/null
+$BASE_CMD workflow component --id ${COMPONENT_ID} permissions --http-hosts '*' --file-system true > /dev/null
 $BASE_CMD workflow component --id ${COMPONENT_ID} time-limit --seconds 30 > /dev/null
 $BASE_CMD workflow component --id ${COMPONENT_ID} env --values WAVS_ENV_SOME_SECRET > /dev/null
 $BASE_CMD workflow component --id ${COMPONENT_ID} config --values 'key=value,key2=value2' > /dev/null
