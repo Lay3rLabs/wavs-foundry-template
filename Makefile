@@ -64,8 +64,12 @@ setup: check-requirements
 ## start-all: starting anvil and WAVS with docker compose
 # running anvil out of compose is a temp work around for MacOS
 start-all: clean-docker setup-env
-	@rm --interactive=never .docker/*.json 2> /dev/null || true
+#@rm --interactive=never .docker/*.json 2> /dev/null || true
 	@sh ./script/start_all.sh
+
+## list-operators: list operators on the current anvil deployment
+list-operators:
+	@docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ghcr.io/reecepbcups/wavs-middleware:0.0.2
 
 ## get-trigger-from-deploy: getting the trigger address from the script deploy
 get-trigger-from-deploy:
