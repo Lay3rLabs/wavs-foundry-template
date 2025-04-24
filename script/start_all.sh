@@ -33,9 +33,6 @@ fi
 ## == Eigenlayer ==
 # setup
 docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes "$MIDDLEWARE_IMAGE"
-# PRIVATE_KEY=$(cat .nodes/deployer)
-# operator register
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh "$MIDDLEWARE_IMAGE" "$OPERATOR_PRIVATE_KEY"
 
 
 ## == Setup Deployer
@@ -48,10 +45,8 @@ fi
 
 sed -i${SP}'' -e "s/^WAVS_CLI_ETH_CREDENTIAL=.*$/WAVS_CLI_ETH_CREDENTIAL=\"$OPERATOR_PRIVATE_KEY\"/" .env
 sed -i${SP}'' -e "s/^WAVS_AGGREGATOR_CREDENTIAL=.*$/WAVS_AGGREGATOR_CREDENTIAL=\"$OPERATOR_PRIVATE_KEY\"/" .env
+# this is what we generate other addresses in service manager based off of.
 sed -i${SP}'' -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$OPERATOR_MNEMONIC\"/" .env
-# TODO: WAVS_SUBMISSION_MNEMONIC CAN NOT BE A PRIVATE KEY, need to figure out which / how to register
-# https://github.com/Lay3rLabs/WAVS/issues/555#issuecomment-2821757422
-
 
 # == WAVS & Aggregator ==
 docker compose up --remove-orphans &

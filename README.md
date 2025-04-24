@@ -193,8 +193,6 @@ Wait for full local deployment, then grab values
 ```bash docci-delay-after=2
 while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done
 
-make list-operators
-
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
 export PRIVATE_KEY=$(cat .nodes/deployer)
 export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
@@ -222,8 +220,11 @@ export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 This is just required so `make deploy-service` works simply without extra overhead.
 
 ```bash docci-delay-per-cmd=2
+export OPERATOR_MNEMONIC=`cat .docker/operator1.json | jq -r .mnemonic`
 export OPERATOR_PRIVATE_KEY=`cat .docker/operator1.json | jq -r .accounts[0].private_key`
 export OPERATOR_ADDRESS=`cast wallet address --private-key $OPERATOR_PRIVATE_KEY`
+
+# TODO: this is JUST a deployer key for `make deploy-service` to work. it could be a different key easily
 
 # faucet
 cast send ${OPERATOR_ADDRESS} --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY --value 1000000000000000000
@@ -245,6 +246,32 @@ COMPONENT_FILENAME=eth_price_oracle.wasm AGGREGATOR_URL=http://127.0.0.1:8001 sh
 # Deploy the service JSON to WAVS so it now watches and submits
 # the results based on the service json configuration.
 SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
+```
+
+
+## Register service specific operator
+
+Each service gets their own key path (hd_path). The first service starts at 1 and increments from there. Get the service ID
+
+```bash
+# get latest service
+SERVICE_ID=`curl --silent http://localhost:8000/app | jq -r .services[].id`
+
+# Key specific to this service
+# This is generated from the AVS keys submit mnemonic
+# This is a hack (which exposes the private key to the endpoint) which will
+#   be removed in the future. Then we can just --mnemonic-path the different index from source locally
+PK=`curl --silent http://localhost:8000/service-key/${SERVICE_ID} | jq -rc .secp256k1 | tr -d '[]'`
+AVS_PRIVATE_KEY=`echo ${PK} | tr ',' ' ' | xargs printf "%02x" | tr -d '\n'`
+
+# verify it matches
+cast wallet address --private-key $AVS_PRIVATE_KEY
+
+# Register the operator at said private key within wavs service-id
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh "ghcr.io/lay3rlabs/wavs-middleware:91-merge" "$AVS_PRIVATE_KEY"
+
+# Validate the operator was registered
+make list-operators
 ```
 
 ## Trigger the Service
