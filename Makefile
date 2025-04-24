@@ -69,7 +69,7 @@ start-all: clean-docker setup-env
 
 ## list-operators: list operators on the current anvil deployment
 list-operators:
-	@docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ghcr.io/reecepbcups/wavs-middleware:0.0.2
+	@docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ghcr.io/lay3rlabs/wavs-middleware:91-merge
 
 ## get-trigger-from-deploy: getting the trigger address from the script deploy
 get-trigger-from-deploy:
