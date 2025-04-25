@@ -183,19 +183,15 @@ cp .env.example .env
 # Create new operator
 cast wallet new-mnemonic --json > .docker/operator1.json
 export OPERATOR_MNEMONIC=`cat .docker/operator1.json | jq -r .mnemonic`
-export OPERATOR_PRIVATE_KEY=`cat .docker/operator1.json | jq -r .accounts[0].private_key`
+export OPERATOR_PK=`cat .docker/operator1.json | jq -r .accounts[0].private_key`
 
 make start-all
 ```
 
-Wait for full local deployment, then grab values
+Wait for full local deployment to be ready
 
 ```bash docci-delay-after=2
 while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done
-
-export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
-export PRIVATE_KEY=$(cat .nodes/deployer)
-export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
 ```
 
 ### Deploy Service Contracts
@@ -208,31 +204,14 @@ export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
 `SERVICE_MANAGER_ADDR` is the address of the Eigenlayer service manager contract. It was deployed in the previous step. Then you deploy the trigger and submission contracts which depends on the service manager. The service manager will verify that a submission is valid (from an authorized operator) before saving it to the blockchain. The trigger contract is any arbitrary contract that emits some event that WAVS will watch for. Yes, this can be on another chain (e.g. an L2) and then the submission contract on the L1 *(Ethereum for now because that is where Eigenlayer is deployed)*.
 
 ```bash docci-delay-per-cmd=2
-forge create SimpleSubmit --json --broadcast -r http://127.0.0.1:8545 --private-key "${PRIVATE_KEY}" --constructor-args "${SERVICE_MANAGER_ADDRESS}" > .docker/submit.json
+export DEPLOYER_PK=$(cat .nodes/deployer)
+export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
+
+forge create SimpleSubmit --json --broadcast -r http://127.0.0.1:8545 --private-key "${DEPLOYER_PK}" --constructor-args "${SERVICE_MANAGER_ADDRESS}" > .docker/submit.json
 export SERVICE_SUBMISSION_ADDR=`jq -r .deployedTo .docker/submit.json`
 
-forge create SimpleTrigger --json --broadcast -r http://127.0.0.1:8545 --private-key "${PRIVATE_KEY}" > .docker/trigger.json
+forge create SimpleTrigger --json --broadcast -r http://127.0.0.1:8545 --private-key "${DEPLOYER_PK}" > .docker/trigger.json
 export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
-```
-
-## Transfer initial deploy over to the operator (developer)
-
-This is just required so `make deploy-service` works simply without extra overhead.
-
-```bash docci-delay-per-cmd=2
-export OPERATOR_MNEMONIC=`cat .docker/operator1.json | jq -r .mnemonic`
-export OPERATOR_PRIVATE_KEY=`cat .docker/operator1.json | jq -r .accounts[0].private_key`
-export OPERATOR_ADDRESS=`cast wallet address --private-key $OPERATOR_PRIVATE_KEY`
-
-# TODO: this is JUST a deployer key for `make deploy-service` to work. it could be a different key easily
-
-# faucet
-cast send ${OPERATOR_ADDRESS} --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY --value 1000000000000000000
-
-# cast call ${WAVS_SERVICE_MANAGER} 'owner()' --rpc-url http://localhost:8545
-
-WAVS_SERVICE_MANAGER=`cat .nodes/avs_deploy.json | jq -r .addresses.WavsServiceManager`
-cast send ${WAVS_SERVICE_MANAGER} 'transferOwnership(address)' ${OPERATOR_ADDRESS} --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY
 ```
 
 ## Deploy Service
@@ -240,12 +219,14 @@ cast send ${WAVS_SERVICE_MANAGER} 'transferOwnership(address)' ${OPERATOR_ADDRES
 Deploy the compiled component with the contract information from the previous steps. Review the [makefile](./Makefile) for more details and configuration options.`TRIGGER_EVENT` is the event that the trigger contract emits and WAVS watches for. By altering `SERVICE_TRIGGER_ADDR` you can watch events for contracts others have deployed.
 
 ```bash docci-delay-per-cmd=2
-# Build your service JSON with optional overrides in the script
+# Build your service JSON
 COMPONENT_FILENAME=eth_price_oracle.wasm AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
 
-# Deploy the service JSON to WAVS so it now watches and submits
-# the results based on the service json configuration.
-SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
+# Deploy the service JSON to WAVS so it now watches and submits.
+#
+# If CREDENTIAL is not set then the default WAVS_CLI .env account will be used
+# You can `cast send ${WAVS_SERVICE_MANAGER} 'transferOwnership(address)'` to move it to another account.
+SERVICE_CONFIG_FILE=.docker/service.json CREDENTIAL=${DEPLOYER_PK} make deploy-service
 ```
 
 
@@ -254,24 +235,25 @@ SERVICE_CONFIG_FILE=.docker/service.json make deploy-service
 Each service gets their own key path (hd_path). The first service starts at 1 and increments from there. Get the service ID
 
 ```bash
-# get latest service
-SERVICE_ID=`curl --silent http://localhost:8000/app | jq -r .services[].id`
-
-# Key specific to this service
+# hack: private key specific to this service
 # This is generated from the AVS keys submit mnemonic
-# This is a hack (which exposes the private key to the endpoint) which will
-#   be removed in the future. Then we can just --mnemonic-path the different index from source locally
-PK=`curl --silent http://localhost:8000/service-key/${SERVICE_ID} | jq -rc .secp256k1 | tr -d '[]'`
-AVS_PRIVATE_KEY=`echo ${PK} | tr ',' ' ' | xargs printf "%02x" | tr -d '\n'`
+# this will be removed in the future. Then we can just --mnemonic-path the different index from source locally
+# (where WAVS /service-key returns just the index)
+# SERVICE_ID=`curl -s http://localhost:8000/app | jq -r .services[0].id`
+# PK=`curl -s http://localhost:8000/service-key/${SERVICE_ID} | jq -rc .secp256k1 | tr -d '[]'`
+# AVS_PRIVATE_KEY=`echo ${PK} | tr ',' ' ' | xargs printf "%02x" | tr -d '\n'`
 
-# verify it matches
-cast wallet address --private-key $AVS_PRIVATE_KEY
+source .env
+AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 1`
 
-# Register the operator at said private key within wavs service-id
+# Register the operator with the WAVS service manager
 docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh "ghcr.io/lay3rlabs/wavs-middleware:91-merge" "$AVS_PRIVATE_KEY"
 
-# Validate the operator was registered
-make list-operators
+# Verify registration
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ghcr.io/lay3rlabs/wavs-middleware:91-merge
+
+# Faucet funds to the aggregator account to post on chain
+cast send $(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL}) --rpc-url http://localhost:8545 --private-key ${DEPLOYER_PK} --value 1ether
 ```
 
 ## Trigger the Service

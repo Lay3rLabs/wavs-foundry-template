@@ -21,6 +21,7 @@ RPC_URL?=http://localhost:8545
 SERVICE_TRIGGER_ADDR?=`jq -r .deployedTo .docker/trigger.json`
 SERVICE_SUBMISSION_ADDR?=`jq -r .deployedTo .docker/submit.json`
 COIN_MARKET_CAP_ID?=1
+CREDENTIAL?=""
 
 ## build: building the project
 build: _build_forge wasi-build
@@ -67,10 +68,6 @@ start-all: clean-docker setup-env
 #@rm --interactive=never .docker/*.json 2> /dev/null || true
 	@sh ./script/start_all.sh
 
-## list-operators: list operators on the current anvil deployment
-list-operators:
-	@docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ghcr.io/lay3rlabs/wavs-middleware:91-merge
-
 ## get-trigger-from-deploy: getting the trigger address from the script deploy
 get-trigger-from-deploy:
 	@jq -r '.deployedTo' "./.docker/trigger.json"
@@ -88,9 +85,10 @@ upload-component:
 # TODO: move to $(WAVS_CMD)  upload-component ./compiled/${COMPONENT_FILENAME}
 	@wget --post-file=./compiled/${COMPONENT_FILENAME} --header="Content-Type: application/wasm" -O - http://127.0.0.1:8000/upload | jq -r .digest
 
-## deploy-service: deploying the WAVS component service json | SERVICE_CONFIG_FILE
+## deploy-service: deploying the WAVS component service json | SERVICE_CONFIG_FILE, CREDENTIAL
 deploy-service:
-	@$(WAVS_CMD) deploy-service-raw --service `jq . -cr ${SERVICE_CONFIG_FILE}` --log-level=info --data /data/.docker --home /data
+	@$(WAVS_CMD) deploy-service-raw --service `jq . -cr ${SERVICE_CONFIG_FILE}` \
+		--log-level=info --data /data/.docker --home /data $(if $(CREDENTIAL),--eth-credential $(CREDENTIAL),)
 
 ## get-trigger: get the trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
 get-trigger:
