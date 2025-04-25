@@ -1,0 +1,55 @@
+###################################
+#
+# Multi-operator WAVS setup
+#
+###################################
+
+services:
+  # Operator 1 services
+  wavs1:
+    image: "ghcr.io/lay3rlabs/wavs:0.4.0-alpha.5"
+    container_name: "wavs1"
+    stop_signal: SIGKILL
+    network_mode: "host"
+    env_file: "./multiple-example/.env1"
+    ports:
+      - "8000:8000"
+    environment:
+      WAVS_HOME: "/wavs/packages/wavs"
+      WAVS_CLI_HOME: "/wavs/packages/cli"
+      WAVS_AGGREGATOR_HOME: "/wavs/packages/aggregator"
+    command: ["wavs"]
+    volumes:
+      - ".:/wavs"
+      - "..docker:/root/wavs/cli/"
+
+  aggregator1:
+    image: "ghcr.io/lay3rlabs/wavs:0.4.0-alpha.5"
+    depends_on: ["wavs1"]
+    container_name: "wavs-aggregator1"
+    stop_signal: SIGKILL
+    env_file: "./multiple-example/.env1"
+    ports:
+      - "8001:8001"
+    command: ["wavs-aggregator"]
+    volumes:
+      - ".:/wavs"
+    network_mode: "host"
+
+  # Operator 2 services
+  wavs2:
+    image: "ghcr.io/lay3rlabs/wavs:0.4.0-alpha.5"
+    container_name: "wavs2"
+    stop_signal: SIGKILL
+    network_mode: "host"
+    env_file: "./multiple-example/.env2"
+    ports:
+      - "9000:9000"
+    environment:
+      WAVS_HOME: "/wavs/packages/wavs"
+      WAVS_CLI_HOME: "/wavs/packages/cli"
+      WAVS_AGGREGATOR_HOME: "/wavs/packages/aggregator"
+    command: ["wavs", "--port", "9000"]
+    volumes:
+      - ".:/wavs"
+      - "..docker:/root/wavs/cli/"

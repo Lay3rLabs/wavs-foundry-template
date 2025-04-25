@@ -1,0 +1,25 @@
+# Environment for Operator 2
+# == PROJECT ==
+
+# WAVS
+WAVS_DATA=~/wavs/data
+WAVS_LOG_LEVEL="info"
+WAVS_SUBMISSION_MNEMONIC="quit attract vendor glad way grow genius snap dignity old runway section"
+WAVS_COSMOS_SUBMISSION_MNEMONIC="cosmos mnemonic here"
+
+# WAVS CLI
+WAVS_CLI_DATA=~/wavs/cli
+WAVS_CLI_COSMOS_CREDENTIAL="cosmos mnemonic here"
+WAVS_CLI_ETH_CREDENTIAL="0xa7b7b12af8df9a5cfdf8c146f9ad72b13fecf10c9d2dca7dc639da30ba340b6b"
+WAVS_CLI_LOG_LEVEL="info, wavs_cli=info"
+
+# == Testnet ==
+RPC_URL=https://holesky.drpc.org
+METADATA_URI=https://wavs.xyz/metadata.json
+DEPLOY_ENV=LOCAL
+FUNDED_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+CHAIN_ID=17000
+ETHERSCAN_API_KEY=foobar
+LOCAL_ETHEREUM_RPC_URL=http://localhost:8545
+LST_CONTRACT_ADDRESS=0x3F1c547b21f65e10480dE3ad8E19fAAC46C95034
+LST_STRATEGY_ADDRESS=0x7D704507b76571a51d9caE8AdDAbBFd0ba0e63d3
