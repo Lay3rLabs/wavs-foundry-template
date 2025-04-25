@@ -53,12 +53,12 @@ forge create SimpleTrigger --json --broadcast -r http://127.0.0.1:8545 --private
 export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 
 # Deploy the WASI component service & upload to each WAVS instance
+# WAVS1
 COMPONENT_FILENAME=eth_price_oracle.wasm AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
+# WAVS2
 COMPONENT_FILENAME=eth_price_oracle.wasm WAVS_ENDPOINT=http://127.0.0.1:9000 make upload-component
 
 # Now upload it to the 2nd wavs instance manually (since it's not watching for events to auto pull configs)
-# WAVS_ENDPOINT="http://127.0.0.1:9000" SERVICE_CONFIG_FILE=.docker/service.json CREDENTIAL=${DEPLOYER_PK} make deploy-service
-
 SERVICE_CONFIG_FILE=.docker/service.json CREDENTIAL=${DEPLOYER_PK} make deploy-service
 WAVS_ENDPOINT="http://127.0.0.1:9000" SERVICE_CONFIG_FILE=.docker/service.json CREDENTIAL=${DEPLOYER_PK} make deploy-service
 

@@ -4,7 +4,7 @@ WAVS_ENV_YOURKEYHERE="00000000000000000000000000000000"
 
 # WAVS
 WAVS_DATA=~/wavs/data
-WAVS_LOG_LEVEL="info"
+WAVS_LOG_LEVEL="info, wavs_aggregator=debug"
 WAVS_SUBMISSION_MNEMONIC="expire refuse visa erosion into clump broom burger toilet awake patch dose"
 WAVS_COSMOS_SUBMISSION_MNEMONIC="cosmos mnemonic here"
 
@@ -12,7 +12,7 @@ WAVS_COSMOS_SUBMISSION_MNEMONIC="cosmos mnemonic here"
 WAVS_CLI_DATA=~/wavs/cli
 WAVS_CLI_COSMOS_CREDENTIAL="cosmos mnemonic here"
 WAVS_CLI_ETH_CREDENTIAL="0xa0a86e2de0cda654f6e537967821f908914387d8c4b8a64c9955b81359686cec"
-WAVS_CLI_LOG_LEVEL="info, wavs_cli=info"
+WAVS_CLI_LOG_LEVEL="info, wavs_cli=info, wavs_aggregator=debug"
 
 # WAVS Aggregator
 WAVS_AGGREGATOR_DATA=~/wavs/aggregator

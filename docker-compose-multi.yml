@@ -21,7 +21,7 @@ services:
     command: ["wavs"]
     volumes:
       - ".:/wavs"
-      - "..docker:/root/wavs/cli/"
+      - ".docker:/root/wavs/cli/"
 
   aggregator1:
     image: "ghcr.io/lay3rlabs/wavs:0.4.0-alpha.5"
@@ -52,4 +52,4 @@ services:
     command: ["wavs", "--port", "9000"]
     volumes:
       - ".:/wavs"
-      - "..docker:/root/wavs/cli/"
+      - ".docker:/root/wavs/cli/"
