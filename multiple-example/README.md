@@ -37,10 +37,9 @@ cd multiple-example
 
 # Wait for deployment to complete (check for start.log)
 while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done
-docker compose -f docker-compose-multi.yml logs
+docker compose -f docker-compose-multi.yml logs -f &
 
-GIT_ROOT=$(git rev-parse --show-toplevel)
-cd ${GIT_ROOT}
+cd $(git rev-parse --show-toplevel)
 
 # In a new terminal, deploy the service contracts
 export DEPLOYER_PK=$(cat ./.nodes/deployer)
@@ -52,6 +51,7 @@ export SERVICE_SUBMISSION_ADDR=`jq -r .deployedTo .docker/submit.json`
 forge create SimpleTrigger --json --broadcast -r http://127.0.0.1:8545 --private-key "${DEPLOYER_PK}" > .docker/trigger.json
 export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 
+
 # Deploy the WASI component service & upload to each WAVS instance
 # WAVS1
 COMPONENT_FILENAME=eth_price_oracle.wasm AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
@@ -61,6 +61,10 @@ COMPONENT_FILENAME=eth_price_oracle.wasm WAVS_ENDPOINT=http://127.0.0.1:9000 mak
 # Now upload it to the 2nd wavs instance manually (since it's not watching for events to auto pull configs)
 SERVICE_CONFIG_FILE=.docker/service.json CREDENTIAL=${DEPLOYER_PK} make deploy-service
 WAVS_ENDPOINT="http://127.0.0.1:9000" SERVICE_CONFIG_FILE=.docker/service.json CREDENTIAL=${DEPLOYER_PK} make deploy-service
+
+# Fund the aggregator account (only 1 is run)
+source multiple-example/.env1
+cast send $(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL}) --rpc-url http://localhost:8545 --private-key ${DEPLOYER_PK} --value 1ether
 
 # Register both operators
 # Operator 1
@@ -73,22 +77,31 @@ source multiple-example/.env2
 AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 1`
 docker run --rm --network host --env-file multiple-example/.env2 -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh "ghcr.io/lay3rlabs/wavs-middleware:0.4.0-alpha.5" "$AVS_PRIVATE_KEY"
 
+# Operator 3 (offline, no WAVS instance submissions)
+AVS_PRIVATE_KEY=`cast wallet new --json | jq -r .[].private_key`
+docker run --rm --network host --env-file multiple-example/.env2 -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh "ghcr.io/lay3rlabs/wavs-middleware:0.4.0-alpha.5" "$AVS_PRIVATE_KEY"
+
+# Update threshold weight
+ECDSA_CONTRACT=`cat .nodes/avs_deploy.json | jq -r .addresses.stakeRegistry`
+# 1.8x a single operator weight (requires 2/3)
+cast send ${ECDSA_CONTRACT} "updateStakeThreshold(uint256)" 1782625057707873 --rpc-url http://localhost:8545 --private-key ${DEPLOYER_PK}
+
 # Verify registration for both operators
 docker run --rm --network host --env-file multiple-example/.env1 -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ghcr.io/lay3rlabs/wavs-middleware:0.4.0-alpha.5
 
-# Fund the aggregator account (only 1 is run)
-source multiple-example/.env1
-cast send $(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL}) --rpc-url http://localhost:8545 --private-key ${DEPLOYER_PK} --value 1ether
-
-# Trigger the service (request BTC price)
+# Trigger the service (request CMC ID price)
 export COIN_MARKET_CAP_ID=1
 forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast
 
 # Show results
-cd multiple-example
 make get-trigger
 TRIGGER_ID=1 make show-result
 ```
+
+```
+docker compose -f docker-compose-multi.yml rm -s -v wavs2
+```
+
 
 ## How It Works
 

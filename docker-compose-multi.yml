@@ -5,6 +5,18 @@
 ###################################
 
 services:
+  aggregator:
+    image: "ghcr.io/lay3rlabs/wavs:0.4.0-alpha.5"
+    container_name: "wavs-aggregator"
+    stop_signal: SIGKILL
+    env_file: "./multiple-example/.env1"
+    ports:
+      - "8001:8001"
+    command: ["wavs-aggregator", "--log-level", "info"]
+    volumes:
+      - ".:/wavs"
+    network_mode: "host"
+
   # Operator 1 services
   wavs1:
     image: "ghcr.io/lay3rlabs/wavs:0.4.0-alpha.5"
@@ -22,19 +34,6 @@ services:
     volumes:
       - ".:/wavs"
       - ".docker:/root/wavs/cli/"
-
-  aggregator1:
-    image: "ghcr.io/lay3rlabs/wavs:0.4.0-alpha.5"
-    depends_on: ["wavs1"]
-    container_name: "wavs-aggregator1"
-    stop_signal: SIGKILL
-    env_file: "./multiple-example/.env1"
-    ports:
-      - "8001:8001"
-    command: ["wavs-aggregator"]
-    volumes:
-      - ".:/wavs"
-    network_mode: "host"
 
   # Operator 2 services
   wavs2:
