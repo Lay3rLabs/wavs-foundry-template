@@ -94,7 +94,7 @@ export COIN_MARKET_CAP_ID=2
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 # Execute on the trigger contract, WAVS will pick this up and submit the result
 # on chain via the operators.
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast -v 4
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast
 ```
 
 Show the result from the triggered service

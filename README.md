@@ -111,7 +111,7 @@ forge build
 forge test
 ```
 
-### Build WASI components
+## Build WASI components
 
 Now build the WASI components into the `compiled` output directory.
 
@@ -131,7 +131,7 @@ Now build the WASI components into the `compiled` output directory.
 WASI_BUILD_DIR=components/eth-price-oracle make wasi-build
 ```
 
-### Testing the Price Feed Component Locally
+## Testing the Price Feed Component Locally
 
 How to test the component locally for business logic validation before on-chain deployment. An ID of 1 for the oracle component is Bitcoin.
 
@@ -168,7 +168,7 @@ Result (utf8):
 > - Docker Desktop: Settings -> Resources -> Network -> 'Enable Host Networking'
 > - `brew install chipmk/tap/docker-mac-net-connect && sudo brew services start chipmk/tap/docker-mac-net-connect`
 
-### Start Environment
+## Start Environment
 
 Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https://www.eigenlayer.xyz/) contracts to the local network.
 
@@ -194,7 +194,7 @@ Wait for full local deployment to be ready
 while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done
 ```
 
-### Deploy Service Contracts
+## Deploy Service Contracts
 
 **Key Concepts:**
 
@@ -267,7 +267,7 @@ export COIN_MARKET_CAP_ID=1
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 # Execute on the trigger contract, WAVS will pick this up and submit the result
 # on chain via the operators.
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast -v 4
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast
 ```
 
 ## Show the result
