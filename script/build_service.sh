@@ -28,6 +28,8 @@ TRIGGER_EVENT=${TRIGGER_EVENT:-"NewTrigger(bytes)"}
 TRIGGER_CHAIN=${TRIGGER_CHAIN:-"local"}
 SUBMIT_CHAIN=${SUBMIT_CHAIN:-"local"}
 AGGREGATOR_URL=${AGGREGATOR_URL:-""}
+# used in make upload-component
+WAVS_ENDPOINT=${WAVS_ENDPOINT:-"http://localhost:8000"}
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
 BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-alpha.5 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"

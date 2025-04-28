@@ -22,6 +22,7 @@ SERVICE_TRIGGER_ADDR?=`jq -r .deployedTo .docker/trigger.json`
 SERVICE_SUBMISSION_ADDR?=`jq -r .deployedTo .docker/submit.json`
 COIN_MARKET_CAP_ID?=1
 CREDENTIAL?=""
+WAVS_ENDPOINT?="http://localhost:8000"
 
 ## build: building the project
 build: _build_forge wasi-build
@@ -80,15 +81,14 @@ get-submit-from-deploy:
 wavs-cli:
 	@$(WAVS_CMD) $(filter-out $@,$(MAKECMDGOALS))
 
-## upload-component: uploading the WAVS component | COMPONENT_FILENAME
+## upload-component: uploading the WAVS component | COMPONENT_FILENAME, WAVS_ENDPOINT
 upload-component:
 # TODO: move to $(WAVS_CMD)  upload-component ./compiled/${COMPONENT_FILENAME}
-	@wget --post-file=./compiled/${COMPONENT_FILENAME} --header="Content-Type: application/wasm" -O - http://127.0.0.1:8000/upload | jq -r .digest
+	@wget --post-file=./compiled/${COMPONENT_FILENAME} --header="Content-Type: application/wasm" -O - ${WAVS_ENDPOINT}/upload | jq -r .digest
 
-## deploy-service: deploying the WAVS component service json | SERVICE_CONFIG_FILE, CREDENTIAL
+## deploy-service: deploying the WAVS component service json | SERVICE_CONFIG_FILE, CREDENTIAL, WAVS_ENDPOINT
 deploy-service:
-	@$(WAVS_CMD) deploy-service-raw --service `jq . -cr ${SERVICE_CONFIG_FILE}` \
-		--log-level=info --data /data/.docker --home /data $(if $(CREDENTIAL),--eth-credential $(CREDENTIAL),)
+	@$(WAVS_CMD) deploy-service-raw --service `jq . -cr ${SERVICE_CONFIG_FILE}` $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),) --log-level=info --data /data/.docker --home /data $(if $(CREDENTIAL),--eth-credential $(CREDENTIAL),)
 
 ## get-trigger: get the trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
 get-trigger:
