@@ -128,7 +128,6 @@ Now build the WASI components into the `compiled` output directory.
 ```bash
 # This command only builds the rust component.
 # Remove `WASI_BUILD_DIR` to build all components.
-# TODO: rename to EVM
 WASI_BUILD_DIR=components/eth-price-oracle make wasi-build
 ```
 
