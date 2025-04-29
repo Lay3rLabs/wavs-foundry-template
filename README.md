@@ -286,7 +286,7 @@ TRIGGER_ID=1 make show-result
 
 To spin up a sandboxed instance of [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) in a Docker container that only has access to this project's files, run the following command:
 
-```bash
+```bash docci-ignore
 npm run claude-code
 # or with no restrictions (--dangerously-skip-permissions)
 npm run claude-code:unrestricted
