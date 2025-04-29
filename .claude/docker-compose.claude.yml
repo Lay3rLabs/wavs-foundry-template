@@ -1,0 +1,18 @@
+services:
+  claude-code-sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile.claude
+    volumes:
+      - ..:/workspace:consistent
+      - claude-code-bashhistory:/commandhistory
+      - claude-code-config:/home/node/.claude
+    environment:
+      NODE_OPTIONS: --max-old-space-size=4096
+      CLAUDE_CONFIG_DIR: /home/node/.claude
+      POWERLEVEL9K_DISABLE_GITSTATUS: "true"
+    working_dir: /workspace
+
+volumes:
+  claude-code-bashhistory:
+  claude-code-config:
