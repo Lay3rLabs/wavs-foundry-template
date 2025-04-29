@@ -1,5 +1,5 @@
 use crate::bindings::wavs::worker::layer_types::{
-    TriggerData, TriggerDataEthContractEvent, WasmResponse,
+    TriggerData, TriggerDataEvmContractEvent, WasmResponse,
 };
 use alloy_sol_types::SolValue;
 use anyhow::Result;
@@ -29,11 +29,11 @@ pub enum Destination {
 ///
 /// # Implementation Details
 /// Handles two types of triggers:
-/// 1. EthContractEvent - Decodes Ethereum event logs using the NewTrigger ABI
+/// 1. EvmContractEvent - Decodes Ethereum event logs using the NewTrigger ABI
 /// 2. Raw - Used for direct CLI testing with no encoding
 pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, Destination)> {
     match trigger_data {
-        TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+        TriggerData::EvmContractEvent(TriggerDataEvmContractEvent { log, .. }) => {
             let event: solidity::NewTrigger = decode_event_log_data!(log)?;
             let trigger_info = solidity::TriggerInfo::abi_decode(&event._triggerInfo)?;
             Ok((trigger_info.triggerId, trigger_info.data.to_vec(), Destination::Ethereum))

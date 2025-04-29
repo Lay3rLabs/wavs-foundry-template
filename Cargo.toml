@@ -18,7 +18,7 @@ wit-bindgen-rt ={ version = "0.39.0", features = ["bitflags"]}
 wit-bindgen = "0.41.0"
 wstd = "0.5.3"
 wasi = "0.14.1"
-wavs-wasi-utils = "0.4.0-alpha.5"
+wavs-wasi-utils = "0.4.0-alpha.7"
 
 # Other
 serde = { version = "1.0.219", features = ["derive"] }
