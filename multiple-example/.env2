@@ -10,7 +10,7 @@ WAVS_COSMOS_SUBMISSION_MNEMONIC="cosmos mnemonic here"
 # WAVS CLI
 WAVS_CLI_DATA=~/wavs/cli
 WAVS_CLI_COSMOS_CREDENTIAL="cosmos mnemonic here"
-WAVS_CLI_ETH_CREDENTIAL="0xa7b7b12af8df9a5cfdf8c146f9ad72b13fecf10c9d2dca7dc639da30ba340b6b"
+WAVS_CLI_EVM_CREDENTIAL="0xa7b7b12af8df9a5cfdf8c146f9ad72b13fecf10c9d2dca7dc639da30ba340b6b"
 WAVS_CLI_LOG_LEVEL="info, wavs_cli=info"
 
 # == Testnet ==

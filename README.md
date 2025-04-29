@@ -222,11 +222,15 @@ Deploy the compiled component with the contract information from the previous st
 # Build your service JSON
 COMPONENT_FILENAME=eth_price_oracle.wasm AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
 
+# Hack: start a python3 http server on the .docker dir so the files can be read (vs having to really upload)
+# http://0.0.0.0:9999/service.json
+cd .docker && python3 -m http.server 9999 &
+
 # Deploy the service JSON to WAVS so it now watches and submits.
 #
 # If CREDENTIAL is not set then the default WAVS_CLI .env account will be used
 # You can `cast send ${WAVS_SERVICE_MANAGER} 'transferOwnership(address)'` to move it to another account.
-SERVICE_CONFIG_FILE=.docker/service.json CREDENTIAL=${DEPLOYER_PK} make deploy-service
+SERVICE_URL=http://0.0.0.0:9999/service.json CREDENTIAL=${DEPLOYER_PK} make deploy-service
 ```
 
 

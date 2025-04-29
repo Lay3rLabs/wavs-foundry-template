@@ -31,15 +31,15 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
                 let l13 = *arg0.add(8 + 8 * ::core::mem::size_of::<*const u8>()).cast::<*mut u8>();
                 let l14 = *arg0.add(8 + 9 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
                 let len15 = l14;
-                wavs::worker::layer_types::TriggerSourceEthContractEvent {
-                    address: wavs::worker::layer_types::EthAddress {
+                wavs::worker::layer_types::TriggerSourceEvmContractEvent {
+                    address: wavs::worker::layer_types::EvmAddress {
                         raw_bytes: _rt::Vec::from_raw_parts(l7.cast(), len9, len9),
                     },
                     chain_name: _rt::string_lift(bytes12),
                     event_hash: _rt::Vec::from_raw_parts(l13.cast(), len15, len15),
                 }
             };
-            V37::EthContractEvent(e37)
+            V37::EvmContractEvent(e37)
         }
         1 => {
             let e37 = {
@@ -167,19 +167,19 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
                 let l52 = *arg0.add(40 + 15 * ::core::mem::size_of::<*const u8>()).cast::<usize>();
                 let len53 = l52;
                 let l54 = *arg0.add(40 + 16 * ::core::mem::size_of::<*const u8>()).cast::<i64>();
-                wavs::worker::layer_types::TriggerDataEthContractEvent {
-                    contract_address: wavs::worker::layer_types::EthAddress {
+                wavs::worker::layer_types::TriggerDataEvmContractEvent {
+                    contract_address: wavs::worker::layer_types::EvmAddress {
                         raw_bytes: _rt::Vec::from_raw_parts(l39.cast(), len41, len41),
                     },
                     chain_name: _rt::string_lift(bytes44),
-                    log: wavs::worker::layer_types::EthEventLogData {
+                    log: wavs::worker::layer_types::EvmEventLogData {
                         topics: result50,
                         data: _rt::Vec::from_raw_parts(l51.cast(), len53, len53),
                     },
                     block_height: l54 as u64,
                 }
             };
-            V83::EthContractEvent(e83)
+            V83::EvmContractEvent(e83)
         }
         1 => {
             let e83 = {
@@ -15277,49 +15277,49 @@ pub mod wavs {
                 }
             }
             #[derive(Clone)]
-            pub struct EthAddress {
+            pub struct EvmAddress {
                 pub raw_bytes: _rt::Vec<u8>,
             }
-            impl ::core::fmt::Debug for EthAddress {
+            impl ::core::fmt::Debug for EvmAddress {
                 fn fmt(
                     &self,
                     f: &mut ::core::fmt::Formatter<'_>,
                 ) -> ::core::fmt::Result {
-                    f.debug_struct("EthAddress")
+                    f.debug_struct("EvmAddress")
                         .field("raw-bytes", &self.raw_bytes)
                         .finish()
                 }
             }
             #[derive(Clone)]
-            pub struct EthEventLogData {
+            pub struct EvmEventLogData {
                 /// the raw log topics that can be decoded into an event
                 pub topics: _rt::Vec<_rt::Vec<u8>>,
                 /// the raw log data that can be decoded into an event
                 pub data: _rt::Vec<u8>,
             }
-            impl ::core::fmt::Debug for EthEventLogData {
+            impl ::core::fmt::Debug for EvmEventLogData {
                 fn fmt(
                     &self,
                     f: &mut ::core::fmt::Formatter<'_>,
                 ) -> ::core::fmt::Result {
-                    f.debug_struct("EthEventLogData")
+                    f.debug_struct("EvmEventLogData")
                         .field("topics", &self.topics)
                         .field("data", &self.data)
                         .finish()
                 }
             }
             #[derive(Clone)]
-            pub struct EthChainConfig {
+            pub struct EvmChainConfig {
                 pub chain_id: _rt::String,
                 pub ws_endpoint: Option<_rt::String>,
                 pub http_endpoint: Option<_rt::String>,
             }
-            impl ::core::fmt::Debug for EthChainConfig {
+            impl ::core::fmt::Debug for EvmChainConfig {
                 fn fmt(
                     &self,
                     f: &mut ::core::fmt::Formatter<'_>,
                 ) -> ::core::fmt::Result {
-                    f.debug_struct("EthChainConfig")
+                    f.debug_struct("EvmChainConfig")
                         .field("chain-id", &self.chain_id)
                         .field("ws-endpoint", &self.ws_endpoint)
                         .field("http-endpoint", &self.http_endpoint)
@@ -15327,17 +15327,17 @@ pub mod wavs {
                 }
             }
             #[derive(Clone)]
-            pub struct TriggerSourceEthContractEvent {
-                pub address: EthAddress,
+            pub struct TriggerSourceEvmContractEvent {
+                pub address: EvmAddress,
                 pub chain_name: _rt::String,
                 pub event_hash: _rt::Vec<u8>,
             }
-            impl ::core::fmt::Debug for TriggerSourceEthContractEvent {
+            impl ::core::fmt::Debug for TriggerSourceEvmContractEvent {
                 fn fmt(
                     &self,
                     f: &mut ::core::fmt::Formatter<'_>,
                 ) -> ::core::fmt::Result {
-                    f.debug_struct("TriggerSourceEthContractEvent")
+                    f.debug_struct("TriggerSourceEvmContractEvent")
                         .field("address", &self.address)
                         .field("chain-name", &self.chain_name)
                         .field("event-hash", &self.event_hash)
@@ -15398,7 +15398,7 @@ pub mod wavs {
             }
             #[derive(Clone)]
             pub enum TriggerSource {
-                EthContractEvent(TriggerSourceEthContractEvent),
+                EvmContractEvent(TriggerSourceEvmContractEvent),
                 CosmosContractEvent(TriggerSourceCosmosContractEvent),
                 BlockInterval(BlockIntervalSource),
                 Cron(TriggerSourceCron),
@@ -15410,8 +15410,8 @@ pub mod wavs {
                     f: &mut ::core::fmt::Formatter<'_>,
                 ) -> ::core::fmt::Result {
                     match self {
-                        TriggerSource::EthContractEvent(e) => {
-                            f.debug_tuple("TriggerSource::EthContractEvent")
+                        TriggerSource::EvmContractEvent(e) => {
+                            f.debug_tuple("TriggerSource::EvmContractEvent")
                                 .field(e)
                                 .finish()
                         }
@@ -15453,18 +15453,18 @@ pub mod wavs {
                 }
             }
             #[derive(Clone)]
-            pub struct TriggerDataEthContractEvent {
-                pub contract_address: EthAddress,
+            pub struct TriggerDataEvmContractEvent {
+                pub contract_address: EvmAddress,
                 pub chain_name: _rt::String,
-                pub log: EthEventLogData,
+                pub log: EvmEventLogData,
                 pub block_height: u64,
             }
-            impl ::core::fmt::Debug for TriggerDataEthContractEvent {
+            impl ::core::fmt::Debug for TriggerDataEvmContractEvent {
                 fn fmt(
                     &self,
                     f: &mut ::core::fmt::Formatter<'_>,
                 ) -> ::core::fmt::Result {
-                    f.debug_struct("TriggerDataEthContractEvent")
+                    f.debug_struct("TriggerDataEvmContractEvent")
                         .field("contract-address", &self.contract_address)
                         .field("chain-name", &self.chain_name)
                         .field("log", &self.log)
@@ -15525,7 +15525,7 @@ pub mod wavs {
             }
             #[derive(Clone)]
             pub enum TriggerData {
-                EthContractEvent(TriggerDataEthContractEvent),
+                EvmContractEvent(TriggerDataEvmContractEvent),
                 CosmosContractEvent(TriggerDataCosmosContractEvent),
                 BlockInterval(BlockIntervalData),
                 Cron(TriggerDataCron),
@@ -15537,8 +15537,8 @@ pub mod wavs {
                     f: &mut ::core::fmt::Formatter<'_>,
                 ) -> ::core::fmt::Result {
                     match self {
-                        TriggerData::EthContractEvent(e) => {
-                            f.debug_tuple("TriggerData::EthContractEvent")
+                        TriggerData::EvmContractEvent(e) => {
+                            f.debug_tuple("TriggerData::EvmContractEvent")
                                 .field(e)
                                 .finish()
                         }
@@ -15622,11 +15622,11 @@ pub mod host {
     #[doc(hidden)]
     static __FORCE_SECTION_REF: fn() = super::__link_custom_section_describing_imports;
     use super::_rt;
-    pub type EthChainConfig = super::wavs::worker::layer_types::EthChainConfig;
+    pub type EvmChainConfig = super::wavs::worker::layer_types::EvmChainConfig;
     pub type CosmosChainConfig = super::wavs::worker::layer_types::CosmosChainConfig;
     pub type LogLevel = super::wavs::worker::layer_types::LogLevel;
     #[allow(unused_unsafe, clippy::all)]
-    pub fn get_eth_chain_config(chain_name: &str) -> Option<EthChainConfig> {
+    pub fn get_evm_chain_config(chain_name: &str) -> Option<EvmChainConfig> {
         unsafe {
             #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
             #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
@@ -15641,7 +15641,7 @@ pub mod host {
             #[cfg(target_arch = "wasm32")]
             #[link(wasm_import_module = "host")]
             unsafe extern "C" {
-                #[link_name = "get-eth-chain-config"]
+                #[link_name = "get-evm-chain-config"]
                 fn wit_import2(_: *mut u8, _: usize, _: *mut u8);
             }
             #[cfg(not(target_arch = "wasm32"))]
@@ -15664,7 +15664,7 @@ pub mod host {
                         let l11 = i32::from(
                             *ptr1.add(6 * ::core::mem::size_of::<*const u8>()).cast::<u8>(),
                         );
-                        super::wavs::worker::layer_types::EthChainConfig {
+                        super::wavs::worker::layer_types::EvmChainConfig {
                             chain_id: _rt::string_lift(bytes6),
                             ws_endpoint: match l7 {
                                 0 => None,
@@ -16141,7 +16141,7 @@ macro_rules! __export_layer_trigger_world_impl {
 #[doc(inline)]
 pub(crate) use __export_layer_trigger_world_impl as export;
 #[cfg(target_arch = "wasm32")]
-#[unsafe(link_section = "component-type:wit-bindgen:0.41.0:wavs:worker@0.4.0-alpha.5:layer-trigger-world:encoded world")]
+#[unsafe(link_section = "component-type:wit-bindgen:0.41.0:wavs:worker@0.4.0-alpha.6:layer-trigger-world:encoded world")]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
 pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 17440] = *b"\
@@ -16151,28 +16151,28 @@ drs\x0aprefix-leny\x04\0\x0ecosmos-address\x03\0\x02\x01o\x02ss\x01p\x04\x01r\x0
 \x02tys\x0aattributes\x05\x04\0\x0ccosmos-event\x03\0\x06\x01ks\x01r\x07\x08chai\
 n-ids\x0crpc-endpoint\x08\x0dgrpc-endpoint\x08\x11grpc-web-endpoint\x08\x09gas-p\
 ricev\x09gas-denoms\x0dbech32-prefixs\x04\0\x13cosmos-chain-config\x03\0\x09\x01\
-p}\x01r\x01\x09raw-bytes\x0b\x04\0\x0beth-address\x03\0\x0c\x01p\x0b\x01r\x02\x06\
-topics\x0e\x04data\x0b\x04\0\x12eth-event-log-data\x03\0\x0f\x01r\x03\x08chain-i\
-ds\x0bws-endpoint\x08\x0dhttp-endpoint\x08\x04\0\x10eth-chain-config\x03\0\x11\x01\
-r\x03\x07address\x0d\x0achain-names\x0aevent-hash\x0b\x04\0!trigger-source-eth-c\
+p}\x01r\x01\x09raw-bytes\x0b\x04\0\x0bevm-address\x03\0\x0c\x01p\x0b\x01r\x02\x06\
+topics\x0e\x04data\x0b\x04\0\x12evm-event-log-data\x03\0\x0f\x01r\x03\x08chain-i\
+ds\x0bws-endpoint\x08\x0dhttp-endpoint\x08\x04\0\x10evm-chain-config\x03\0\x11\x01\
+r\x03\x07address\x0d\x0achain-names\x0aevent-hash\x0b\x04\0!trigger-source-evm-c\
 ontract-event\x03\0\x13\x01r\x03\x07address\x03\x0achain-names\x0aevent-types\x04\
 \0$trigger-source-cosmos-contract-event\x03\0\x15\x01r\x02\x0achain-names\x08n-b\
 locksy\x04\0\x15block-interval-source\x03\0\x17\x01k\x01\x01r\x03\x08schedules\x0a\
 start-time\x19\x08end-time\x19\x04\0\x13trigger-source-cron\x03\0\x1a\x01q\x05\x12\
-eth-contract-event\x01\x14\0\x15cosmos-contract-event\x01\x16\0\x0eblock-interva\
+evm-contract-event\x01\x14\0\x15cosmos-contract-event\x01\x16\0\x0eblock-interva\
 l\x01\x18\0\x04cron\x01\x1b\0\x06manual\0\0\x04\0\x0etrigger-source\x03\0\x1c\x01\
 r\x03\x0aservice-ids\x0bworkflow-ids\x0etrigger-source\x1d\x04\0\x0etrigger-conf\
 ig\x03\0\x1e\x01r\x04\x10contract-address\x0d\x0achain-names\x03log\x10\x0cblock\
--heightw\x04\0\x1ftrigger-data-eth-contract-event\x03\0\x20\x01r\x04\x10contract\
+-heightw\x04\0\x1ftrigger-data-evm-contract-event\x03\0\x20\x01r\x04\x10contract\
 -address\x03\x0achain-names\x05event\x07\x0cblock-heightw\x04\0\"trigger-data-co\
 smos-contract-event\x03\0\"\x01r\x02\x0achain-names\x0cblock-heightw\x04\0\x13bl\
 ock-interval-data\x03\0$\x01r\x01\x0ctrigger-time\x01\x04\0\x11trigger-data-cron\
-\x03\0&\x01q\x05\x12eth-contract-event\x01!\0\x15cosmos-contract-event\x01#\0\x0e\
+\x03\0&\x01q\x05\x12evm-contract-event\x01!\0\x15cosmos-contract-event\x01#\0\x0e\
 block-interval\x01%\0\x04cron\x01'\0\x03raw\x01\x0b\0\x04\0\x0ctrigger-data\x03\0\
 (\x01r\x02\x06config\x1f\x04data)\x04\0\x0etrigger-action\x03\0*\x01kw\x01r\x02\x07\
 payload\x0b\x08ordering,\x04\0\x0dwasm-response\x03\0-\x01q\x05\x05error\0\0\x04\
 warn\0\0\x04info\0\0\x05debug\0\0\x05trace\0\0\x04\0\x09log-level\x03\0/\x03\0%w\
-avs:worker/layer-types@0.4.0-alpha.5\x05\0\x02\x03\0\0\x0etrigger-action\x03\0\x0e\
+avs:worker/layer-types@0.4.0-alpha.6\x05\0\x02\x03\0\0\x0etrigger-action\x03\0\x0e\
 trigger-action\x03\0\x01\x02\x03\0\0\x0dwasm-response\x03\0\x0dwasm-response\x03\
 \0\x03\x01B\x0a\x04\0\x08pollable\x03\x01\x01h\0\x01@\x01\x04self\x01\0\x7f\x04\0\
 \x16[method]pollable.ready\x01\x02\x01@\x01\x04self\x01\x01\0\x04\0\x16[method]p\
@@ -16298,11 +16298,11 @@ uest\x03\0\0\x02\x03\x02\x01\x10\x04\0\x0frequest-options\x03\0\x02\x02\x03\x02\
 \x11\x04\0\x18future-incoming-response\x03\0\x04\x02\x03\x02\x01\x12\x04\0\x0aer\
 ror-code\x03\0\x06\x01i\x01\x01i\x03\x01k\x09\x01i\x05\x01j\x01\x0b\x01\x07\x01@\
 \x02\x07request\x08\x07options\x0a\0\x0c\x04\0\x06handle\x01\x0d\x03\0\x20wasi:h\
-ttp/outgoing-handler@0.2.0\x05\x13\x02\x03\0\0\x10eth-chain-config\x02\x03\0\0\x13\
+ttp/outgoing-handler@0.2.0\x05\x13\x02\x03\0\0\x10evm-chain-config\x02\x03\0\0\x13\
 cosmos-chain-config\x02\x03\0\0\x09log-level\x01B\x11\x02\x03\x02\x01\x14\x04\0\x10\
-eth-chain-config\x03\0\0\x02\x03\x02\x01\x15\x04\0\x13cosmos-chain-config\x03\0\x02\
+evm-chain-config\x03\0\0\x02\x03\x02\x01\x15\x04\0\x13cosmos-chain-config\x03\0\x02\
 \x02\x03\x02\x01\x16\x04\0\x09log-level\x03\0\x04\x01k\x01\x01@\x01\x0achain-nam\
-es\0\x06\x04\0\x14get-eth-chain-config\x01\x07\x01k\x03\x01@\x01\x0achain-names\0\
+es\0\x06\x04\0\x14get-evm-chain-config\x01\x07\x01k\x03\x01@\x01\x0achain-names\0\
 \x08\x04\0\x17get-cosmos-chain-config\x01\x09\x01ks\x01@\x01\x03keys\0\x0a\x04\0\
 \x0aconfig-var\x01\x0b\x01@\x02\x05level\x05\x07messages\x01\0\x04\0\x03log\x01\x0c\
 \x03\0\x04host\x05\x17\x01B\x0a\x01o\x02ss\x01p\0\x01@\0\0\x01\x04\0\x0fget-envi\
@@ -16489,7 +16489,7 @@ andom-u64\x01\x02\x03\0\x18wasi:random/random@0.2.0\x058\x01B\x05\x01p}\x01@\x01
 nsecure-random-u64\x01\x02\x03\0\x1awasi:random/insecure@0.2.0\x059\x01B\x03\x01\
 o\x02ww\x01@\0\0\0\x04\0\x0dinsecure-seed\x01\x01\x03\0\x1fwasi:random/insecure-\
 seed@0.2.0\x05:\x01k\x04\x01j\x01;\x01s\x01@\x01\x0etrigger-action\x02\0<\x04\0\x03\
-run\x01=\x04\0-wavs:worker/layer-trigger-world@0.4.0-alpha.5\x04\0\x0b\x19\x01\0\
+run\x01=\x04\0-wavs:worker/layer-trigger-world@0.4.0-alpha.6\x04\0\x0b\x19\x01\0\
 \x13layer-trigger-world\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-c\
 omponent\x070.227.1\x10wit-bindgen-rust\x060.41.0";
 #[inline(never)]

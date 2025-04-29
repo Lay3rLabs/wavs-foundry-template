@@ -8,13 +8,13 @@ default: build
 
 # Customize these variables
 COMPONENT_FILENAME?=eth_price_oracle.wasm
-SERVICE_CONFIG_FILE?=.docker/service.json
+SERVICE_URL?="http://127.0.0.1:9999/service.json"
 
 # Define common variables
 CARGO=cargo
 # the directory to build, or "" for all
 WASI_BUILD_DIR ?= ""
-DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:0.4.0-alpha.5
+DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:april-29-agg-fix
 WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ${DOCKER_IMAGE} wavs-cli
 ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 RPC_URL?=http://localhost:8545
@@ -83,12 +83,12 @@ wavs-cli:
 
 ## upload-component: uploading the WAVS component | COMPONENT_FILENAME, WAVS_ENDPOINT
 upload-component:
-# TODO: move to $(WAVS_CMD)  upload-component ./compiled/${COMPONENT_FILENAME}
+# TODO: move to `$(WAVS_CMD) upload-component ./compiled/${COMPONENT_FILENAME} --wavs-endpoint ${WAVS_ENDPOINT}`
 	@wget --post-file=./compiled/${COMPONENT_FILENAME} --header="Content-Type: application/wasm" -O - ${WAVS_ENDPOINT}/upload | jq -r .digest
 
-## deploy-service: deploying the WAVS component service json | SERVICE_CONFIG_FILE, CREDENTIAL, WAVS_ENDPOINT
+## deploy-service: deploying the WAVS component service json | SERVICE_URL, CREDENTIAL, WAVS_ENDPOINT
 deploy-service:
-	@$(WAVS_CMD) deploy-service-raw --service `jq . -cr ${SERVICE_CONFIG_FILE}` $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),) --log-level=info --data /data/.docker --home /data $(if $(CREDENTIAL),--eth-credential $(CREDENTIAL),)
+	@$(WAVS_CMD) deploy-service --service-url "$(SERVICE_URL)" --log-level=info --data /data/.docker --home /var/wavs $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),) $(if $(CREDENTIAL),--evm-credential $(CREDENTIAL),)
 
 ## get-trigger: get the trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
 get-trigger:

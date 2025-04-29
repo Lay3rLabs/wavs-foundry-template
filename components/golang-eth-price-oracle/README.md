@@ -118,7 +118,7 @@ export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 ```bash docci-delay-per-cmd=3
 COMPONENT_FILENAME=golang_eth_price_oracle.wasm sh ./script/build_service.sh
 
-SERVICE_CONFIG_FILE=.docker/service.json CREDENTIAL=${DEPLOYER_PK} make deploy-service
+SERVICE_URL=http://0.0.0.0:9999/service.json CREDENTIAL=${DEPLOYER_PK} make deploy-service
 ```
 
 ## Register service specific operator

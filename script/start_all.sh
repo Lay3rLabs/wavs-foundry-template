@@ -43,7 +43,7 @@ if [[ "$(uname)" == *"Darwin"* ]]; then
   SP=" "
 fi
 
-sed -i${SP}'' -e "s/^WAVS_CLI_ETH_CREDENTIAL=.*$/WAVS_CLI_ETH_CREDENTIAL=\"$OPERATOR_PK\"/" .env
+sed -i${SP}'' -e "s/^WAVS_CLI_EVM_CREDENTIAL=.*$/WAVS_CLI_EVM_CREDENTIAL=\"$OPERATOR_PK\"/" .env
 sed -i${SP}'' -e "s/^WAVS_AGGREGATOR_CREDENTIAL=.*$/WAVS_AGGREGATOR_CREDENTIAL=\"$OPERATOR_PK\"/" .env
 # this is what we generate other addresses in service manager based off of.
 sed -i${SP}'' -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$OPERATOR_MNEMONIC\"/" .env
