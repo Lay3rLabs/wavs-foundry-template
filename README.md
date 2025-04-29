@@ -292,4 +292,3 @@ npm run claude-code
 npm run claude-code:unrestricted
 ```
 
-You must have [Docker](https://www.docker.com/) installed.
