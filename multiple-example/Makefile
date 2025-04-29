@@ -33,7 +33,6 @@ create-operators:
 	export OPERATOR2_PK=`cat ../.docker/operator2.json | jq -r .accounts[0].private_key` && \
 	sed -i'' -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$$/WAVS_SUBMISSION_MNEMONIC=\"$$OPERATOR2_MNEMONIC\"/" .env2 && \
 	sed -i'' -e "s/^WAVS_CLI_EVM_CREDENTIAL=.*$$/WAVS_CLI_EVM_CREDENTIAL=\"$$OPERATOR2_PK\"/" .env2 && \
-	# sed -i'' -e "s/^WAVS_AGGREGATOR_CREDENTIAL=.*$$/WAVS_AGGREGATOR_CREDENTIAL=\"$$OPERATOR2_PK\"/" .env2
 
 get-trigger:
 	cd .. && cast call $$(jq -r .deployedTo .docker/submit.json) "lastId()(uint256)" --rpc-url http://localhost:8545
