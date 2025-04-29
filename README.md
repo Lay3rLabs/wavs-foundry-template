@@ -231,7 +231,7 @@ cd .docker && python3 -m http.server 9999 &
 #
 # If CREDENTIAL is not set then the default WAVS_CLI .env account will be used
 # You can `cast send ${WAVS_SERVICE_MANAGER} 'transferOwnership(address)'` to move it to another account.
-SERVICE_URL=http://127.0.0.1:9999/service.json CREDENTIAL=${DEPLOYER_PK} make deploy-service
+SERVICE_URL=http://0.0.0.0:9999/service.json CREDENTIAL=${DEPLOYER_PK} make deploy-service
 ```
 
 
