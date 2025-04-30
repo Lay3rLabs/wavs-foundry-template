@@ -99,11 +99,16 @@ async function fetchCryptoPrice(id: number): Promise<PriceFeedData> {
     // Parse the JSON response
     const root: Root = await response.json();
 
-    // Create and return the price feed data
+    // round to 2 decimal places on root.data.statistics.price
+    let price = Math.round(root.data.statistics.price * 100) / 100;
+
+    // timestamp is 2025-04-30T19:59:44.161Z, becomes 2025-04-30T19:59:44
+    let timestamp = root.status.timestamp.split(".")[0];
+
     return {
       symbol: root.data.symbol,
-      price: root.data.statistics.price,
-      timestamp: root.status.timestamp,
+      price: price,
+      timestamp: timestamp,
     };
   } catch (error) {
     throw new Error(

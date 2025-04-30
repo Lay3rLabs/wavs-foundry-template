@@ -95,11 +95,12 @@ async fn get_price_feed(id: u64) -> Result<PriceFeedData, String> {
 
     let json: Root = fetch_json(req).await.map_err(|e| e.to_string())?;
 
-    Ok(PriceFeedData {
-        symbol: json.data.symbol,
-        price: json.data.statistics.price,
-        timestamp: json.status.timestamp,
-    })
+    // round to the nearest 3 decimal places
+    let price = (json.data.statistics.price * 100.0).round() / 100.0;
+    // timestamp is 2025-04-30T19:59:44.161Z, becomes 2025-04-30T19:59:44
+    let timestamp = json.status.timestamp.split('.').next().unwrap_or("");
+
+    Ok(PriceFeedData { symbol: json.data.symbol, price, timestamp: timestamp.to_string() })
 }
 
 /// Represents the price feed response data structure

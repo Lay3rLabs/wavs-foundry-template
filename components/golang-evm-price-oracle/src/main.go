@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Lay3rLabs/wavs-wasi/go/types"
@@ -138,11 +140,16 @@ func fetchCryptoPrice(id int) (*PriceFeedData, error) {
 		return nil, err
 	}
 
-	// Create the price feed data
+	// round to 2 decimal places
+	price := math.Round(root.Data.Statistics.Price*100) / 100
+
+	// timestamp is 2025-04-30T19:59:44.161Z, becomes 2025-04-30T19:59:44
+	timestamp := strings.Split(root.Status.Timestamp, ".")[0]
+
 	return &PriceFeedData{
 		Symbol:    root.Data.Symbol,
-		Price:     root.Data.Statistics.Price,
-		Timestamp: root.Status.Timestamp,
+		Price:     price,
+		Timestamp: timestamp,
 	}, nil
 }
 
