@@ -177,7 +177,6 @@ Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https:
 #
 # This must remain running in your terminal. Use another terminal to run other commands.
 # You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
-# make start-all
 cp .env.example .env
 
 # Create new operator
@@ -250,14 +249,14 @@ Each service gets their own key path (hd_path). The first service starts at 1 an
 source .env
 AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 1`
 
+# Faucet funds to the aggregator account to post on chain
+cast send $(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL}) --rpc-url http://localhost:8545 --private-key ${DEPLOYER_PK} --value 1ether
+
 # Register the operator with the WAVS service manager
 docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh "ghcr.io/lay3rlabs/wavs-middleware:0.4.0-alpha.5" "$AVS_PRIVATE_KEY"
 
 # Verify registration
 docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ghcr.io/lay3rlabs/wavs-middleware:0.4.0-alpha.5
-
-# Faucet funds to the aggregator account to post on chain
-cast send $(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL}) --rpc-url http://localhost:8545 --private-key ${DEPLOYER_PK} --value 1ether
 ```
 
 ## Trigger the Service
