@@ -1,7 +1,7 @@
 #!/bin/bash
 
+# set -x
 set -e
-set -x
 
 GIT_ROOT=$(git rev-parse --show-toplevel)
 

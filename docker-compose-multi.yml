@@ -52,3 +52,15 @@ services:
     volumes:
       - ".:/wavs"
       - ".docker:/root/wavs/cli/"
+
+  ipfs:
+    image: "ipfs/kubo:v0.34.1"
+    container_name: "ipfs"
+    stop_signal: SIGKILL
+    network_mode: "host"
+    ports:
+      - "4001:4001"
+      - "4001:4001/udp"
+      - "8080:8080"
+      - "5001:5001"
+    command: ["daemon", "--offline"]
