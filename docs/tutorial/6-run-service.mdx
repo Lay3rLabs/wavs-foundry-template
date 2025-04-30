@@ -56,7 +56,7 @@ export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 The following command will deploy your WASI component and service information to WAVS to be run by operators when triggered:
 
 ```bash docci-ignore (run in the next codeblock)
-SERVICE_URL=http://0.0.0.0:9999/service.json make deploy-service
+SERVICE_URL=http://127.0.0.1:9999/service.json make deploy-service
 ```
 
 This command specifies the event emitted from your trigger contract as the on-chain event that will trigger your service. In the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L95-L102), you can also see that it specifies the submission contract as the `submit-address`, as well as the filename of your component.
@@ -73,7 +73,7 @@ export COMPONENT_FILENAME=evm_price_oracle.wasm
 AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
 
 # Deploy the service JSON
-SERVICE_URL=http://0.0.0.0:9999/service.json make deploy-service
+SERVICE_URL=http://127.0.0.1:9999/service.json make deploy-service
 ```
 
 </Callout>
