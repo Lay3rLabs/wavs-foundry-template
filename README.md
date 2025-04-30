@@ -230,7 +230,6 @@ ipfs_cid=`jq -r .Hash <<< ${ipfs_out}`
 #
 # If CREDENTIAL is not set then the default WAVS_CLI .env account will be used
 # You can `cast send ${WAVS_SERVICE_MANAGER} 'transferOwnership(address)'` to move it to another account.
-# curl "http://127.0.0.1:8080/ipfs/${ipfs_cid}"
 SERVICE_URL=http://127.0.0.1:8080/ipfs/${ipfs_cid} CREDENTIAL=${DEPLOYER_PK} make deploy-service
 ```
 
