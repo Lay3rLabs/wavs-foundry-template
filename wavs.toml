@@ -104,7 +104,7 @@ cors_allowed_origins = [
 # host = "localhost"
 
 # The directory to store the data. Default is "/var/wavs"
-# data = "/var/wavs"
+data = "~/wavs"
 
 # Active chain names to watch for triggers
 active_trigger_chains = ["local"]
@@ -121,7 +121,7 @@ active_trigger_chains = ["local"]
 # ----------------------------
 [cli]
 # The directory to store the data. Default is "/var/wavs-cli"
-# data = "/var/wavs-cli"
+data = "~/wavs/cli"
 
 # WAVS endpoint
 # wavs_endpoint = "http://localhost:8000"
@@ -144,7 +144,7 @@ aggregator_endpoint = "http://localhost:8001"
 # ----------------------------
 [aggregator]
 # The directory to store the data. Default is "/var/wavs-aggregator"
-# data = "/var/wavs-aggregator"
+data = "~/wavs/aggregator"
 
 cors_allowed_origins = [
     "https://lay3rlabs.github.io/*",
