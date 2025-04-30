@@ -90,8 +90,8 @@ cast send ${ECDSA_CONTRACT} "updateStakeThreshold(uint256)" 1782625057707873 --r
 docker run --rm --network host --env-file multiple-example/.env1 -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ghcr.io/lay3rlabs/wavs-middleware:0.4.0-alpha.5
 
 # Trigger the service (request CMC ID price)
-export COIN_MARKET_CAP_ID=1
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast
+export TRIGGER_DATA_INPUT=1
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${TRIGGER_DATA_INPUT} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast
 
 # Show results
 make get-trigger

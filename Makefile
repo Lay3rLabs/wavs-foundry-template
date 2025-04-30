@@ -20,7 +20,7 @@ ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f
 RPC_URL?=http://localhost:8545
 SERVICE_TRIGGER_ADDR?=`jq -r .deployedTo .docker/trigger.json`
 SERVICE_SUBMISSION_ADDR?=`jq -r .deployedTo .docker/submit.json`
-COIN_MARKET_CAP_ID?=1
+TRIGGER_DATA_INPUT?=1
 CREDENTIAL?=""
 WAVS_ENDPOINT?="http://localhost:8000"
 
@@ -31,11 +31,11 @@ build: _build_forge wasi-build
 wasi-build:
 	@./script/build_components.sh $(WASI_BUILD_DIR)
 
-## wasi-exec: executing the WAVS wasi component(s) | COMPONENT_FILENAME, COIN_MARKET_CAP_ID
+## wasi-exec: executing the WAVS wasi component(s) | COMPONENT_FILENAME, TRIGGER_DATA_INPUT
 wasi-exec: pull-image
 	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
 	--component "/data/compiled/$(COMPONENT_FILENAME)" \
-	--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)`
+	--input `cast format-bytes32-string $(TRIGGER_DATA_INPUT)`
 
 ## clean: cleaning the project files
 clean: clean-docker

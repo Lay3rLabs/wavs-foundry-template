@@ -70,7 +70,7 @@ WASI_BUILD_DIR=golang-evm-price-oracle make wasi-build
 Run the component with the `wasi-exec` command in the root of the repo
 
 ```bash docci-output-contains="LTC"
-COMPONENT_FILENAME=golang_evm_price_oracle.wasm COIN_MARKET_CAP_ID=2 make wasi-exec
+COMPONENT_FILENAME=golang_evm_price_oracle.wasm TRIGGER_DATA_INPUT=2 make wasi-exec
 ```
 
 Build your smart contracts
@@ -143,9 +143,9 @@ cast send $(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL}) --r
 Trigger the service
 
 ```bash docci-delay-after=2
-export COIN_MARKET_CAP_ID=1
+export TRIGGER_DATA_INPUT=1
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${TRIGGER_DATA_INPUT} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast
 ```
 
 Show the result from the triggered service

@@ -136,7 +136,7 @@ WASI_BUILD_DIR=components/evm-price-oracle make wasi-build
 How to test the component locally for business logic validation before on-chain deployment. An ID of 1 for the oracle component is Bitcoin.
 
 ```bash
-COIN_MARKET_CAP_ID=1 make wasi-exec
+TRIGGER_DATA_INPUT=1 make wasi-exec
 ```
 
 Expected output:
@@ -266,12 +266,12 @@ Anyone can now call the [trigger contract](./src/contracts/WavsTrigger.sol) whic
 
 ```bash
 # Request BTC from CMC
-export COIN_MARKET_CAP_ID=1
+export TRIGGER_DATA_INPUT=1
 # Get the trigger address from previous Deploy forge script
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 # Execute on the trigger contract, WAVS will pick this up and submit the result
 # on chain via the operators.
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${TRIGGER_DATA_INPUT} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast
 ```
 
 ## Show the result

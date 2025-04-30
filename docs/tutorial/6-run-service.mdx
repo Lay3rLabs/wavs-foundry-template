@@ -81,7 +81,7 @@ SERVICE_URL=http://0.0.0.0:9999/service.json make deploy-service
 
 ## Trigger the Service
 
-Next, use your deployed trigger contract to trigger the oracle to be run. In the following command, you'll specify the `COIN_MARKET_CAP_ID` as `1`, which corresponds to the ID of Bitcoin.
+Next, use your deployed trigger contract to trigger the oracle to be run. In the following command, you'll specify the `TRIGGER_DATA_INPUT` as `1`, which corresponds to the ID of Bitcoin.
 
 Running this command will execute [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/script/Trigger.s.sol) and pass the ID to the trigger contract, starting the following chain of events:
 
@@ -92,9 +92,9 @@ Running this command will execute [`/script/Trigger.s.sol`](https://github.com/L
 
 
 ```bash docci-delay-per-cmd=2
-export COIN_MARKET_CAP_ID=1
+export TRIGGER_DATA_INPUT=1
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${TRIGGER_DATA_INPUT} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast
 ```
 
 ## Show the result
