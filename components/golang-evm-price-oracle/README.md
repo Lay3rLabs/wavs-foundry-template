@@ -118,10 +118,10 @@ export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 ```bash docci-delay-per-cmd=3
 COMPONENT_FILENAME=golang_evm_price_oracle.wasm sh ./script/build_service.sh
 
-# TODO: kill this at the end of the test
-cd .docker && python3 -m http.server 9999 &
+# Upload service.json to IPFS
+ipfs_cid=`IPFS_ENDPOINT=http://127.0.0.1:5001 SERVICE_FILE=.docker/service.json make upload-to-ipfs`
 
-SERVICE_URL=http://127.0.0.1:9999/service.json CREDENTIAL=${DEPLOYER_PK} make deploy-service
+SERVICE_URL="http://127.0.0.1:8080/ipfs/${ipfs_cid}" CREDENTIAL=${DEPLOYER_PK} make deploy-service
 ```
 
 ## Register service specific operator
@@ -130,14 +130,14 @@ SERVICE_URL=http://127.0.0.1:9999/service.json CREDENTIAL=${DEPLOYER_PK} make de
 source .env
 AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 1`
 
+# Faucet funds to the aggregator account to post on chain
+cast send $(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL}) --rpc-url http://localhost:8545 --private-key ${DEPLOYER_PK} --value 1ether
+
 # Register the operator with the WAVS service manager
 docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh "ghcr.io/lay3rlabs/wavs-middleware:0.4.0-alpha.5" "$AVS_PRIVATE_KEY"
 
 # Verify registration
 docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ghcr.io/lay3rlabs/wavs-middleware:0.4.0-alpha.5
-
-# Faucet funds to the aggregator account to post on chain
-cast send $(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL}) --rpc-url http://localhost:8545 --private-key ${DEPLOYER_PK} --value 1ether
 ```
 
 Trigger the service
