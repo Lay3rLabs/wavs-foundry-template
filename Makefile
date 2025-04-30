@@ -14,7 +14,7 @@ SERVICE_URL?="http://127.0.0.1:9999/service.json"
 CARGO=cargo
 # the directory to build, or "" for all
 WASI_BUILD_DIR ?= ""
-DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:april-29-agg-fix
+DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:apr-30-fix-general
 WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ${DOCKER_IMAGE} wavs-cli
 ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 RPC_URL?=http://localhost:8545

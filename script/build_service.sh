@@ -32,7 +32,7 @@ AGGREGATOR_URL=${AGGREGATOR_URL:-""}
 WAVS_ENDPOINT=${WAVS_ENDPOINT:-"http://localhost:8000"}
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
-BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:april-29-agg-fix wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
+BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:apr-30-fix-general wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
     echo "SERVICE_MANAGER_ADDRESS is not set. Please set it to the address of the service manager."
@@ -79,7 +79,7 @@ $BASE_CMD workflow component --id ${COMPONENT_ID} time-limit --seconds 30 > /dev
 $BASE_CMD workflow component --id ${COMPONENT_ID} env --values WAVS_ENV_SOME_SECRET > /dev/null
 $BASE_CMD workflow component --id ${COMPONENT_ID} config --values 'key=value,key2=value2' > /dev/null
 
-$BASE_CMD manager set-evm ${SUBMIT_CHAIN} `cast --to-checksum ${SERVICE_MANAGER_ADDRESS}`
+$BASE_CMD manager set-evm --chain-name ${SUBMIT_CHAIN} --address `cast --to-checksum ${SERVICE_MANAGER_ADDRESS}`
 $BASE_CMD validate > /dev/null
 
 # inform aggregator if set
