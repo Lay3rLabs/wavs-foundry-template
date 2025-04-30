@@ -10,6 +10,7 @@ COIN_MARKET_CAP_ID?=1
 COMPONENT_FILENAME?=evm_price_oracle.wasm
 CREDENTIAL?=""
 DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:apr-30-fix-general
+MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-alpha.5
 IPFS_ENDPOINT?=http://127.0.0.1:5001
 RPC_URL?=http://localhost:8545
 SERVICE_FILE?=.docker/service.json
@@ -18,6 +19,7 @@ SERVICE_TRIGGER_ADDR?=`jq -r .deployedTo .docker/trigger.json`
 WASI_BUILD_DIR ?= ""
 WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ${DOCKER_IMAGE} wavs-cli
 WAVS_ENDPOINT?="http://localhost:8000"
+ENV_FILE?=.env
 
 # Default target is build
 default: build
@@ -102,6 +104,20 @@ upload-to-ipfs:
 	@curl -s -X POST "${IPFS_ENDPOINT}/api/v0/add?pin=true" \
 		-H "Content-Type: multipart/form-data" \
 		-F file=@${SERVICE_FILE} | jq -r .Hash
+
+## operator-list: listing the AVS operators | ENV_FILE
+operator-list:
+	@docker run --rm --network host --env-file ${ENV_FILE} -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ${MIDDLEWARE_DOCKER_IMAGE}
+
+AVS_PRIVATE_KEY?=""
+## operator-register: listing the AVS operators | ENV_FILE, AVS_PRIVATE_KEY
+operator-register:
+	@if [ -z "${AVS_PRIVATE_KEY}" ]; then \
+		echo "Error: AVS_PRIVATE_KEY is not set. Please set it to your AVS private key."; \
+		exit 1; \
+	fi
+	@docker run --rm --network host --env-file ${ENV_FILE} -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh ${MIDDLEWARE_DOCKER_IMAGE} "${AVS_PRIVATE_KEY}"
+
 
 ## update-submodules: update the git submodules
 update-submodules:
