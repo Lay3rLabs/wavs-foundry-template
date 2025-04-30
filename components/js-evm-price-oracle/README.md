@@ -88,6 +88,9 @@ Upload service
 # Build your service JSON with optional overrides in the script
 COMPONENT_FILENAME=js_evm_price_oracle.wasm sh ./script/build_service.sh
 
+# TODO: kill this at the end of the test
+cd .docker && python3 -m http.server 9999 &
+
 SERVICE_URL=http://0.0.0.0:9999/service.json CREDENTIAL=${DEPLOYER_PK} make deploy-service
 ```
 
