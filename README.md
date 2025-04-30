@@ -93,7 +93,7 @@ wkg config --default-registry wa.dev
 forge init --template Lay3rLabs/wavs-foundry-template my-wavs --branch main
 ```
 
-> \\[!TIP]
+> \[!TIP]
 > Run `make help` to see all available commands and environment variable overrides.
 
 ### Solidity
@@ -115,7 +115,7 @@ forge test
 
 Now build the WASI components into the `compiled` output directory.
 
-> \\[!WARNING]
+> \[!WARNING]
 > If you get: `error: no registry configured for namespace "wavs"`
 >
 > run, `wkg config --default-registry wa.dev`
