@@ -5,9 +5,9 @@
 A template for developing WebAssembly AVS applications using Rust and Solidity, configured for Windows *WSL*, Linux, and MacOS. The sample oracle service fetches the current price of a cryptocurrency from [CoinMarketCap](https://coinmarketcap.com) and saves it on chain via the operators.
 
 **Languages**
- * [Rust (this example)](./components/eth-price-oracle/)
- * [Go](./components/golang-eth-price-oracle/README.md)
- * [JS / TS](./components/js-eth-price-oracle/README.md)
+ * [Rust (this example)](./components/evm-price-oracle/)
+ * [Go](./components/golang-evm-price-oracle/README.md)
+ * [JS / TS](./components/js-evm-price-oracle/README.md)
 
 ## System Requirements
 
@@ -128,7 +128,7 @@ Now build the WASI components into the `compiled` output directory.
 ```bash
 # This command only builds the rust component.
 # Remove `WASI_BUILD_DIR` to build all components.
-WASI_BUILD_DIR=components/eth-price-oracle make wasi-build
+WASI_BUILD_DIR=components/evm-price-oracle make wasi-build
 ```
 
 ## Testing the Price Feed Component Locally
@@ -220,7 +220,7 @@ Deploy the compiled component with the contract information from the previous st
 
 ```bash docci-delay-per-cmd=2
 # Build your service JSON
-COMPONENT_FILENAME=eth_price_oracle.wasm AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
+COMPONENT_FILENAME=evm_price_oracle.wasm AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
 
 # Hack: start a python3 http server on the .docker dir so the files can be read (vs having to really upload)
 # http://0.0.0.0:9999/service.json

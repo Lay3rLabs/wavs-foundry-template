@@ -1,5 +1,5 @@
 {
-    "name": "js-eth-price-oracle",
+    "name": "js-evm-price-oracle",
     "version": "1.0.0",
     "description": "",
     "main": "index.js",

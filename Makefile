@@ -7,7 +7,7 @@ SUDO := $(shell if groups | grep -q docker; then echo ''; else echo 'sudo'; fi)
 default: build
 
 # Customize these variables
-COMPONENT_FILENAME?=eth_price_oracle.wasm
+COMPONENT_FILENAME?=evm_price_oracle.wasm
 SERVICE_URL?="http://127.0.0.1:9999/service.json"
 
 # Define common variables

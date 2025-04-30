@@ -1184,7 +1184,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "eth-price-oracle"
+name = "evm-price-oracle"
 version = "0.3.0"
 dependencies = [
  "alloy-sol-macro",

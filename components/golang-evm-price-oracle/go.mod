@@ -1,4 +1,4 @@
-module github.com/Lay3rLabs/wavs-foundry-template/components/golang-eth-price-oracle
+module github.com/Lay3rLabs/wavs-foundry-template/components/golang-evm-price-oracle
 
 go 1.23.7
 

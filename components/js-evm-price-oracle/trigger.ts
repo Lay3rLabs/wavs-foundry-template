@@ -58,7 +58,7 @@ function decodeTriggerEvent(
     ];
   }
 
-  if (triggerAction.tag === "eth-contract-event") {
+  if (triggerAction.tag === "evm-contract-event") {
     const ethContractEvent = triggerAction.val;
 
     try {

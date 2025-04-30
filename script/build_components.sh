@@ -5,7 +5,7 @@
 # ./script/build_components.sh [WASI_BUILD_DIR]
 #
 # WASI_BUILD_DIR: the directory to build the component in
-# e.g. ./script/build_components.sh components/golang-eth-price-oracle
+# e.g. ./script/build_components.sh components/golang-evm-price-oracle
 #
 
 # Extract arguments

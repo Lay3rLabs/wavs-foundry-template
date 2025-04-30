@@ -1,7 +1,7 @@
 {
     "__tool": "github.com/reecepbcups/docci",
     "paths": [
-      "components/js-eth-price-oracle/README.md"
+      "components/golang-evm-price-oracle/README.md"
     ],
     "env_vars": {},
     "pre_cmds": [],

@@ -1,4 +1,4 @@
-WAVS_PACKAGE=wavs:worker@0.4.0-alpha.5
+WAVS_PACKAGE=wavs:worker@0.4.0-alpha.6
 WAVS_WIT_WORLD=wavs:worker/layer-trigger-world
 OUTPUT_DIR?=../../compiled
 
@@ -22,10 +22,10 @@ build-bindings: check-jco check-package
 
 ## wasi-build: building the WAVS wasi component
 wasi-build: check-jco build-bindings convert-wasm-to-wit
-	@echo "Building component: js_eth_price_oracle"
+	@echo "Building component: js_evm_price_oracle"
 	@npx tsc --outDir out/ --target es6 --strict --module preserve index.ts
 	@npx esbuild ./index.js --bundle --outfile=out/out.js --platform=node --format=esm
-	@npx jco componentize out/out.js --wit $(WAVS_PACKAGE).wit --world-name $(WAVS_WIT_WORLD) --out ../../compiled/js_eth_price_oracle.wasm
+	@npx jco componentize out/out.js --wit $(WAVS_PACKAGE).wit --world-name $(WAVS_WIT_WORLD) --out ../../compiled/js_evm_price_oracle.wasm
 
 .PHONY: help
 help: Makefile

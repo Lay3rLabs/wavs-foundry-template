@@ -1,5 +1,5 @@
 [package]
-name = "eth-price-oracle"
+name = "evm-price-oracle"
 edition.workspace = true
 version.workspace = true
 authors.workspace = true
@@ -27,5 +27,5 @@ strip = true
 lto = true
 
 [package.metadata.component]
-package = "component:eth-price-oracle"
+package = "component:evm-price-oracle"
 target = "wavs:worker/layer-trigger-world@0.4.0-alpha.6"
