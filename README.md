@@ -222,15 +222,16 @@ Deploy the compiled component with the contract information from the previous st
 # Build your service JSON
 COMPONENT_FILENAME=evm_price_oracle.wasm AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
 
-# Hack: start a python3 http server on the .docker dir so the files can be read (vs having to really upload)
-# http://0.0.0.0:9999/service.json
-cd .docker && python3 -m http.server 9999 &
+# Upload service.json to IPFS
+ipfs_out=`curl -q -X POST "http://127.0.0.1:5001/api/v0/add?pin=true" -H "Content-Type: multipart/form-data" -F file=@.docker/service.json`
+ipfs_cid=`jq -r .Hash <<< ${ipfs_out}`
 
 # Deploy the service JSON to WAVS so it now watches and submits.
 #
 # If CREDENTIAL is not set then the default WAVS_CLI .env account will be used
 # You can `cast send ${WAVS_SERVICE_MANAGER} 'transferOwnership(address)'` to move it to another account.
-SERVICE_URL=http://0.0.0.0:9999/service.json CREDENTIAL=${DEPLOYER_PK} make deploy-service
+# curl "http://127.0.0.1:8080/ipfs/${ipfs_cid}"
+SERVICE_URL=http://127.0.0.1:8080/ipfs/${ipfs_cid} CREDENTIAL=${DEPLOYER_PK} make deploy-service
 ```
 
 
