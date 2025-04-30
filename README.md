@@ -217,19 +217,18 @@ export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 
 Deploy the compiled component with the contract information from the previous steps. Review the [makefile](./Makefile) for more details and configuration options.`TRIGGER_EVENT` is the event that the trigger contract emits and WAVS watches for. By altering `SERVICE_TRIGGER_ADDR` you can watch events for contracts others have deployed.
 
-```bash docci-delay-per-cmd=2
+```bash docci-delay-per-cmd=3
 # Build your service JSON
 COMPONENT_FILENAME=evm_price_oracle.wasm AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
 
 # Upload service.json to IPFS
-ipfs_out=`curl -q -X POST "http://127.0.0.1:5001/api/v0/add?pin=true" -H "Content-Type: multipart/form-data" -F file=@.docker/service.json`
-ipfs_cid=`jq -r .Hash <<< ${ipfs_out}`
+ipfs_cid=`IPFS_ENDPOINT=http://127.0.0.1:5001 SERVICE_FILE=.docker/service.json make upload-to-ipfs`
 
 # Deploy the service JSON to WAVS so it now watches and submits.
 #
 # If CREDENTIAL is not set then the default WAVS_CLI .env account will be used
 # You can `cast send ${WAVS_SERVICE_MANAGER} 'transferOwnership(address)'` to move it to another account.
-SERVICE_URL=http://127.0.0.1:8080/ipfs/${ipfs_cid} CREDENTIAL=${DEPLOYER_PK} make deploy-service
+SERVICE_URL="http://127.0.0.1:8080/ipfs/${ipfs_cid}" CREDENTIAL=${DEPLOYER_PK} make deploy-service
 ```
 
 

@@ -8,7 +8,8 @@ default: build
 
 # Customize these variables
 COMPONENT_FILENAME?=evm_price_oracle.wasm
-SERVICE_URL?="http://127.0.0.1:9999/service.json"
+IPFS_ENDPOINT?=http://127.0.0.1:5001
+SERVICE_FILE?=.docker/service.json
 
 # Define common variables
 CARGO=cargo
@@ -86,6 +87,7 @@ upload-component:
 # TODO: move to `$(WAVS_CMD) upload-component ./compiled/${COMPONENT_FILENAME} --wavs-endpoint ${WAVS_ENDPOINT}`
 	@wget --post-file=./compiled/${COMPONENT_FILENAME} --header="Content-Type: application/wasm" -O - ${WAVS_ENDPOINT}/upload | jq -r .digest
 
+SERVICE_URL?="http://127.0.0.1:8080/ipfs/service.json"
 ## deploy-service: deploying the WAVS component service json | SERVICE_URL, CREDENTIAL, WAVS_ENDPOINT
 deploy-service:
 	@$(WAVS_CMD) deploy-service --service-url "$(SERVICE_URL)" --log-level=info --data /data/.docker --home /var/wavs $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),) $(if $(CREDENTIAL),--evm-credential $(CREDENTIAL),)
@@ -98,6 +100,13 @@ TRIGGER_ID?=1
 ## show-result: showing the result | SERVICE_SUBMISSION_ADDR, TRIGGER_ID, RPC_URL
 show-result:
 	@forge script ./script/ShowResult.s.sol ${SERVICE_SUBMISSION_ADDR} ${TRIGGER_ID} --sig 'data(string,uint64)' --rpc-url $(RPC_URL) --broadcast
+
+
+## upload-to-ipfs: uploading the a service config to IPFS | IPFS_ENDPOINT, SERVICE_FILE
+upload-to-ipfs:
+	@curl -s -X POST "${IPFS_ENDPOINT}/api/v0/add?pin=true" \
+		-H "Content-Type: multipart/form-data" \
+		-F file=@${SERVICE_FILE} | jq -r .Hash
 
 ## update-submodules: update the git submodules
 update-submodules:
