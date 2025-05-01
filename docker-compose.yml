@@ -49,17 +49,13 @@ services:
       - "5001:5001"
     command: ["daemon", "--offline"]
 
-  fix-permission:
-    image: busybox
-    command: ["sh", "-c", "chown -R 1000:1000 /var/lib/warg-server/data"]
-    volumes:
-      - content:/var/lib/warg-server/data
-
   warg-registry:
     image: "ghcr.io/reecepbcups/registry:0.0.1"
+    container_name: "warg-registry"
     environment:
       WARG_OPERATOR_KEY: ecdsa-p256:I+UlDo0HxyBBFeelhPPWmD+LnklOpqZDkrFP5VduASk=
       WARG_NAMESPACE: example
+      WARG_CONTENT_BASE_URL: http://localhost
     ports:
       - 8090:8090
     volumes:
@@ -67,6 +63,12 @@ services:
     depends_on:
       fix-permission:
         condition: service_completed_successfully
+
+  fix-permission:
+    image: busybox
+    command: ["sh", "-c", "chown -R 1000:1000 /var/lib/warg-server/data"]
+    volumes:
+      - content:/var/lib/warg-server/data
 
 volumes:
   content:

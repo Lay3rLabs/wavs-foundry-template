@@ -46,10 +46,12 @@ fi
 if [ -z "$SUBMIT_ADDRESS" ]; then
     SUBMIT_ADDRESS=`make get-submit-from-deploy`
 fi
-if [ -z "$WASM_DIGEST" ]; then
-    WASM_DIGEST=`make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME`
-    WASM_DIGEST=$(echo ${WASM_DIGEST} | cut -d':' -f2)
-fi
+# if [ -z "$WASM_DIGEST" ]; then
+#     WASM_DIGEST=`make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME`
+#     WASM_DIGEST=$(echo ${WASM_DIGEST} | cut -d':' -f2)
+# fi
+
+
 
 # === Core ===
 
@@ -71,7 +73,8 @@ if [ -n "$AGGREGATOR_URL" ]; then
 fi
 $BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDRESS} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
 
-COMPONENT_ID=`$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST} | jq -r '.workflows | keys | .[0]'`
+# COMPONENT_ID=`$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST} | jq -r '.workflows | keys | .[0]'`
+COMPONENT_ID=`$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --domain localhost:8090 --package "example:evmpriceoraclerust" --version "0.1.0"`
 echo "Component ID: ${COMPONENT_ID}"
 
 $BASE_CMD workflow component --id ${COMPONENT_ID} permissions --http-hosts '*' --file-system true > /dev/null

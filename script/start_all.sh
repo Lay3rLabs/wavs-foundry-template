@@ -50,7 +50,7 @@ sed -i${SP}'' -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$OP
 
 # == WAVS & Aggregator ==
 docker compose up --remove-orphans &
-trap "docker compose down && echo -e '\nKilled WAVS'" EXIT
+trap "docker compose down -v && echo -e '\nKilled WAVS'" EXIT
 
 # fin
 date +%s > $LOG_FILE
