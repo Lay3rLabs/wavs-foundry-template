@@ -20,6 +20,9 @@
 [default]
 log_level = ["info", "wavs=debug"]
 
+# The IPFS gateway URL used to access IPFS content over HTTP.
+# ipfs_gateway = "https://ipfs.io/ipfs/"
+
 # ----------------------------
 # Chain configurations
 # ----------------------------
@@ -97,8 +100,8 @@ cors_allowed_origins = [
     "http://127.0.0.1:*",
 ]
 
-# The port on which the server will listen. Default is 8000
-# port = 9000
+# The port on which the server will listen.
+# port = 8000
 
 # The host to serve on. Default is localhost
 # host = "localhost"
@@ -123,7 +126,6 @@ active_trigger_chains = ["local"]
 # The directory to store the data. Default is "/var/wavs-cli"
 data = "~/wavs/cli"
 
-# WAVS endpoint
 # wavs_endpoint = "http://localhost:8000"
 
 # CLI-specific chain overrides
