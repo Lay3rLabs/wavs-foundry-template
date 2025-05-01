@@ -74,8 +74,10 @@ fi
 $BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDRESS} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
 
 # COMPONENT_ID=`$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST} | jq -r '.workflows | keys | .[0]'`
-COMPONENT_ID=`$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --domain localhost:8090 --package "example:evmpriceoraclerust" --version "0.1.0"`
+COMPONENT_ID=`$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --domain localhost:8090 --version "0.1.0" --package "example:evmpriceoraclerust"`
 echo "Component ID: ${COMPONENT_ID}"
+
+exit 99
 
 $BASE_CMD workflow component --id ${COMPONENT_ID} permissions --http-hosts '*' --file-system true > /dev/null
 $BASE_CMD workflow component --id ${COMPONENT_ID} time-limit --seconds 30 > /dev/null
