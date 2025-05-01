@@ -20,4 +20,4 @@ create-operators:
 	export OPERATOR2_MNEMONIC=`cat ../.docker/operator2.json | jq -r .mnemonic` && \
 	export OPERATOR2_PK=`cat ../.docker/operator2.json | jq -r .accounts[0].private_key` && \
 	sed -i'' -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$$/WAVS_SUBMISSION_MNEMONIC=\"$$OPERATOR2_MNEMONIC\"/" .env2 && \
-	sed -i'' -e "s/^WAVS_CLI_EVM_CREDENTIAL=.*$$/WAVS_CLI_EVM_CREDENTIAL=\"$$OPERATOR2_PK\"/" .env2 && \
+	sed -i'' -e "s/^WAVS_CLI_EVM_CREDENTIAL=.*$$/WAVS_CLI_EVM_CREDENTIAL=\"$$OPERATOR2_PK\"/" .env2
