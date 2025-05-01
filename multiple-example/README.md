@@ -38,7 +38,7 @@ cd $(git rev-parse --show-toplevel)
 
 # Wait for deployment to complete (check for start.log)
 while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done
-docker compose -f docker-compose-multi.yml logs -f &
+docker compose -f docker-compose-multi.yml logs -f &;
 
 export DEPLOYER_PK=$(cat ./.nodes/deployer)
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager ./.nodes/avs_deploy.json)
