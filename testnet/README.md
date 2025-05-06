@@ -17,11 +17,7 @@ sh ./create-aggregator.sh
 
 sh ./create-operator.sh 1
 sh ./create-operator.sh 2
-```
 
-### Start
-
-```bash
 # - Shows operators being used
 # - Deploys Eigen AVS specific contracts
 # - Funds Aggregator wallet (from .aggregator.env) # TODO: real testnet this needs to be pre-funded with FUNDED_KEY instead
@@ -32,6 +28,7 @@ sh start.sh
 ## Upload standard smart contracts
 
 ```bash
+# new terminal
 cd $(git rev-parse --show-toplevel)
 
 # Wait for deployment to complete (check for start.log)
