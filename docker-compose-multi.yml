@@ -9,7 +9,7 @@ services:
     image: "ghcr.io/lay3rlabs/wavs:apr-30-fix-general"
     container_name: "wavs-aggregator"
     stop_signal: SIGKILL
-    env_file: "./multiple-example/.env1"
+    env_file: "./multiple-example/.aggregator.env"
     ports:
       - "8001:8001"
     command: ["wavs-aggregator", "--log-level", "info"]
@@ -23,7 +23,7 @@ services:
     container_name: "wavs1"
     stop_signal: SIGKILL
     network_mode: "host"
-    env_file: "./multiple-example/.env1"
+    env_file: "./multiple-example/.operator1.env"
     ports:
       - "8000:8000"
     environment:
@@ -41,7 +41,7 @@ services:
     container_name: "wavs2"
     stop_signal: SIGKILL
     network_mode: "host"
-    env_file: "./multiple-example/.env2"
+    env_file: "./multiple-example/.operator2.env"
     ports:
       - "9000:9000"
     environment:

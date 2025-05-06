@@ -10,41 +10,23 @@ MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-alpha.5
 LOG_FILE="$GIT_ROOT/.docker/start.log"
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
-# Create parent directories if they don't exist
-# mkdir -p ../.docker
-# mkdir -p ../.nodes
-
 # Remove log file if it exists
 rm $LOG_FILE 2> /dev/null || true
 
-# Get operator keys from .env files or create new ones if they don't exist
-if [ ! -f ../.docker/operator1.json ] || [ ! -f ../.docker/operator2.json ]; then
-  echo "Creating new operator keys..."
-  make create-operators
-fi
 
-# Load environment variables from .env files
-source .env1
-OPERATOR1_PK=$WAVS_CLI_EVM_CREDENTIAL
-OPERATOR1_MNEMONIC=$WAVS_SUBMISSION_MNEMONIC
-
-source .env2
-OPERATOR2_PK=$WAVS_CLI_EVM_CREDENTIAL
-OPERATOR2_MNEMONIC=$WAVS_SUBMISSION_MNEMONIC
-
-# Verify keys exist
-if [[ -z "$OPERATOR1_PK" ]] || [[ -z "$OPERATOR1_MNEMONIC" ]]; then
-  echo "Operator 1 keys missing. Please run 'make create-operators'"
+OPERATORS=`find . -type f -name ".operator[0-9].env" | sort -t r -k 2 -n`
+if [ -z "$OPERATORS" ]; then
+  echo "No operator files found. Please create at least one operator env file (sh create-operator.sh)."
   exit 1
 fi
 
-if [[ -z "$OPERATOR2_PK" ]] || [[ -z "$OPERATOR2_MNEMONIC" ]]; then
-  echo "Operator 2 keys missing. Please run 'make create-operators'"
-  exit 1
-fi
+for file in ${OPERATORS}; do
+  source $file
+  OPERATOR_INDEX=$(echo $file | grep -oP '(?<=\.operator)\d+')
 
-echo "Using Operator 1 Address: $(cast wallet address --private-key ${OPERATOR1_PK})"
-echo "Using Operator 2 Address: $(cast wallet address --private-key ${OPERATOR2_PK})"
+  ETH_ADDR=$(cast wallet address --mnemonic "${WAVS_SUBMISSION_MNEMONIC}")
+  echo "Using Operator ${OPERATOR_INDEX} Address: ${ETH_ADDR}"
+done
 
 # Start Anvil
 echo "Starting Anvil..."
@@ -61,7 +43,7 @@ echo "Anvil started successfully"
 
 # Deploy EigenLayer contracts
 echo "Deploying EigenLayer contracts..."
-cd ${GIT_ROOT} && docker run --rm --network host --env-file multiple-example/.env1 -v ./.nodes:/root/.nodes "$MIDDLEWARE_IMAGE"
+cd ${GIT_ROOT} && docker run --rm --network host --env-file multiple-example/.operator1.env -v ./.nodes:/root/.nodes "$MIDDLEWARE_IMAGE"
 cd multiple-example
 echo "EigenLayer contracts deployed"
 
