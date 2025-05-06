@@ -82,7 +82,7 @@ func decodeTriggerEvent(triggerAction trigger.TriggerData) (trigger_id uint64, r
 	}
 
 	// Handle Ethereum event case
-	ethEvent := triggerAction.EthContractEvent()
+	ethEvent := triggerAction.EvmContractEvent()
 	if ethEvent == nil {
 		panic("triggerAction.EthContractEvent() is nil")
 	}

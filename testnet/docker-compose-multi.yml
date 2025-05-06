@@ -6,7 +6,7 @@
 
 services:
   aggregator:
-    image: "ghcr.io/lay3rlabs/wavs:may-6-fix-agg-sort"
+    image: "ghcr.io/lay3rlabs/wavs:0.4.0-beta.1"
     container_name: "wavs-aggregator"
     stop_signal: SIGKILL
     env_file: ".aggregator.env"
@@ -19,7 +19,7 @@ services:
 
   # Operator 1 services
   wavs1:
-    image: "ghcr.io/lay3rlabs/wavs:may-6-fix-agg-sort"
+    image: "ghcr.io/lay3rlabs/wavs:0.4.0-beta.1"
     container_name: "wavs1"
     stop_signal: SIGKILL
     network_mode: "host"
@@ -37,7 +37,7 @@ services:
 
   # Operator 2 services
   wavs2:
-    image: "ghcr.io/lay3rlabs/wavs:may-6-fix-agg-sort"
+    image: "ghcr.io/lay3rlabs/wavs:0.4.0-beta.1"
     container_name: "wavs2"
     stop_signal: SIGKILL
     network_mode: "host"
