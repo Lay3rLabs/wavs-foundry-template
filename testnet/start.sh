@@ -42,11 +42,11 @@ echo "Anvil started successfully"
 
 # Deploy EigenLayer contracts
 echo "Deploying EigenLayer contracts..."
-cd ${GIT_ROOT} && docker run --rm --network host --env-file multiple-example/.operator1.env -v ./.nodes:/root/.nodes "$MIDDLEWARE_IMAGE"
+cd ${GIT_ROOT} && docker run --rm --network host --env-file testnet/.operator1.env -v ./.nodes:/root/.nodes "$MIDDLEWARE_IMAGE"
 echo "EigenLayer contracts deployed"
 
 echo "Funding WAVS Aggregator..."
-source multiple-example/.aggregator.env
+source testnet/.aggregator.env
 export DEPLOYER_PK=$(cat ./.nodes/deployer) # from eigenlayer deploy (funded account)
 AGGREGATOR_ADDR=$(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL})
 cast send ${AGGREGATOR_ADDR} --rpc-url http://localhost:8545 --private-key ${DEPLOYER_PK} --value 1ether

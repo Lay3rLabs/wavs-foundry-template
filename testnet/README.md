@@ -1,4 +1,4 @@
-# WAVS Multi-Operator Example
+# WAVS Multi-Operator Testnet Example
 
 This example demonstrates how to run a WAVS service with multiple operators. It builds upon the main example in the root directory but extends it to use two separate operators.
 
@@ -9,7 +9,7 @@ Make sure you have completed the system requirements setup from the main [README
 ## Directory Structure
 
 ```
-multiple-example/
+testnet/
 ├── .env1                # Environment variables for operator 1
 ├── .env2                # Environment variables for operator 2
 ├── docker-compose.yml   # Multi-operator Docker configuration
@@ -32,7 +32,7 @@ multiple-example/
 ### Create & Start
 
 ```bash
-cd multiple-example/
+cd testnet/
 
 sh ./create-aggregator.sh
 
@@ -89,14 +89,14 @@ WAVS_ENDPOINT="http://127.0.0.1:9000" CREDENTIAL=${DEPLOYER_PK} make deploy-serv
 
 
 # Register Operators
-source multiple-example/.operator1.env
+source testnet/.operator1.env
 AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 1`
-ENV_FILE=multiple-example/.operator1.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
+ENV_FILE=testnet/.operator1.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
 
 # Operator 2
-source multiple-example/.operator2.env
+source testnet/.operator2.env
 AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 1`
-ENV_FILE=multiple-example/.operator2.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
+ENV_FILE=testnet/.operator2.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
 
 # Update threshold weight
 ECDSA_CONTRACT=`cat .nodes/avs_deploy.json | jq -r .addresses.stakeRegistry`
