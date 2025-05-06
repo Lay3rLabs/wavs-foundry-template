@@ -6,27 +6,6 @@ This example demonstrates how to run a WAVS service with multiple operators. It 
 
 Make sure you have completed the system requirements setup from the main [README.md](../README.md).
 
-## Directory Structure
-
-```
-testnet/
-├── .env1                # Environment variables for operator 1
-├── .env2                # Environment variables for operator 2
-├── docker-compose.yml   # Multi-operator Docker configuration
-├── README.md            # This file
-└── start_multi.sh       # Script to start both operators
-```
-
-## Multi-Operator Flow
-
-1. Start an Ethereum node (anvil)
-2. Deploy EigenLayer contracts
-3. Start two WAVS instances (with different ports)
-4. Deploy service contracts
-5. Deploy the WASI component
-6. Register both operators with the service
-7. Trigger the service and observe multiple operators submitting results
-
 ## Setup and Run
 
 ### Create & Start
@@ -42,7 +21,7 @@ sh ./create-operator.sh 2
 
 ### Start
 
-```bash docci-background
+```bash
 # - Shows operators being used
 # - Deploys Eigen Contracts
 # - Funds Aggregator wallet (from .aggregator.env)
@@ -50,16 +29,13 @@ sh ./create-operator.sh 2
 sh start.sh
 ```
 
+## Upload standard smart contracts
 
 ```bash
-# new terminal, run below
 cd $(git rev-parse --show-toplevel)
 
-# Wait for deployment to complete (check for start.log)
-while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done
-docker compose -f docker-compose-multi.yml logs -f &
-
-# Upload smart contracts from some account
+# This Deployer can be any private key, using
+# pre funded account for simplicity.
 export DEPLOYER_PK=$(cat ./.nodes/deployer)
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager ./.nodes/avs_deploy.json)
 
@@ -68,14 +44,20 @@ export SERVICE_SUBMISSION_ADDR=`jq -r .deployedTo .docker/submit.json`
 
 forge create SimpleTrigger --json --broadcast -r http://127.0.0.1:8545 --private-key "${DEPLOYER_PK}" > .docker/trigger.json
 export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
+```
+
+```bash
+cd $(git rev-parse --show-toplevel)
+
+# Wait for deployment to complete (check for start.log)
+while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done
+docker compose -f docker-compose-multi.yml logs -f &
 
 
 # Deploy the WASI component service & upload to each WAVS instance
 # (required until we can read components from upstream registry)
-# WAVS1
 export COMPONENT_FILENAME=evm_price_oracle.wasm
 WAVS_ENDPOINT="http://127.0.0.1:8000" AGGREGATOR_URL="http://127.0.0.1:8001" sh ./script/build_service.sh
-# WAVS2
 WAVS_ENDPOINT=http://127.0.0.1:9000 make upload-component
 
 
@@ -85,8 +67,6 @@ ipfs_cid=`IPFS_ENDPOINT=http://127.0.0.1:5001 SERVICE_FILE=.docker/service.json 
 export SERVICE_URL="http://127.0.0.1:8080/ipfs/${ipfs_cid}"
 WAVS_ENDPOINT="http://127.0.0.1:8000" CREDENTIAL=${DEPLOYER_PK} make deploy-service
 WAVS_ENDPOINT="http://127.0.0.1:9000" CREDENTIAL=${DEPLOYER_PK} make deploy-service
-
-
 
 # Register Operators
 source testnet/.operator1.env
@@ -99,21 +79,21 @@ AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMO
 ENV_FILE=testnet/.operator2.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
 
 # Update threshold weight
-ECDSA_CONTRACT=`cat .nodes/avs_deploy.json | jq -r .addresses.stakeRegistry`
-
 # 1.8x a single operator weight (requires 2/3 of registered operators)
+ECDSA_CONTRACT=`cat .nodes/avs_deploy.json | jq -r .addresses.stakeRegistry`
 cast send ${ECDSA_CONTRACT} "updateStakeThreshold(uint256)" 1782625057707873 --rpc-url http://localhost:8545 --private-key ${DEPLOYER_PK}
 
 # Verify registration for operators
 make operator-list
+```
 
+## Contract call and aggregation
 
+```bash
 # Trigger the service (request CMC ID price)
 export COIN_MARKET_CAP_ID=2
 forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast
 
-
-# Show results
 TRIGGER_ID=`make get-trigger | grep "TriggerID:" | awk '{print $2}'`
 TRIGGER_ID=${TRIGGER_ID} make show-result
 ```
