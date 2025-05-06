@@ -13,7 +13,6 @@ export DOCKER_DEFAULT_PLATFORM=linux/amd64
 # Remove log file if it exists
 rm $LOG_FILE 2> /dev/null || true
 
-
 OPERATORS=`find . -type f -name ".operator[0-9].env" | sort -t r -k 2 -n`
 if [ -z "$OPERATORS" ]; then
   echo "No operator files found. Please create at least one operator env file (sh create-operator.sh)."
@@ -44,8 +43,13 @@ echo "Anvil started successfully"
 # Deploy EigenLayer contracts
 echo "Deploying EigenLayer contracts..."
 cd ${GIT_ROOT} && docker run --rm --network host --env-file multiple-example/.operator1.env -v ./.nodes:/root/.nodes "$MIDDLEWARE_IMAGE"
-cd multiple-example
 echo "EigenLayer contracts deployed"
+
+echo "Funding WAVS Aggregator..."
+source multiple-example/.aggregator.env
+export DEPLOYER_PK=$(cat ./.nodes/deployer) # from eigenlayer deploy (funded account)
+AGGREGATOR_ADDR=$(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL})
+cast send ${AGGREGATOR_ADDR} --rpc-url http://localhost:8545 --private-key ${DEPLOYER_PK} --value 1ether
 
 # Start WAVS services using docker-compose
 echo "Starting WAVS services for both operators..."

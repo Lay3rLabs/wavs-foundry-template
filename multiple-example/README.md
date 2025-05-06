@@ -38,9 +38,14 @@ sh ./create-aggregator.sh
 
 sh ./create-operator.sh 1
 sh ./create-operator.sh 2
+```
 
+### Start
+
+```bash docci-background
 # - Shows operators being used
 # - Deploys Eigen Contracts
+# - Funds Aggregator wallet (from .aggregator.env)
 # - Start WAVS services using docker-compose
 sh start.sh
 ```
@@ -81,9 +86,7 @@ export SERVICE_URL="http://127.0.0.1:8080/ipfs/${ipfs_cid}"
 WAVS_ENDPOINT="http://127.0.0.1:8000" CREDENTIAL=${DEPLOYER_PK} make deploy-service
 WAVS_ENDPOINT="http://127.0.0.1:9000" CREDENTIAL=${DEPLOYER_PK} make deploy-service
 
-# Fund the aggregator account (only 1 is run)
-source multiple-example/.aggregator.env
-cast send $(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL}) --rpc-url http://localhost:8545 --private-key ${DEPLOYER_PK} --value 1ether
+
 
 # Register Operators
 source multiple-example/.operator1.env
@@ -95,14 +98,10 @@ source multiple-example/.operator2.env
 AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 1`
 ENV_FILE=multiple-example/.operator2.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
 
-
-# Operator 3 (offline, no WAVS instance submissions) - just for testing 2/3 threshold
-# AVS_PRIVATE_KEY=`cast wallet new --json | jq -r .[].private_key`
-# ENV_FILE=multiple-example/.operator2.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
-
 # Update threshold weight
 ECDSA_CONTRACT=`cat .nodes/avs_deploy.json | jq -r .addresses.stakeRegistry`
-# 1.8x a single operator weight (requires 2/3)
+
+# 1.8x a single operator weight (requires 2/3 of registered operators)
 cast send ${ECDSA_CONTRACT} "updateStakeThreshold(uint256)" 1782625057707873 --rpc-url http://localhost:8545 --private-key ${DEPLOYER_PK}
 
 # Verify registration for operators
