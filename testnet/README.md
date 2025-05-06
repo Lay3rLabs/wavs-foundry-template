@@ -23,8 +23,8 @@ sh ./create-operator.sh 2
 
 ```bash
 # - Shows operators being used
-# - Deploys Eigen Contracts
-# - Funds Aggregator wallet (from .aggregator.env)
+# - Deploys Eigen AVS specific contracts
+# - Funds Aggregator wallet (from .aggregator.env) # TODO: real testnet this needs to be pre-funded with FUNDED_KEY instead
 # - Start WAVS services using docker-compose
 sh start.sh
 ```
@@ -82,6 +82,8 @@ ENV_FILE=testnet/.operator1.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator
 source testnet/.operator2.env
 AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 1`
 ENV_FILE=testnet/.operator2.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
+
+# register a 3rd new wallet operator here to test with a 2/3 config, just don't run a node for it.
 
 # Update threshold weight
 # 1.8x a single operator weight (requires 2/3 of registered operators)
