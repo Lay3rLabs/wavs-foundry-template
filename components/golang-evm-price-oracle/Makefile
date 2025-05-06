@@ -1,4 +1,4 @@
-WAVS_PACKAGE=wavs:worker@0.4.0-alpha.6
+WAVS_PACKAGE=wavs:worker@0.4.0-beta.1
 WAVS_WIT_WORLD=wavs:worker/layer-trigger-world
 # get the first line of the go.mod and get the last element after the last /, then replace - with _
 GO_MOD_NAME?=$(shell head -n 1 go.mod | cut -d' ' -f2 | rev | cut -d'/' -f1 | rev | tr '-' '_')

@@ -27,6 +27,7 @@ contract ShowResult is Common {
         }
 
         bytes memory triggerData = submit.getData(triggerIdTyped);
+        console.log("TriggerID:", triggerId);
         console.log("Data:", string(triggerData));
     }
 

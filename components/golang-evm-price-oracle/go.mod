@@ -9,7 +9,7 @@ replace github.com/dev-wasm/dev-wasm-go/lib => github.com/Reecepbcups/dev-wasm-g
 replace github.com/defiweb/go-eth => github.com/Reecepbcups/go-eth v0.7.1-0.20250320155602-e7f53502e2df
 
 require (
-	github.com/Lay3rLabs/wavs-wasi/go v0.4.0-alpha.5
+	github.com/Lay3rLabs/wavs-wasi/go v0.4.0-beta.1
 	github.com/dev-wasm/dev-wasm-go/lib v0.0.0
 	go.bytecodealliance.org/cm v0.1.1-0.20250218151459-e57ac0139b6f
 )

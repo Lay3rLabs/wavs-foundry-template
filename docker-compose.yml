@@ -8,7 +8,7 @@
 
 services:
   wavs:
-    image: "ghcr.io/lay3rlabs/wavs:apr-30-fix-general"
+    image: "ghcr.io/lay3rlabs/wavs:0.4.0-beta.1"
     container_name: "wavs"
     stop_signal: SIGKILL
     network_mode: "host"
@@ -25,7 +25,7 @@ services:
       - "./.docker:/root/wavs/cli/"
 
   aggregator:
-    image: "ghcr.io/lay3rlabs/wavs:apr-30-fix-general"
+    image: "ghcr.io/lay3rlabs/wavs:0.4.0-beta.1"
     depends_on: ["wavs"]
     container_name: "wavs-aggregator"
     stop_signal: SIGKILL
@@ -49,26 +49,3 @@ services:
       - "5001:5001"
     command: ["daemon", "--offline"]
 
-  warg-registry:
-    image: "ghcr.io/reecepbcups/registry:0.0.1"
-    container_name: "warg-registry"
-    environment:
-      WARG_OPERATOR_KEY: ecdsa-p256:I+UlDo0HxyBBFeelhPPWmD+LnklOpqZDkrFP5VduASk=
-      WARG_NAMESPACE: example
-      WARG_CONTENT_BASE_URL: http://localhost
-    ports:
-      - 8090:8090
-    volumes:
-      - content:/var/lib/warg-server/data
-    depends_on:
-      fix-permission:
-        condition: service_completed_successfully
-
-  fix-permission:
-    image: busybox
-    command: ["sh", "-c", "chown -R 1000:1000 /var/lib/warg-server/data"]
-    volumes:
-      - content:/var/lib/warg-server/data
-
-volumes:
-  content:

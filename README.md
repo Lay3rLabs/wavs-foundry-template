@@ -286,3 +286,14 @@ make get-trigger
 ```bash docci-delay-per-cmd=2 docci-output-contains="BTC"
 TRIGGER_ID=1 make show-result
 ```
+
+## Claude Code
+
+To spin up a sandboxed instance of [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) in a Docker container that only has access to this project's files, run the following command:
+
+```bash docci-ignore
+npm run claude-code
+# or with no restrictions (--dangerously-skip-permissions)
+npm run claude-code:unrestricted
+```
+

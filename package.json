@@ -12,7 +12,9 @@
     "lint:sol": "solhint 'src/**/*.sol' 'script/**/*.sol' 'test/**/*.sol'",
     "test": "forge test -vvv",
     "test:integration": "forge test --match-contract Integration -vvv",
-    "test:unit": "forge test --match-contract Unit -vvv"
+    "test:unit": "forge test --match-contract Unit -vvv",
+    "claude-code": "docker compose -f .claude/docker-compose.claude.yml run --rm --remove-orphans -it claude-code-sandbox bash -c 'claude; exec'",
+    "claude-code:unrestricted": "docker compose -f .claude/docker-compose.claude.yml run --rm --remove-orphans -it claude-code-sandbox bash -c 'claude --dangerously-skip-permissions; exec'"
   },
   "lint-staged": {
     "*.{js,css,md,ts,sol}": "forge fmt",
@@ -25,7 +27,7 @@
     "@defi-wonderland/natspec-smells": "1.1.6",
     "@openzeppelin/contracts": "^5.2.0",
     "forge-std": "github:foundry-rs/forge-std#v1.9.6",
-    "wavs-middleware": "github:Lay3rLabs/wavs-middleware#v0.4.0-alpha.5",
+    "@wavs/solidity": "0.4.0-beta.1",
     "lint-staged": ">=10",
     "solhint-community": "4.0.0",
     "sort-package-json": "2.10.0"

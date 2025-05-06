@@ -3,7 +3,7 @@
 set -e
 
 PORT=8545
-MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-alpha.5
+MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.1
 LOG_FILE=.docker/start.log
 OPERATOR_PK=${OPERATOR_PK:-""}
 OPERATOR_MNEMONIC=${OPERATOR_MNEMONIC:-""}
