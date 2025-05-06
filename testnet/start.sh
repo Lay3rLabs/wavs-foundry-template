@@ -53,8 +53,8 @@ cast send ${AGGREGATOR_ADDR} --rpc-url http://localhost:8545 --private-key ${DEP
 
 # Start WAVS services using docker-compose
 echo "Starting WAVS services for both operators..."
-cd ${GIT_ROOT} && docker compose -f docker-compose-multi.yml up --remove-orphans -d
-trap "cd ${GIT_ROOT} && docker compose -f docker-compose-multi.yml down && echo -e '\nKilled WAVS services'" EXIT
+cd ${GIT_ROOT} && docker compose -f testnet/docker-compose-multi.yml up --remove-orphans -d
+trap "cd ${GIT_ROOT} && docker compose -f testnet/docker-compose-multi.yml down && echo -e '\nKilled WAVS services'" EXIT
 
 # Mark successful startup
 echo "Multi-operator environment started successfully"

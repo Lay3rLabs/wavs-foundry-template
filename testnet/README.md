@@ -11,7 +11,7 @@ Make sure you have completed the system requirements setup from the main [README
 ### Create & Start
 
 ```bash
-cd testnet/
+cd testnet/ || true
 
 sh ./create-aggregator.sh
 
@@ -34,6 +34,9 @@ sh start.sh
 ```bash
 cd $(git rev-parse --show-toplevel)
 
+# Wait for deployment to complete (check for start.log)
+while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done
+
 # This Deployer can be any private key, using
 # pre funded account for simplicity.
 export DEPLOYER_PK=$(cat ./.nodes/deployer)
@@ -46,13 +49,13 @@ forge create SimpleTrigger --json --broadcast -r http://127.0.0.1:8545 --private
 export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 ```
 
+## Setup WAVS instances
+
 ```bash
 cd $(git rev-parse --show-toplevel)
 
-# Wait for deployment to complete (check for start.log)
-while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done
-docker compose -f docker-compose-multi.yml logs -f &
-
+# Start wavs
+docker compose -f testnet/docker-compose-multi.yml logs -f &
 
 # Deploy the WASI component service & upload to each WAVS instance
 # (required until we can read components from upstream registry)
@@ -60,15 +63,17 @@ export COMPONENT_FILENAME=evm_price_oracle.wasm
 WAVS_ENDPOINT="http://127.0.0.1:8000" AGGREGATOR_URL="http://127.0.0.1:8001" sh ./script/build_service.sh
 WAVS_ENDPOINT=http://127.0.0.1:9000 make upload-component
 
-
-# Upload service.json to IPFS
+# Upload service.json to IPFS & deploy service with it
 ipfs_cid=`IPFS_ENDPOINT=http://127.0.0.1:5001 SERVICE_FILE=.docker/service.json make upload-to-ipfs`
-
 export SERVICE_URL="http://127.0.0.1:8080/ipfs/${ipfs_cid}"
+
 WAVS_ENDPOINT="http://127.0.0.1:8000" CREDENTIAL=${DEPLOYER_PK} make deploy-service
 WAVS_ENDPOINT="http://127.0.0.1:9000" CREDENTIAL=${DEPLOYER_PK} make deploy-service
+```
 
-# Register Operators
+## Register operators -> Eigenlayer
+
+```bash
 source testnet/.operator1.env
 AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 1`
 ENV_FILE=testnet/.operator1.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
