@@ -21,7 +21,7 @@ fi
 
 for file in ${OPERATORS}; do
   source $file
-  OPERATOR_INDEX=$(echo $file | grep -oP '(?<=\.operator)\d+')
+  OPERATOR_INDEX=$(echo $file | awk -F'.operator' '{print $2}' | grep -o '^[0-9]*')
 
   ETH_ADDR=$(cast wallet address --mnemonic "${WAVS_SUBMISSION_MNEMONIC}")
   echo "Using Operator ${OPERATOR_INDEX} Address: ${ETH_ADDR}"
