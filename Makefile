@@ -12,13 +12,13 @@ CREDENTIAL?=""
 DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:0.4.0-beta.1
 MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.1
 IPFS_ENDPOINT?=http://127.0.0.1:5001
-RPC_URL?=http://localhost:8545
+RPC_URL?=http://127.0.0.1:8545
 SERVICE_FILE?=.docker/service.json
 SERVICE_SUBMISSION_ADDR?=`jq -r .deployedTo .docker/submit.json`
 SERVICE_TRIGGER_ADDR?=`jq -r .deployedTo .docker/trigger.json`
 WASI_BUILD_DIR ?= ""
 WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ${DOCKER_IMAGE} wavs-cli
-WAVS_ENDPOINT?="http://localhost:8000"
+WAVS_ENDPOINT?="http://127.0.0.1:8000"
 ENV_FILE?=.env
 
 # Default target is build
