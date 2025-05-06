@@ -9,12 +9,12 @@ services:
     image: "ghcr.io/lay3rlabs/wavs:apr-30-fix-general"
     container_name: "wavs-aggregator"
     stop_signal: SIGKILL
-    env_file: "./multiple-example/.env1"
+    env_file: ".aggregator.env"
     ports:
       - "8001:8001"
     command: ["wavs-aggregator", "--log-level", "info"]
     volumes:
-      - ".:/wavs"
+      - "..:/wavs"
     network_mode: "host"
 
   # Operator 1 services
@@ -23,7 +23,7 @@ services:
     container_name: "wavs1"
     stop_signal: SIGKILL
     network_mode: "host"
-    env_file: "./multiple-example/.env1"
+    env_file: ".operator1.env"
     ports:
       - "8000:8000"
     environment:
@@ -32,8 +32,8 @@ services:
       WAVS_AGGREGATOR_HOME: "/wavs/packages/aggregator"
     command: ["wavs"]
     volumes:
-      - ".:/wavs"
-      - ".docker:/root/wavs/cli/"
+      - "..:/wavs"
+      - "../.docker:/root/wavs/cli/"
 
   # Operator 2 services
   wavs2:
@@ -41,7 +41,7 @@ services:
     container_name: "wavs2"
     stop_signal: SIGKILL
     network_mode: "host"
-    env_file: "./multiple-example/.env2"
+    env_file: ".operator2.env"
     ports:
       - "9000:9000"
     environment:
@@ -50,8 +50,8 @@ services:
       WAVS_AGGREGATOR_HOME: "/wavs/packages/aggregator"
     command: ["wavs", "--port", "9000"]
     volumes:
-      - ".:/wavs"
-      - ".docker:/root/wavs/cli/"
+      - "..:/wavs"
+      - "../.docker:/root/wavs/cli/"
 
   ipfs:
     image: "ipfs/kubo:v0.34.1"
