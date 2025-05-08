@@ -17,26 +17,32 @@ export RPC_URL=${RPC_URL:-"https://ethereum-holesky.publicnode.com"} # TODO: set
 
 sh ./create-aggregator.sh
 
-# cast wallet new-mnemonic --json > .docker/funded_key.json
-# export FUNDED_KEY=`jq -r .accounts[0].private_key .docker/funded_key.json`
+cast wallet new-mnemonic --json > .docker/funded_key.json
+export FUNDED_KEY=`jq -r .accounts[0].private_key .docker/funded_key.json`
 
 # TODO: change to allow for TESTNET vs LOCAL gen (require another argument)
+# TODO: also put funded key in its own .env instead of here
 sh ./create-operator.sh 1 ${FUNDED_KEY}
 sh ./create-operator.sh 2 ${FUNDED_KEY}
-
-# TODO: Faucet funds to FUNDED_KEY
-DEPLOYER_ADDR=`cast wallet address --private-key $FUNDED_KEY`
-echo "Balance of ${DEPLOYER_ADDR}"
-cast balance --ether ${DEPLOYER_ADDR} --rpc-url $RPC_URL
 
 mv /root/wavs-foundry-template/testnet/.operator1.env /root/wavs-1/.env
 mv /root/wavs-foundry-template/testnet/.operator2.env /root/wavs-2/.env
 mv /root/wavs-foundry-template/testnet/.aggregator.env /root/wavs-agg/.env
 
-# - Shows operators being used
-# - Deploys Eigen AVS specific contracts
-# - Funds Aggregator wallet (from .aggregator.env) # TODO: real testnet this needs to be pre-funded with FUNDED_KEY instead
-# - Start WAVS services using docker-compose
+# TODO: Faucet funds to FUNDED_KEY
+
+# TODO: faucet fund deployer, aggregator here (operators later)
+DEPLOYER_ADDR=`cast wallet address --private-key $FUNDED_KEY`
+# cast balance --ether ${DEPLOYER_ADDR} --rpc-url $RPC_URL
+echo "Balance of ${DEPLOYER_ADDR} to fund"
+
+# TODO: move operator index 1 payments here too for initial registration?
+source /root/wavs-agg/.env
+AGGREGATOR_ADDR=$(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL})
+# cast balance --ether $AGGREGATOR_ADDR --rpc-url ${RPC_URL}
+cast send ${AGGREGATOR_ADDR} --rpc-url ${RPC_URL} --private-key ${FUNDED_KEY} --value 0.005ether
+
+# deploys AVS contracts
 sh start.sh
 ```
 
@@ -86,6 +92,7 @@ WAVS_ENDPOINT=http://5.161.229.43:9000 make upload-component
 # Upload service.json to IPFS & deploy service with it
 ipfs_cid=`IPFS_ENDPOINT=http://5.161.229.43:5001 SERVICE_FILE=.docker/service.json make upload-to-ipfs`
 export SERVICE_URL="http://5.161.229.43:8080/ipfs/${ipfs_cid}"
+curl ${SERVICE_URL}
 
 WAVS_ENDPOINT="http://5.161.229.43:8000" CREDENTIAL=${DEPLOYER_PK} make deploy-service
 WAVS_ENDPOINT="http://5.161.229.43:9000" CREDENTIAL=${DEPLOYER_PK} make deploy-service
@@ -101,7 +108,8 @@ AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMO
 # https://holesky-faucet.pk910.de/
 # fund operator acc so they can register
 OPERATOR1_ADDR=`cast wallet address --private-key $AVS_PRIVATE_KEY`
-cast send ${OPERATOR1_ADDR} --private-key ${DEPLOYER_PK} --value 0.025ether --rpc-url ${RPC_URL}
+echo ${OPERATOR1_ADDR}
+cast send ${OPERATOR1_ADDR} --private-key ${DEPLOYER_PK} --value 0.0025ether --rpc-url ${RPC_URL}
 cast balance --ether ${OPERATOR1_ADDR} --rpc-url ${RPC_URL}
 
 # ENV_FILE=testnet/.operator1.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
@@ -112,6 +120,7 @@ ENV_FILE=/root/wavs-1/.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-regi
 source /root/wavs-2/.env
 AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 1`
 OPERATOR2_ADDR=`cast wallet address --private-key $AVS_PRIVATE_KEY`
+echo ${OPERATOR2_ADDR}
 cast send ${OPERATOR2_ADDR} --private-key ${DEPLOYER_PK} --value 0.025ether --rpc-url ${RPC_URL}
 cast balance --ether ${OPERATOR2_ADDR} --rpc-url ${RPC_URL}
 

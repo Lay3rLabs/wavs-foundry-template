@@ -49,16 +49,7 @@ echo "Deploying EigenLayer contracts..."
 cd ${GIT_ROOT} && docker run --rm --network host --env-file /root/wavs-1/.env -v ./.nodes:/root/.nodes "$MIDDLEWARE_IMAGE"
 echo "EigenLayer contracts deployed"
 
-# TODO: do this out of scope of this? idk
-echo "Funding WAVS Aggregator..."
-source /root/wavs-agg/.env
-export DEPLOYER_PK=$(cat ./.nodes/deployer) # from eigenlayer deploy (funded account)
-AGGREGATOR_ADDR=$(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL})
 
-cast balance --ether $AGGREGATOR_ADDR --rpc-url ${RPC_URL}
-
-# if AGGREGATOR_ADDR balance is 0, then do this
-cast send ${AGGREGATOR_ADDR} --rpc-url ${RPC_URL} --private-key ${DEPLOYER_PK} --value 0.05ether
 
 # TODO: LOCAL only
 # Start WAVS services using docker-compose
