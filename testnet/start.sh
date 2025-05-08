@@ -10,6 +10,8 @@ MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.1
 LOG_FILE="$GIT_ROOT/.docker/start.log"
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
+# TODO: ensure RPC_URL is set
+
 # Remove log file if it exists
 rm $LOG_FILE 2> /dev/null || true
 
@@ -41,29 +43,26 @@ done
 # done
 # echo "Anvil started successfully"
 
-# Deploy EigenLayer contracts
+# Deploy EigenLayer AVS contracts
 echo "Deploying EigenLayer contracts..."
-# TODO: make sure the key here is pre-funded private key
 cd ${GIT_ROOT} && docker run --rm --network host --env-file testnet/.operator1.env -v ./.nodes:/root/.nodes "$MIDDLEWARE_IMAGE"
 echo "EigenLayer contracts deployed"
 
+# TODO: do this out of scope of this? idk
 echo "Funding WAVS Aggregator..."
 source testnet/.aggregator.env
 export DEPLOYER_PK=$(cat ./.nodes/deployer) # from eigenlayer deploy (funded account)
 AGGREGATOR_ADDR=$(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL})
-# TODO: get RPC_URL from the .operator1.env, not hardcoded
-cast send ${AGGREGATOR_ADDR} --rpc-url https://1rpc.io/holesky --private-key ${DEPLOYER_PK} --value 0.1ether
+cast send ${AGGREGATOR_ADDR} --rpc-url ${RPC_URL} --private-key ${DEPLOYER_PK} --value 0.05ether
 
-# Start WAVS services using docker-compose
 # TODO: LOCAL only
-echo "Starting WAVS services for both operators..."
-cd ${GIT_ROOT} && docker compose -f testnet/docker-compose-multi.yml up --remove-orphans -d
-trap "cd ${GIT_ROOT} && docker compose -f testnet/docker-compose-multi.yml down && echo -e '\nKilled WAVS services'" EXIT
-
-# Mark successful startup
-echo "Multi-operator environment started successfully"
-date +%s > $LOG_FILE
-
-# Keep running until interrupted
-echo "Press Ctrl+C to stop the services"
-wait $anvil_pid
+# Start WAVS services using docker-compose
+#     echo "Starting WAVS services for both operators..."
+#     cd ${GIT_ROOT} && docker compose -f testnet/docker-compose-multi.yml up --remove-orphans -d
+#     trap "cd ${GIT_ROOT} && docker compose -f testnet/docker-compose-multi.yml down && echo -e '\nKilled WAVS services'" EXIT
+#     # Mark successful startup
+#     echo "Multi-operator environment started successfully"
+#     date +%s > $LOG_FILE
+#     # Keep running until interrupted
+#     echo "Press Ctrl+C to stop the services"
+#     wait $anvil_pid
