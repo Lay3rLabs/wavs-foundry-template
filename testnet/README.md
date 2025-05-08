@@ -13,7 +13,7 @@ Make sure you have completed the system requirements setup from the main [README
 ```bash
 cd testnet/ || true
 
-export RPC_URL=${RPC_URL} # TODO: set as testnet / .env help here
+export RPC_URL=${RPC_URL:-"https://ethereum-holesky.publicnode.com"} # TODO: set as testnet / .env help here
 
 sh ./create-aggregator.sh
 
@@ -29,6 +29,9 @@ DEPLOYER_ADDR=`cast wallet address --private-key $FUNDED_KEY`
 echo "Balance of ${DEPLOYER_ADDR}"
 cast balance --ether ${DEPLOYER_ADDR} --rpc-url $RPC_URL
 
+mv /root/wavs-foundry-template/testnet/.operator1.env /root/wavs-1/.env
+mv /root/wavs-foundry-template/testnet/.operator2.env /root/wavs-2/.env
+mv /root/wavs-foundry-template/testnet/.aggregator.env /root/wavs-agg/.env
 
 # - Shows operators being used
 # - Deploys Eigen AVS specific contracts
@@ -65,11 +68,11 @@ export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 cd $(git rev-parse --show-toplevel)
 
 # Start wavs
-(cd /root/wavs-1 && mv /root/wavs-foundry-template/testnet/.operator1.env /root/wavs-1/.env && sh start.sh)
-(cd /root/wavs-2 && mv /root/wavs-foundry-template/testnet/.operator2.env /root/wavs-2/.env && sh start.sh)
+(cd /root/wavs-1 && sh start.sh)
+(cd /root/wavs-2 && sh start.sh)
 
 # start aggregator / IPFS
-(cd /root/wavs-agg && mv /root/wavs-foundry-template/testnet/.aggregator.env /root/wavs-agg/.env && docker compose up -d)
+(cd /root/wavs-agg && docker compose up -d)
 
 
 # Deploy the WASI component service & upload to each WAVS instance
@@ -101,16 +104,9 @@ OPERATOR1_ADDR=`cast wallet address --private-key $AVS_PRIVATE_KEY`
 cast send ${OPERATOR1_ADDR} --private-key ${DEPLOYER_PK} --value 0.025ether --rpc-url ${RPC_URL}
 cast balance --ether ${OPERATOR1_ADDR} --rpc-url ${RPC_URL}
 
-
-
-# stake some ETH -> stETH. This is done in the operator-register but required some tweaking
-# export MINT_FUNCTION="submit(address _referral)"
-# cast send "0x3f1c547b21f65e10480de3ad8e19faac46c95034" "$MINT_FUNCTION" "$OPERATOR1_ADDR" "0x0000000000000000000000000000000000000000" --private-key "$AVS_PRIVATE_KEY" --value 0.01ether --rpc-url "${RPC_URL}
-
-# cast call --rpc-url https://ethereum-holesky.publicnode.com 0x3f1c547b21f65e10480de3ad8e19faac46c95034 "balanceOf(address)(uint256)" ${OPERATOR1_ADDR}
-
 # ENV_FILE=testnet/.operator1.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
 ENV_FILE=/root/wavs-1/.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
+# cast call --rpc-url https://ethereum-holesky.publicnode.com 0x3f1c547b21f65e10480de3ad8e19faac46c95034 "balanceOf(address)(uint256)" ${OPERATOR1_ADDR}
 
 # Operator 2
 source /root/wavs-2/.env
@@ -141,7 +137,6 @@ export COIN_MARKET_CAP_ID=2
 export ANVIL_PRIVATE_KEY=${DEPLOYER_PK}
 forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast
 
-export RPC_URL=${RPC_URL}
 TRIGGER_ID=`make get-trigger | grep "TriggerID:" | awk '{print $2}'`
 TRIGGER_ID=${TRIGGER_ID} make show-result
 ```

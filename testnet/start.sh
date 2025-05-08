@@ -15,19 +15,20 @@ export DOCKER_DEFAULT_PLATFORM=linux/amd64
 # Remove log file if it exists
 rm $LOG_FILE 2> /dev/null || true
 
-OPERATORS=`find . -type f -name ".operator[0-9].env" | sort -t r -k 2 -n`
-if [ -z "$OPERATORS" ]; then
-  echo "No operator files found. Please create at least one operator env file (sh create-operator.sh)."
-  exit 1
-fi
+# TODO: local only
+# OPERATORS=`find . -type f -name ".operator[0-9].env" | sort -t r -k 2 -n`
+# if [ -z "$OPERATORS" ]; then
+#   echo "No operator files found. Please create at least one operator env file (sh create-operator.sh)."
+#   exit 1
+# fi
 
-for file in ${OPERATORS}; do
-  source $file
-  OPERATOR_INDEX=$(echo $file | awk -F'.operator' '{print $2}' | grep -o '^[0-9]*')
+# for file in ${OPERATORS}; do
+#   source $file
+#   OPERATOR_INDEX=$(echo $file | awk -F'.operator' '{print $2}' | grep -o '^[0-9]*')
 
-  ETH_ADDR=$(cast wallet address --mnemonic "${WAVS_SUBMISSION_MNEMONIC}")
-  echo "Using Operator ${OPERATOR_INDEX} Address: ${ETH_ADDR}"
-done
+#   ETH_ADDR=$(cast wallet address --mnemonic "${WAVS_SUBMISSION_MNEMONIC}")
+#   echo "Using Operator ${OPERATOR_INDEX} Address: ${ETH_ADDR}"
+# done
 
 # Start Anvil
 # TODO: if LOCAL deploy, else TESTNET does not require
@@ -45,14 +46,18 @@ done
 
 # Deploy EigenLayer AVS contracts
 echo "Deploying EigenLayer contracts..."
-cd ${GIT_ROOT} && docker run --rm --network host --env-file testnet/.operator1.env -v ./.nodes:/root/.nodes "$MIDDLEWARE_IMAGE"
+cd ${GIT_ROOT} && docker run --rm --network host --env-file /root/wavs-1/.env -v ./.nodes:/root/.nodes "$MIDDLEWARE_IMAGE"
 echo "EigenLayer contracts deployed"
 
 # TODO: do this out of scope of this? idk
 echo "Funding WAVS Aggregator..."
-source testnet/.aggregator.env
+source /root/wavs-agg/.env
 export DEPLOYER_PK=$(cat ./.nodes/deployer) # from eigenlayer deploy (funded account)
 AGGREGATOR_ADDR=$(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL})
+
+cast balance --ether $AGGREGATOR_ADDR --rpc-url ${RPC_URL}
+
+# if AGGREGATOR_ADDR balance is 0, then do this
 cast send ${AGGREGATOR_ADDR} --rpc-url ${RPC_URL} --private-key ${DEPLOYER_PK} --value 0.05ether
 
 # TODO: LOCAL only
