@@ -13,13 +13,14 @@ export DOCKER_DEFAULT_PLATFORM=linux/amd64
 rm $LOG_FILE 2> /dev/null || true
 
 ## == Base Anvil Testnet Fork ==
-anvil --fork-url https://ethereum-holesky-rpc.publicnode.com --port ${PORT} &
-anvil_pid=$!
-trap "kill -9 $anvil_pid && echo -e '\nKilled anvil'" EXIT
-while ! cast block-number --rpc-url http://localhost:${PORT} > /dev/null 2>&1
-do
-  sleep 0.25
-done
+# TODO: only if DEPLOY_ENV is local, ignore for TESTNET
+# anvil --fork-url https://ethereum-holesky-rpc.publicnode.com --port ${PORT} &
+# anvil_pid=$!
+# trap "kill -9 $anvil_pid && echo -e '\nKilled anvil'" EXIT
+# while ! cast block-number --rpc-url http://localhost:${PORT} > /dev/null 2>&1
+# do
+#   sleep 0.25
+# done
 
 if [[ -z "$OPERATOR_PK" ]]; then
   echo "You must set OPERATOR_PK"

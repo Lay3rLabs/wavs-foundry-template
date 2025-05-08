@@ -1,6 +1,6 @@
-#!/bin/bash
-set -e
-SP=""; if [[ "$(uname)" == *"Darwin"* ]]; then SP=" "; fi
+#!/usr/bin/bash
+# set -e
+SP="" #; if [[ "$(uname)" == *"Darwin"* ]]; then SP=" "; fi
 
 mkdir -p .docker
 

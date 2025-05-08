@@ -28,20 +28,22 @@ for file in ${OPERATORS}; do
 done
 
 # Start Anvil
-echo "Starting Anvil..."
-anvil --fork-url https://ethereum-holesky-rpc.publicnode.com --port ${PORT} &
-anvil_pid=$!
-trap "kill -9 $anvil_pid && echo -e '\nKilled anvil'" EXIT
+# TODO: if LOCAL deploy, else TESTNET does not require
+# echo "Starting Anvil..."
+# anvil --fork-url https://ethereum-holesky-rpc.publicnode.com --port ${PORT} &
+# anvil_pid=$!
+# trap "kill -9 $anvil_pid && echo -e '\nKilled anvil'" EXIT
 
-# Wait for Anvil to start
-while ! cast block-number --rpc-url http://localhost:${PORT} > /dev/null 2>&1
-do
-  sleep 0.25
-done
-echo "Anvil started successfully"
+# # Wait for Anvil to start
+# while ! cast block-number --rpc-url http://localhost:${PORT} > /dev/null 2>&1
+# do
+#   sleep 0.25
+# done
+# echo "Anvil started successfully"
 
 # Deploy EigenLayer contracts
 echo "Deploying EigenLayer contracts..."
+# TODO: make sure the key here is pre-funded private key
 cd ${GIT_ROOT} && docker run --rm --network host --env-file testnet/.operator1.env -v ./.nodes:/root/.nodes "$MIDDLEWARE_IMAGE"
 echo "EigenLayer contracts deployed"
 
@@ -49,9 +51,11 @@ echo "Funding WAVS Aggregator..."
 source testnet/.aggregator.env
 export DEPLOYER_PK=$(cat ./.nodes/deployer) # from eigenlayer deploy (funded account)
 AGGREGATOR_ADDR=$(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL})
-cast send ${AGGREGATOR_ADDR} --rpc-url http://localhost:8545 --private-key ${DEPLOYER_PK} --value 1ether
+# TODO: get RPC_URL from the .operator1.env, not hardcoded
+cast send ${AGGREGATOR_ADDR} --rpc-url https://1rpc.io/holesky --private-key ${DEPLOYER_PK} --value 0.1ether
 
 # Start WAVS services using docker-compose
+# TODO: LOCAL only
 echo "Starting WAVS services for both operators..."
 cd ${GIT_ROOT} && docker compose -f testnet/docker-compose-multi.yml up --remove-orphans -d
 trap "cd ${GIT_ROOT} && docker compose -f testnet/docker-compose-multi.yml down && echo -e '\nKilled WAVS services'" EXIT
