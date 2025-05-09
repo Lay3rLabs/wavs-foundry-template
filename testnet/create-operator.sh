@@ -11,12 +11,6 @@ if [ -z "$OPERATOR_INDEX" ]; then
   exit 1
 fi
 
-export FUNDED_KEY=${FUNDED_KEY:-$2}
-if [ -z "$FUNDED_KEY" ]; then
-  echo "Please provide an a FUNDED_KEY which has testnet funds."
-  exit 1
-fi
-
 ENV_FILENAME=".operator${OPERATOR_INDEX}.env"
 cp .env.example.operator ${ENV_FILENAME}
 
@@ -29,4 +23,3 @@ export OPERATOR_PK=`jq -r .accounts[0].private_key ${OPERATOR_FILENAME}`
 
 sed -i${SP}'' -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$OPERATOR_MNEMONIC\"/" ${ENV_FILENAME}
 sed -i${SP}'' -e "s/^WAVS_CLI_EVM_CREDENTIAL=.*$/WAVS_CLI_EVM_CREDENTIAL=\"$OPERATOR_PK\"/" ${ENV_FILENAME}
-sed -i${SP}'' -e "s/^FUNDED_KEY=.*$/FUNDED_KEY=$FUNDED_KEY/" ${ENV_FILENAME}
