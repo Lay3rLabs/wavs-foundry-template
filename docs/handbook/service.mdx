@@ -1,0 +1,155 @@
+---
+title: Service
+---
+
+{/* todo: overview of the service manifest. This will be the first page in the handbook. The rest of the pages are based on the structure of the manifest: workflow, trigger, component, submit, manager, etc. */}
+
+
+A service manifest defines the configuration for a WAVS service. It includes information about the service, workflows, and components.
+
+
+
+
+
+```json
+{
+    // Basic service information
+    "id": "example-service-123",
+    "name": "Example WAVS Service",
+    
+    // Workflows define the different execution paths in your service
+    "workflows": {
+        // Each workflow has a unique ID
+        "default": {
+            // Trigger defines what initiates the workflow
+            "trigger": {
+                // Option 1: EVM Contract Event
+                "evm_contract_event": {
+                    "chain_name": "ethereum",
+                    "address": "0x1234567890123456789012345678901234567890",
+                    "event_hash": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+                }
+                // Option 2: Cosmos Contract Event
+                // "cosmos_contract_event": {
+                //     "chain_name": "cosmos-hub",
+                //     "address": "cosmos1abcdefghijklmnopqrstuvwxyz1234567890",
+                //     "event_type": "wasm.message"
+                // }
+                // Option 3: Block Interval
+                // "block_interval": {
+                //     "chain_name": "ethereum",
+                //     "interval_blocks": 10
+                // }
+                // Option 4: Cron Schedule
+                // "cron": {
+                //     "chain_name": "ethereum",
+                //     "schedule": "*/5 * * * *",
+                //     "start_time": "2024-03-20T00:00:00Z",  // Optional
+                //     "end_time": "2024-04-20T00:00:00Z"     // Optional
+                // }
+            },
+
+            // Component defines the WASI component to execute
+            "component": {
+                // Component source can be specified in different ways
+                "source": {
+                    // Option 1: By digest
+                    "digest": "sha256:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+                    // Option 2: By registry package
+                    // "registry": {
+                    //     "name": "example-package",
+                    //     "version": "1.0.0"
+                    // }
+                },
+                
+                // Permissions define what the component can access
+                "permissions": {
+                    // HTTP host permissions
+                    "allowed_http_hosts": "all"  // Options: "all", ["host1", "host2"], or "none"
+                    // File system permissions
+                    "file_system": true
+                },
+
+                // Resource limits
+                "fuel_limit": 1000000,           // Optional: Maximum compute units
+                "time_limit_seconds": 30,        // Optional: Maximum execution time
+
+                // Component-specific configuration
+                "config": {
+                    "api_key": "your-api-key",
+                    "endpoint": "https://api.example.com",
+                    "timeout": "30s"
+                },
+
+                // Environment variables to be passed to the component
+                "env_keys": [
+                    "WAVS_ENV_API_KEY",
+                    "WAVS_ENV_SECRET"
+                ]
+            },
+
+            // Submit defines where the results are sent
+            "submit": {
+                // Option 1: EVM Contract
+                "evm_contract": {
+                    "chain_name": "ethereum",
+                    "address": "0x9876543210987654321098765432109876543210",
+                    "max_gas": 1000000  // Optional
+                }
+                // Option 2: Aggregator
+                // "aggregator": {
+                //     "url": "http://aggregator.example.com"
+                // }
+                // Option 3: No submission
+                // "none": null
+            },
+
+            // Optional aggregators for the workflow
+            "aggregators": [
+                {
+                    "evm": {
+                        "chain_name": "ethereum",
+                        "address": "0xfedcba9876543210fedcba9876543210fedcba98",
+                        "max_gas": 1000000  // Optional
+                    }
+                }
+            ]
+        },
+
+        // Example of a second workflow
+        "secondary": {
+            "trigger": {
+                "block_interval": {
+                    "chain_name": "ethereum",
+                    "interval_blocks": 100
+                }
+            },
+            "component": {
+                "source": {
+                    "digest": "sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+                },
+                "permissions": {
+                    "allowed_http_hosts": ["api.example.com"],
+                    "file_system": false
+                }
+            },
+            "submit": {
+                "aggregator": {
+                    "url": "http://aggregator2.example.com"
+                }
+            }
+        }
+    },
+
+    // Service status
+    "status": "active",  // Options: "active" or "inactive"
+
+    // Service manager configuration
+    "manager": {
+        "evm": {
+            "chain_name": "ethereum",
+            "address": "0xabcdef1234567890abcdef1234567890abcdef12"
+        }
+    }
+}
+```

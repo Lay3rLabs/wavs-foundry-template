@@ -187,7 +187,7 @@ export OPERATOR_PK=`cat .docker/operator1.json | jq -r '.accounts[0].private_key
 make start-all
 ```
 
-Wait for full local deployment to be ready
+Open a new terminal and wait for full local deployment to be ready
 
 ```bash docci-delay-after=2
 while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done

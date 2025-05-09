@@ -1,0 +1,216 @@
+## Components
+
+WASI components contain the main logic of a WAVS service. They are responsible for processing the trigger data and executing the business logic of a service.
+
+A basic component has three main parts:
+
+- Decoding incoming trigger data.
+- Processing the data (this is the custom logic of your component).
+- Encoding and returning the result for submission (if applicable).
+
+After being passed the `TriggerAction`, the component decodes it using the `decode_event_log_data!` macro from the [`wavs-wasi-chain`](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) crate.
+
+```rust
+
+#[allow(warnings)]
+mod bindings;
+use alloy_sol_types::{sol, SolValue};
+use bindings::{export, wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent}, Guest, TriggerAction};
+use wavs_wasi_chain::decode_event_log_data;
+
+// Solidity types for the incoming evm trigger event using the `sol!` macro
+sol! {
+    event MyEvent(uint64 indexed triggerId, bytes data);
+    struct MyResult {
+        uint64 triggerId;
+        bool success;
+    }
+}
+
+// Define the component
+struct Component;
+export!(Component with_types_in bindings);
+
+impl Guest for Component {
+    fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
+        match action.data {
+            TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+                // 1. Decode the event
+                let event: MyEvent = decode_event_log_data!(log)
+                    .map_err(|e| format!("Failed to decode event: {}", e))?;
+                
+                // 2. Process data (your business logic goes here)
+                let result = MyResult {
+                    triggerId,
+                    success: true
+                };
+                
+                // 3. Return encoded result
+                Ok(Some(result.abi_encode()))
+            }
+            _ => Err("Unsupported trigger type".to_string())
+        }
+    }
+}
+```
+
+Components must implement the `Guest` trait, which is the main interface between your component and the WAVS runtime. The `run` function is the entry point for processing triggers: it should receive the trigger data, decode it, process it according to your component's logic, and return the results. If you need to submit results to the blockchain, results need to be encoded using `abi_encode()`.
+
+The `sol!` macro from `alloy_sol_types` is used to define Solidity types in Rust. It generates Rust structs and implementations that match your Solidity types, including ABI encoding/decoding methods.
+
+Bindings are automatically generated for any files in the `/components` and `/src` directories when the `make build` command is run.
+
+
+{/* todo: update section below. */}
+
+## Input and Output
+
+When building WASI components, keep in mind that the component can receive the trigger data in two ways:
+
+1. Triggered by an onchain event from a contract after service deployment. Components receive a `TriggerAction` containing event data which is then decoded.
+
+2. Manually via the `wasi-exec` command. The wasi-exec command simulates an onchain event and passes the trigger data directly to the component as `trigger::raw`. No abi decoding is required, and the output is returned as raw bytes.
+    - In the `ETH_PRICE_ORACLE` component, the input data needs to be formatted into a `bytes32` string using the `cast format-bytes32-string` when using the `make wasi-exec` command. When creating your own components, use an appropriate format for your use case to use the `wasi-exec` command.
+
+### Data Processing Pattern
+
+The example below shows a basic generic pattern for processing input data and returning output. In the example, the `sol!` macro generates Rust types from Solidity definitions, adds ABI encoding/decoding methods, and handles type conversions (e.g., `uint64` → `u64`). ABI encoding/decoding converts Rust structs to bytes and vice versa. The `decode_event_log_data!` macro decodes the raw event log data and returns a Rust struct matching your Solidity event. This is used for on-chain events.
+
+
+```rust
+// 1. Define your Solidity types using the `sol!` macro
+sol! {
+    event MyEvent(uint64 indexed triggerId, bytes data);
+    struct MyResult {
+        uint64 triggerId;
+        bytes processedData;
+    }
+}
+
+// 2. Handle on-chain event trigger and raw trigger types
+impl Guest for Component {
+    fn run(action: TriggerAction) -> Result<Option<Vec<u8>>, String> {
+        match action.data {
+            // On-chain event handling
+            TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+                // Decode the event
+                let event: MyEvent = decode_event_log_data!(log)?;
+                
+                // Process the data
+                let result = MyResult {
+                    triggerId: event.triggerId,
+                    processedData: process_data(&event.data)?,
+                };
+                
+                // Encode for submission
+                Ok(Some(result.abi_encode()))
+            }
+            // Manual trigger handling for testing
+            TriggerData::Raw(data) => {
+                // Process raw data directly
+                let result = process_data(&data)?;
+                Ok(Some(result))
+            }
+            _ => Err("Unsupported trigger type".to_string())
+        }
+    }
+}
+```
+
+In the template, encoding and decoding is handled in the `trigger.rs` file using a `Destination` enum to determine how to process and return data based on the trigger source. The `decode_trigger_event` function in `trigger.rs` determines the destination:
+
+- For `TriggerData::EthContractEvent`, it returns `Destination::Ethereum`
+- For `TriggerData::Raw` (used in testing), it returns `Destination::CliOutput`
+
+This allows the component to handle both production and testing scenarios appropriately.
+
+{/* todo: update all of the below. add below to it's own page? component becomes a directory on writing components ?  Add info on multi-language? */}
+
+
+## Logging
+
+Components can use logging to debug and track the execution of the component.
+
+**Logging in development**:
+
+Use `println!()` to write to stdout/stderr. This is visible when running `wasi-exec` locally.
+
+```rust lib.rs
+println!("Debug message: {:?}", data);
+```
+
+**Logging in production**
+
+For production, you can use a `host::log()` function which takes a `LogLevel` and writes its output via the tracing mechanism. Along with the string that the developer provides, it attaches additional context such as the `ServiceID`, `WorkflowID`, and component `Digest`.
+
+```rust lib.rs
+host::log(LogLevel::Info, "Production logging message");
+```
+
+
+## Helpers and utilities
+
+### `wavs-wasi-chain` crate
+
+The `wavs-wasi-chain` crate provides a set of helpful functions for making HTTP requests and interacting with the blockchain. It also provides a macro for decoding trigger data for use in the component.
+
+Learn more in the [crate documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions).
+
+### Sol! macro
+
+The `sol!` macro from `alloy-sol-macro` allows you to generate Rust types from Solidity interface files. This is useful for handling blockchain events and data structures in components.
+
+You can write Solidity definitions (interfaces, structs, enums, custom errors, events, and function signatures) directly inside the `sol! { ... }` macro invocation in your Rust code.
+
+At compile time, the `sol!` macro parses that Solidity syntax and automatically generates the equivalent Rust types, structs, enums, and associated functions (like `abi_encode()` for calls or `abi_decode()` for return data/events) needed to interact with smart contracts based on those definitions.
+
+Required Dependencies:
+
+```toml
+[dependencies]
+alloy-sol-macro = { workspace = true }  # For Solidity type generation
+alloy-sol-types = { workspace = true }  # For ABI handling
+```
+
+Basic Pattern:
+
+```rust
+mod solidity {
+    use alloy_sol_macro::sol;
+    
+    // Generate types from Solidity file
+    sol!("../../src/interfaces/ITypes.sol");
+    
+    // Or define types inline
+    sol! {
+        struct TriggerInfo {
+            uint64 triggerId;
+            bytes data;
+        }
+        
+        event NewTrigger(TriggerInfo _triggerInfo);
+    }
+}
+```
+
+In the template, the `sol!` macro is used in the `trigger.rs` component file to generate Rust types from the `ITypes.sol` file.
+
+```rust trigger.rs
+mod solidity {
+    use alloy_sol_macro::sol;
+    pub use ITypes::*;
+
+    // The objects here will be generated automatically into Rust types.
+    // If you update the .sol file, you must re-run `cargo build` to see the changes.
+    sol!("../../src/interfaces/ITypes.sol");
+}
+```
+
+The macro reads a Solidity interface file and generates corresponding Rust types and encoding/decoding functions. In the example above, it reads `ITypes.sol` which defines:
+- `NewTrigger` event
+- `TriggerInfo` struct
+- `DataWithId` struct
+
+More documentation on the `sol!` macro can be found at: https://docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html
+
+

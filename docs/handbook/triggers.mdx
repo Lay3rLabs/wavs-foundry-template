@@ -1,0 +1,180 @@
+## Triggers
+
+{/* todo: verify examples, add info on triggerdata and decode trigger data. Multi-chain services blurb goes here? add info on trigger data in components and link to inputs/outputs on component page (or move here?? dunno).  */}
+
+A trigger prompts a WAVS service to run. Operators listen for the trigger event specified by the service and execute the corresponding component off-chain. Triggers can be any onchain event emitted from any contract.
+
+### Trigger lifecycle
+
+1. When a service is deployed, it is configured with a trigger address and event, a wasi component, and a submission contract (optional).
+
+2. Registered operators listen to chain logs. Each operator maintains lookup maps and verifies events against registered triggers.
+
+3. When a trigger event is emitted, operators pick up the event and verify the event matches the registered trigger.
+
+4. If a match is found, WAVS creates a `TriggerAction` that wraps the trigger event data:
+
+```rust
+TriggerAction {
+    // Service and workflow identification
+    config: TriggerConfig {
+       service_id: ServiceID,      // Generated during deployment
+        workflow_id: WorkflowID,    // Default or specified
+        trigger: Trigger::EthContractEvent {
+           address: Address,       // Contract address
+            chain_name: ChainName,  // Chain identifier
+            event_hash: ByteArray<32> // Event signature
+        }
+    },
+   // The actual event data
+    data: TriggerData::EthContractEvent {
+        contract_address: Address,  // Emitting contract
+        chain_name: ChainName,      // Source chain
+        log: LogData {             // Raw event data
+            topics: Vec<Vec<u8>>,  // Event signature + indexed params
+            data: Vec<u8>         // ABI-encoded event data
+        },
+        block_height: u64         // Block number
+    }
+}
+```
+
+5. The TriggerAction is converted to a WASI-compatible format and passed to the component where it is decoded and processed.
+
+### Developing triggers
+
+WAVS doesn't interpret the contents of event triggers. Instead, it passes the raw log data to components, which can decode and process the data according to their specific needs.
+
+To configure a trigger for a service, you'll need to specify:
+
+- The event signature/name that identifies which specific event should trigger the service. This can either be a hex-encoded event signature or an event name.
+- The contract address where the event will be emitted from.
+
+In the template, the trigger event is set in the `Makefile` as `TRIGGER_EVENT ?= NewTrigger(bytes)` and the trigger address of the example trigger contract is automatically populated during deployment. To change the trigger event or address, you can manually [update the `Makefile` variables](#customizing-makefile-variables) and redeploy the service.
+
+When a WAVS component receives this trigger, it uses the `decode_event_log_data!` macro from the [`wavs-wasi-chain`](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) crate to decode the event data for processing.
+
+The [trigger contract in the WAVS foundry template](https://github.com/Lay3rLabs/wavs-foundry-template/blob/v0.3.0/src/contracts/WavsTrigger.sol) is a simple example that takes generic bytes and passes them to the component. The flow for triggers is located in several places in the template:
+
+- The trigger contract in [`src/WavsTrigger.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsTrigger.sol) defines how triggers are created and emitted on-chain.
+- The trigger script in [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/script/Trigger.s.sol#L15) calls the `addTrigger` function with the `coinMarketCapID`.
+- The `decode_trigger_event` function in [`/components/eth-price-oracle/src/trigger.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/trigger.rs#L11-L21) processes the trigger data and extracts the `trigger_id` and `data`.
+- The `run` function in [`/components/eth-price-oracle/src/lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/eth-price-oracle/src/lib.rs#L13) calls `decode_trigger_event`, processes the extracted trigger data, and determines how to handle it.
+- When testing, the `wasi-exec` command in the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L39-L43) passes input data when testing WAVS components via ``--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)` ``. This uses cast to format the `COIN_MARKET_CAP_ID` as a bytes32 string and simulates an Ethereum event during local execution.
+
+
+## Trigger Configuration
+
+Triggers define when and how the component should be executed. Each workflow needs a trigger to be set. They are set in the `trigger` field of the `service.json` file.
+
+### 1. EVM Event Trigger
+
+This trigger listens for specific events emitted by contracts on EVM-compatible chains, executing the component when a matching event is detected.
+
+```json
+{
+  "trigger": {
+    "type": "evm",
+    "config": {
+      "address": "0x1234...",     // Contract address to monitor
+      "event_hash": "0x...",      // Event hash (32 bytes)
+      "chain_name": "ethereum"    // Chain to monitor
+    }
+  }
+}
+```
+
+### 2. Cosmos Event Trigger
+
+This trigger monitors events emitted by Cosmos smart contracts, executing your component when a matching event type is detected from the specified contract address.
+
+```json
+{
+  "trigger": {
+    "type": "cosmos",
+    "config": {
+      "address": "cosmos1...",    // Bech32 contract address
+      "event_type": "transfer",   // Event type to watch
+      "chain_name": "cosmoshub-4" // Chain to monitor set in wavs.toml
+    }
+  }
+}
+```
+
+### 3. Cron Trigger
+
+Executes your component on a schedule defined by a cron expression, with optional start and end times to control the execution window.
+
+```json
+{
+  "trigger": {
+    "type": "cron",
+    "config": {
+      "schedule": "*/45 * * * * *",  // Cron expression
+      "start_time": 1704067200000000000,  // Optional start time in nanoseconds since Unix epoch (2024-01-01T00:00:00Z)
+      "end_time": 1735689599000000000     // Optional end time in nanoseconds since Unix epoch (2024-12-31T23:59:59Z)
+    }3
+  }
+}
+
+// Cron Expression Format:
+// * * * * * *
+// │ │ │ │ │ │
+// │ │ │ │ │ └── Day of week (0-6, where 0 is Sunday)
+// │ │ │ │ └──── Month (1-12)
+// │ │ │ └────── Day of month (1-31)
+// │ │ └──────── Hour (0-23)
+// │ └────────── Minute (0-59)
+// └──────────── Second (0-59)
+//
+// Each field can be:
+// - A number: `5` (exact time)
+// - A range: `1-5` (1 through 5)
+// - A list: `1,3,5` (1, 3, and 5)
+// - A step: `*/5` (every 5 units)
+// - An asterisk: `*` (every unit)
+//
+// Common examples:
+// - `*/45 * * * * *` - Every 45 seconds
+// - `0 */5 * * * *` - Every 5 minutes
+// - `0 0 * * * *` - Every hour
+// - `0 0 12 * * *` - Every day at noon
+// - `0 0 12 1 * *` - Noon on the first day of every month
+// - `0 0 12 * * 1` - Noon every Monday
+```
+
+### 4. Block Trigger
+
+Executes your component at regular block intervals on a specified EVM or Cosmos chain, useful for chain-specific operations that need to run periodically.
+
+```json
+{
+  "trigger": {
+    "type": "block",
+    "config": {
+      "chain_name": "ethereum",  // Must match exactly what's in wavs.toml
+      "n_blocks": 10            // Must be a non-zero number
+    }
+  }
+}
+```
+
+The `chain-name` in your block trigger configuration is set in `wavs.toml` under the `[default.chains.evm.<chain_name>]` or `[default.chains.cosmos.<chain_name>]` section. It also needs to be added to the `active_trigger_chains` list in `wavs.toml`.
+
+```toml
+[wavs]
+active_trigger_chains = ["<chain_name>"]
+```
+
+
+### 5. Manual Trigger
+The Manual Trigger is a testing-only trigger that allows manual execution of your component, not intended for production use.
+
+```json
+{
+  "trigger": {
+    "type": "manual"
+  }
+}
+```
+Note: Manual trigger is for testing purposes only and not meant for production use.

@@ -1,0 +1,64 @@
+{/* todo: update with new info. this is outdated */}
+
+## Environment Variables
+
+Components can be configured with two types of variables:
+
+### Public variables: `kv`
+
+{/* todo: update with new info. this is outdated : `host::config_var(config_var)` where host is in the world bindings. set in config as kv */}
+
+These variables can be used for non-sensitive information that can be viewed publicly. These variables can be configured in the makefile and are set during service deployment. They are accessed using `std::env::var` in the component.
+
+To add public variables, modify the `"kv"` section in the `SERVICE_CONFIG` in your `Makefile`. The following example adds `max_retries`, `timeout_seconds`, and `api_endpoint` variables with values:
+
+```bash
+# makefile
+SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv":[["max_retries","3"],["timeout_seconds","30"],["api_endpoint","https://api.example.com"]],"workflow_id":"default","component_id":"default"}'
+```
+
+Then use these variables in your component:
+
+```rust
+let max_retries = std::env::var("max_retries")?;
+let timeout = std::env::var("timeout_seconds")?;
+let endpoint = std::env::var("api_endpoint")?;
+```
+
+### Private variables: `host_envs`
+
+Private environment variables (`host_envs`) can be used for sensitive data like API keys. These variables are set by operators in their environment and are not viewable by anyone. These variables must be prefixed with `WAVS_ENV_`. Each operator must set these variables in their environment before deploying the service. Only variables listed in `host_envs` will be available to the component.
+
+To add private variables to your .env file, copy the `.env.example` file to `.env`:
+
+```bash
+# copy the example file
+cp .env.example .env
+```
+
+Then set the environment variable in your `.env` file:
+
+```bash
+# .env file
+WAVS_ENV_MY_API_KEY=your_secret_key_here
+```
+
+Variables can also be set in your `~/.bashrc` , `~/.zshrc` , or `~/.profile` files.
+
+Then modify `"host_envs"` in the `SERVICE_CONFIG` section of your `Makefile`. The following example adds `WAVS_ENV_MY_API_KEY` to the `host_envs` array. Remember to add the `WAVS_ENV_` prefix to the variable name:
+
+```bash
+# makefile
+SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_MY_API_KEY"],"kv":[],"workflow_id":"default","component_id":"default"}'
+```
+
+This configuration is used during local testing with `make wasi-exec` and will also be applied when your service is deployed.
+
+The following example shows how to access a private environment variable in a component:
+
+```rust
+let api_key = std::env::var("WAVS_ENV_MY_API_KEY")?;
+```
+
+
+

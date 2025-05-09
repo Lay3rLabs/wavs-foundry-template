@@ -1,0 +1,77 @@
+## Network requests
+
+{/* todo: update examples and add other helper functions. Update to wavs-wasi utils. */}
+
+Components can make network requests to external APIs using the `wavs-wasi-chain` crate. Since WASI components run in a synchronous environment but network requests are asynchronous, you can use `block_on` from the `wstd` crate to bridge this gap. The `block_on` function allows you to run async code within a synchronous context, which is essential for making HTTP requests in WAVS components.
+
+To learn how to use private environment variables like API keys in a component, see the [Private Variables](#private-variables-host_envs) section.
+
+The following dependencies are useful for making HTTP requests from a component. These are added to a component's `Cargo.toml` file:
+
+```toml Cargo.toml
+[dependencies]
+wavs-wasi-chain = { workspace = true }  # HTTP utilities
+wstd = { workspace = true }             # Runtime utilities (includes block_on)
+serde = { workspace = true }            # Serialization
+serde_json = { workspace = true }       # JSON handling
+```
+
+The following example shows how to make a basic HTTP GET request from a component:
+
+```rust lib.rs
+use wstd::runtime::block_on;  // Required for running async code
+
+// Async function for the HTTP request
+async fn make_request() -> Result<YourResponseType, String> {
+    // Create the request
+    let url = "https://api.example.com/endpoint";
+    let mut req = http_request_get(&url).map_err(|e| e.to_string())?;
+    
+    // Add headers
+    req.headers_mut().insert(
+        "Accept",
+        HeaderValue::from_static("application/json")
+    );
+    
+    // Make the request and parse JSON response
+    let json: YourResponseType = fetch_json(req)
+        .await
+        .map_err(|e| e.to_string())?;
+        
+    Ok(json)
+}
+
+// Main component logic that uses block_on
+fn process_data() -> Result<YourResponseType, String> {
+    // Use block_on to run the async function
+    block_on(async move {
+        make_request().await
+    })?
+}
+```
+
+For making POST requests with JSON data, you can use the [`http_request_post_json` helper function](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/http/fn.http_request_post_json.html), which automatically handles JSON serialization and sets header to `application/json`:
+
+```rust lib.rs
+async fn make_post_request() -> Result<PostResponse, String> {
+    let url = "https://api.example.com/endpoint"; // The URL of the endpoint to make the request to
+    let post_data = ("key1", "value1"); // any serializable data can be passed in
+    
+    // Make POST request and parse JSON response
+    let response: PostResponse = fetch_json(
+        http_request_post_json(&url, &post_data)?
+    ).await.map_err(|e| e.to_string())?;
+    
+    Ok(response)
+}
+
+// Main component logic that uses block_on
+fn process_data() -> Result<PostResponse, String> {
+    // Use block_on to run the async function
+    block_on(async move {
+        make_post_request().await
+    })?
+}
+```
+
+Other functions are available in the [crate documentation](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions).

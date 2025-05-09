@@ -1,0 +1,188 @@
+# Workflows
+
+A WAVS service is a collection of workflows that define the different execution paths in your service.
+
+{/* todo: fill out section, verify content. Add examples of multi workflow and chained services. discuss shared config/manager in workflows, but not shared storage. */}
+
+
+Each workflow consists of three main components:
+
+1. **Trigger**: Defines what event initiates the workflow
+2. **Component**: The WASM component that processes the event
+3. **Submit**: Specifies where to send the results
+
+## Multi-workflow services
+
+A WAVS service can have one or multiple workflows. You can specify multiple workflows in the service manifest. Each workflow can have a different trigger, component, and submision logic.
+
+
+
+
+
+
+
+
+Each workflow execution is completely isolated with components running in separate WebAssembly environments. Each execution has its own memory space and components cannot directly access each other's memory or state.
+
+
+## Workflow Structure
+
+
+
+```json
+{
+  "trigger": {
+    "type": "evm",
+    "config": {
+      "address": "0x1234...",
+      "event_hash": "0xabcd...",
+      "chain_name": "ethereum"
+    }
+  },
+  "component": {
+    "source": {
+      "digest": "sha256:abc123..."
+    },
+    "permissions": {
+      "allowed_http_hosts": "all",
+      "file_system": true
+    },
+    "fuel_limit": 1000000,
+    "time_limit_seconds": 30,
+    "config": {
+      "key1": "value1"
+    },
+    "env_keys": [
+      "WAVS_ENV_API_KEY"
+    ]
+  },
+  "submit": {
+    "type": "evm_contract",
+    "config": {
+      "chain_name": "ethereum",
+      "address": "0x5678...",
+      "max_gas": 500000
+    }
+  }
+}
+```
+
+
+
+
+
+
+
+## Execution Model
+
+### Isolation
+- Each workflow execution is completely isolated
+- Components run in separate WebAssembly environments
+- Each execution has its own memory space
+- Components cannot directly access each other's memory or state
+
+### State Management
+Workflows can only share state through:
+1. **Service Manager Contract**
+   - On-chain storage for service-level state
+   - Accessible to all workflows in the service
+   - Requires blockchain interaction
+
+2. **Environment Variables**
+   - Shared configuration through `env_keys`
+   - Must be prefixed with `WAVS_ENV_`
+   - Read-only during execution
+
+3. **External Systems**
+   - Databases
+   - Blockchains
+   - Other external services
+   - Accessed through component permissions
+
+### Component Communication
+Components in different workflows cannot directly communicate. To pass data between workflows:
+1. First workflow submits data to a contract or external system
+2. Second workflow reads data from the same contract or system
+3. No direct variable or state sharing is possible
+
+## Trigger Types
+
+1. **EVM Event Trigger**
+   - Monitors specific events on EVM chains
+   - Requires contract address and event hash
+   - Uses WebSocket for event subscription
+
+2. **Cosmos Event Trigger**
+   - Monitors events on Cosmos chains
+   - Requires contract address and event type
+   - Uses gRPC for event subscription
+
+3. **Cron Trigger**
+   - Executes on a schedule
+   - Uses standard cron syntax
+   - Supports start and end times
+
+4. **Block Trigger**
+   - Executes every N blocks
+   - Requires chain name and block interval
+   - Uses chain RPC for block monitoring
+
+## Submit Types
+
+1. **EVM Contract**
+   - Submits to an EVM contract
+   - Requires chain name and contract address
+   - Optional gas limit
+
+2. **Aggregator**
+   - Submits to an aggregator service
+   - Requires aggregator URL
+   - Can include multiple aggregators
+
+3. **None**
+   - No submission required
+   - Used when component handles its own state
+
+## Component Configuration
+
+### Source Types
+1. **Digest**
+   - Direct reference to WebAssembly bytecode
+   - Ensures integrity through hash verification
+
+2. **Registry**
+   - References component from a registry
+   - Supports versioning and domain specification
+
+### Permissions
+- `allowed_http_hosts`: HTTP host access control
+  - `"all"`: Allow all hosts
+  - `"none"`: Allow no hosts
+  - Array of specific hosts
+- `file_system`: Whether to allow filesystem access
+
+### Resource Limits
+- `fuel_limit`: Maximum compute units
+- `time_limit_seconds`: Maximum execution time
+
+## Best Practices
+
+1. **State Management**
+   - Use service manager contract for shared state
+   - Keep workflow components independent
+   - Use external systems for data persistence
+
+2. **Resource Usage**
+   - Set appropriate fuel and time limits
+   - Monitor component resource usage
+   - Use permissions to restrict access
+
+3. **Error Handling**
+   - Implement proper error handling in components
+   - Use appropriate submit types for error cases
+   - Monitor workflow execution status
+
+4. **Security**
+   - Restrict HTTP host access
+   - Limit filesystem access
+   - Use environment variables for sensitive data 
