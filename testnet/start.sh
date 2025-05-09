@@ -6,7 +6,7 @@ set -e
 GIT_ROOT=$(git rev-parse --show-toplevel)
 
 PORT=8545
-MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.1
+MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
 LOG_FILE="$GIT_ROOT/.docker/start.log"
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
@@ -46,7 +46,7 @@ rm $LOG_FILE 2> /dev/null || true
 
 # Deploy EigenLayer AVS contracts
 echo "Deploying EigenLayer contracts..."
-cd ${GIT_ROOT} && docker run --rm --network host --env-file /root/wavs-1/.env -v ./.nodes:/root/.nodes "$MIDDLEWARE_IMAGE"
+cd ${GIT_ROOT} && docker run --rm --network host --env-file ~/testnet/wavs-1/.env -v ./.nodes:/root/.nodes "$MIDDLEWARE_IMAGE"
 echo "EigenLayer contracts deployed"
 
 

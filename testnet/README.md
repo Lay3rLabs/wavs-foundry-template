@@ -25,9 +25,9 @@ export FUNDED_KEY=`jq -r .accounts[0].private_key .docker/funded_key.json`
 sh ./create-operator.sh 1 ${FUNDED_KEY}
 sh ./create-operator.sh 2 ${FUNDED_KEY}
 
-mv /root/wavs-foundry-template/testnet/.operator1.env /root/wavs-1/.env
-mv /root/wavs-foundry-template/testnet/.operator2.env /root/wavs-2/.env
-mv /root/wavs-foundry-template/testnet/.aggregator.env /root/wavs-agg/.env
+mv ~/testnet/wavs-foundry-template/testnet/.operator1.env ~/testnet/wavs-1/.env
+mv ~/testnet/wavs-foundry-template/testnet/.operator2.env ~/testnet/wavs-2/.env
+mv ~/testnet/wavs-foundry-template/testnet/.aggregator.env ~/testnet/wavs-agg/.env
 
 # TODO: Faucet funds to FUNDED_KEY
 
@@ -37,7 +37,7 @@ DEPLOYER_ADDR=`cast wallet address --private-key $FUNDED_KEY`
 echo "Balance of ${DEPLOYER_ADDR} to fund"
 
 # TODO: move operator index 1 payments here too for initial registration?
-source /root/wavs-agg/.env
+source ~/testnet/wavs-agg/.env
 AGGREGATOR_ADDR=$(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL})
 # cast balance --ether $AGGREGATOR_ADDR --rpc-url ${RPC_URL}
 cast send ${AGGREGATOR_ADDR} --rpc-url ${RPC_URL} --private-key ${FUNDED_KEY} --value 0.005ether
@@ -60,7 +60,6 @@ cd $(git rev-parse --show-toplevel)
 export DEPLOYER_PK=$(cat ./.nodes/deployer)
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager ./.nodes/avs_deploy.json)
 
-
 forge create SimpleSubmit --json --broadcast -r ${RPC_URL} --private-key "${DEPLOYER_PK}" --constructor-args "${SERVICE_MANAGER_ADDRESS}" > .docker/submit.json
 export SERVICE_SUBMISSION_ADDR=`jq -r .deployedTo .docker/submit.json`
 
@@ -74,11 +73,11 @@ export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 cd $(git rev-parse --show-toplevel)
 
 # Start wavs
-(cd /root/wavs-1 && sh start.sh)
-(cd /root/wavs-2 && sh start.sh)
+(cd ~/testnet/wavs-1 && sh start.sh)
+(cd ~/testnet/wavs-2 && sh start.sh)
 
 # start aggregator / IPFS
-(cd /root/wavs-agg && docker compose up -d)
+(cd ~/testnet/wavs-agg && docker compose up -d)
 
 
 # Deploy the WASI component service & upload to each WAVS instance
@@ -86,23 +85,23 @@ cd $(git rev-parse --show-toplevel)
 export COMPONENT_FILENAME=evm_price_oracle.wasm
 export TRIGGER_CHAIN=holesky
 export SUBMIT_CHAIN=holesky
-WAVS_ENDPOINT="http://5.161.229.43:8000" AGGREGATOR_URL="http://5.161.229.43:8001" sh ./script/build_service.sh
-WAVS_ENDPOINT=http://5.161.229.43:9000 make upload-component
+WAVS_ENDPOINT="http://3.75.195.165:8000" AGGREGATOR_URL="http://3.75.195.165:8001" sh ./script/build_service.sh
+WAVS_ENDPOINT=http://3.75.195.165:9000 make upload-component
 
 # Upload service.json to IPFS & deploy service with it
-ipfs_cid=`IPFS_ENDPOINT=http://5.161.229.43:5001 SERVICE_FILE=.docker/service.json make upload-to-ipfs`
-export SERVICE_URL="http://5.161.229.43:8080/ipfs/${ipfs_cid}"
+ipfs_cid=`IPFS_ENDPOINT=http://3.75.195.165:5001 SERVICE_FILE=.docker/service.json make upload-to-ipfs`
+export SERVICE_URL="http://3.75.195.165:8080/ipfs/${ipfs_cid}"
 curl ${SERVICE_URL}
 
-WAVS_ENDPOINT="http://5.161.229.43:8000" CREDENTIAL=${DEPLOYER_PK} make deploy-service
-WAVS_ENDPOINT="http://5.161.229.43:9000" CREDENTIAL=${DEPLOYER_PK} make deploy-service
+WAVS_ENDPOINT="http://3.75.195.165:8000" CREDENTIAL=${DEPLOYER_PK} make deploy-service
+WAVS_ENDPOINT="http://3.75.195.165:9000" CREDENTIAL=${DEPLOYER_PK} make deploy-service
 ```
 
 ## Register operators -> Eigenlayer
 
 ```bash
 # this was moved in a previous step, ensure it is not the default values
-source /root/wavs-1/.env
+source ~/testnet/wavs-1/.env
 AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 1`
 
 # https://holesky-faucet.pk910.de/
@@ -113,18 +112,18 @@ cast send ${OPERATOR1_ADDR} --private-key ${DEPLOYER_PK} --value 0.0025ether --r
 cast balance --ether ${OPERATOR1_ADDR} --rpc-url ${RPC_URL}
 
 # ENV_FILE=testnet/.operator1.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
-ENV_FILE=/root/wavs-1/.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
+ENV_FILE=~/testnet/wavs-1/.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
 # cast call --rpc-url https://ethereum-holesky.publicnode.com 0x3f1c547b21f65e10480de3ad8e19faac46c95034 "balanceOf(address)(uint256)" ${OPERATOR1_ADDR}
 
 # Operator 2
-source /root/wavs-2/.env
+source ~/testnet/wavs-2/.env
 AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 1`
 OPERATOR2_ADDR=`cast wallet address --private-key $AVS_PRIVATE_KEY`
 echo ${OPERATOR2_ADDR}
 cast send ${OPERATOR2_ADDR} --private-key ${DEPLOYER_PK} --value 0.025ether --rpc-url ${RPC_URL}
 cast balance --ether ${OPERATOR2_ADDR} --rpc-url ${RPC_URL}
 
-ENV_FILE=/root/wavs-2/.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
+ENV_FILE=~/testnet/wavs-2/.env AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
 
 # register a 3rd new wallet operator here to test with a 2/3 config, just don't run a node for it.
 
