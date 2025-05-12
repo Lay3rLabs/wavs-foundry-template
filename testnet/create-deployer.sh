@@ -19,6 +19,12 @@ sed -i${SP}'' -e "s/^FUNDED_KEY=.*$/FUNDED_KEY=$DEPLOYER_PK/" .env
 ADDR=`cast wallet address $DEPLOYER_PK`
 echo "Fund deployer ${ADDR} with some ETH, or change this value in the .env"
 
-# TODO: poll for iteration of the balance here
-
-cast b --ether ${ADDR} --rpc-url=${RPC_URL}
+while true; do
+    BALANCE=`cast balance --ether $ADDR --rpc-url=${RPC_URL}`
+    if [ "$BALANCE" != "0.000000000000000000" ]; then
+        echo "Balance is now $BALANCE"
+        break
+    fi
+    echo "Waiting for balance to be funded by another account to this deployer..."
+    sleep 5
+done

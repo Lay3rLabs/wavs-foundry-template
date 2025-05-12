@@ -35,8 +35,7 @@ export DOCKER_DEFAULT_PLATFORM=linux/amd64
 BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-beta.1 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
-
-    # attempt to grab it from the location
+    # DevEx: attempt to grab it from the location if not set already
     export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager ./.nodes/avs_deploy.json)
 
     if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
