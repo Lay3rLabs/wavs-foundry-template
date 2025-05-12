@@ -12,9 +12,15 @@ A template for developing WebAssembly AVS applications using Rust and Solidity, 
 ## System Requirements
 
 <details>
-<summary>Core (Docker, Compose, Make, JQ, Node v21+)</summary>
+<summary>Core (Docker, Compose, Make, JQ, Node v21+, Foundry)</summary>
+
+## Ubuntu Base
+- **Linux**: `sudo apt update && sudo apt install build-essential`
 
 ### Docker
+
+If prompted, remove containerd with `sudo apt remove containerd.io`.
+
 - **MacOS**: `brew install --cask docker`
 - **Linux**: `sudo apt -y install docker.io`
 - **Windows WSL**: [docker desktop wsl](https://docs.docker.com/desktop/wsl/#turn-on-docker-desktop-wsl-2) & `sudo chmod 666 /var/run/docker.sock`
@@ -22,6 +28,7 @@ A template for developing WebAssembly AVS applications using Rust and Solidity, 
 
 ### Docker Compose
 - **MacOS**: Already installed with Docker installer
+> `sudo apt remove docker-compose-plugin` may be required if you get a `dpkg` error
 - **Linux + Windows WSL**: `sudo apt-get install docker-compose-v2`
 - [Compose Documentation](https://docs.docker.com/compose/)
 
@@ -38,11 +45,22 @@ A template for developing WebAssembly AVS applications using Rust and Solidity, 
 ### Node.js
 - **Required Version**: v21+
 - [Installation via NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating)
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+nvm install --lts
+```
+
+### Foundry
+```bash docci-ignore
+curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup
+```
+
 </details>
 
 <details>
 
-<summary>Rust v1.84+</summary>
+<summary>Rust v1.85+</summary>
 
 ### Rust Installation
 
@@ -71,6 +89,19 @@ rustup target add wasm32-wasip2
 <summary>Cargo Components</summary>
 
 ### Install Cargo Components
+
+On Ubuntu LTS, if you later encounter errors like:
+
+```bash
+wkg: /lib/x86_64-linux-gnu/libm.so.6: version `GLIBC_2.38' not found (required by wkg)
+wkg: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.39' not found (required by wkg)
+```
+
+If GLIB is out of date. Consider updating your system using:
+```bash
+sudo do-release-upgrade
+```
+
 
 ```bash docci-ignore
 # Install required cargo components
