@@ -30,7 +30,6 @@ SUBMIT_CHAIN=${SUBMIT_CHAIN:-"local"}
 AGGREGATOR_URL=${AGGREGATOR_URL:-""}
 # used in make upload-component
 WAVS_ENDPOINT=${WAVS_ENDPOINT:-"http://localhost:8000"}
-export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
 BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-beta.1 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 

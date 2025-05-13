@@ -7,7 +7,6 @@ MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.1
 LOG_FILE=.docker/start.log
 OPERATOR_PK=${OPERATOR_PK:-""}
 OPERATOR_MNEMONIC=${OPERATOR_MNEMONIC:-""}
-export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
 ## == Start watcher ==
 rm $LOG_FILE 2> /dev/null || true
