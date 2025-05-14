@@ -76,7 +76,7 @@ rustup target add wasm32-wasip2
 # Install required cargo components
 # https://github.com/bytecodealliance/cargo-component#installation
 cargo install cargo-binstall
-cargo binstall cargo-component warg-cli wkg --locked --no-confirm --force
+cargo binstall cargo-component wasm-tools warg-cli wkg --locked --no-confirm --force
 
 # Configure default registry
 # Found at: $HOME/.config/wasm-pkg/config.toml
