@@ -9,8 +9,8 @@ CARGO=cargo
 COIN_MARKET_CAP_ID?=1
 COMPONENT_FILENAME?=evm_price_oracle.wasm
 CREDENTIAL?=""
-DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:0.4.0-beta.2-pr619
-MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.3
+DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:0.4.0-beta.4
+MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
 IPFS_ENDPOINT?=http://127.0.0.1:5001
 RPC_URL?=http://127.0.0.1:8545
 SERVICE_FILE?=.docker/service.json
@@ -117,7 +117,8 @@ operator-register:
 		echo "Error: AVS_PRIVATE_KEY is not set. Please set it to your AVS private key."; \
 		exit 1; \
 	fi
-	@docker run --rm --network host --env-file ${ENV_FILE} -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh ${MIDDLEWARE_DOCKER_IMAGE} "${AVS_PRIVATE_KEY}" "${DELEGATION}"
+	# TODO: add "${DELEGATION}" to this line when updating to testnet
+	@docker run --rm --network host --env-file ${ENV_FILE} -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh ${MIDDLEWARE_DOCKER_IMAGE} "${AVS_PRIVATE_KEY}"
 
 
 ## update-submodules: update the git submodules
