@@ -185,6 +185,10 @@ export OPERATOR_MNEMONIC=`cat .docker/operator1.json | jq -r .mnemonic`
 export OPERATOR_PK=`cat .docker/operator1.json | jq -r '.accounts[0].private_key'`
 
 make start-all
+
+# TODO: move this into a docker here
+# move into https://github.com/reecepbcups/registry
+docker compose up
 ```
 
 Wait for full local deployment to be ready
@@ -219,18 +223,18 @@ Deploy the compiled component with the contract information from the previous st
 
 ```bash docci-delay-per-cmd=3
 export COMPONENT_FILENAME=evm_price_oracle.wasm
-
-# === LOCAL ===
-export IS_TESTNET=false
-export WASM_DIGEST=$(make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME)
-
-# === TESTNET ===
-# ** Setup: https://wa.dev/account/credentials
-export IS_TESTNET=true
 export PKG_VERSION="0.1.0"
-export PKG_NAMESPACE=`warg info --namespaces | grep = | cut -d'=' -f1 | tr -d ' '`
+# export PKG_NAMESPACE=`warg info --namespaces | grep = | cut -d'=' -f1 | tr -d ' '`
+export PKG_NAMESPACE="example" # TODO: if using 127.0.0.1 registry, `example` is the default namespace
 export PKG_NAME="${PKG_NAMESPACE}:evmpriceoraclerust"
-warg publish release --name ${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
+export WASI_REGISTRY="127.0.0.1:8090"
+
+# if you change to wa.dev registry, https://wa.dev/account/credentials
+warg reset --registry wa.dev
+warg publish release --name ${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} --registry http://${WASI_REGISTRY} || true ## may already be uploaded
+
+# Verify
+# warg download ${PKG_NAME} --registry http://localhost:8090 --version ${PKG_VERSION}
 
 # Build your service JSON
 AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
