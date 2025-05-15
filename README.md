@@ -172,9 +172,24 @@ Result (utf8):
 
 Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https://www.eigenlayer.xyz/) contracts to the local network.
 
+### Enable Telemetry (optional)
+
+Before starting the services, you can enable telemetry for monitoring and debugging purposes. Follow these steps:
+
+1. Update Configuration:
+  - Open the `wavs.toml` configuration file.
+  - Uncomment the following lines to enable Jaeger and Prometheus endpoints:
+```bash docci-background docci-delay-after=2
+jaeger = "http://localhost:4317"
+prometheus = "http://localhost:9090"
+```
+2. Set Log Level:
+  - Open the `.env` file.
+  - Set the `log_level` variable for wavs to debug to ensure detailed logs are captured.
+
+### Start the backend
+
 ```bash docci-background docci-delay-after=15
-# Start the backend
-#
 # This must remain running in your terminal. Use another terminal to run other commands.
 # You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
 cp .env.example .env
