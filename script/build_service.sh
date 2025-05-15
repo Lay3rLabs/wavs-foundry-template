@@ -31,7 +31,7 @@ SUBMIT_CHAIN=${SUBMIT_CHAIN:-"local"}
 AGGREGATOR_URL=${AGGREGATOR_URL:-""}
 IS_TESTNET=${IS_TESTNET:-"true"}
 
-BASE_CMD="docker run --rm --network host -w /data -e RUST_BACKTRACE=1 -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-beta.5 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
+BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-beta.5 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
     echo "SERVICE_MANAGER_ADDRESS is not set. Please set it to the address of the service manager."

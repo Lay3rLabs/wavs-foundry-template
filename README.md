@@ -233,7 +233,8 @@ export COMPONENT_FILENAME=evm_price_oracle.wasm
 # if testnet, setup https://wa.dev/account/credentials
 export IS_TESTNET=true
 export PKG_VERSION="0.1.0"
-export PKG_NAME="reecepbcups:evmpriceoraclerust" # TODO: get the namespace from `warg info --namespaces | grep =`, also have to go in and make this public (private by default)
+export PKG_NAMESPACE=`warg info --namespaces | grep = | cut -d'=' -f1 | tr -d ' '`
+export PKG_NAME="${PKG_NAMESPACE}:evmpriceoraclerust"
 warg publish release --name ${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
 
 # upload this to the registry
