@@ -29,9 +29,7 @@ TRIGGER_EVENT=${TRIGGER_EVENT:-"NewTrigger(bytes)"}
 TRIGGER_CHAIN=${TRIGGER_CHAIN:-"local"}
 SUBMIT_CHAIN=${SUBMIT_CHAIN:-"local"}
 AGGREGATOR_URL=${AGGREGATOR_URL:-""}
-# used in make upload-component
-WAVS_ENDPOINT=${WAVS_ENDPOINT:-"http://localhost:8000"}
-export DOCKER_DEFAULT_PLATFORM=linux/amd64
+IS_TESTNET=${IS_TESTNET:-"true"}
 
 BASE_CMD="docker run --rm --network host -w /data -e RUST_BACKTRACE=1 -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-beta.5 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
@@ -40,19 +38,16 @@ if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
     exit 1
 fi
 
-
 if [ -z "$TRIGGER_ADDRESS" ]; then
     TRIGGER_ADDRESS=`make get-trigger-from-deploy`
 fi
 if [ -z "$SUBMIT_ADDRESS" ]; then
     SUBMIT_ADDRESS=`make get-submit-from-deploy`
 fi
-# if [ -z "$WASM_DIGEST" ]; then
-#     WASM_DIGEST=`make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME`
-#     WASM_DIGEST=$(echo ${WASM_DIGEST} | cut -d':' -f2)
-# fi
 
-
+if [[ "$WASM_DIGEST" == sha256:* ]]; then
+    WASM_DIGEST=${WASM_DIGEST#sha256:}
+fi
 
 # === Core ===
 
@@ -73,11 +68,12 @@ if [ -n "$AGGREGATOR_URL" ]; then
 fi
 $BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDRESS} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
 
-# $BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST} > /dev/null
-COMPONENT_ID=`$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --domain 127.0.0.1:8090 --version "0.1.0" --package "example:evmpriceoraclerust"`
-echo "Component ID: ${COMPONENT_ID}"
 
-exit 99
+if [ "$IS_TESTNET" = "true" ]; then
+    $BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST}
+else
+    $BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --domain wa.dev --version ${PKG_VERSION} --package ${PKG_NAME}
+fi
 
 $BASE_CMD workflow component --id ${WORKFLOW_ID} permissions --http-hosts '*' --file-system true > /dev/null
 $BASE_CMD workflow component --id ${WORKFLOW_ID} time-limit --seconds 30 > /dev/null

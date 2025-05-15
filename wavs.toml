@@ -24,8 +24,8 @@ log_level = ["info", "wavs=debug"]
 # ipfs_gateway = "https://ipfs.io/ipfs/"
 
 # Registry domain
-# registry_domain = "wa.dev"
-registry_domain = "127.0.0.1:8090"
+registry_domain = "wa.dev"
+# registry_domain = "127.0.0.1:8090"
 
 # ----------------------------
 # Chain configurations

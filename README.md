@@ -222,13 +222,28 @@ export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 Deploy the compiled component with the contract information from the previous steps. Review the [makefile](./Makefile) for more details and configuration options.`TRIGGER_EVENT` is the event that the trigger contract emits and WAVS watches for. By altering `SERVICE_TRIGGER_ADDR` you can watch events for contracts others have deployed.
 
 ```bash docci-delay-per-cmd=3
-warg reset --registry http://127.0.0.1:8090
-warg publish release --name example:evmpriceoraclerust --version 0.1.0 ./compiled/evm_price_oracle.wasm --registry http://127.0.0.1:8090
+# TODO: would be so nice to do this entirely locally, then we only need to do the IS_TESTNET=true flow
+# warg reset --registry wa.dev
+# warg publish release --name example:evmpriceoraclerust --version 0.1.0 ./compiled/evm_price_oracle.wasm --registry http://127.0.0.1:8090
 # Verify
 # warg download example:evmpriceoraclerust --registry http://localhost:8090 --version 0.1.0
 
+export COMPONENT_FILENAME=evm_price_oracle.wasm
+
+# if testnet, setup https://wa.dev/account/credentials
+export IS_TESTNET=true
+export PKG_VERSION="0.1.0"
+export PKG_NAME="reecepbcups:evmpriceoraclerust" # TODO: get the namespace from `warg info --namespaces | grep =`, also have to go in and make this public (private by default)
+warg publish release --name ${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
+
+# upload this to the registry
+
+# local iterations require us to upload the digest directly.
+export IS_TESTNET=false
+export WASM_DIGEST=$(make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME)
+
 # Build your service JSON
-COMPONENT_FILENAME=evm_price_oracle.wasm AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
+AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
 
 # Upload service.json to IPFS
 ipfs_cid=`IPFS_ENDPOINT=http://127.0.0.1:5001 SERVICE_FILE=.docker/service.json make upload-to-ipfs`
