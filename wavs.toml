@@ -18,13 +18,12 @@
 # The log level, in the format of tracing directives. Default is ["info"]
 # See https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html#directives
 [default]
-log_level = ["info", "wavs=debug"]
+log_level = ["debug"]
 
 # Those configs are global and shared between wavs and aggregator
 jaeger = "http://localhost:4317"
 prometheus = "http://localhost:9090"
 
-# ----------------------------
 # The IPFS gateway URL used to access IPFS content over HTTP.
 # ipfs_gateway = "https://ipfs.io/ipfs/"
 
@@ -126,6 +125,7 @@ active_trigger_chains = ["local"]
 # ws_endpoint = "ws://localhost:8545"
 # http_endpoint = "http://localhost:8545"
 
+# ----------------------------
 # CLI specific settings
 # ----------------------------
 [cli]

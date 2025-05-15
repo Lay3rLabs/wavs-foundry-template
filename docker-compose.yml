@@ -52,6 +52,8 @@ services:
   # Default all-memory Jaeger
   jaeger:
     image: jaegertracing/jaeger:2.5.0
+    network_mode: "host"
+    stop_signal: SIGKILL
     environment:
       - COLLECTOR_OTLP_ENABLED=true
     ports:
@@ -61,6 +63,8 @@ services:
   # Prometheus is used to display metrics
   prometheus:
     image: prom/prometheus:v3.3.0
+    network_mode: "host"
+    stop_signal: SIGKILL
     ports:
       - "9090:9090" # Prometheus UI and OTLP receiver
     volumes:
