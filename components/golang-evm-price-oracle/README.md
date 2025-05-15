@@ -116,7 +116,17 @@ export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 ## Deploy Service
 
 ```bash docci-delay-per-cmd=3
-COMPONENT_FILENAME=golang_evm_price_oracle.wasm sh ./script/build_service.sh
+
+export COMPONENT_FILENAME=golang_evm_price_oracle.wasm
+
+# === LOCAL ===
+export IS_TESTNET=false
+export WASM_DIGEST=$(make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME)
+
+# === TESTNET ===
+# - reference repo root README.md
+
+sh ./script/build_service.sh
 
 # Upload service.json to IPFS
 ipfs_cid=`IPFS_ENDPOINT=http://127.0.0.1:5001 SERVICE_FILE=.docker/service.json make upload-to-ipfs`
