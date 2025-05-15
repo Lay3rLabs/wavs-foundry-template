@@ -185,6 +185,10 @@ export OPERATOR_MNEMONIC=`cat .docker/operator1.json | jq -r .mnemonic`
 export OPERATOR_PK=`cat .docker/operator1.json | jq -r '.accounts[0].private_key'`
 
 make start-all
+
+# TODO: move this into a docker here
+# move into https://github.com/reecepbcups/registry
+docker compose up
 ```
 
 Wait for full local deployment to be ready
@@ -218,8 +222,10 @@ export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 Deploy the compiled component with the contract information from the previous steps. Review the [makefile](./Makefile) for more details and configuration options.`TRIGGER_EVENT` is the event that the trigger contract emits and WAVS watches for. By altering `SERVICE_TRIGGER_ADDR` you can watch events for contracts others have deployed.
 
 ```bash docci-delay-per-cmd=3
-warg reset --registry http://localhost:8090
-warg publish release --name example:evmpriceoraclerust --version 0.1.0 ./compiled/evm_price_oracle.wasm --registry http://localhost:8090
+warg reset --registry http://127.0.0.1:8090
+warg publish release --name example:evmpriceoraclerust --version 0.1.0 ./compiled/evm_price_oracle.wasm --registry http://127.0.0.1:8090
+# Verify
+# warg download example:evmpriceoraclerust --registry http://localhost:8090 --version 0.1.0
 
 # Build your service JSON
 COMPONENT_FILENAME=evm_price_oracle.wasm AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
