@@ -12,3 +12,5 @@ internal/
 wavs:worker*.wit
 wavs:worker*.wasm
 .nodes
+
+infra/*
