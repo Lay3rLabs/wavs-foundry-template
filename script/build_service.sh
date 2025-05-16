@@ -85,7 +85,9 @@ $BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDR
 # else
 #     # use the package directly, no need to upload component to the instance itself.
 # fi
-$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --version ${PKG_VERSION} --package ${PKG_NAME}
+
+# TODO: domain
+$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --domain wa.dev --version ${PKG_VERSION} --package ${PKG_NAME}
 
 $BASE_CMD workflow component --id ${WORKFLOW_ID} permissions --http-hosts '*' --file-system true > /dev/null
 $BASE_CMD workflow component --id ${WORKFLOW_ID} time-limit --seconds 30 > /dev/null
