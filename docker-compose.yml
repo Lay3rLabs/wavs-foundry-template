@@ -6,9 +6,9 @@
 #
 ###################################
 
-services:
+# services:
   # wavs:
-  #   image: "ghcr.io/lay3rlabs/wavs:49ee0c4"
+  #   image: "ghcr.io/lay3rlabs/wavs:local-may-16"
   #   container_name: "wavs"
   #   stop_signal: SIGKILL
   #   network_mode: "host"
@@ -25,7 +25,7 @@ services:
   #     - "./.docker:/root/wavs/cli/"
 
   # aggregator:
-  #   image: "ghcr.io/lay3rlabs/wavs:49ee0c4"
+  #   image: "ghcr.io/lay3rlabs/wavs:local-may-16"
   #   depends_on: ["wavs"]
   #   container_name: "wavs-aggregator"
   #   stop_signal: SIGKILL
