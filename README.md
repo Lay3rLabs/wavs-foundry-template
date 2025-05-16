@@ -210,6 +210,13 @@ Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https:
 # You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
 cp .env.example .env
 
+# Gets the RPC depending on `DEPLOY_ENV` in .env
+export RPC_URL=`sh ./script/get-rpc.sh`
+echo "Using RPC_URL ${RPC_URL}"
+
+export DEPLOY_ENV=`sh ./script/get-deploy-status.sh`
+
+
 # Create new operator
 cast wallet new-mnemonic --json > .docker/operator1.json
 export OPERATOR_MNEMONIC=`cat .docker/operator1.json | jq -r .mnemonic`
@@ -237,10 +244,10 @@ while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; do
 export DEPLOYER_PK=$(cat .nodes/deployer)
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
 
-forge create SimpleSubmit --json --broadcast -r http://127.0.0.1:8545 --private-key "${DEPLOYER_PK}" --constructor-args "${SERVICE_MANAGER_ADDRESS}" > .docker/submit.json
+forge create SimpleSubmit --json --broadcast -r ${RPC_URL} --private-key "${DEPLOYER_PK}" --constructor-args "${SERVICE_MANAGER_ADDRESS}" > .docker/submit.json
 export SERVICE_SUBMISSION_ADDR=`jq -r .deployedTo .docker/submit.json`
 
-forge create SimpleTrigger --json --broadcast -r http://127.0.0.1:8545 --private-key "${DEPLOYER_PK}" > .docker/trigger.json
+forge create SimpleTrigger --json --broadcast -r ${RPC_URL} --private-key "${DEPLOYER_PK}" > .docker/trigger.json
 export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 ```
 
@@ -249,19 +256,20 @@ export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 Deploy the compiled component with the contract information from the previous steps. Review the [makefile](./Makefile) for more details and configuration options.`TRIGGER_EVENT` is the event that the trigger contract emits and WAVS watches for. By altering `SERVICE_TRIGGER_ADDR` you can watch events for contracts others have deployed.
 
 ```bash docci-delay-per-cmd=3
+
+
 export COMPONENT_FILENAME=evm_price_oracle.wasm
-
-# === LOCAL ===
-export IS_TESTNET=false
-export WASM_DIGEST=$(make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME)
-
-# === TESTNET ===
-# ** Setup: https://wa.dev/account/credentials
-export IS_TESTNET=true
-export PKG_VERSION="0.1.0"
-export PKG_NAMESPACE=`warg info --namespaces | grep = | cut -d'=' -f1 | tr -d ' '`
-export PKG_NAME="${PKG_NAMESPACE}:evmpriceoraclerust"
-warg publish release --name ${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
+if [ "$DEPLOY_ENV" = "LOCAL" ]; then
+    # TODO: would require WAVS to start here until we can get
+    # it to move to the else block here. then we could keep wavs off for now
+    export WASM_DIGEST=$(make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME)
+else
+    # ** Setup: https://wa.dev/account/credentials
+    export PKG_VERSION="0.1.0"
+    export PKG_NAMESPACE=`warg info --namespaces | grep = | cut -d'=' -f1 | tr -d ' '`
+    export PKG_NAME="${PKG_NAMESPACE}:evmpriceoraclerust"
+    warg publish release --name ${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
+fi
 
 # Build your service JSON
 AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
