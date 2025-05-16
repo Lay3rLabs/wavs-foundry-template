@@ -1,0 +1,220 @@
+## Creating components
+
+WASI components contain the main logic of a WAVS service. They are responsible for processing the trigger data and executing the business logic of a service.
+
+A basic component has three main parts:
+
+- Decoding incoming trigger data.
+- Processing the data (this is the custom logic of your component).
+- Encoding and returning the result for submission (if applicable).
+
+After being passed the `TriggerAction`, the component decodes it using the `decode_event_log_data!` macro from the [`wavs-wasi-chain`](https://docs.rs/wavs-wasi-chain/latest/wavs_wasi_chain/all.html#functions) crate.
+
+## 1. Component implementation
+
+{/* todo: verify example to show component structure. */}
+```rust
+#[allow(warnings)]
+mod bindings;
+use alloy_sol_types::{sol, SolValue};
+use bindings::{export, wavs::worker::layer_types::{TriggerData, TriggerDataEvmContractEvent}, Guest, TriggerAction, WasmResponse};
+use wavs_wasi_utils::decode_event_log_data;
+
+// Solidity types for the incoming trigger event using the `sol!` macro
+sol! {
+    event MyEvent(bytes data);  // Generic event with just data
+    struct MyResult {
+        bool success;
+        bytes result;  // Generic result data
+    }
+}
+
+// Define the component
+struct Component;
+export!(Component with_types_in bindings);
+
+impl Guest for Component {
+    fn run(action: TriggerAction) -> Result<Option<WasmResponse>, String> {
+        match action.data {
+            TriggerData::EvmContractEvent(TriggerDataEvmContractEvent { log, .. }) => {
+                // 1. Decode the event
+                let event: MyEvent = decode_event_log_data!(log)
+                    .map_err(|e| format!("Failed to decode event: {}", e))?;
+                
+                // 2. Process data (your business logic goes here)
+                let result = MyResult {
+                    success: true,
+                    result: event.data
+                };
+                
+                // 3. Return encoded result
+                Ok(Some(WasmResponse {
+                    payload: result.abi_encode(),  // Encode the result for blockchain submission
+                    ordering: None                 // Optional ordering parameter for transaction sequencing
+                }))
+            }
+            _ => Err("Unsupported trigger type".to_string())
+        }
+    }
+}
+
+```
+
+Components must implement the `Guest` trait, which is the main interface between your component and the WAVS runtime. The `run` function is the entry point for processing triggers: it should receive the trigger data, decode it, process it according to your component's logic, and return the results. If you need to submit results to the blockchain, results need to be encoded using `abi_encode()`.
+
+The `sol!` macro from `alloy_sol_types` is used to define Solidity types in Rust. It generates Rust structs and implementations that match your Solidity types, including ABI encoding/decoding methods.
+
+Bindings are automatically generated for any files in the `/components` and `/src` directories when the `make build` command is run.
+
+## Component definition
+
+A component is defined in a service.json file in the workflow object.
+
+```json service.json
+// ... other parts of the service manifest
+    "component": { // the WASI component containing the business logic of the workflow
+        "source": {  // Where the component code comes from
+            "Digest": "65747b4b1a7fa98cab6abd9a81a6102068de77b1040b94de904112272b226f51"  // SHA-256 hash of the component's bytecode
+        },
+        "permissions": {  // What the component can access
+            "allowed_http_hosts": "all",  // Can make HTTP requests to any host
+            "file_system": true  // Can access the filesystem
+        },
+        "fuel_limit": null,  // Computational limits for the component
+        "time_limit_seconds": 1800,  // Can run for up to 30 minutes
+        "config": {  // Configuration passed to the component
+            "nft": "0xb5d4D4a87Cb07f33b5FAd6736D8F1EE7D255d9E9",  // NFT contract address
+            "reward_token": "0x34045B4b0cdfADf87B840bCF544161168c8ab85A"  // Reward token address
+        },
+        "env_keys": [  // Secret environment variables the component can access from .env
+            "WAVS_ENV_API_KEY",  // secret API key with prefix WAVS_ENV_
+        ]
+    },
+// ... the rest of the service manifest
+```
+
+{/* todo: update section below. */}
+## Input and Output
+
+When building WASI components, keep in mind that the component can receive the trigger data in two ways:
+
+1. Triggered by an onchain event from a contract after service deployment. Components receive a `TriggerAction` containing event or trigger data which is then decoded.
+
+2. Manually via the `wasi-exec` command. The wasi-exec command simulates an onchain event and passes the trigger data directly to the component as `trigger::raw`. No abi decoding is required, and the output is returned as raw bytes.
+    - In the `EVM_PRICE_ORACLE` component, the input data needs to be formatted into a `bytes32` string using the `cast format-bytes32-string` when using the `make wasi-exec` command. When creating your own components, use an appropriate format for your use case to use the `wasi-exec` command.
+
+## Trigger Handling Pattern
+
+The evm-price-oracle component demonstrates a robust pattern for handling triggers in WAVS components. This pattern is particularly useful for components that need to handle both on-chain events and local testing via `wasi-exec`.
+
+### Input Sources
+
+The component handles two types of inputs:
+
+1. **On-chain Events**: When triggered by a blockchain event, the data comes through the `TriggerAction` with `TriggerData::EvmContractEvent`
+2. **Local Testing**: When using `wasi-exec`, the data comes through `TriggerData::Raw`
+
+Here's how the component handles both cases:
+
+```rust
+// In trigger.rs
+pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, Destination)> {
+    match trigger_data {
+        TriggerData::EvmContractEvent(TriggerDataEvmContractEvent { log, .. }) => {
+            // Decode Ethereum event logs using the NewTrigger ABI
+            let event: solidity::NewTrigger = decode_event_log_data!(log)?;
+            let trigger_info = solidity::TriggerInfo::abi_decode(&event._triggerInfo)?;
+            Ok((trigger_info.triggerId, trigger_info.data.to_vec(), Destination::Ethereum))
+        }
+        TriggerData::Raw(data) => Ok((0, data.clone(), Destination::CliOutput)),
+        _ => Err(anyhow::anyhow!("Unsupported trigger data type")),
+    }
+}
+```
+
+### Processing Flow
+
+The component follows a clear pattern for processing triggers:
+
+1. **Decode Input**: Use `decode_trigger_event` to handle both input types
+2. **Process Data**: Implement your business logic
+3. **Encode Output**: Format the response based on the destination
+
+```rust
+// In lib.rs
+impl Guest for Component {
+    fn run(action: TriggerAction) -> Result<Option<WasmResponse>, String> {
+        // 1. Decode the trigger data
+        let (trigger_id, req, dest) = decode_trigger_event(action.data)?;
+        
+        // 2. Process the data (your business logic)
+        let res = block_on(async move {
+            let resp_data = get_price_feed(id).await?;
+            serde_json::to_vec(&resp_data)
+        })?;
+
+        // 3. Encode the output based on destination
+        let output = match dest {
+            Destination::Ethereum => Some(encode_trigger_output(trigger_id, &res)),
+            Destination::CliOutput => Some(WasmResponse { 
+                payload: res.into(), 
+                ordering: None 
+            }),
+        };
+        Ok(output)
+    }
+}
+```
+
+### Best Practices
+
+1. **Separate Concerns**: Keep trigger decoding/encoding logic separate from business logic
+2. **Handle Both Input Types**: Support both on-chain events and local testing
+3. **Type Safety**: Use strong typing for both input and output data
+4. **Error Handling**: Use proper error types and propagate errors clearly
+5. **Documentation**: Document the data flow and expected formats
+
+### Output Encoding
+
+The component uses different encoding strategies based on the destination:
+
+```rust
+// For Ethereum submission
+pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> WasmResponse {
+    WasmResponse {
+        payload: solidity::DataWithId {
+            triggerId: trigger_id,
+            data: output.as_ref().to_vec().into(),
+        }
+        .abi_encode(),
+        ordering: None,
+    }
+}
+```
+
+This pattern ensures that:
+- On-chain submissions are properly ABI encoded
+- Local testing outputs are in a readable format
+- The trigger ID is preserved for tracking
+- The component can be tested locally before deployment
+
+## Logging
+
+Components can use logging to debug and track the execution of the component.
+
+**Logging in development**:
+
+Use `println!()` to write to stdout/stderr. This is visible when running `wasi-exec` locally.
+
+```rust lib.rs
+println!("Debug message: {:?}", data);
+```
+
+**Logging in production**
+
+For production, you can use a `host::log()` function which takes a `LogLevel` and writes its output via the tracing mechanism. Along with the string that the developer provides, it attaches additional context such as the `ServiceID`, `WorkflowID`, and component `Digest`.
+
+```rust lib.rs
+host::log(LogLevel::Info, "Production logging message");
+```
+
