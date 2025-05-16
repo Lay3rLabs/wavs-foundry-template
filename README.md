@@ -273,6 +273,9 @@ Deploy the compiled component with the contract information from the previous st
 
 export COMPONENT_FILENAME=evm_price_oracle.wasm
 if [ "$DEPLOY_ENV" = "LOCAL" ]; then
+    sh ./script/create-operator.sh 1
+
+
     # TODO: would require WAVS to start here until we can get
     # it to move to the else block here. then we could keep wavs off for now
     export WASM_DIGEST=$(make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME)
