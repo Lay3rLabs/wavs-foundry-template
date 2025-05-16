@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-set -x
 
 SP=""; if [ "$(uname)" == *"Darwin"* ]; then SP=" "; fi
 
