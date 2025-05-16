@@ -221,8 +221,8 @@ echo "Using RPC_URL ${RPC_URL}"
 # export OPERATOR_MNEMONIC=`cat .docker/operator1.json | jq -r .mnemonic`
 # export OPERATOR_PK=`cat .docker/operator1.json | jq -r '.accounts[0].private_key'`
 
-# TODO: this should really just be a start anvil if local script
-make start-all
+# Stats anvil & IPFS
+make start-all-local
 ```
 
 ## Create Deployer, upload Eigenlayer
@@ -273,14 +273,12 @@ Deploy the compiled component with the contract information from the previous st
 
 export COMPONENT_FILENAME=evm_price_oracle.wasm
 if [ "$DEPLOY_ENV" = "LOCAL" ]; then
+    # TODO: temp: required to start wavs to upload. ideal is the local wasi registry
     sh ./script/create-operator.sh 1
     sh ./infra/wavs-1/start.sh
 
-    sh ./script/create-aggregator.sh 1
-
-
-    # TODO: would require WAVS to start here until we can get
-    # it to move to the else block here. then we could keep wavs off for now
+    # I still think we can wait to start this after we deploy
+    # sh ./script/create-aggregator.sh 1
     export WASM_DIGEST=$(make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME)
 else
     # ** Setup: https://wa.dev/account/credentials

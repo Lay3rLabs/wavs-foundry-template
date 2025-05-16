@@ -7,45 +7,46 @@
 ###################################
 
 services:
-  wavs:
-    image: "ghcr.io/lay3rlabs/wavs:0.4.0-beta.5"
-    container_name: "wavs"
-    stop_signal: SIGKILL
-    network_mode: "host"
-    env_file: "./.env"
-    ports:
-      - "8000:8000"
-    environment:
-      WAVS_HOME: "/wavs/packages/wavs"
-      WAVS_CLI_HOME: "/wavs/packages/cli"
-      WAVS_AGGREGATOR_HOME: "/wavs/packages/aggregator"
-    command: ["wavs"]
-    volumes:
-      - "./:/wavs"
-      - "./.docker:/root/wavs/cli/"
+  # wavs:
+  #   image: "ghcr.io/lay3rlabs/wavs:0.4.0-beta.5"
+  #   container_name: "wavs"
+  #   stop_signal: SIGKILL
+  #   network_mode: "host"
+  #   env_file: "./.env"
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     WAVS_HOME: "/wavs/packages/wavs"
+  #     WAVS_CLI_HOME: "/wavs/packages/cli"
+  #     WAVS_AGGREGATOR_HOME: "/wavs/packages/aggregator"
+  #   command: ["wavs"]
+  #   volumes:
+  #     - "./:/wavs"
+  #     - "./.docker:/root/wavs/cli/"
 
-  aggregator:
-    image: "ghcr.io/lay3rlabs/wavs:0.4.0-beta.5"
-    depends_on: ["wavs"]
-    container_name: "wavs-aggregator"
-    stop_signal: SIGKILL
-    env_file: "./.env"
-    ports:
-      - "8001:8001"
-    command: ["wavs-aggregator"]
-    volumes:
-      - ".:/wavs"
-    network_mode: "host"
+  # aggregator:
+  #   image: "ghcr.io/lay3rlabs/wavs:0.4.0-beta.5"
+  #   depends_on: ["wavs"]
+  #   container_name: "wavs-aggregator"
+  #   stop_signal: SIGKILL
+  #   env_file: "./.env"
+  #   ports:
+  #     - "8001:8001"
+  #   command: ["wavs-aggregator"]
+  #   volumes:
+  #     - ".:/wavs"
+  #   network_mode: "host"
 
-  ipfs:
-    image: "ipfs/kubo:v0.34.1"
-    container_name: "ipfs"
-    stop_signal: SIGKILL
-    network_mode: "host"
-    ports:
-      - "4001:4001"
-      - "4001:4001/udp"
-      - "8080:8080"
-      - "5001:5001"
-    command: ["daemon", "--offline"]
+# TODO: currently just running in start-all-local, maybe do this in the aggregator or wavs instances in the future (in compose?)
+  # ipfs:
+  #   image: "ipfs/kubo:v0.34.1"
+  #   container_name: "ipfs"
+  #   stop_signal: SIGKILL
+  #   network_mode: "host"
+  #   ports:
+  #     - "4001:4001"
+  #     - "4001:4001/udp"
+  #     - "8080:8080"
+  #     - "5001:5001"
+  #   command: ["daemon", "--offline"]
 

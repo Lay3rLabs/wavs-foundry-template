@@ -63,8 +63,8 @@ setup: check-requirements
 	@forge install
 	@npm install
 
-## start-all: starting anvil and WAVS with docker compose
-start-all: clean-docker setup-env
+## start-all-local: starting anvil and core services (like IPFS for example)
+start-all-local: clean-docker setup-env
 	@sh ./script/start_all.sh
 
 ## get-trigger-from-deploy: getting the trigger address from the script deploy
