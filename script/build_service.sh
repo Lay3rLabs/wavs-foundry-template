@@ -32,7 +32,7 @@ IS_TESTNET=${IS_TESTNET:-"false"}
 WAVS_ENDPOINT=${WAVS_ENDPOINT:-"http://localhost:8000"}
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
-BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:local-may15-wit-fix wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
+BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:49ee0c4 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
     echo "SERVICE_MANAGER_ADDRESS is not set. Please set it to the address of the service manager."

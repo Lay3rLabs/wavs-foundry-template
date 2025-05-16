@@ -9,7 +9,7 @@ CARGO=cargo
 COIN_MARKET_CAP_ID?=1
 COMPONENT_FILENAME?=evm_price_oracle.wasm
 CREDENTIAL?=""
-DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:local-may15-wit-fix
+DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:49ee0c4
 MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
 IPFS_ENDPOINT?=http://127.0.0.1:5001
 RPC_URL?=http://127.0.0.1:8545
@@ -84,10 +84,9 @@ upload-component:
 # TODO: move to `$(WAVS_CMD) upload-component ./compiled/${COMPONENT_FILENAME} --wavs-endpoint ${WAVS_ENDPOINT}`
 	@wget --post-file=./compiled/${COMPONENT_FILENAME} --header="Content-Type: application/wasm" -O - ${WAVS_ENDPOINT}/upload | jq -r .digest
 
-SERVICE_URL?="http://127.0.0.1:8080/ipfs/service.json"
 ## deploy-service: deploying the WAVS component service json | SERVICE_URL, CREDENTIAL, WAVS_ENDPOINT
 deploy-service:
-	@$(WAVS_CMD) deploy-service --service-url "$(SERVICE_URL)" --log-level=info --data /data/.docker --home /data $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),)
+	@$(WAVS_CMD) deploy-service --service-url $(SERVICE_URL) --log-level=debug --data /data/.docker --home /data $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),)
 
 ## get-trigger: get the trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
 get-trigger:
@@ -101,7 +100,7 @@ show-result:
 
 ## upload-to-ipfs: uploading the a service config to IPFS | IPFS_ENDPOINT, SERVICE_FILE
 upload-to-ipfs:
-	@curl -s -X POST "${IPFS_ENDPOINT}/api/v0/add?pin=true" \
+	@curl -X POST "${IPFS_ENDPOINT}/api/v0/add?pin=true" \
 		-H "Content-Type: multipart/form-data" \
 		-F file=@${SERVICE_FILE} | jq -r .Hash
 
