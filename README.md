@@ -222,13 +222,16 @@ export COMPONENT_FILENAME=evm_price_oracle.wasm
 
 # === LOCAL ===
 export IS_TESTNET=false
+RPC_URL="http://localhost:8545"
 export WASM_DIGEST=$(make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME)
 
 # === TESTNET ===
 # ** Setup: https://wa.dev/account/credentials
 export IS_TESTNET=true
+RPC_URL="https://ethereum-holesky-rpc.publicnode.com"
 export PKG_VERSION="0.1.0"
-export PKG_NAMESPACE=`warg info --namespaces | grep = | cut -d'=' -f1 | tr -d ' '`
+# export PKG_NAMESPACE=`warg info --namespaces | grep = | cut -d'=' -f1 | tr -d ' '`
+export PKG_NAMESPACE=reecepbcups
 export PKG_NAME="${PKG_NAMESPACE}:evmpriceoraclerust"
 warg publish release --name ${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
 
@@ -238,11 +241,11 @@ AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
 # Upload service.json to IPFS
 ipfs_cid=`IPFS_ENDPOINT=http://127.0.0.1:5001 SERVICE_FILE=.docker/service.json make upload-to-ipfs`
 
+export SERVICE_URI="http://127.0.0.1:8080/ipfs/${ipfs_cid}"
+cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${SERVICE_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
+
 # Deploy the service JSON to WAVS so it now watches and submits.
-#
-# If CREDENTIAL is not set then the default WAVS_CLI .env account will be used
-# You can `cast send ${WAVS_SERVICE_MANAGER} 'transferOwnership(address)'` to move it to another account.
-SERVICE_URL="http://127.0.0.1:8080/ipfs/${ipfs_cid}" CREDENTIAL=${DEPLOYER_PK} make deploy-service
+SERVICE_URL=${SERVICE_URI} make deploy-service
 ```
 
 
