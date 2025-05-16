@@ -267,19 +267,8 @@ Deploy the compiled component with the contract information from the previous st
 
 export COMPONENT_FILENAME=evm_price_oracle.wasm
 
-# if [ "$DEPLOY_ENV" = "LOCAL" ]; then
-#     # TODO: temp: required to start wavs to upload. ideal is the local wasi registry
-#     sh ./script/create-operator.sh 1
-#     sh ./infra/wavs-1/start.sh
-
-#     export WASM_DIGEST=$(make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME)
-# else
-
-# over in warg-registry
-# - docker compose down --rmi all && docker volume prune -a
-docker compose up --remove-orphans --force-recreate --renew-anon-volumes
-
-warg reset --registry http://127.0.0.1:8090
+# over in warg-registry, start (reece/wip-oci-registry branch)
+# warg reset --registry http://127.0.0.1:8090
 
 # ** Setup: https://wa.dev/account/credentials
 export PKG_VERSION="0.2.0"
@@ -290,14 +279,29 @@ export REGISTRY=localhost:8090
 export WKG_OCI_INSECURE="localhost,127.0.0.1"
 
 # TODO: how to upload to the OCI server only and not run the old warg server? then build using this same IP:PORT so it works
-warg publish release --name ${PKG_NAMESPACE}/${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} --registry http://${REGISTRY} || true
+warg publish release --name ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} --registry http://${REGISTRY} || true
 
 # brew install oras // go install oras.land/oras/cmd/oras@v1.2.3
-oras push "localhost:5000/${PKG_NAMESPACE}/${PKG_NAME}:${PKG_VERSION}" "./compiled/${COMPONENT_FILENAME}:application/wasm"
+export ARTIFACT_URL="localhost:5000/${PKG_NAMESPACE}/${PKG_NAME}:${PKG_VERSION}"
+echo "Pushing to ${ARTIFACT_URL}"
+
+# oras push ${ARTIFACT_URL} "./compiled/${COMPONENT_FILENAME}:application/vnd.wasm.config.v0+json" --export-manifest t.txt --format json --plain-http --artifact-type application/vnd.wasm.config.v0+json --config /dev/null:application/vnd.wasm.config.v0+json
+
+oras push ${ARTIFACT_URL} \
+  "./compiled/${COMPONENT_FILENAME}:application/wasm" \
+  --export-manifest t.txt \
+  --format json \
+  --plain-http \
+  --artifact-type application/vnd.wasm.config.v0+json \
+  --config /dev/null:application/vnd.wasm.config.v0+json
+
+# oras push --config config.json:application/vnd.oras.config.v1+json localhost:5000/hello:latest hi.txt
+oras manifest fetch localhost:5000/${PKG_NAMESPACE}/${PKG_NAME}:${PKG_VERSION} --plain-http
 
 # Build your service JSON
 export AGGREGATOR_URL=http://127.0.0.1:8001
-REGISTRY=127.0.0.1:8090 sh ./script/build_service.sh
+export WKG_OCI_INSECURE="localhost,127.0.0.1"
+REGISTRY=localhost:5000 sh ./script/build_service.sh
 
 # Upload service.json to IPFS
 export SERVICE_FILE=.docker/service.json
