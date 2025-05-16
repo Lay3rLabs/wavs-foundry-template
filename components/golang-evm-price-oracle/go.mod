@@ -1,17 +1,21 @@
 module github.com/Lay3rLabs/wavs-foundry-template/components/golang-evm-price-oracle
 
-go 1.23.7
+go 1.24.3
 
 // namespace import fix
 replace github.com/dev-wasm/dev-wasm-go/lib => github.com/Reecepbcups/dev-wasm-go/lib v0.0.0-20250302004559-caf3bb14c8e6
 
 // tinygo >0.35 support
-replace github.com/defiweb/go-eth => github.com/Reecepbcups/go-eth v0.7.1-0.20250320155602-e7f53502e2df
+replace (
+	github.com/defiweb/go-eth => github.com/Reecepbcups/go-eth v0.7.1-0.20250320155602-e7f53502e2df
+	// fix: assignment mismatch: 3 variables but rlp.Decode returns 2 values
+	github.com/defiweb/go-rlp => github.com/defiweb/go-rlp v0.3.0
+)
 
 require (
-	github.com/Lay3rLabs/wavs-wasi/go v0.4.0-beta.1
+	github.com/Lay3rLabs/wavs-wasi/go v0.4.0-beta.4
 	github.com/dev-wasm/dev-wasm-go/lib v0.0.0
-	go.bytecodealliance.org/cm v0.1.1-0.20250218151459-e57ac0139b6f
+	go.bytecodealliance.org/cm v0.2.2
 )
 
 require (

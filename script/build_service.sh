@@ -31,7 +31,7 @@ DEPLOY_ENV=${DEPLOY_ENV:-""}
 # used in make upload-component
 WAVS_ENDPOINT=${WAVS_ENDPOINT:-"http://localhost:8000"}
 
-BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-beta.5 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
+BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:49ee0c4 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
     # DevEx: attempt to grab it from the location if not set already
@@ -76,16 +76,18 @@ if [ -n "$AGGREGATOR_URL" ]; then
 fi
 $BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDRESS} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
 
-if [ "$DEPLOY_ENV" = "LOCAL" ]; then
-    if [ -z "$WASM_DIGEST" ]; then
-        echo "WASM_DIGEST is not set. You must upload the component directly to the wavs instance."
-        exit 1
-    fi
-    $BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST}
-else
-    # use the package directly, no need to upload component to the instance itself.
-    $BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --version ${PKG_VERSION} --package ${PKG_NAME}
-fi
+# if [ "$DEPLOY_ENV" = "LOCAL" ]; then
+#     if [ -z "$WASM_DIGEST" ]; then
+#         echo "WASM_DIGEST is not set. You must upload the component directly to the wavs instance."
+#         exit 1
+#     fi
+#     $BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST}
+# else
+#     # use the package directly, no need to upload component to the instance itself.
+# fi
+
+# TODO: domain
+$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --domain wa.dev --version ${PKG_VERSION} --package ${PKG_NAME}
 
 $BASE_CMD workflow component --id ${WORKFLOW_ID} permissions --http-hosts '*' --file-system true > /dev/null
 $BASE_CMD workflow component --id ${WORKFLOW_ID} time-limit --seconds 30 > /dev/null
@@ -94,10 +96,5 @@ $BASE_CMD workflow component --id ${WORKFLOW_ID} config --values 'key=value,key2
 
 $BASE_CMD manager set-evm --chain-name ${SUBMIT_CHAIN} --address `cast --to-checksum ${SERVICE_MANAGER_ADDRESS}` > /dev/null
 $BASE_CMD validate > /dev/null
-
-# inform aggregator if set
-if [ -n "$AGGREGATOR_URL" ]; then
-    wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(cat ${FILE_LOCATION})"'}' ${AGGREGATOR_URL}/register-service -O -
-fi
 
 echo "Configuration file created at ${FILE_LOCATION}"

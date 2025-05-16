@@ -148,7 +148,7 @@ aggregator_endpoint = "http://localhost:8001"
 # ----------------------------
 [aggregator]
 # The directory to store the data. Default is "/var/wavs-aggregator"
-data = "~/wavs/aggregator"
+data = "~/wavs"
 
 cors_allowed_origins = [
     "https://lay3rlabs.github.io/*",
