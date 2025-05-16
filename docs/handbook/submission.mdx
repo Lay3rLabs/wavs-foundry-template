@@ -1,0 +1,37 @@
+
+{/* todo: update info on submission. add info on aggregator. mention submission can be used to trigger when chaining.  */}
+
+## Submission and aggregator
+
+A service handler or submission contract handles the logic for submitting a component's output to the blockchain. A submission contract must implement the `handleSignedData()` function using the `IWavsServiceHandler` interface. This interface is defined in the `@wavs` package: https://www.npmjs.com/package/@wavs/solidity?activeTab=code
+
+In the template, the [submission contract](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsSubmit.sol) uses the `handleSignedData()` function to validate the operator's signature and store the processed data from the component. The `DataWithId` struct must match the output format from the component. Each trigger has a unique ID that links the data to its source.
+
+Template submission example:
+
+```solidity
+function handleSignedData(bytes calldata _data, bytes calldata _signature) external {
+    // 1. Validate the operator's signature by calling the `validate` function on the `_serviceManager` contract
+    _serviceManager.validate(_data, _signature);
+
+    // 2. Decode the data into a DataWithId struct defined in the `ITypes` interface
+    DataWithId memory dataWithId = abi.decode(_data, (DataWithId));
+
+    // 3. Store the result in state
+    _signatures[dataWithId.triggerId] = _signature;      // 1. Store operator signature
+    _datas[dataWithId.triggerId] = dataWithId.data;      // 2. Store the data
+    _validTriggers[dataWithId.triggerId] = true;         // 3. Mark trigger as valid
+}
+```
+
+Note: submission contracts are not required for a WAVS service. If you don't need to submit data back to the blockchain, you can modify the makefile `deploy-service` command to use the `--submit none` flag when deploying the service:
+
+```bash
+deploy-service:
+	@$(WAVS_CMD) deploy-service --log-level=info --data /data/.docker --home /data \
+	--component "/data/compiled/${COMPONENT_FILENAME}" \
+	--trigger-event-name "${TRIGGER_EVENT}" \
+	--trigger-address "${SERVICE_TRIGGER_ADDR}" \
+	--service-config ${SERVICE_CONFIG} \
+  --submit none
+```
