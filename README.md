@@ -211,15 +211,8 @@ Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https:
 cp .env.example .env
 
 # Gets the RPC depending on `DEPLOY_ENV` in .env
-export DEPLOY_ENV=`sh ./script/get-deploy-status.sh`
-export RPC_URL=`sh ./script/get-rpc.sh`
-echo "Using RPC_URL ${RPC_URL}"
-
-
-# Create new operator
-# cast wallet new-mnemonic --json > .docker/operator1.json
-# export OPERATOR_MNEMONIC=`cat .docker/operator1.json | jq -r .mnemonic`
-# export OPERATOR_PK=`cat .docker/operator1.json | jq -r '.accounts[0].private_key'`
+# export RPC_URL=`sh ./script/get-rpc.sh`
+# export DEPLOY_ENV=`sh ./script/get-deploy-status.sh`
 
 # Stats anvil & IPFS
 make start-all-local
@@ -254,6 +247,8 @@ Wait for full local deployment to be ready
 `SERVICE_MANAGER_ADDR` is the address of the Eigenlayer service manager contract. It was deployed in the previous step. Then you deploy the trigger and submission contracts which depends on the service manager. The service manager will verify that a submission is valid (from an authorized operator) before saving it to the blockchain. The trigger contract is any arbitrary contract that emits some event that WAVS will watch for. Yes, this can be on another chain (e.g. an L2) and then the submission contract on the L1 *(Ethereum for now because that is where Eigenlayer is deployed)*.
 
 ```bash docci-delay-per-cmd=2
+export RPC_URL=`sh ./script/get-rpc.sh`
+
 export DEPLOYER_PK=$(cat .nodes/deployer)
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
 
@@ -317,8 +312,9 @@ wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(j
 ## Start WAVS
 
 ```bash
-sh ./script/create-operator.sh 1
-sh ./infra/wavs-1/start.sh
+# FOR NOW: local is already on because we have to upload components manually. pending local wasi registry
+# sh ./script/create-operator.sh 1
+# sh ./infra/wavs-1/start.sh
 ```
 
 ## Register service specific operator
@@ -338,7 +334,7 @@ source infra/wavs-1/.env
 AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 1`
 
 # Register the operator with the WAVS service manager
-# !!! TODO: we need to fund this operator for testnet -- see why this just worked when AVS_PRIVATE_KEY does not have funds yet (middleware?)
+# !!! TODO: we need to fund this operator for testnet -- see why this just worked when AVS_PRIVATE_KEY does not have funds yet (middleware being magical?)
 AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} DELEGATION=0.01ether make operator-register
 
 # Verify registration
