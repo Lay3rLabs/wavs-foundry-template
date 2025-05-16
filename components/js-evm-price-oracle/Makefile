@@ -1,4 +1,4 @@
-WAVS_PACKAGE=wavs:worker@0.4.0-beta.1
+WAVS_PACKAGE=wavs:worker@0.4.0-beta.4
 WAVS_WIT_WORLD=wavs:worker/layer-trigger-world
 OUTPUT_DIR?=../../compiled
 

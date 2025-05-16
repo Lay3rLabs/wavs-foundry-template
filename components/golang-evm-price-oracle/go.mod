@@ -9,19 +9,19 @@ replace github.com/dev-wasm/dev-wasm-go/lib => github.com/Reecepbcups/dev-wasm-g
 replace github.com/defiweb/go-eth => github.com/Reecepbcups/go-eth v0.7.1-0.20250320155602-e7f53502e2df
 
 require (
-	github.com/Lay3rLabs/wavs-wasi/go v0.4.0-beta.1
+	github.com/Lay3rLabs/wavs-wasi/go v0.4.0-beta.4
 	github.com/dev-wasm/dev-wasm-go/lib v0.0.0
-	go.bytecodealliance.org/cm v0.1.1-0.20250218151459-e57ac0139b6f
+	go.bytecodealliance.org/cm v0.2.2
 )
 
 require (
-	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
+	github.com/btcsuite/btcd/btcec/v2 v2.3.4 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
 	github.com/defiweb/go-anymapper v0.3.0 // indirect
 	github.com/defiweb/go-eth v0.7.0 // indirect
-	github.com/defiweb/go-rlp v0.3.0 // indirect
+	github.com/defiweb/go-rlp v0.4.0 // indirect
 	github.com/defiweb/go-sigparser v0.6.0 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
-	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/crypto v0.38.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
 )

@@ -45,7 +45,7 @@ cat > "${AGG_LOC}/start.sh" << EOF
 #!/bin/bash
 cd \$(dirname "\$0") || exit 1
 
-IMAGE=ghcr.io/lay3rlabs/wavs:0.4.0-beta.5
+IMAGE=ghcr.io/lay3rlabs/wavs:49ee0c4
 INSTANCE=wavs-aggregator-${AGGREGATOR_INDEX}
 
 docker kill \${INSTANCE} || true

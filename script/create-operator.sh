@@ -22,8 +22,9 @@ if [ -d "${OPERATOR_LOC}" ] && [ "$(ls -A ${OPERATOR_LOC})" ]; then
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo -e "\nRemoving ${OPERATOR_LOC}"
     docker kill wavs-${OPERATOR_INDEX} || true
-    # ca/ directory requires this
+    # ca/ & app/ directory requires this
     sudo rm -rf ${OPERATOR_LOC}/ca
+    sudo rm -rf ${OPERATOR_LOC}/app
     rm -rf ${OPERATOR_LOC}
   else
     echo -e "\nExiting without changes."
@@ -55,7 +56,7 @@ cat > "${OPERATOR_LOC}/start.sh" << EOF
 #!/bin/bash
 cd \$(dirname "\$0") || exit 1
 
-IMAGE=ghcr.io/lay3rlabs/wavs:0.4.0-beta.5
+IMAGE=ghcr.io/lay3rlabs/wavs:49ee0c4
 WAVS_INSTANCE=wavs-${OPERATOR_INDEX}
 
 docker kill \${WAVS_INSTANCE} || true
