@@ -295,6 +295,7 @@ cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${SERVICE_URI}" -r
 
 # !! TODO: pending https://github.com/Lay3rLabs/WAVS/pull/641 we can move this to the start-wavs section
 #
+#
 # Deploy the service JSON to WAVS so it now watches and submits.
 WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${SERVICE_URI} make deploy-service
 ```
