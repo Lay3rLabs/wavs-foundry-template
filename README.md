@@ -275,17 +275,26 @@ export COMPONENT_FILENAME=evm_price_oracle.wasm
 #     export WASM_DIGEST=$(make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME)
 # else
 
+# over in warg-registry
+# - docker compose down --rmi all && docker volume prune -a
+docker compose up --remove-orphans --force-recreate --renew-anon-volumes
+
+warg reset --registry http://127.0.0.1:8090
+
 # ** Setup: https://wa.dev/account/credentials
 export PKG_VERSION="0.2.0"
 # export PKG_NAMESPACE=`warg info --namespaces | grep = | cut -d'=' -f1 | tr -d ' '`
-export PKG_NAMESPACE=reecepbcups
+export PKG_NAMESPACE=example
 export PKG_NAME="${PKG_NAMESPACE}:evmpriceoraclerust"
-warg publish release --name ${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
+export REGISTRY=localhost:8090
+export WKG_OCI_INSECURE="localhost,127.0.0.1"
 
+# TODO: how to upload to the OCI server only and not run the old warg server? then build using this same IP:PORT so it works
+warg publish release --name ${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} --registry http://${REGISTRY} || true
 
 # Build your service JSON
 export AGGREGATOR_URL=http://127.0.0.1:8001
-sh ./script/build_service.sh
+REGISTRY=127.0.0.1:8090 sh ./script/build_service.sh
 
 # Upload service.json to IPFS
 export SERVICE_FILE=.docker/service.json

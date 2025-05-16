@@ -30,8 +30,9 @@ AGGREGATOR_URL=${AGGREGATOR_URL:-""}
 DEPLOY_ENV=${DEPLOY_ENV:-""}
 # used in make upload-component
 WAVS_ENDPOINT=${WAVS_ENDPOINT:-"http://localhost:8000"}
+REGISTRY=${REGISTRY:-"wa.dev"}
 
-BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:49ee0c4 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
+BASE_CMD="docker run --rm --network host -w /data -e WKG_OCI_INSECURE=localhost,127.0.0.1 -v $(pwd):/data ghcr.io/lay3rlabs/wavs:49ee0c4 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
     # DevEx: attempt to grab it from the location if not set already
@@ -87,7 +88,7 @@ $BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDR
 # fi
 
 # TODO: domain
-$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --domain wa.dev --version ${PKG_VERSION} --package ${PKG_NAME}
+$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --domain ${REGISTRY} --version ${PKG_VERSION} --package ${PKG_NAME}
 
 $BASE_CMD workflow component --id ${WORKFLOW_ID} permissions --http-hosts '*' --file-system true > /dev/null
 $BASE_CMD workflow component --id ${WORKFLOW_ID} time-limit --seconds 30 > /dev/null
