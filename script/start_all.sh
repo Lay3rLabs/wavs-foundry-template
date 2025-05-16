@@ -7,25 +7,28 @@ MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
 LOG_FILE=.docker/start.log
 OPERATOR_PK=${OPERATOR_PK:-""}
 OPERATOR_MNEMONIC=${OPERATOR_MNEMONIC:-""}
-export DOCKER_DEFAULT_PLATFORM=linux/amd64
+FORK_RPC_URL=${FORK_RPC_URL:-"https://ethereum-holesky-rpc.publicnode.com"}
 
 ## == Start watcher ==
 rm $LOG_FILE 2> /dev/null || true
 
 ## == Base Anvil Testnet Fork ==
-anvil --fork-url https://ethereum-holesky-rpc.publicnode.com --port ${PORT} &
-anvil_pid=$!
-trap "kill -9 $anvil_pid && echo -e '\nKilled anvil'" EXIT
-while ! cast block-number --rpc-url http://localhost:${PORT} > /dev/null 2>&1
-do
-  sleep 0.25
-done
+DEPLOY_ENV=$(sh ./script/get-deploy-status.sh)
+if [ "$DEPLOY_ENV" = "LOCAL" ]; then
+  anvil --fork-url ${FORK_RPC_URL} --port ${PORT} &
+  anvil_pid=$!
+  trap "kill -9 $anvil_pid && echo -e '\nKilled anvil'" EXIT
+  while ! cast block-number --rpc-url http://localhost:${PORT} > /dev/null 2>&1
+  do
+    sleep 0.25
+  done
+fi
 
-if [[ -z "$OPERATOR_PK" ]]; then
+if [ -z "$OPERATOR_PK" ]; then
   echo "You must set OPERATOR_PK"
   exit 1
 fi
-if [[ -z "$OPERATOR_MNEMONIC" ]]; then
+if [ -z "$OPERATOR_MNEMONIC" ]; then
   echo "You must set OPERATOR_MNEMONIC"
   exit 1
 fi
@@ -38,10 +41,7 @@ docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes "$MIDDLE
 ## == Setup Deployer
 echo "Using Address: $(cast wallet address --private-key ${OPERATOR_PK})"
 
-SP=""
-if [[ "$(uname)" == *"Darwin"* ]]; then
-  SP=" "
-fi
+SP=""; if [ "$(uname)" == *"Darwin"* ]; then SP=" "; fi
 
 sed -i${SP}'' -e "s/^WAVS_CLI_EVM_CREDENTIAL=.*$/WAVS_CLI_EVM_CREDENTIAL=\"$OPERATOR_PK\"/" .env
 sed -i${SP}'' -e "s/^WAVS_AGGREGATOR_CREDENTIAL=.*$/WAVS_AGGREGATOR_CREDENTIAL=\"$OPERATOR_PK\"/" .env
