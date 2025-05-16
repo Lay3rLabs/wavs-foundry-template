@@ -267,20 +267,21 @@ Deploy the compiled component with the contract information from the previous st
 
 export COMPONENT_FILENAME=evm_price_oracle.wasm
 
-if [ "$DEPLOY_ENV" = "LOCAL" ]; then
-    # TODO: temp: required to start wavs to upload. ideal is the local wasi registry
-    sh ./script/create-operator.sh 1
-    sh ./infra/wavs-1/start.sh
+# if [ "$DEPLOY_ENV" = "LOCAL" ]; then
+#     # TODO: temp: required to start wavs to upload. ideal is the local wasi registry
+#     sh ./script/create-operator.sh 1
+#     sh ./infra/wavs-1/start.sh
 
-    export WASM_DIGEST=$(make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME)
-else
-    # ** Setup: https://wa.dev/account/credentials
-    export PKG_VERSION="0.1.0"
-    # export PKG_NAMESPACE=`warg info --namespaces | grep = | cut -d'=' -f1 | tr -d ' '`
-    export PKG_NAMESPACE=reecepbcups
-    export PKG_NAME="${PKG_NAMESPACE}:evmpriceoraclerust"
-    warg publish release --name ${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
-fi
+#     export WASM_DIGEST=$(make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME)
+# else
+
+# ** Setup: https://wa.dev/account/credentials
+export PKG_VERSION="0.2.0"
+# export PKG_NAMESPACE=`warg info --namespaces | grep = | cut -d'=' -f1 | tr -d ' '`
+export PKG_NAMESPACE=reecepbcups
+export PKG_NAME="${PKG_NAMESPACE}:evmpriceoraclerust"
+warg publish release --name ${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
+
 
 # Build your service JSON
 export AGGREGATOR_URL=http://127.0.0.1:8001
@@ -292,12 +293,6 @@ ipfs_cid=`IPFS_ENDPOINT=http://127.0.0.1:5001 SERVICE_FILE=${SERVICE_FILE} make 
 
 export SERVICE_URI="http://127.0.0.1:8080/ipfs/${ipfs_cid}"
 cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${SERVICE_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
-
-# !! TODO: pending https://github.com/Lay3rLabs/WAVS/pull/641 we can move this to the start-wavs section
-#
-#
-# Deploy the service JSON to WAVS so it now watches and submits.
-WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${SERVICE_URI} make deploy-service
 ```
 
 ## Start Aggregator
@@ -315,8 +310,12 @@ wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(j
 
 ```bash
 # FOR NOW: local is already on because we have to upload components manually. pending local wasi registry
-# sh ./script/create-operator.sh 1
-# sh ./infra/wavs-1/start.sh
+sh ./script/create-operator.sh 1
+sh ./infra/wavs-1/start.sh
+
+# Deploy the service JSON to WAVS so it now watches and submits.
+# 'opt in' for WAVS to watch (this is before we register to Eigenlayer)
+WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${SERVICE_URI} make deploy-service
 ```
 
 ## Register service specific operator

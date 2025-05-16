@@ -76,16 +76,16 @@ if [ -n "$AGGREGATOR_URL" ]; then
 fi
 $BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDRESS} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
 
-if [ "$DEPLOY_ENV" = "LOCAL" ]; then
-    if [ -z "$WASM_DIGEST" ]; then
-        echo "WASM_DIGEST is not set. You must upload the component directly to the wavs instance."
-        exit 1
-    fi
-    $BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST}
-else
-    # use the package directly, no need to upload component to the instance itself.
-    $BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --version ${PKG_VERSION} --package ${PKG_NAME}
-fi
+# if [ "$DEPLOY_ENV" = "LOCAL" ]; then
+#     if [ -z "$WASM_DIGEST" ]; then
+#         echo "WASM_DIGEST is not set. You must upload the component directly to the wavs instance."
+#         exit 1
+#     fi
+#     $BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST}
+# else
+#     # use the package directly, no need to upload component to the instance itself.
+# fi
+$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --version ${PKG_VERSION} --package ${PKG_NAME}
 
 $BASE_CMD workflow component --id ${WORKFLOW_ID} permissions --http-hosts '*' --file-system true > /dev/null
 $BASE_CMD workflow component --id ${WORKFLOW_ID} time-limit --seconds 30 > /dev/null
