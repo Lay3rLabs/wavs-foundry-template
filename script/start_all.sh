@@ -7,19 +7,22 @@ MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
 LOG_FILE=.docker/start.log
 OPERATOR_PK=${OPERATOR_PK:-""}
 OPERATOR_MNEMONIC=${OPERATOR_MNEMONIC:-""}
+FORK_RPC_URL=${FORK_RPC_URL:-"https://ethereum-holesky-rpc.publicnode.com"}
 
 ## == Start watcher ==
 rm $LOG_FILE 2> /dev/null || true
 
 ## == Base Anvil Testnet Fork ==
-# TODO: only if DEPLOY_ENV is local, ignore for TESTNET
-# anvil --fork-url https://ethereum-holesky-rpc.publicnode.com --port ${PORT} &
-# anvil_pid=$!
-# trap "kill -9 $anvil_pid && echo -e '\nKilled anvil'" EXIT
-# while ! cast block-number --rpc-url http://localhost:${PORT} > /dev/null 2>&1
-# do
-#   sleep 0.25
-# done
+DEPLOY_ENV=$(sh ./script/get-deploy-status.sh)
+if [ "$DEPLOY_ENV" = "LOCAL" ]; then
+  anvil --fork-url ${FORK_RPC_URL} --port ${PORT} &
+  anvil_pid=$!
+  trap "kill -9 $anvil_pid && echo -e '\nKilled anvil'" EXIT
+  while ! cast block-number --rpc-url http://localhost:${PORT} > /dev/null 2>&1
+  do
+    sleep 0.25
+  done
+fi
 
 if [ -z "$OPERATOR_PK" ]; then
   echo "You must set OPERATOR_PK"

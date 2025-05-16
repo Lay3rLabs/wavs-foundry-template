@@ -27,7 +27,7 @@ TRIGGER_EVENT=${TRIGGER_EVENT:-"NewTrigger(bytes)"}
 TRIGGER_CHAIN=${TRIGGER_CHAIN:-"local"}
 SUBMIT_CHAIN=${SUBMIT_CHAIN:-"local"}
 AGGREGATOR_URL=${AGGREGATOR_URL:-""}
-IS_TESTNET=${IS_TESTNET:-"false"}
+DEPLOY_ENV=${DEPLOY_ENV:-""}
 # used in make upload-component
 WAVS_ENDPOINT=${WAVS_ENDPOINT:-"http://localhost:8000"}
 
@@ -50,6 +50,10 @@ fi
 if [ -z "$SUBMIT_ADDRESS" ]; then
     SUBMIT_ADDRESS=`make get-submit-from-deploy`
 fi
+if [ -z "$DEPLOY_ENV" ]; then
+    DEPLOY_ENV=$(sh ./script/get-deploy-status.sh)
+fi
+
 if [[ "$WASM_DIGEST" == sha256:* ]]; then
     export WASM_DIGEST=${WASM_DIGEST#sha256:}
 fi
@@ -72,10 +76,9 @@ if [ -n "$AGGREGATOR_URL" ]; then
 fi
 $BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDRESS} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
 
-if [ "$IS_TESTNET" = "false" ]; then
+if [ "$DEPLOY_ENV" = "LOCAL" ]; then
     if [ -z "$WASM_DIGEST" ]; then
         echo "WASM_DIGEST is not set. You must upload the component directly to the wavs instance."
-        echo "(( optionally: \`export IS_TESTNET=true\` and upload your component to the wa.dev registry ))."
         exit 1
     fi
     $BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST}
