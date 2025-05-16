@@ -51,7 +51,7 @@ if [ -z "$SUBMIT_ADDRESS" ]; then
     SUBMIT_ADDRESS=`make get-submit-from-deploy`
 fi
 if [[ "$WASM_DIGEST" == sha256:* ]]; then
-    WASM_DIGEST=${WASM_DIGEST#sha256:}
+    export WASM_DIGEST=${WASM_DIGEST#sha256:}
 fi
 # === Core ===
 
@@ -80,7 +80,7 @@ if [ "$IS_TESTNET" = "false" ]; then
     fi
     $BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST}
 else
-    # use the package directly, no need to upload component to the instance itself. 
+    # use the package directly, no need to upload component to the instance itself.
     $BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --version ${PKG_VERSION} --package ${PKG_NAME}
 fi
 

@@ -21,11 +21,11 @@ rm $LOG_FILE 2> /dev/null || true
 #   sleep 0.25
 # done
 
-if [[ -z "$OPERATOR_PK" ]]; then
+if [ -z "$OPERATOR_PK" ]; then
   echo "You must set OPERATOR_PK"
   exit 1
 fi
-if [[ -z "$OPERATOR_MNEMONIC" ]]; then
+if [ -z "$OPERATOR_MNEMONIC" ]; then
   echo "You must set OPERATOR_MNEMONIC"
   exit 1
 fi
@@ -38,10 +38,7 @@ docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes "$MIDDLE
 ## == Setup Deployer
 echo "Using Address: $(cast wallet address --private-key ${OPERATOR_PK})"
 
-SP=""
-if [[ "$(uname)" == *"Darwin"* ]]; then
-  SP=" "
-fi
+SP=""; if [ "$(uname)" == *"Darwin"* ]; then SP=" "; fi
 
 sed -i${SP}'' -e "s/^WAVS_CLI_EVM_CREDENTIAL=.*$/WAVS_CLI_EVM_CREDENTIAL=\"$OPERATOR_PK\"/" .env
 sed -i${SP}'' -e "s/^WAVS_AGGREGATOR_CREDENTIAL=.*$/WAVS_AGGREGATOR_CREDENTIAL=\"$OPERATOR_PK\"/" .env
