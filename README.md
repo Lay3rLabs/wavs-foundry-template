@@ -285,12 +285,15 @@ warg reset --registry http://127.0.0.1:8090
 export PKG_VERSION="0.2.0"
 # export PKG_NAMESPACE=`warg info --namespaces | grep = | cut -d'=' -f1 | tr -d ' '`
 export PKG_NAMESPACE=example
-export PKG_NAME="${PKG_NAMESPACE}:evmpriceoraclerust"
+export PKG_NAME="evmpriceoraclerust"
 export REGISTRY=localhost:8090
 export WKG_OCI_INSECURE="localhost,127.0.0.1"
 
 # TODO: how to upload to the OCI server only and not run the old warg server? then build using this same IP:PORT so it works
-warg publish release --name ${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} --registry http://${REGISTRY} || true
+warg publish release --name ${PKG_NAMESPACE}/${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} --registry http://${REGISTRY} || true
+
+# brew install oras // go install oras.land/oras/cmd/oras@v1.2.3
+oras push "localhost:5000/${PKG_NAMESPACE}/${PKG_NAME}:${PKG_VERSION}" "./compiled/${COMPONENT_FILENAME}:application/wasm"
 
 # Build your service JSON
 export AGGREGATOR_URL=http://127.0.0.1:8001
