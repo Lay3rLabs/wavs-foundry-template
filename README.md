@@ -274,6 +274,8 @@ Deploy the compiled component with the contract information from the previous st
 export COMPONENT_FILENAME=evm_price_oracle.wasm
 if [ "$DEPLOY_ENV" = "LOCAL" ]; then
     sh ./script/create-operator.sh 1
+    sh ./infra/wavs-1/start.sh
+
     sh ./script/create-aggregator.sh 1
 
 

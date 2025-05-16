@@ -15,6 +15,19 @@ if [ -z "$OPERATOR_INDEX" ]; then
 fi
 
 OPERATOR_LOC=infra/wavs-${OPERATOR_INDEX}
+
+
+if [ -d "${OPERATOR_LOC}" ] && [ "$(ls -A ${OPERATOR_LOC})" ]; then
+  read -p "Directory ${OPERATOR_LOC} already exists and is not empty. Do you want to remove it? (y/n): " -n 1 -r
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo -e "\nRemoving ${OPERATOR_LOC}"
+    rm -rf ${OPERATOR_LOC}
+  else
+    echo -e "\nExiting without changes."
+    exit 1
+  fi
+fi
+
 mkdir -p ${OPERATOR_LOC}
 
 
@@ -32,5 +45,21 @@ sed -i${SP}'' -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$OP
 sed -i${SP}'' -e "s/^WAVS_CLI_EVM_CREDENTIAL=.*$/WAVS_CLI_EVM_CREDENTIAL=\"$OPERATOR_PK\"/" ${ENV_FILENAME}
 
 rm ${TEMP_FILENAME}
+
+
+# Create startup script
+cat > "${OPERATOR_LOC}/start.sh" << EOF
+#!/bin/bash
+cd \$(dirname "\$0") || exit 1
+
+IMAGE=ghcr.io/lay3rlabs/wavs:0.4.0-beta.5
+WAVS_INSTANCE=wavs-${OPERATOR_INDEX}
+
+docker run -d --rm --name \${WAVS_INSTANCE} --network host --env-file .env -v \$(pwd):/root/wavs \${IMAGE} wavs --home /root/wavs --host 0.0.0.0 --log-level info
+EOF
+
+cp wavs.toml ${OPERATOR_LOC}/wavs.toml
+
+# TODO: if testnet change active_trigger_chains from local -> holesky
 
 echo "Operator ${OPERATOR_INDEX} created at ${OPERATOR_LOC}"

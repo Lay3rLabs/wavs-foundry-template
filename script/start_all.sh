@@ -4,9 +4,6 @@ set -e
 
 PORT=8545
 MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
-LOG_FILE=
-OPERATOR_PK=${OPERATOR_PK:-""}
-OPERATOR_MNEMONIC=${OPERATOR_MNEMONIC:-""}
 FORK_RPC_URL=${FORK_RPC_URL:-"https://ethereum-holesky-rpc.publicnode.com"}
 
 ## == Start watcher ==
@@ -23,17 +20,6 @@ if [ "$DEPLOY_ENV" = "LOCAL" ]; then
     sleep 0.25
   done
 fi
-
-if [ -z "$OPERATOR_PK" ]; then
-  echo "You must set OPERATOR_PK"
-  exit 1
-fi
-if [ -z "$OPERATOR_MNEMONIC" ]; then
-  echo "You must set OPERATOR_MNEMONIC"
-  exit 1
-fi
-
-
 
 
 ## == Setup Deployer

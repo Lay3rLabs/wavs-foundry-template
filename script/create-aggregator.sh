@@ -6,7 +6,8 @@ set -x
 # otherwise, use the default of 1
 if [ -n "$1" ]; then
     AGGREGATOR_INDEX=$1
-else
+fi
+if [ -z "$AGGREGATOR_INDEX" ]; then
     AGGREGATOR_INDEX=1
 fi
 
@@ -31,7 +32,7 @@ export AGG_PK=`jq -r .accounts[0].private_key ${TEMP_FILENAME}`
 AGGREGATOR_ADDR=`cast wallet address $AGG_PK`
 
 # == infra files ==
-AGG_LOC=infra/aggregator-${OPERATOR_INDEX}
+AGG_LOC=infra/aggregator-${AGGREGATOR_INDEX}
 mkdir -p ${AGG_LOC}
 
 ENV_FILENAME="${AGG_LOC}/.env"
