@@ -4,7 +4,7 @@ set -e
 
 PORT=8545
 MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
-LOG_FILE=.docker/start.log
+LOG_FILE=
 OPERATOR_PK=${OPERATOR_PK:-""}
 OPERATOR_MNEMONIC=${OPERATOR_MNEMONIC:-""}
 FORK_RPC_URL=${FORK_RPC_URL:-"https://ethereum-holesky-rpc.publicnode.com"}
@@ -33,25 +33,23 @@ if [ -z "$OPERATOR_MNEMONIC" ]; then
   exit 1
 fi
 
-## == Eigenlayer ==
-# setup
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes "$MIDDLEWARE_IMAGE"
+
 
 
 ## == Setup Deployer
-echo "Using Address: $(cast wallet address --private-key ${OPERATOR_PK})"
+# echo "Using Address: $(cast wallet address --private-key ${OPERATOR_PK})"
 
-SP=""; if [ "$(uname)" == *"Darwin"* ]; then SP=" "; fi
+# SP=""; if [ "$(uname)" == *"Darwin"* ]; then SP=" "; fi
 
-sed -i${SP}'' -e "s/^WAVS_CLI_EVM_CREDENTIAL=.*$/WAVS_CLI_EVM_CREDENTIAL=\"$OPERATOR_PK\"/" .env
-sed -i${SP}'' -e "s/^WAVS_AGGREGATOR_CREDENTIAL=.*$/WAVS_AGGREGATOR_CREDENTIAL=\"$OPERATOR_PK\"/" .env
-# this is what we generate other addresses in service manager based off of.
-sed -i${SP}'' -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$OPERATOR_MNEMONIC\"/" .env
+# sed -i${SP}'' -e "s/^WAVS_CLI_EVM_CREDENTIAL=.*$/WAVS_CLI_EVM_CREDENTIAL=\"$OPERATOR_PK\"/" .env
+# sed -i${SP}'' -e "s/^WAVS_AGGREGATOR_CREDENTIAL=.*$/WAVS_AGGREGATOR_CREDENTIAL=\"$OPERATOR_PK\"/" .env
+# # this is what we generate other addresses in service manager based off of.
+# sed -i${SP}'' -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$OPERATOR_MNEMONIC\"/" .env
 
-# == WAVS & Aggregator ==
-docker compose up --remove-orphans &
-trap "docker compose down && echo -e '\nKilled WAVS'" EXIT
+# # == WAVS & Aggregator ==
+# docker compose up --remove-orphans &
+# trap "docker compose down && echo -e '\nKilled WAVS'" EXIT
 
 # fin
-date +%s > $LOG_FILE
+
 wait

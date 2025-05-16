@@ -203,7 +203,7 @@ Result (utf8):
 
 Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https://www.eigenlayer.xyz/) contracts to the local network.
 
-```bash docci-background docci-delay-after=15
+```bash docci-background docci-delay-after=5
 # Start the backend
 #
 # This must remain running in your terminal. Use another terminal to run other commands.
@@ -211,24 +211,37 @@ Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https:
 cp .env.example .env
 
 # Gets the RPC depending on `DEPLOY_ENV` in .env
+export DEPLOY_ENV=`sh ./script/get-deploy-status.sh`
 export RPC_URL=`sh ./script/get-rpc.sh`
 echo "Using RPC_URL ${RPC_URL}"
 
-export DEPLOY_ENV=`sh ./script/get-deploy-status.sh`
-
 
 # Create new operator
-cast wallet new-mnemonic --json > .docker/operator1.json
-export OPERATOR_MNEMONIC=`cat .docker/operator1.json | jq -r .mnemonic`
-export OPERATOR_PK=`cat .docker/operator1.json | jq -r '.accounts[0].private_key'`
+# cast wallet new-mnemonic --json > .docker/operator1.json
+# export OPERATOR_MNEMONIC=`cat .docker/operator1.json | jq -r .mnemonic`
+# export OPERATOR_PK=`cat .docker/operator1.json | jq -r '.accounts[0].private_key'`
 
+# TODO: this should really just be a start anvil if local script
 make start-all
+```
+
+## Create Deployer, upload Eigenlayer
+
+```bash
+# local: create deployer & auto fund. testnet: create & iterate check balance
+sh ./script/create-deployer.sh
+
+## == Deploy Eigenlayer from Deployer ==
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
+
+# lets next section start, not sure we need this anymore though
+# date +%s > .docker/start.log
 ```
 
 Wait for full local deployment to be ready
 
 ```bash docci-delay-after=2
-while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done
+# while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done
 ```
 
 ## Deploy Service Contracts
