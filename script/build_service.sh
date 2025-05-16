@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+# set -x
 
 : '''
 # Run:
@@ -11,7 +12,6 @@ sh ./build_service.sh
 - FILE_LOCATION: The save location of the configuration file
 - TRIGGER_ADDRESS: The address to trigger the service
 - SUBMIT_ADDRESS: The address to submit the service
-- COMPONENT_FILENAME: The filename of the component to upload (ignored if WASM_DIGEST is used)
 - WASM_DIGEST: The digest of the component to use that is already in WAVS
 - TRIGGER_EVENT: The event to trigger the service (e.g. "NewTrigger(bytes)")
 - FUEL_LIMIT: The fuel limit (wasm compute metering) for the service
@@ -23,15 +23,15 @@ sh ./build_service.sh
 FUEL_LIMIT=${FUEL_LIMIT:-1000000000000}
 MAX_GAS=${MAX_GAS:-5000000}
 FILE_LOCATION=${FILE_LOCATION:-".docker/service.json"}
-COMPONENT_FILENAME=${COMPONENT_FILENAME:-"evm_price_oracle.wasm"}
 TRIGGER_EVENT=${TRIGGER_EVENT:-"NewTrigger(bytes)"}
 TRIGGER_CHAIN=${TRIGGER_CHAIN:-"local"}
 SUBMIT_CHAIN=${SUBMIT_CHAIN:-"local"}
 AGGREGATOR_URL=${AGGREGATOR_URL:-""}
+IS_TESTNET=${IS_TESTNET:-"false"}
 # used in make upload-component
 WAVS_ENDPOINT=${WAVS_ENDPOINT:-"http://localhost:8000"}
 
-BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-beta.1 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
+BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-beta.5 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
     # DevEx: attempt to grab it from the location if not set already
@@ -50,20 +50,17 @@ fi
 if [ -z "$SUBMIT_ADDRESS" ]; then
     SUBMIT_ADDRESS=`make get-submit-from-deploy`
 fi
-if [ -z "$WASM_DIGEST" ]; then
-    WASM_DIGEST=`make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME`
-    WASM_DIGEST=$(echo ${WASM_DIGEST} | cut -d':' -f2)
+if [[ "$WASM_DIGEST" == sha256:* ]]; then
+    WASM_DIGEST=${WASM_DIGEST#sha256:}
 fi
-
 # === Core ===
 
 TRIGGER_EVENT_HASH=`cast keccak ${TRIGGER_EVENT}`
 
-SERVICE_ID=`$BASE_CMD init --name demo | jq -r .id`
+SERVICE_ID=`$BASE_CMD init --name demo | jq -r .service.id`
 echo "Service ID: ${SERVICE_ID}"
 
-
-WORKFLOW_ID=`$BASE_CMD workflow add | jq -r '.workflows | keys | .[0]'`
+WORKFLOW_ID=`$BASE_CMD workflow add | jq -r .workflow_id`
 echo "Workflow ID: ${WORKFLOW_ID}"
 
 $BASE_CMD workflow trigger --id ${WORKFLOW_ID} set-evm --address ${TRIGGER_ADDRESS} --chain-name ${TRIGGER_CHAIN} --event-hash ${TRIGGER_EVENT_HASH} > /dev/null
@@ -75,15 +72,24 @@ if [ -n "$AGGREGATOR_URL" ]; then
 fi
 $BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDRESS} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
 
-COMPONENT_ID=`$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST} | jq -r '.workflows | keys | .[0]'`
-echo "Component ID: ${COMPONENT_ID}"
+if [ "$IS_TESTNET" = "false" ]; then
+    if [ -z "$WASM_DIGEST" ]; then
+        echo "WASM_DIGEST is not set. You must upload the component directly to the wavs instance."
+        echo "(( optionally: \`export IS_TESTNET=true\` and upload your component to the wa.dev registry ))."
+        exit 1
+    fi
+    $BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST}
+else
+    # use the package directly, no need to upload component to the instance itself. 
+    $BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --version ${PKG_VERSION} --package ${PKG_NAME}
+fi
 
-$BASE_CMD workflow component --id ${COMPONENT_ID} permissions --http-hosts '*' --file-system true > /dev/null
-$BASE_CMD workflow component --id ${COMPONENT_ID} time-limit --seconds 30 > /dev/null
-$BASE_CMD workflow component --id ${COMPONENT_ID} env --values WAVS_ENV_SOME_SECRET > /dev/null
-$BASE_CMD workflow component --id ${COMPONENT_ID} config --values 'key=value,key2=value2' > /dev/null
+$BASE_CMD workflow component --id ${WORKFLOW_ID} permissions --http-hosts '*' --file-system true > /dev/null
+$BASE_CMD workflow component --id ${WORKFLOW_ID} time-limit --seconds 30 > /dev/null
+$BASE_CMD workflow component --id ${WORKFLOW_ID} env --values WAVS_ENV_SOME_SECRET > /dev/null
+$BASE_CMD workflow component --id ${WORKFLOW_ID} config --values 'key=value,key2=value2' > /dev/null
 
-$BASE_CMD manager set-evm --chain-name ${SUBMIT_CHAIN} --address `cast --to-checksum ${SERVICE_MANAGER_ADDRESS}`
+$BASE_CMD manager set-evm --chain-name ${SUBMIT_CHAIN} --address `cast --to-checksum ${SERVICE_MANAGER_ADDRESS}` > /dev/null
 $BASE_CMD validate > /dev/null
 
 # inform aggregator if set

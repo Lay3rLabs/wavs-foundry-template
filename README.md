@@ -213,7 +213,7 @@ cp .env.example .env
 # Create new operator
 cast wallet new-mnemonic --json > .docker/operator1.json
 export OPERATOR_MNEMONIC=`cat .docker/operator1.json | jq -r .mnemonic`
-export OPERATOR_PK=`cat .docker/operator1.json | jq -r .accounts[0].private_key`
+export OPERATOR_PK=`cat .docker/operator1.json | jq -r '.accounts[0].private_key'`
 
 make start-all
 ```
@@ -249,8 +249,22 @@ export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 Deploy the compiled component with the contract information from the previous steps. Review the [makefile](./Makefile) for more details and configuration options.`TRIGGER_EVENT` is the event that the trigger contract emits and WAVS watches for. By altering `SERVICE_TRIGGER_ADDR` you can watch events for contracts others have deployed.
 
 ```bash docci-delay-per-cmd=3
+export COMPONENT_FILENAME=evm_price_oracle.wasm
+
+# === LOCAL ===
+export IS_TESTNET=false
+export WASM_DIGEST=$(make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME)
+
+# === TESTNET ===
+# ** Setup: https://wa.dev/account/credentials
+export IS_TESTNET=true
+export PKG_VERSION="0.1.0"
+export PKG_NAMESPACE=`warg info --namespaces | grep = | cut -d'=' -f1 | tr -d ' '`
+export PKG_NAME="${PKG_NAMESPACE}:evmpriceoraclerust"
+warg publish release --name ${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
+
 # Build your service JSON
-COMPONENT_FILENAME=evm_price_oracle.wasm AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
+AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
 
 # Upload service.json to IPFS
 ipfs_cid=`IPFS_ENDPOINT=http://127.0.0.1:5001 SERVICE_FILE=.docker/service.json make upload-to-ipfs`
@@ -283,7 +297,7 @@ AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMO
 cast send $(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL}) --rpc-url http://localhost:8545 --private-key ${DEPLOYER_PK} --value 1ether
 
 # Register the operator with the WAVS service manager
-AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
+AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} DELEGATION=0.01ether make operator-register
 
 # Verify registration
 make operator-list

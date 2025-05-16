@@ -23,6 +23,8 @@ log_level = ["info", "wavs=debug"]
 # The IPFS gateway URL used to access IPFS content over HTTP.
 # ipfs_gateway = "https://ipfs.io/ipfs/"
 
+registry_domain = "wa.dev"
+
 # ----------------------------
 # Chain configurations
 # ----------------------------
@@ -93,8 +95,6 @@ gas_denom = "untrn"
 # WAVS specific settings
 # ----------------------------
 [wavs]
-# Registry domain
-registry_domain = "wa.dev"
 
 cors_allowed_origins = [
     "https://lay3rlabs.github.io/*",
