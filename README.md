@@ -270,15 +270,13 @@ Deploy the compiled component with the contract information from the previous st
 
 ```bash docci-delay-per-cmd=3
 
-
 export COMPONENT_FILENAME=evm_price_oracle.wasm
+
 if [ "$DEPLOY_ENV" = "LOCAL" ]; then
     # TODO: temp: required to start wavs to upload. ideal is the local wasi registry
     sh ./script/create-operator.sh 1
     sh ./infra/wavs-1/start.sh
 
-    # I still think we can wait to start this after we deploy
-    # sh ./script/create-aggregator.sh 1
     export WASM_DIGEST=$(make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME)
 else
     # ** Setup: https://wa.dev/account/credentials
@@ -301,6 +299,12 @@ ipfs_cid=`IPFS_ENDPOINT=http://127.0.0.1:5001 SERVICE_FILE=.docker/service.json 
 SERVICE_URL="http://127.0.0.1:8080/ipfs/${ipfs_cid}" CREDENTIAL=${DEPLOYER_PK} make deploy-service
 ```
 
+## Start Aggregator
+
+```bash
+sh ./script/create-aggregator.sh 1
+sh ./infra/aggregator-1/start.sh
+```
 
 ## Register service specific operator
 

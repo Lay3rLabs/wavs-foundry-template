@@ -41,6 +41,21 @@ cp ./script/template/.env.example.aggregator ${ENV_FILENAME}
 sed -i${SP}'' -e "s/^WAVS_AGGREGATOR_CREDENTIAL=.*$/WAVS_AGGREGATOR_CREDENTIAL=\"$AGG_PK\"/" ${ENV_FILENAME}
 sed -i${SP}'' -e "s/.%%MNEMONIC_REFERENCE%%$/ $AGG_MNEMONIC/" ${ENV_FILENAME}
 
+cat > "${AGG_LOC}/start.sh" << EOF
+#!/bin/bash
+cd \$(dirname "\$0") || exit 1
+
+IMAGE=ghcr.io/lay3rlabs/wavs:0.4.0-beta.5
+INSTANCE=wavs-aggregator-${AGGREGATOR_INDEX}
+
+docker kill \${INSTANCE} || true
+docker rm \${INSTANCE} || true
+
+docker run -d --name \${INSTANCE} --network host -p 8001:8001 --stop-signal SIGKILL --env-file .env --user 1000:1000 -v .:/wavs \\
+  \${IMAGE} wavs-aggregator --log-level debug --host 0.0.0.0 --port 8001
+EOF
+
+cp wavs.toml ${AGG_LOC}/wavs.toml
 
 if [ "$DEPLOY_ENV" = "LOCAL" ]; then
     # Good DevEx, auto fund the deployer

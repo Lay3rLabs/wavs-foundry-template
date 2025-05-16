@@ -58,6 +58,9 @@ cd \$(dirname "\$0") || exit 1
 IMAGE=ghcr.io/lay3rlabs/wavs:0.4.0-beta.5
 WAVS_INSTANCE=wavs-${OPERATOR_INDEX}
 
+docker kill \${WAVS_INSTANCE} || true
+docker rm \${WAVS_INSTANCE} || true
+
 docker run -d --rm --name \${WAVS_INSTANCE} --network host --env-file .env -v \$(pwd):/root/wavs \${IMAGE} wavs --home /root/wavs --host 0.0.0.0 --log-level info
 EOF
 
