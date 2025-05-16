@@ -95,9 +95,4 @@ $BASE_CMD workflow component --id ${WORKFLOW_ID} config --values 'key=value,key2
 $BASE_CMD manager set-evm --chain-name ${SUBMIT_CHAIN} --address `cast --to-checksum ${SERVICE_MANAGER_ADDRESS}` > /dev/null
 $BASE_CMD validate > /dev/null
 
-# inform aggregator if set
-if [ -n "$AGGREGATOR_URL" ]; then
-    wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(cat ${FILE_LOCATION})"'}' ${AGGREGATOR_URL}/register-service -O -
-fi
-
 echo "Configuration file created at ${FILE_LOCATION}"

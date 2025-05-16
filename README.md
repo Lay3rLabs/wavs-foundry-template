@@ -287,11 +287,15 @@ else
 fi
 
 # Build your service JSON
-AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
+export AGGREGATOR_URL=http://127.0.0.1:8001
+sh ./script/build_service.sh
 
 # Upload service.json to IPFS
-ipfs_cid=`IPFS_ENDPOINT=http://127.0.0.1:5001 SERVICE_FILE=.docker/service.json make upload-to-ipfs`
+export SERVICE_FILE=.docker/service.json
+ipfs_cid=`IPFS_ENDPOINT=http://127.0.0.1:5001 SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs`
 
+# !! TODO: pending https://github.com/Lay3rLabs/WAVS/pull/641 we can move this to the start-wavs section
+#
 # Deploy the service JSON to WAVS so it now watches and submits.
 #
 # If CREDENTIAL is not set then the default WAVS_CLI .env account will be used
@@ -304,6 +308,17 @@ SERVICE_URL="http://127.0.0.1:8080/ipfs/${ipfs_cid}" CREDENTIAL=${DEPLOYER_PK} m
 ```bash
 sh ./script/create-aggregator.sh 1
 sh ./infra/aggregator-1/start.sh
+
+# was previously in the build_service.sh step.
+# TODO: this takes in a file contents, maybe the SERVICE_URL would be better?
+wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(jq -c . ${SERVICE_FILE})"'}' ${AGGREGATOR_URL}/register-service -O -
+```
+
+## Start WAVS
+
+```bash
+sh ./script/create-operator.sh 1
+sh ./infra/wavs-1/start.sh
 ```
 
 ## Register service specific operator
@@ -319,13 +334,11 @@ Each service gets their own key path (hd_path). The first service starts at 1 an
 # PK=`curl -s http://localhost:8000/service-key/${SERVICE_ID} | jq -rc .secp256k1 | tr -d '[]'`
 # AVS_PRIVATE_KEY=`echo ${PK} | tr ',' ' ' | xargs printf "%02x" | tr -d '\n'`
 
-source .env
+source infra/wavs-1/.env
 AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 1`
 
-# Faucet funds to the aggregator account to post on chain
-cast send $(cast wallet address --private-key ${WAVS_AGGREGATOR_CREDENTIAL}) --rpc-url http://localhost:8545 --private-key ${DEPLOYER_PK} --value 1ether
-
 # Register the operator with the WAVS service manager
+# !!! TODO: we need to fund this operator for testnet -- see why this just worked when AVS_PRIVATE_KEY does not have funds yet (middleware?)
 AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} DELEGATION=0.01ether make operator-register
 
 # Verify registration
