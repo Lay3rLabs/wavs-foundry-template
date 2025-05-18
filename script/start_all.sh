@@ -49,7 +49,7 @@ sed -i${SP}'' -e "s/^WAVS_AGGREGATOR_CREDENTIAL=.*$/WAVS_AGGREGATOR_CREDENTIAL=\
 sed -i${SP}'' -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$OPERATOR_MNEMONIC\"/" .env
 
 # == WAVS & Aggregator ==
-docker compose up --remove-orphans &
+docker compose -f docker-compose.yml -f docker-compose.telemetry.yml up --remove-orphans &
 trap "docker compose down && echo -e '\nKilled WAVS'" EXIT
 
 # fin
