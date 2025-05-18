@@ -187,6 +187,13 @@ prometheus = "http://localhost:9090"
   - Open the `.env` file.
   - Set the `log_level` variable for wavs to debug to ensure detailed logs are captured.
 
+3. If you are running the docker compose manually, include telemetry images by pointing to a particular file:
+```bash docci-background docci-delay-after=2
+docker-compose -f docker-compose.yml -f docker-compose.telemetry.yml up
+```
+Otherwise, it is already included in the start scripts.
+
+> \[!NOTE]
 To see details on how to access both traces and metrics, please check out [Telemetry Documentation](telemetry.md).
 
 ### Start the backend
