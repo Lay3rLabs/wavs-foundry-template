@@ -18,7 +18,7 @@
 # The log level, in the format of tracing directives. Default is ["info"]
 # See https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html#directives
 [default]
-log_level = ["debug"]
+log_level = ["info", "wavs=debug"]
 
 # Those configs are global and shared between wavs and aggregator
 jaeger = "http://localhost:4317"
