@@ -21,8 +21,8 @@
 log_level = ["info", "wavs=debug"]
 
 # Those configs are global and shared between wavs and aggregator
-jaeger = "http://localhost:4317"
-prometheus = "http://localhost:9090"
+# jaeger = "http://localhost:4317"
+# prometheus = "http://localhost:9090"
 
 # The IPFS gateway URL used to access IPFS content over HTTP.
 # ipfs_gateway = "https://ipfs.io/ipfs/"
