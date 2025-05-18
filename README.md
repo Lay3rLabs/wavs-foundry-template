@@ -187,6 +187,8 @@ prometheus = "http://localhost:9090"
   - Open the `.env` file.
   - Set the `log_level` variable for wavs to debug to ensure detailed logs are captured.
 
+To see details on how to access both traces and metrics, please check out [Telemetry Documentation](telemetry.md).
+
 ### Start the backend
 
 ```bash docci-background docci-delay-after=15
