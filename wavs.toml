@@ -21,11 +21,12 @@
 log_level = ["info", "wavs=debug"]
 
 # The IPFS gateway URL used to access IPFS content over HTTP.
-# ipfs_gateway = "https://ipfs.io/ipfs/"
 ipfs_gateway = "127.0.0.1:8080/ipfs/"
+# ipfs_gateway = "https://ipfs.io/ipfs/" # testnet / production
 
-# registry_domain = "wa.dev"
+# The domain used for the warg wasi registry
 registry_domain = "localhost:8090"
+# registry_domain = "wa.dev" # testnet / production
 
 # ----------------------------
 # Chain configurations

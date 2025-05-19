@@ -256,12 +256,12 @@ Deploy the compiled component with the contract information from the previous st
 
 ```bash docci-delay-per-cmd=3
 
-export COMPONENT_FILENAME=evm_price_oracle.wasm
 
 # over in warg-registry, start (reece/wip-oci-registry branch)
 # warg reset --registry http://127.0.0.1:8090
 
 # ** Setup: https://wa.dev/account/credentials
+export COMPONENT_FILENAME=evm_price_oracle.wasm
 export PKG_VERSION="0.2.0"
 # export PKG_NAMESPACE=`warg info --namespaces | grep = | cut -d'=' -f1 | tr -d ' '`
 export PKG_NAMESPACE=example
@@ -279,6 +279,7 @@ export AGGREGATOR_URL=http://127.0.0.1:8001
 REGISTRY=${REGISTRY} sh ./script/build_service.sh
 
 # Upload service.json to IPFS
+# TODO: add support for pinata here natively too
 export SERVICE_FILE=.docker/service.json
 ipfs_cid=`IPFS_ENDPOINT=http://127.0.0.1:5001 SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs`
 
@@ -308,6 +309,7 @@ sh ./infra/wavs-1/start.sh
 
 # Deploy the service JSON to WAVS so it now watches and submits.
 # 'opt in' for WAVS to watch (this is before we register to Eigenlayer)
+# TODO: get a 500 error? make sure you started wavs.toml with registry_domain = "localhost:8090"
 WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${SERVICE_URI} make deploy-service
 ```
 
