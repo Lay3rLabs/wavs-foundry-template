@@ -56,13 +56,13 @@ cat > "${OPERATOR_LOC}/start.sh" << EOF
 #!/bin/bash
 cd \$(dirname "\$0") || exit 1
 
-IMAGE=ghcr.io/lay3rlabs/wavs:local-may-16
+IMAGE=ghcr.io/lay3rlabs/wavs:local-may-19
 WAVS_INSTANCE=wavs-${OPERATOR_INDEX}
 
 docker kill \${WAVS_INSTANCE} || true
 docker rm \${WAVS_INSTANCE} || true
 
-docker run -d --rm --name \${WAVS_INSTANCE} -e WKG_OCI_INSECURE=localhost,127.0.0.1 --network host --env-file .env -v \$(pwd):/root/wavs \${IMAGE} wavs --home /root/wavs --host 0.0.0.0 --log-level info
+docker run -d --rm --name \${WAVS_INSTANCE} --network host --env-file .env -v \$(pwd):/root/wavs \${IMAGE} wavs --home /root/wavs --host 0.0.0.0 --log-level info
 EOF
 
 cp wavs.toml ${OPERATOR_LOC}/wavs.toml

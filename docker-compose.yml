@@ -6,9 +6,42 @@
 #
 ###################################
 
-# services:
+# docker volume rm $(docker volume ls -q -f "dangling=true")
+
+
+services:
+  warg-server:
+    image: "ghcr.io/reecepbcups/warg-registry:v0.9.3"
+    container_name: "warg-server"
+    environment:
+      WARG_OPERATOR_KEY: ecdsa-p256:I+UlDo0HxyBBFeelhPPWmD+LnklOpqZDkrFP5VduASk=
+      WARG_NAMESPACE: example
+      WKG_REGISTRY: http://127.0.0.1:5000
+      WARG_CONTENT_BASE_URL: http://localhost:8090
+      WARG_LISTEN: 0.0.0.0:8090
+      WARG_VERBOSE: 1
+    volumes:
+      - warg-data:/var/lib/warg-server/data
+    ports:
+      - 8090:8090
+    command: ["--rm"]
+
+  ipfs:
+    image: ipfs/kubo:v0.34.1
+    container_name: ipfs
+    network_mode: host
+    ports:
+      - "4001:4001"
+      - "4001:4001/udp"
+      - "8080:8080"
+      - "5001:5001"
+    stop_signal: SIGKILL
+    command: daemon --offline
+    restart: unless-stopped
+
+
   # wavs:
-  #   image: "ghcr.io/lay3rlabs/wavs:local-may-16"
+  #   image: "ghcr.io/lay3rlabs/wavs:local-may-19"
   #   container_name: "wavs"
   #   stop_signal: SIGKILL
   #   network_mode: "host"
@@ -25,7 +58,7 @@
   #     - "./.docker:/root/wavs/cli/"
 
   # aggregator:
-  #   image: "ghcr.io/lay3rlabs/wavs:local-may-16"
+  #   image: "ghcr.io/lay3rlabs/wavs:local-may-19"
   #   depends_on: ["wavs"]
   #   container_name: "wavs-aggregator"
   #   stop_signal: SIGKILL
@@ -50,3 +83,5 @@
   #     - "5001:5001"
   #   command: ["daemon", "--offline"]
 
+volumes:
+  warg-data:

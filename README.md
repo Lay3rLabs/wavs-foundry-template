@@ -214,7 +214,7 @@ cp .env.example .env
 # export RPC_URL=`sh ./script/get-rpc.sh`
 # export DEPLOY_ENV=`sh ./script/get-deploy-status.sh`
 
-# Stats anvil & IPFS
+# Starts anvil + IPFS & WARG
 make start-all-local
 ```
 
@@ -226,15 +226,6 @@ sh ./script/create-deployer.sh
 
 ## == Deploy Eigenlayer from Deployer ==
 docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
-
-# lets next section start, not sure we need this anymore though
-# date +%s > .docker/start.log
-```
-
-Wait for full local deployment to be ready
-
-```bash docci-delay-after=2
-# while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done
 ```
 
 ## Deploy Service Contracts
@@ -276,38 +267,24 @@ export PKG_VERSION="0.2.0"
 export PKG_NAMESPACE=example
 export PKG_NAME="evmpriceoraclerust"
 export REGISTRY=localhost:8090
-export WKG_OCI_INSECURE="localhost,127.0.0.1"
 
-# TODO: how to upload to the OCI server only and not run the old warg server? then build using this same IP:PORT so it works
+# set WkgClient as .warg in tom l config (wkg.rs), then this works with localhost
+# `failed to send request to registry server: error sending request for url`? - warg reset
+
+# TODO: root inclusion issue does not matter, why is it happening though?
 warg publish release --name ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} --registry http://${REGISTRY} || true
-
-# brew install oras // go install oras.land/oras/cmd/oras@v1.2.3
-export ARTIFACT_URL="localhost:5000/${PKG_NAMESPACE}/${PKG_NAME}:${PKG_VERSION}"
-echo "Pushing to ${ARTIFACT_URL}"
-
-# oras push ${ARTIFACT_URL} "./compiled/${COMPONENT_FILENAME}:application/vnd.wasm.config.v0+json" --export-manifest t.txt --format json --plain-http --artifact-type application/vnd.wasm.config.v0+json --config /dev/null:application/vnd.wasm.config.v0+json
-
-oras push ${ARTIFACT_URL} \
-  "./compiled/${COMPONENT_FILENAME}:application/wasm" \
-  --export-manifest t.txt \
-  --format json \
-  --plain-http \
-  --artifact-type application/vnd.wasm.config.v0+json \
-  --config /dev/null:application/vnd.wasm.config.v0+json
-
-# oras push --config config.json:application/vnd.oras.config.v1+json localhost:5000/hello:latest hi.txt
-oras manifest fetch localhost:5000/${PKG_NAMESPACE}/${PKG_NAME}:${PKG_VERSION} --plain-http
 
 # Build your service JSON
 export AGGREGATOR_URL=http://127.0.0.1:8001
-export WKG_OCI_INSECURE="localhost,127.0.0.1"
-REGISTRY=localhost:5000 sh ./script/build_service.sh
+REGISTRY=${REGISTRY} sh ./script/build_service.sh
 
 # Upload service.json to IPFS
 export SERVICE_FILE=.docker/service.json
 ipfs_cid=`IPFS_ENDPOINT=http://127.0.0.1:5001 SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs`
 
 export SERVICE_URI="http://127.0.0.1:8080/ipfs/${ipfs_cid}"
+curl ${SERVICE_URI}
+
 cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${SERVICE_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
 ```
 
