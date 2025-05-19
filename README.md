@@ -267,11 +267,12 @@ export PKG_VERSION="0.2.0"
 export PKG_NAMESPACE=example
 export PKG_NAME="evmpriceoraclerust"
 export REGISTRY=localhost:8090
+# export REGISTRY=wa.dev
 
 # set WkgClient as .warg in tom l config (wkg.rs), then this works with localhost
 # `failed to send request to registry server: error sending request for url`? - warg reset
 
-# TODO: root inclusion issue does not matter, why is it happening though?
+# TODO: root inclusion issue does not matter for localhost, why is it happening though?
 warg publish release --name ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} --registry http://${REGISTRY} || true
 
 # Build your service JSON
@@ -305,11 +306,12 @@ wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(j
 ```bash
 # FOR NOW: local is already on because we have to upload components manually. pending local wasi registry
 sh ./script/create-operator.sh 1
+
 sh ./infra/wavs-1/start.sh
 
 # Deploy the service JSON to WAVS so it now watches and submits.
 # 'opt in' for WAVS to watch (this is before we register to Eigenlayer)
-# TODO: get a 500 error? make sure you started wavs.toml with registry_domain = "localhost:8090"
+# TODO: also ensure the default_registry.toml is correct when you started wavs. Maybe we make this CLI only?
 WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${SERVICE_URI} make deploy-service
 ```
 
