@@ -107,7 +107,7 @@ sudo do-release-upgrade
 # Install required cargo components
 # https://github.com/bytecodealliance/cargo-component#installation
 cargo install cargo-binstall
-cargo binstall cargo-component warg-cli wkg --locked --no-confirm --force
+cargo binstall cargo-component wasm-tools warg-cli wkg --locked --no-confirm --force
 
 # Configure default registry
 # Found at: $HOME/.config/wasm-pkg/config.toml
@@ -203,9 +203,20 @@ Result (utf8):
 
 Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https://www.eigenlayer.xyz/) contracts to the local network.
 
-```bash docci-background docci-delay-after=5
-# Start the backend
-#
+### Enable Telemetry (optional)
+
+Set Log Level:
+  - Open the `.env` file.
+  - Set the `log_level` variable for wavs to debug to ensure detailed logs are captured.
+
+Otherwise, it is already included in the start scripts.
+
+> \[!NOTE]
+To see details on how to access both traces and metrics, please check out [Telemetry Documentation](telemetry.md).
+
+### Start the backend
+
+```bash docci-background docci-delay-after=15
 # This must remain running in your terminal. Use another terminal to run other commands.
 # You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
 cp .env.example .env
