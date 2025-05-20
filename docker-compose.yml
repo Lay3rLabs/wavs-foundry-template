@@ -16,7 +16,7 @@ services:
     environment:
       WARG_OPERATOR_KEY: ecdsa-p256:I+UlDo0HxyBBFeelhPPWmD+LnklOpqZDkrFP5VduASk=
       WARG_NAMESPACE: example
-      WKG_REGISTRY: http://127.0.0.1:5000
+      WKG_REGISTRY: http://localhost:5000
       WARG_CONTENT_BASE_URL: http://localhost:8090
       WARG_LISTEN: 0.0.0.0:8090
       WARG_VERBOSE: 1
@@ -36,7 +36,7 @@ services:
       - "8080:8080"
       - "5001:5001"
     stop_signal: SIGKILL
-    command: daemon --offline
+    command: daemon
     restart: unless-stopped
 
 volumes:

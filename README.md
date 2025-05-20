@@ -276,10 +276,12 @@ export REGISTRY=`sh ./script/get-registry.sh`
 
 # `failed to send request to registry server: error sending request for url`? - warg reset
 # TODO: root inclusion issue does not matter for localhost, why is it happening though?
+
 warg publish release --registry http://${REGISTRY} --name ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
 
 # Build your service JSON
 export AGGREGATOR_URL=http://127.0.0.1:8001
+# Package not found with wa.dev? -- make sure it is public
 REGISTRY=${REGISTRY} sh ./script/build_service.sh
 
 # Upload service.json to IPFS
