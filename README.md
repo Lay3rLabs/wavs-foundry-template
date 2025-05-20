@@ -210,9 +210,7 @@ Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https:
 # You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
 cp .env.example .env
 
-# Gets the RPC depending on `DEPLOY_ENV` in .env
-# export RPC_URL=`sh ./script/get-rpc.sh`
-# export DEPLOY_ENV=`sh ./script/get-deploy-status.sh`
+# update the .env for either LOCAL or TESTNET
 
 # Starts anvil + IPFS & WARG
 make start-all-local
