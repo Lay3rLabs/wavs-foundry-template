@@ -272,7 +272,7 @@ export PKG_VERSION="0.1.0"
 export PKG_NAME="evmrustoracle"
 export REGISTRY=`sh ./script/get-registry.sh`
 
-# Local: localhost:8090 or Production: wa.dev.
+# Local: example | Testnet: your wa.dev namespace
 export PKG_NAMESPACE=example
 
 # `failed to send request to registry server: error sending request for url`? - warg reset
@@ -366,7 +366,7 @@ export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 # Execute on the trigger contract, WAVS will pick this up and submit the result
 # on chain via the operators.
 
-source .env # uses PRIVATE_KEY as the executor
+source .env # uses FUNDED_KEY as the executor (local: anvil account)
 forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast
 ```
 
