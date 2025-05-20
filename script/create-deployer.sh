@@ -25,7 +25,7 @@ mkdir -p .docker
 cast wallet new-mnemonic --json > .docker/deployer.json
 export DEPLOYER_PK=`jq -r .accounts[0].private_key .docker/deployer.json`
 export DEPLOYER_ADDRESS=`cast wallet address $DEPLOYER_PK`
-sed -i${SP}'' -e "s/^FUNDED_KEY=.*$/FUNDED_KEY=$DEPLOYER_PK/" .env
+sed -i${SP}'' -e "s/^PRIVATE_KEY=.*$/PRIVATE_KEY=$DEPLOYER_PK/" .env
 
 
 if [ "$DEPLOY_ENV" = "LOCAL" ]; then
@@ -45,7 +45,7 @@ else
             echo "Deployer balance is now $BALANCE"
             break
         fi
-        echo "... Waiting for balance to be funded by another account to this deployer..."
+        echo "    [!] Waiting for balance to be funded by another account to this deployer (${RPC_URL})..."
         sleep 5
     done
 fi

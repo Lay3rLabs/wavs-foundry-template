@@ -32,7 +32,7 @@ DEPLOY_ENV=${DEPLOY_ENV:-""}
 WAVS_ENDPOINT=${WAVS_ENDPOINT:-"http://localhost:8000"}
 REGISTRY=${REGISTRY:-"wa.dev"}
 
-BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:248e294 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
+BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:local-may-20-morelogs wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
     # DevEx: attempt to grab it from the location if not set already

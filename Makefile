@@ -9,7 +9,7 @@ CARGO=cargo
 COIN_MARKET_CAP_ID?=1
 COMPONENT_FILENAME?=evm_price_oracle.wasm
 CREDENTIAL?=""
-DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:248e294
+DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:local-may-20-morelogs
 MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:local-0.4.0-beta.3
 IPFS_ENDPOINT?=http://127.0.0.1:5001
 RPC_URL?=http://127.0.0.1:8545
@@ -20,6 +20,8 @@ WASI_BUILD_DIR ?= ""
 WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ${DOCKER_IMAGE} wavs-cli
 WAVS_ENDPOINT?="http://127.0.0.1:8000"
 ENV_FILE?=.env
+
+include ${ENV_FILE}
 
 # Default target is build
 default: build
@@ -113,7 +115,10 @@ upload-to-ipfs:
 	@if [ `sh script/get-deploy-status.sh` = "LOCAL" ]; then \
 		curl -X POST "http://127.0.0.1:5001/api/v0/add?pin=true" -H "Content-Type: multipart/form-data" -F file=@${SERVICE_FILE} | jq -r .Hash; \
 	else \
-		if [ ${PINATA_API_KEY} = "" ]; then echo "Error: PINATA_API_KEY is not set. Please set it to your Pinata API key -- https://app.pinata.cloud/developers/api-keys." && exit 1; fi; \
+		if [ -z "${PINATA_API_KEY}" ]; then \
+			echo "Error: PINATA_API_KEY is not set. Please set it to your Pinata API key -- https://app.pinata.cloud/developers/api-keys."; \
+			exit 1; \
+		fi; \
 		curl -X POST --url https://uploads.pinata.cloud/v3/files --header "Authorization: Bearer ${PINATA_API_KEY}" --header 'Content-Type: multipart/form-data' --form file=@${SERVICE_FILE} --form network=public --form name=service-`date +"%b-%d-%Y"`.json | jq -r .data.cid; \
 	fi
 
@@ -122,7 +127,7 @@ operator-list:
 	@docker run --rm --network host --env-file ${ENV_FILE} -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ${MIDDLEWARE_DOCKER_IMAGE}
 
 AVS_PRIVATE_KEY?=""
-DELEGATION?="0.01ether"
+DELEGATION?="0.001ether"
 ## operator-register: listing the AVS operators | ENV_FILE, AVS_PRIVATE_KEY
 operator-register:
 	@if [ -z "${AVS_PRIVATE_KEY}" ]; then \
@@ -139,7 +144,7 @@ operator-register:
 		-e StakeRegistryAddress=${StakeRegistryAddress} \
 		--env-file ${ENV_FILE} \
 		-v ./.nodes:/root/.nodes \
-		--entrypoint /wavs/register.sh ${MIDDLEWARE_DOCKER_IMAGE} "${AVS_PRIVATE_KEY}" "0.001ether"
+		--entrypoint /wavs/register.sh ${MIDDLEWARE_DOCKER_IMAGE} "${AVS_PRIVATE_KEY}" "${DELEGATION}"
 
 
 ## update-submodules: update the git submodules

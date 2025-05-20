@@ -45,11 +45,11 @@ cat > "${AGG_LOC}/start.sh" << EOF
 #!/bin/bash
 cd \$(dirname "\$0") || exit 1
 
-IMAGE=ghcr.io/lay3rlabs/wavs:248e294
+IMAGE=ghcr.io/lay3rlabs/wavs:local-may-20-morelogs
 INSTANCE=wavs-aggregator-${AGGREGATOR_INDEX}
 
-docker kill \${INSTANCE} || true
-docker rm \${INSTANCE} || true
+docker kill \${INSTANCE} > /dev/null 2>&1 || true
+docker rm \${INSTANCE} > /dev/null 2>&1 || true
 
 docker run -d --name \${INSTANCE} --network host -p 8001:8001 --stop-signal SIGKILL --env-file .env --user 1000:1000 -v .:/wavs \\
   \${IMAGE} wavs-aggregator --log-level debug --host 0.0.0.0 --port 8001
@@ -75,7 +75,7 @@ else
             echo "Account balance is now $BALANCE"
             break
         fi
-        echo "... Waiting for balance to be funded by another account to this deployer..."
+        echo "      [!] Waiting for balance to be funded by another account to this account..."
         sleep 5
     done
 fi

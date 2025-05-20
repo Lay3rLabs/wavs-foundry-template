@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+# set -e
 
 SP=""; if [ "$(uname)" == *"Darwin"* ]; then SP=" "; fi
 
@@ -21,11 +21,10 @@ if [ -d "${OPERATOR_LOC}" ] && [ "$(ls -A ${OPERATOR_LOC})" ]; then
   read -p "Directory ${OPERATOR_LOC} already exists and is not empty. Do you want to remove it? (y/n): " -n 1 -r
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo -e "\nRemoving ${OPERATOR_LOC}"
-    docker kill wavs-${OPERATOR_INDEX} || true
-    # ca/ & app/ directory requires this
-    sudo rm -rf ${OPERATOR_LOC}/ca
-    sudo rm -rf ${OPERATOR_LOC}/app
-    rm -rf ${OPERATOR_LOC}
+    docker kill wavs-${OPERATOR_INDEX} > /dev/null 2>&1 || true
+
+    echo "Removing dir ${OPERATOR_LOC} ((may prompt for password))"
+    sudo rm -rf ${OPERATOR_LOC}
   else
     echo -e "\nExiting without changes."
     exit 1
@@ -56,11 +55,11 @@ cat > "${OPERATOR_LOC}/start.sh" << EOF
 #!/bin/bash
 cd \$(dirname "\$0") || exit 1
 
-IMAGE=ghcr.io/lay3rlabs/wavs:248e294
+IMAGE=ghcr.io/lay3rlabs/wavs:local-may-20-morelogs
 WAVS_INSTANCE=wavs-${OPERATOR_INDEX}
 
-docker kill \${WAVS_INSTANCE} || true
-docker rm \${WAVS_INSTANCE} || true
+docker kill \${WAVS_INSTANCE} > /dev/null 2>&1 || true
+docker rm \${WAVS_INSTANCE} > /dev/null 2>&1 || true
 
 docker run -d --rm --name \${WAVS_INSTANCE} --network host --env-file .env -v \$(pwd):/root/wavs \${IMAGE} wavs --home /root/wavs --host 0.0.0.0 --log-level info
 sleep 0.5

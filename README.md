@@ -231,7 +231,7 @@ make start-all-local
 # local: create deployer & auto fund. testnet: create & iterate check balance
 sh ./script/create-deployer.sh
 
-## == Deploy Eigenlayer from Deployer ==
+## Deploy Eigenlayer from Deployer
 docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:local-0.4.0-beta.3
 ```
 
@@ -270,9 +270,10 @@ Deploy the compiled component with the contract information from the previous st
 export COMPONENT_FILENAME=evm_price_oracle.wasm
 export PKG_VERSION="0.1.0"
 export PKG_NAME="evmrustoracle"
+export REGISTRY=`sh ./script/get-registry.sh`
+
 # Local: localhost:8090 or Production: wa.dev.
 export PKG_NAMESPACE=example
-export REGISTRY=`sh ./script/get-registry.sh`
 
 # `failed to send request to registry server: error sending request for url`? - warg reset
 # TODO: root inclusion issue does not matter for localhost, why is it happening though?
@@ -281,14 +282,14 @@ warg publish release --registry http://${REGISTRY} --name ${PKG_NAMESPACE}:${PKG
 # Build your service JSON
 export AGGREGATOR_URL=http://127.0.0.1:8001
 # Package not found with wa.dev? -- make sure it is public
-REGISTRY=${REGISTRY} sh ./script/build_service.sh
+TRIGGER_CHAIN=holesky SUBMIT_CHAIN=holesky REGISTRY=${REGISTRY} sh ./script/build_service.sh
 
 # Upload service.json to IPFS
 # TODO: add support for pinata here natively too
 export SERVICE_FILE=.docker/service.json
 
 # local: 127.0.0.1:5001
-# testnet: https://app.pinata.cloud/. set PINATA_API_KEY to JWT token
+# testnet: https://app.pinata.cloud/. set PINATA_API_KEY to JWT token in .env
 ipfs_cid=`SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs`
 
 # LOCAL: http://127.0.0.1:8080
@@ -317,17 +318,13 @@ wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(j
 ```bash
 sh ./script/create-operator.sh 1
 
-# Make sure wavs.toml has the proper chains watched, defaults (wa.dev, ipfs gateway)
+# [!] UPDATE PROPER VALUES FOR TESTNET HERE
+
 sh ./infra/wavs-1/start.sh
-
-
-
 
 # Deploy the service JSON to WAVS so it now watches and submits.
 # 'opt in' for WAVS to watch (this is before we register to Eigenlayer)
 # TODO: also ensure the default_registry.toml is correct when you started wavs. Maybe we make this CLI only?
-
-# TODO: currently breaking on testnet, just a 500 return. need to write better debugging output
 WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${SERVICE_URI} make deploy-service
 ```
 
@@ -341,15 +338,15 @@ export HD_INDEX=`curl -s http://localhost:8000/service-key/${SERVICE_ID} | jq -r
 
 source infra/wavs-1/.env
 AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index ${HD_INDEX}`
+OPERATOR_ADDRESS=`cast wallet address ${AVS_PRIVATE_KEY}`
 
-# TODO: fund operator (put this within the middleware, continue to poll until they have funds). it failed at step `submit(address _referral)`, bal check before
-cast wallet address ${AVS_PRIVATE_KEY}
+# TODO: move this to the middleware, we can't auto fund since testnet does not have deployer
+sh script/fund-account.sh ${OPERATOR_ADDRESS} 0.002
 
 # Register the operator with the WAVS service manager
-# !!! TODO: we need to fund this operator for testnet -- see why this just worked when AVS_PRIVATE_KEY does not have funds yet (middleware being magical?)
 export WAVSServiceManagerAddress=`jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json`
 export StakeRegistryAddress=`jq -r .addresses.stakeRegistry .nodes/avs_deploy.json`
-AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} DELEGATION=0.01ether make operator-register
+DELEGATION=0.001ether AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
 
 # Verify registration
 make operator-list
@@ -367,7 +364,7 @@ export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 # Execute on the trigger contract, WAVS will pick this up and submit the result
 # on chain via the operators.
 
-source .env # uses PRIVATE_KEY
+source .env # uses PRIVATE_KEY as the executor
 forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast
 ```
 
@@ -376,11 +373,11 @@ forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID
 Query the latest submission contract id from the previous request made.
 
 ```bash docci-delay-per-cmd=2 docci-output-contains="1"
-make get-trigger
+RPC_URL=${RPC_URL} make get-trigger
 ```
 
 ```bash docci-delay-per-cmd=2 docci-output-contains="BTC"
-TRIGGER_ID=1 make show-result
+TRIGGER_ID=1 RPC_URL=${RPC_URL} make show-result
 ```
 
 ## Claude Code
