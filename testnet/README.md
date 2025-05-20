@@ -139,7 +139,7 @@ cast send ${ECDSA_CONTRACT} "updateStakeThreshold(uint256)" 1782625057707873 --r
 # Trigger the service (request CMC ID price)
 export COIN_MARKET_CAP_ID=1
 # TODO: change from anvil -> just PRIVATE_KEY
-export ANVIL_PRIVATE_KEY=${DEPLOYER_PK}
+export PRIVATE_KEY=${DEPLOYER_PK}
 forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast
 
 TRIGGER_ID=`make get-trigger | grep "TriggerID:" | awk '{print $2}'`

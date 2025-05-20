@@ -22,15 +22,18 @@ log_level = ["info", "wavs=debug"]
 
 # The IPFS gateway URL used to access IPFS content over HTTP.
 ipfs_gateway = "http://127.0.0.1:8080/ipfs/"
-# ipfs_gateway = "https://ipfs.io/ipfs/" # testnet / production
+# ipfs_gateway = "https://gateway.pinata.cloud/ipfs/" # testnet / production
 
 # The domain used for the warg wasi registry
 registry_domain = "localhost:8090"
 # registry_domain = "wa.dev" # testnet / production
 
+wavs.active_trigger_chains = ["local", "holesky"]
+
 # Those configs are global and shared between wavs and aggregator
 jaeger = "http://localhost:4317"
 prometheus = "http://localhost:9090"
+
 
 # ----------------------------
 # Chain configurations
@@ -117,9 +120,6 @@ cors_allowed_origins = [
 
 # The directory to store the data. Default is "/var/wavs"
 data = "~/wavs"
-
-# Active chain names to watch for triggers
-active_trigger_chains = ["local", "holesky"]
 
 # WAVS-specific chain overrides (if needed)
 # Example:

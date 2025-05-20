@@ -4,7 +4,7 @@
 SUDO := $(shell if groups | grep -q docker; then echo ''; else echo 'sudo'; fi)
 
 # Define common variables
-ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 CARGO=cargo
 COIN_MARKET_CAP_ID?=1
 COMPONENT_FILENAME?=evm_price_oracle.wasm
@@ -107,11 +107,15 @@ show-result:
 	@forge script ./script/ShowResult.s.sol ${SERVICE_SUBMISSION_ADDR} ${TRIGGER_ID} --sig 'data(string,uint64)' --rpc-url $(RPC_URL) --broadcast
 
 
-## upload-to-ipfs: uploading the a service config to IPFS | IPFS_ENDPOINT, SERVICE_FILE
+PINATA_API_KEY?=""
+## upload-to-ipfs: uploading the a service config to IPFS | SERVICE_FILE, [PINATA_API_KEY]
 upload-to-ipfs:
-	@curl -X POST "${IPFS_ENDPOINT}/api/v0/add?pin=true" \
-		-H "Content-Type: multipart/form-data" \
-		-F file=@${SERVICE_FILE} | jq -r .Hash
+	@if [ `sh script/get-deploy-status.sh` = "LOCAL" ]; then \
+		curl -X POST "http://127.0.0.1:5001/api/v0/add?pin=true" -H "Content-Type: multipart/form-data" -F file=@${SERVICE_FILE} | jq -r .Hash; \
+	else \
+		if [ ${PINATA_API_KEY} = "" ]; then echo "Error: PINATA_API_KEY is not set. Please set it to your Pinata API key -- https://app.pinata.cloud/developers/api-keys." && exit 1; fi; \
+		curl -X POST --url https://uploads.pinata.cloud/v3/files --header "Authorization: Bearer ${PINATA_API_KEY}" --header 'Content-Type: multipart/form-data' --form file=@${SERVICE_FILE} --form network=public --form name=service-`date +"%b-%d-%Y"`.json | jq -r .data.cid; \
+	fi
 
 ## operator-list: listing the AVS operators | ENV_FILE
 operator-list:

@@ -286,9 +286,16 @@ REGISTRY=${REGISTRY} sh ./script/build_service.sh
 # Upload service.json to IPFS
 # TODO: add support for pinata here natively too
 export SERVICE_FILE=.docker/service.json
-ipfs_cid=`IPFS_ENDPOINT=http://127.0.0.1:5001 SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs`
 
-export SERVICE_URI="http://127.0.0.1:8080/ipfs/${ipfs_cid}"
+# local: 127.0.0.1:5001
+# testnet: https://app.pinata.cloud/. set PINATA_API_KEY to JWT token
+ipfs_cid=`SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs`
+
+# LOCAL: http://127.0.0.1:8080
+# TESTNET: https://gateway.pinata.cloud/
+export IPFS_GATEWAY=$(sh script/get-ipfs-gateway.sh)
+
+export SERVICE_URI="${IPFS_GATEWAY}/ipfs/${ipfs_cid}"
 curl ${SERVICE_URI}
 
 cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${SERVICE_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
@@ -310,11 +317,17 @@ wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(j
 ```bash
 sh ./script/create-operator.sh 1
 
+# Make sure wavs.toml has the proper chains watched, defaults (wa.dev, ipfs gateway)
 sh ./infra/wavs-1/start.sh
+
+
+
 
 # Deploy the service JSON to WAVS so it now watches and submits.
 # 'opt in' for WAVS to watch (this is before we register to Eigenlayer)
 # TODO: also ensure the default_registry.toml is correct when you started wavs. Maybe we make this CLI only?
+
+# TODO: currently breaking on testnet, just a 500 return. need to write better debugging output
 WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${SERVICE_URI} make deploy-service
 ```
 
@@ -328,6 +341,9 @@ export HD_INDEX=`curl -s http://localhost:8000/service-key/${SERVICE_ID} | jq -r
 
 source infra/wavs-1/.env
 AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index ${HD_INDEX}`
+
+# TODO: fund operator (put this within the middleware, continue to poll until they have funds). it failed at step `submit(address _referral)`, bal check before
+cast wallet address ${AVS_PRIVATE_KEY}
 
 # Register the operator with the WAVS service manager
 # !!! TODO: we need to fund this operator for testnet -- see why this just worked when AVS_PRIVATE_KEY does not have funds yet (middleware being magical?)
@@ -350,7 +366,9 @@ export COIN_MARKET_CAP_ID=1
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 # Execute on the trigger contract, WAVS will pick this up and submit the result
 # on chain via the operators.
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast
+
+source .env # uses PRIVATE_KEY
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast
 ```
 
 ## Show the result

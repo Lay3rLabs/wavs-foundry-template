@@ -72,7 +72,7 @@ else
     while true; do
         BALANCE=`cast balance --ether $AGGREGATOR_ADDR --rpc-url=${RPC_URL}`
         if [ "$BALANCE" != "0.000000000000000000" ]; then
-            echo "Deployer balance is now $BALANCE"
+            echo "Account balance is now $BALANCE"
             break
         fi
         echo "... Waiting for balance to be funded by another account to this deployer..."
