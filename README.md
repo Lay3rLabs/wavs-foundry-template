@@ -176,18 +176,11 @@ Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https:
 
 Before starting the services, you can enable telemetry for monitoring and debugging purposes. Follow these steps:
 
-1. Update Configuration:
-  - Open the `wavs.toml` configuration file.
-  - Uncomment the following lines to enable Jaeger and Prometheus endpoints:
-```bash docci-background docci-delay-after=2
-jaeger = "http://localhost:4317"
-prometheus = "http://localhost:9090"
-```
-2. Set Log Level:
+1. Set Log Level:
   - Open the `.env` file.
   - Set the `log_level` variable for wavs to debug to ensure detailed logs are captured.
 
-3. If you are running the docker compose manually, include telemetry images by pointing to a particular file:
+2. If you are running the docker compose manually, include telemetry images by pointing to a particular file:
 ```bash docci-background docci-delay-after=2
 docker-compose -f docker-compose.yml -f docker-compose.telemetry.yml up
 ```
