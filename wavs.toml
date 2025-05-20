@@ -115,7 +115,7 @@ cors_allowed_origins = [
 data = "~/wavs"
 
 # Active chain names to watch for triggers
-active_trigger_chains = ["local"]
+active_trigger_chains = ["local", "holesky"]
 
 # WAVS-specific chain overrides (if needed)
 # Example:

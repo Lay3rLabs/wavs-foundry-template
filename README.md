@@ -255,25 +255,22 @@ export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 Deploy the compiled component with the contract information from the previous steps. Review the [makefile](./Makefile) for more details and configuration options.`TRIGGER_EVENT` is the event that the trigger contract emits and WAVS watches for. By altering `SERVICE_TRIGGER_ADDR` you can watch events for contracts others have deployed.
 
 ```bash docci-delay-per-cmd=3
-
-
-# over in warg-registry, start (reece/wip-oci-registry branch)
+# ** Testnet Setup: https://wa.dev/account/credentials
+#
+# If you get errors:
 # warg reset --registry http://127.0.0.1:8090
 
-# ** Setup: https://wa.dev/account/credentials
 export COMPONENT_FILENAME=evm_price_oracle.wasm
-export PKG_VERSION="0.2.0"
-# export PKG_NAMESPACE=`warg info --namespaces | grep = | cut -d'=' -f1 | tr -d ' '`
+export PKG_VERSION="0.1.0"
+export PKG_NAME="evmrustoracle"
+# Local: localhost:8090 or Production: wa.dev.
 export PKG_NAMESPACE=example
-export PKG_NAME="evmpriceoraclerust"
-export REGISTRY=localhost:8090
-# export REGISTRY=wa.dev
+export PKG_NAMESPACE=reecepbcups
+export REGISTRY=`sh ./script/get-registry.sh`
 
-# set WkgClient as .warg in tom l config (wkg.rs), then this works with localhost
 # `failed to send request to registry server: error sending request for url`? - warg reset
-
 # TODO: root inclusion issue does not matter for localhost, why is it happening though?
-warg publish release --name ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} --registry http://${REGISTRY} || true
+warg publish release --registry http://${REGISTRY} --name ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
 
 # Build your service JSON
 export AGGREGATOR_URL=http://127.0.0.1:8001
@@ -304,7 +301,6 @@ wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(j
 ## Start WAVS
 
 ```bash
-# FOR NOW: local is already on because we have to upload components manually. pending local wasi registry
 sh ./script/create-operator.sh 1
 
 sh ./infra/wavs-1/start.sh
@@ -320,16 +316,11 @@ WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${SERVICE_URI} make deploy-servi
 Each service gets their own key path (hd_path). The first service starts at 1 and increments from there. Get the service ID
 
 ```bash
-# hack: private key specific to this service
-# This is generated from the AVS keys submit mnemonic
-# this will be removed in the future. Then we can just --mnemonic-path the different index from source locally
-# (where WAVS /service-key returns just the index)
-# SERVICE_ID=`curl -s http://localhost:8000/app | jq -r .services[0].id`
-# PK=`curl -s http://localhost:8000/service-key/${SERVICE_ID} | jq -rc .secp256k1 | tr -d '[]'`
-# AVS_PRIVATE_KEY=`echo ${PK} | tr ',' ' ' | xargs printf "%02x" | tr -d '\n'`
+export SERVICE_ID=`curl -s http://localhost:8000/app | jq -r .services[0].id`
+export HD_INDEX=`curl -s http://localhost:8000/service-key/${SERVICE_ID} | jq -rc .secp256k1.hd_index | tr -d '[]'`
 
 source infra/wavs-1/.env
-AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 1`
+AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index ${HD_INDEX}`
 
 # Register the operator with the WAVS service manager
 # !!! TODO: we need to fund this operator for testnet -- see why this just worked when AVS_PRIVATE_KEY does not have funds yet (middleware being magical?)

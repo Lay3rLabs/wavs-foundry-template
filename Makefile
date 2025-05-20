@@ -90,8 +90,11 @@ upload-component:
 
 ## deploy-service: deploying the WAVS component service json | SERVICE_URL, CREDENTIAL, WAVS_ENDPOINT
 deploy-service:
-# TODO: if SERVICE_URL is not set, throw error
-	@$(WAVS_CMD) deploy-service --service-url $(SERVICE_URL) --log-level=debug --data /data/.docker --home /data $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),)
+	@if [ -z "${SERVICE_URL}" ]; then \
+		echo "Error: SERVICE_URL is not set. Set SERVICE_URL to a link / ipfs url."; \
+		exit 1; \
+	fi
+	@$(WAVS_CMD) deploy-service --service-url ${SERVICE_URL} --log-level=debug --data /data/.docker --home /data $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),)
 
 ## get-trigger: get the trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
 get-trigger:
