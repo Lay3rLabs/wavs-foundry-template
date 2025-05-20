@@ -265,7 +265,6 @@ export PKG_VERSION="0.1.0"
 export PKG_NAME="evmrustoracle"
 # Local: localhost:8090 or Production: wa.dev.
 export PKG_NAMESPACE=example
-export PKG_NAMESPACE=reecepbcups
 export REGISTRY=`sh ./script/get-registry.sh`
 
 # `failed to send request to registry server: error sending request for url`? - warg reset
