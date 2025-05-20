@@ -28,6 +28,10 @@ ipfs_gateway = "http://127.0.0.1:8080/ipfs/"
 registry_domain = "localhost:8090"
 # registry_domain = "wa.dev" # testnet / production
 
+# Those configs are global and shared between wavs and aggregator
+jaeger = "http://localhost:4317"
+prometheus = "http://localhost:9090"
+
 # ----------------------------
 # Chain configurations
 # ----------------------------
