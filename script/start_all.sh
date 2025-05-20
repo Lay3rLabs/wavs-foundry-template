@@ -22,17 +22,8 @@ if [ "$DEPLOY_ENV" = "LOCAL" ]; then
 fi
 
 
-docker run -d \
-  --name ipfs \
-  --network host \
-  -p 4001:4001 \
-  -p 4001:4001/udp \
-  -p 8080:8080 \
-  -p 5001:5001 \
-  --stop-signal SIGKILL \
-  ipfs/kubo:v0.34.1 \
-  daemon --offline
-trap "docker stop ipfs && echo -e '\nKilled IPFS'" EXIT
+docker compose up --force-recreate -d
+trap "docker compose down --remove-orphans && echo -e '\nKilled IPFS + Local WARG'" EXIT
 
 ## == Setup Deployer
 # echo "Using Address: $(cast wallet address --private-key ${OPERATOR_PK})"
@@ -50,4 +41,5 @@ trap "docker stop ipfs && echo -e '\nKilled IPFS'" EXIT
 
 # fin
 
+echo "Started..."
 wait

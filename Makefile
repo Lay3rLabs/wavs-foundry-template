@@ -9,7 +9,7 @@ CARGO=cargo
 COIN_MARKET_CAP_ID?=1
 COMPONENT_FILENAME?=evm_price_oracle.wasm
 CREDENTIAL?=""
-DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:49ee0c4
+DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:248e294
 MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
 IPFS_ENDPOINT?=http://127.0.0.1:5001
 RPC_URL?=http://127.0.0.1:8545
@@ -90,7 +90,11 @@ upload-component:
 
 ## deploy-service: deploying the WAVS component service json | SERVICE_URL, CREDENTIAL, WAVS_ENDPOINT
 deploy-service:
-	@$(WAVS_CMD) deploy-service --service-url $(SERVICE_URL) --log-level=debug --data /data/.docker --home /data $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),)
+	@if [ -z "${SERVICE_URL}" ]; then \
+		echo "Error: SERVICE_URL is not set. Set SERVICE_URL to a link / ipfs url."; \
+		exit 1; \
+	fi
+	@$(WAVS_CMD) deploy-service --service-url ${SERVICE_URL} --log-level=debug --data /data/.docker --home /data $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),)
 
 ## get-trigger: get the trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
 get-trigger:

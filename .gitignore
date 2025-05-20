@@ -14,3 +14,5 @@ wavs:worker*.wasm
 .nodes
 
 infra/*
+
+**/.claude/settings.local.json

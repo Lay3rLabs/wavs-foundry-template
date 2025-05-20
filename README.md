@@ -210,11 +210,9 @@ Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https:
 # You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
 cp .env.example .env
 
-# Gets the RPC depending on `DEPLOY_ENV` in .env
-# export RPC_URL=`sh ./script/get-rpc.sh`
-# export DEPLOY_ENV=`sh ./script/get-deploy-status.sh`
+# update the .env for either LOCAL or TESTNET
 
-# Stats anvil & IPFS
+# Starts anvil + IPFS & WARG
 make start-all-local
 ```
 
@@ -226,15 +224,6 @@ sh ./script/create-deployer.sh
 
 ## == Deploy Eigenlayer from Deployer ==
 docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
-
-# lets next section start, not sure we need this anymore though
-# date +%s > .docker/start.log
-```
-
-Wait for full local deployment to be ready
-
-```bash docci-delay-after=2
-# while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done
 ```
 
 ## Deploy Service Contracts
@@ -264,34 +253,34 @@ export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
 Deploy the compiled component with the contract information from the previous steps. Review the [makefile](./Makefile) for more details and configuration options.`TRIGGER_EVENT` is the event that the trigger contract emits and WAVS watches for. By altering `SERVICE_TRIGGER_ADDR` you can watch events for contracts others have deployed.
 
 ```bash docci-delay-per-cmd=3
+# ** Testnet Setup: https://wa.dev/account/credentials
+#
+# If you get errors:
+# warg reset --registry http://127.0.0.1:8090
 
 export COMPONENT_FILENAME=evm_price_oracle.wasm
+export PKG_VERSION="0.1.0"
+export PKG_NAME="evmrustoracle"
+# Local: localhost:8090 or Production: wa.dev.
+export PKG_NAMESPACE=example
+export REGISTRY=`sh ./script/get-registry.sh`
 
-# if [ "$DEPLOY_ENV" = "LOCAL" ]; then
-#     # TODO: temp: required to start wavs to upload. ideal is the local wasi registry
-#     sh ./script/create-operator.sh 1
-#     sh ./infra/wavs-1/start.sh
-
-#     export WASM_DIGEST=$(make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME)
-# else
-
-# ** Setup: https://wa.dev/account/credentials
-export PKG_VERSION="0.2.0"
-# export PKG_NAMESPACE=`warg info --namespaces | grep = | cut -d'=' -f1 | tr -d ' '`
-export PKG_NAMESPACE=reecepbcups
-export PKG_NAME="${PKG_NAMESPACE}:evmpriceoraclerust"
-warg publish release --name ${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
-
+# `failed to send request to registry server: error sending request for url`? - warg reset
+# TODO: root inclusion issue does not matter for localhost, why is it happening though?
+warg publish release --registry http://${REGISTRY} --name ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
 
 # Build your service JSON
 export AGGREGATOR_URL=http://127.0.0.1:8001
-sh ./script/build_service.sh
+REGISTRY=${REGISTRY} sh ./script/build_service.sh
 
 # Upload service.json to IPFS
+# TODO: add support for pinata here natively too
 export SERVICE_FILE=.docker/service.json
 ipfs_cid=`IPFS_ENDPOINT=http://127.0.0.1:5001 SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs`
 
 export SERVICE_URI="http://127.0.0.1:8080/ipfs/${ipfs_cid}"
+curl ${SERVICE_URI}
+
 cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${SERVICE_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
 ```
 
@@ -309,12 +298,13 @@ wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(j
 ## Start WAVS
 
 ```bash
-# FOR NOW: local is already on because we have to upload components manually. pending local wasi registry
 sh ./script/create-operator.sh 1
+
 sh ./infra/wavs-1/start.sh
 
 # Deploy the service JSON to WAVS so it now watches and submits.
 # 'opt in' for WAVS to watch (this is before we register to Eigenlayer)
+# TODO: also ensure the default_registry.toml is correct when you started wavs. Maybe we make this CLI only?
 WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${SERVICE_URI} make deploy-service
 ```
 
@@ -323,16 +313,11 @@ WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${SERVICE_URI} make deploy-servi
 Each service gets their own key path (hd_path). The first service starts at 1 and increments from there. Get the service ID
 
 ```bash
-# hack: private key specific to this service
-# This is generated from the AVS keys submit mnemonic
-# this will be removed in the future. Then we can just --mnemonic-path the different index from source locally
-# (where WAVS /service-key returns just the index)
-# SERVICE_ID=`curl -s http://localhost:8000/app | jq -r .services[0].id`
-# PK=`curl -s http://localhost:8000/service-key/${SERVICE_ID} | jq -rc .secp256k1 | tr -d '[]'`
-# AVS_PRIVATE_KEY=`echo ${PK} | tr ',' ' ' | xargs printf "%02x" | tr -d '\n'`
+export SERVICE_ID=`curl -s http://localhost:8000/app | jq -r .services[0].id`
+export HD_INDEX=`curl -s http://localhost:8000/service-key/${SERVICE_ID} | jq -rc .secp256k1.hd_index | tr -d '[]'`
 
 source infra/wavs-1/.env
-AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 1`
+AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index ${HD_INDEX}`
 
 # Register the operator with the WAVS service manager
 # !!! TODO: we need to fund this operator for testnet -- see why this just worked when AVS_PRIVATE_KEY does not have funds yet (middleware being magical?)

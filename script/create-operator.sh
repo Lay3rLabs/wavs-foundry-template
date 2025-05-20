@@ -56,7 +56,7 @@ cat > "${OPERATOR_LOC}/start.sh" << EOF
 #!/bin/bash
 cd \$(dirname "\$0") || exit 1
 
-IMAGE=ghcr.io/lay3rlabs/wavs:49ee0c4
+IMAGE=ghcr.io/lay3rlabs/wavs:248e294
 WAVS_INSTANCE=wavs-${OPERATOR_INDEX}
 
 docker kill \${WAVS_INSTANCE} || true
