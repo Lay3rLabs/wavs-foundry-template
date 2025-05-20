@@ -157,8 +157,8 @@ Now build the WASI components into the `compiled` output directory.
 > `brew uninstall rust` & install it from <https://rustup.rs>
 
 ```bash
-# This command only builds the rust component.
 # Remove `WASI_BUILD_DIR` to build all components.
+# ** registry error: fetch token -> `warg reset`
 WASI_BUILD_DIR=components/evm-price-oracle make wasi-build
 ```
 
@@ -209,10 +209,8 @@ Set Log Level:
   - Open the `.env` file.
   - Set the `log_level` variable for wavs to debug to ensure detailed logs are captured.
 
-Otherwise, it is already included in the start scripts.
-
 > \[!NOTE]
-To see details on how to access both traces and metrics, please check out [Telemetry Documentation](telemetry.md).
+To see details on how to access both traces and metrics, please check out [Telemetry Documentation](telemetry/telemetry.md).
 
 ### Start the backend
 
@@ -223,7 +221,7 @@ cp .env.example .env
 
 # update the .env for either LOCAL or TESTNET
 
-# Starts anvil + IPFS & WARG
+# Starts anvil + IPFS, WARG, Jaeger, and prometheus.
 make start-all-local
 ```
 

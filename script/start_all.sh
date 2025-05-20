@@ -21,8 +21,9 @@ if [ "$DEPLOY_ENV" = "LOCAL" ]; then
   done
 fi
 
-docker compose -f docker-compose.yml -f docker-compose.telemetry.yml up --force-recreate -d
-trap "docker compose down --remove-orphans && echo -e '\nKilled IPFS + Local WARG, and metrics'" EXIT
+FILES="-f docker-compose.yml -f telemetry/docker-compose.yml"
+docker compose ${FILES} up --force-recreate -d
+trap "docker compose ${FILES} down --remove-orphans && echo -e '\nKilled IPFS + Local WARG, and metrics'" EXIT
 
 echo "Started..."
 wait
