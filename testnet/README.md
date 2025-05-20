@@ -30,7 +30,7 @@ mv ~/testnet/wavs-foundry-template/testnet/.aggregator.env ~/testnet/wavs-agg/.e
 
 # Deploy AVS Contracts (prev: start.sh)
 GIT_ROOT="$HOME/testnet/wavs-foundry-template"
-docker run --rm --network host --env-file ${GIT_ROOT}/testnet/.env -v ${GIT_ROOT}/.nodes:/root/.nodes "ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2"
+docker run --rm --network host --env-file ${GIT_ROOT}/testnet/.env -v ${GIT_ROOT}/.nodes:/root/.nodes "ghcr.io/lay3rlabs/wavs-middleware:local-0.4.0-beta.3"
 ```
 
 ## Upload standard smart contracts

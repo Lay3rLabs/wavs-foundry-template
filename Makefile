@@ -10,7 +10,7 @@ COIN_MARKET_CAP_ID?=1
 COMPONENT_FILENAME?=evm_price_oracle.wasm
 CREDENTIAL?=""
 DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:248e294
-MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
+MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:local-0.4.0-beta.3
 IPFS_ENDPOINT?=http://127.0.0.1:5001
 RPC_URL?=http://127.0.0.1:8545
 SERVICE_FILE?=.docker/service.json
@@ -94,6 +94,7 @@ deploy-service:
 		echo "Error: SERVICE_URL is not set. Set SERVICE_URL to a link / ipfs url."; \
 		exit 1; \
 	fi
+	@sleep 1
 	@$(WAVS_CMD) deploy-service --service-url ${SERVICE_URL} --log-level=debug --data /data/.docker --home /data $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),)
 
 ## get-trigger: get the trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
@@ -121,11 +122,20 @@ DELEGATION?="0.01ether"
 ## operator-register: listing the AVS operators | ENV_FILE, AVS_PRIVATE_KEY
 operator-register:
 	@if [ -z "${AVS_PRIVATE_KEY}" ]; then \
-		echo "Error: AVS_PRIVATE_KEY is not set. Please set it to your AVS private key."; \
-		exit 1; \
+		echo "Error: AVS_PRIVATE_KEY is not set. Please set it to your AVS private key." && exit 1; \
 	fi
-	# TODO: add "${DELEGATION}" to this line when updating to testnet
-	@docker run --rm --network host --env-file ${ENV_FILE} -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh ${MIDDLEWARE_DOCKER_IMAGE} "${AVS_PRIVATE_KEY}"
+	@if [ -z "${WAVSServiceManagerAddress}" ]; then \
+		echo "Error: WAVSServiceManagerAddress is not set. Please set it to the deployed WAVS service manager." && exit 1; \
+	fi
+	@if [ -z "${StakeRegistryAddress}" ]; then \
+		echo "Error: StakeRegistryAddress is not set. Please set it to the deployed WAVS stake registry." && exit 1; \
+	fi
+	@docker run --rm --network host \
+		-e WAVSServiceManagerAddress=${WAVSServiceManagerAddress} \
+		-e StakeRegistryAddress=${StakeRegistryAddress} \
+		--env-file ${ENV_FILE} \
+		-v ./.nodes:/root/.nodes \
+		--entrypoint /wavs/register.sh ${MIDDLEWARE_DOCKER_IMAGE} "${AVS_PRIVATE_KEY}" "0.001ether"
 
 
 ## update-submodules: update the git submodules

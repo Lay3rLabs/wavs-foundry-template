@@ -3,7 +3,7 @@
 set -e
 
 PORT=8545
-MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
+MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:local-0.4.0-beta.3
 FORK_RPC_URL=${FORK_RPC_URL:-"https://ethereum-holesky-rpc.publicnode.com"}
 
 ## == Start watcher ==
@@ -23,7 +23,7 @@ fi
 
 FILES="-f docker-compose.yml -f telemetry/docker-compose.yml"
 docker compose ${FILES} up --force-recreate -d
-trap "docker compose ${FILES} down --remove-orphans && echo -e '\nKilled IPFS + Local WARG, and metrics'" EXIT
+trap "docker compose ${FILES} down --remove-orphans && docker kill wavs-1 wavs-aggregator-1 > /dev/null 2>&1 && echo -e '\nKilled IPFS + Local WARG, and wavs instances'" EXIT
 
 echo "Started..."
 wait

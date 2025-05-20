@@ -63,6 +63,7 @@ docker kill \${WAVS_INSTANCE} || true
 docker rm \${WAVS_INSTANCE} || true
 
 docker run -d --rm --name \${WAVS_INSTANCE} --network host --env-file .env -v \$(pwd):/root/wavs \${IMAGE} wavs --home /root/wavs --host 0.0.0.0 --log-level info
+sleep 0.5
 EOF
 
 cp wavs.toml ${OPERATOR_LOC}/wavs.toml

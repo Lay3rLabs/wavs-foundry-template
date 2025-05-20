@@ -158,7 +158,7 @@ Now build the WASI components into the `compiled` output directory.
 
 ```bash
 # Remove `WASI_BUILD_DIR` to build all components.
-# ** registry error: fetch token -> `warg reset`
+warg reset
 WASI_BUILD_DIR=components/evm-price-oracle make wasi-build
 ```
 
@@ -232,7 +232,7 @@ make start-all-local
 sh ./script/create-deployer.sh
 
 ## == Deploy Eigenlayer from Deployer ==
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:local-0.4.0-beta.3
 ```
 
 ## Deploy Service Contracts
@@ -276,7 +276,6 @@ export REGISTRY=`sh ./script/get-registry.sh`
 
 # `failed to send request to registry server: error sending request for url`? - warg reset
 # TODO: root inclusion issue does not matter for localhost, why is it happening though?
-
 warg publish release --registry http://${REGISTRY} --name ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
 
 # Build your service JSON
@@ -332,6 +331,8 @@ AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMO
 
 # Register the operator with the WAVS service manager
 # !!! TODO: we need to fund this operator for testnet -- see why this just worked when AVS_PRIVATE_KEY does not have funds yet (middleware being magical?)
+export WAVSServiceManagerAddress=`jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json`
+export StakeRegistryAddress=`jq -r .addresses.stakeRegistry .nodes/avs_deploy.json`
 AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} DELEGATION=0.01ether make operator-register
 
 # Verify registration

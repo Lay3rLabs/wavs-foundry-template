@@ -6,7 +6,7 @@ set -e
 GIT_ROOT=$(git rev-parse --show-toplevel)
 
 PORT=8545
-MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
+MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:local-0.4.0-beta.3
 LOG_FILE="$GIT_ROOT/.docker/start.log"
 
 # TODO: ensure RPC_URL is set
