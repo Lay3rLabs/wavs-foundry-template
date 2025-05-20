@@ -95,6 +95,12 @@ deploy-service:
 		echo "Error: SERVICE_URL is not set. Set SERVICE_URL to a link / ipfs url."; \
 		exit 1; \
 	fi
+	@if [ -n "${WAVS_ENDPOINT}" ]; then \
+		if [ "$$(curl -s -o /dev/null -w "%{http_code}" ${WAVS_ENDPOINT}/app)" != "200" ]; then \
+			echo "Error: WAVS_ENDPOINT is not reachable. Please check the WAVS_ENDPOINT."; \
+			exit 1; \
+		fi; \
+	fi
 	@sleep 1
 	@$(WAVS_CMD) deploy-service --service-url ${SERVICE_URL} --log-level=debug --data /data/.docker --home /data $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),)
 

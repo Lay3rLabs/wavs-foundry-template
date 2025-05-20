@@ -62,7 +62,12 @@ docker kill \${WAVS_INSTANCE} > /dev/null 2>&1 || true
 docker rm \${WAVS_INSTANCE} > /dev/null 2>&1 || true
 
 docker run -d --rm --name \${WAVS_INSTANCE} --network host --env-file .env -v \$(pwd):/root/wavs \${IMAGE} wavs --home /root/wavs --host 0.0.0.0 --log-level info
-sleep 0.5
+sleep 0.25
+
+if [ ! "\$(docker ps -q -f name=\${WAVS_INSTANCE})" ]; then
+  echo "Container \${WAVS_INSTANCE} is not running. Reason:"
+  docker run --rm --name \${WAVS_INSTANCE} --network host --env-file .env -v \$(pwd):/root/wavs \${IMAGE} wavs --home /root/wavs --host 0.0.0.0 --log-level info
+fi
 EOF
 
 cp wavs.toml ${OPERATOR_LOC}/wavs.toml

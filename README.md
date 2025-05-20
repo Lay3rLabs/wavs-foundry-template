@@ -281,8 +281,13 @@ warg publish release --registry http://${REGISTRY} --name ${PKG_NAMESPACE}:${PKG
 
 # Build your service JSON
 export AGGREGATOR_URL=http://127.0.0.1:8001
+
+# Testnet: set values (default: local)
+export TRIGGER_CHAIN=holesky
+export SUBMIT_CHAIN=holesky
+
 # Package not found with wa.dev? -- make sure it is public
-TRIGGER_CHAIN=holesky SUBMIT_CHAIN=holesky REGISTRY=${REGISTRY} sh ./script/build_service.sh
+REGISTRY=${REGISTRY} sh ./script/build_service.sh
 
 # Upload service.json to IPFS
 # TODO: add support for pinata here natively too
@@ -318,7 +323,7 @@ wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(j
 ```bash
 sh ./script/create-operator.sh 1
 
-# [!] UPDATE PROPER VALUES FOR TESTNET HERE
+# [!] UPDATE PROPER VALUES FOR TESTNET HERE (active trigger chains, registry, ipfs_gateway)
 
 sh ./infra/wavs-1/start.sh
 
@@ -339,9 +344,6 @@ export HD_INDEX=`curl -s http://localhost:8000/service-key/${SERVICE_ID} | jq -r
 source infra/wavs-1/.env
 AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index ${HD_INDEX}`
 OPERATOR_ADDRESS=`cast wallet address ${AVS_PRIVATE_KEY}`
-
-# TODO: move this to the middleware, we can't auto fund since testnet does not have deployer
-sh script/fund-account.sh ${OPERATOR_ADDRESS} 0.002
 
 # Register the operator with the WAVS service manager
 export WAVSServiceManagerAddress=`jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json`
