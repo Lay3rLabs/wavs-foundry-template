@@ -282,7 +282,7 @@ warg publish release --registry http://${REGISTRY} --name ${PKG_NAMESPACE}:${PKG
 # Build your service JSON
 export AGGREGATOR_URL=http://127.0.0.1:8001
 
-# Testnet: set values (default: local)
+# Testnet: set values (default: local if not set)
 export TRIGGER_CHAIN=holesky
 export SUBMIT_CHAIN=holesky
 
@@ -348,6 +348,7 @@ OPERATOR_ADDRESS=`cast wallet address ${AVS_PRIVATE_KEY}`
 # Register the operator with the WAVS service manager
 export WAVSServiceManagerAddress=`jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json`
 export StakeRegistryAddress=`jq -r .addresses.stakeRegistry .nodes/avs_deploy.json`
+
 DELEGATION=0.001ether AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
 
 # Verify registration
@@ -382,7 +383,20 @@ RPC_URL=${RPC_URL} make get-trigger
 TRIGGER_ID=1 RPC_URL=${RPC_URL} make show-result
 ```
 
-## Claude Code
+## Update Threshold
+
+```bash docci-ignore
+export ECDSA_CONTRACT=`cat .nodes/avs_deploy.json | jq -r .addresses.stakeRegistry`
+
+TOTAL_WEIGHT=`cast call ${ECDSA_CONTRACT} "getLastCheckpointTotalWeight()(uint256)" --rpc-url ${RPC_URL} --json | jq -r .[0]`
+TWO_THIRDS=`echo $((TOTAL_WEIGHT * 2 / 3))`
+
+cast send ${ECDSA_CONTRACT} "updateStakeThreshold(uint256)" ${TWO_THIRDS} --rpc-url ${RPC_URL} --private-key ${FUNDED_KEY}
+
+make operator-list
+```
+
+# Claude Code
 
 To spin up a sandboxed instance of [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) in a Docker container that only has access to this project's files, run the following command:
 

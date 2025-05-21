@@ -47,7 +47,7 @@ clean: clean-docker
 
 ## clean-docker: remove unused docker containers
 clean-docker:
-	@$(SUDO) docker rm -v $(shell $(SUDO) docker ps -a --filter status=exited -q) 2> /dev/null || true
+	@$(SUDO) docker rm -v $(shell $(SUDO) docker ps -a --filter status=exited -q) > /dev/null 2>&1 || true
 
 ## fmt: formatting solidity and rust code
 fmt:
