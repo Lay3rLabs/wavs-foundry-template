@@ -323,7 +323,7 @@ wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(j
 ```bash
 sh ./script/create-operator.sh 1
 
-# [!] UPDATE PROPER VALUES FOR TESTNET HERE (active trigger chains, registry, ipfs_gateway)
+# [!] UPDATE PROPER VALUES FOR TESTNET HERE (`wavs.toml`: active trigger chains, registry, ipfs_gateway)
 
 sh ./infra/wavs-1/start.sh
 
