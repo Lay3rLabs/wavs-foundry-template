@@ -22,15 +22,16 @@ log_level = ["info", "wavs=debug"]
 
 # The IPFS gateway URL used to access IPFS content over HTTP.
 ipfs_gateway = "http://127.0.0.1:8080/ipfs/"
-# ipfs_gateway = "https://ipfs.io/ipfs/" # testnet / production
+# ipfs_gateway = "https://gateway.pinata.cloud/ipfs/" # testnet / production
 
 # The domain used for the warg wasi registry
 registry_domain = "localhost:8090"
 # registry_domain = "wa.dev" # testnet / production
 
 # Those configs are global and shared between wavs and aggregator
-jaeger = "http://localhost:4317"
-prometheus = "http://localhost:9090"
+# jaeger = "http://localhost:4317"
+# prometheus = "http://localhost:9090"
+
 
 # ----------------------------
 # Chain configurations
@@ -39,7 +40,7 @@ prometheus = "http://localhost:9090"
 # == Ethereum chains ==
 
 # Mainnet
-[default.chains.evm.evmereum]
+[default.chains.evm.ethereum]
 chain_id = "1"
 ws_endpoint = "wss://eth.drpc.org"
 http_endpoint = "https://eth.drpc.org"
@@ -103,6 +104,11 @@ gas_denom = "untrn"
 # ----------------------------
 [wavs]
 
+# The directory to store the data. Default is "/var/wavs"
+data = "~/wavs"
+
+active_trigger_chains = ["local", "holesky"]
+
 cors_allowed_origins = [
     "https://lay3rlabs.github.io/*",
     "http://localhost:*",
@@ -114,12 +120,6 @@ cors_allowed_origins = [
 
 # The host to serve on. Default is localhost
 # host = "localhost"
-
-# The directory to store the data. Default is "/var/wavs"
-data = "~/wavs"
-
-# Active chain names to watch for triggers
-active_trigger_chains = ["local", "holesky"]
 
 # WAVS-specific chain overrides (if needed)
 # Example:

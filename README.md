@@ -158,7 +158,7 @@ Now build the WASI components into the `compiled` output directory.
 
 ```bash
 # Remove `WASI_BUILD_DIR` to build all components.
-# ** registry error: fetch token -> `warg reset`
+warg reset
 WASI_BUILD_DIR=components/evm-price-oracle make wasi-build
 ```
 
@@ -231,8 +231,8 @@ make start-all-local
 # local: create deployer & auto fund. testnet: create & iterate check balance
 sh ./script/create-deployer.sh
 
-## == Deploy Eigenlayer from Deployer ==
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
+## Deploy Eigenlayer from Deployer
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:local-0.4.0-beta.3
 ```
 
 ## Deploy Service Contracts
@@ -270,26 +270,38 @@ Deploy the compiled component with the contract information from the previous st
 export COMPONENT_FILENAME=evm_price_oracle.wasm
 export PKG_VERSION="0.1.0"
 export PKG_NAME="evmrustoracle"
-# Local: localhost:8090 or Production: wa.dev.
-export PKG_NAMESPACE=example
 export REGISTRY=`sh ./script/get-registry.sh`
+
+# Local: example | Testnet: your wa.dev namespace
+export PKG_NAMESPACE=example
 
 # `failed to send request to registry server: error sending request for url`? - warg reset
 # TODO: root inclusion issue does not matter for localhost, why is it happening though?
-
 warg publish release --registry http://${REGISTRY} --name ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
 
 # Build your service JSON
 export AGGREGATOR_URL=http://127.0.0.1:8001
+
+# Testnet: set values (default: local if not set)
+export TRIGGER_CHAIN=holesky
+export SUBMIT_CHAIN=holesky
+
 # Package not found with wa.dev? -- make sure it is public
 REGISTRY=${REGISTRY} sh ./script/build_service.sh
 
 # Upload service.json to IPFS
 # TODO: add support for pinata here natively too
 export SERVICE_FILE=.docker/service.json
-ipfs_cid=`IPFS_ENDPOINT=http://127.0.0.1:5001 SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs`
 
-export SERVICE_URI="http://127.0.0.1:8080/ipfs/${ipfs_cid}"
+# local: 127.0.0.1:5001
+# testnet: https://app.pinata.cloud/. set PINATA_API_KEY to JWT token in .env
+ipfs_cid=`SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs`
+
+# LOCAL: http://127.0.0.1:8080
+# TESTNET: https://gateway.pinata.cloud/
+export IPFS_GATEWAY=$(sh script/get-ipfs-gateway.sh)
+
+export SERVICE_URI="${IPFS_GATEWAY}/ipfs/${ipfs_cid}"
 curl ${SERVICE_URI}
 
 cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${SERVICE_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
@@ -311,6 +323,8 @@ wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(j
 ```bash
 sh ./script/create-operator.sh 1
 
+# [!] UPDATE PROPER VALUES FOR TESTNET HERE (active trigger chains, registry, ipfs_gateway)
+
 sh ./infra/wavs-1/start.sh
 
 # Deploy the service JSON to WAVS so it now watches and submits.
@@ -329,10 +343,13 @@ export HD_INDEX=`curl -s http://localhost:8000/service-key/${SERVICE_ID} | jq -r
 
 source infra/wavs-1/.env
 AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index ${HD_INDEX}`
+OPERATOR_ADDRESS=`cast wallet address ${AVS_PRIVATE_KEY}`
 
 # Register the operator with the WAVS service manager
-# !!! TODO: we need to fund this operator for testnet -- see why this just worked when AVS_PRIVATE_KEY does not have funds yet (middleware being magical?)
-AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} DELEGATION=0.01ether make operator-register
+export WAVSServiceManagerAddress=`jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json`
+export StakeRegistryAddress=`jq -r .addresses.stakeRegistry .nodes/avs_deploy.json`
+
+DELEGATION=0.001ether AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
 
 # Verify registration
 make operator-list
@@ -349,7 +366,9 @@ export COIN_MARKET_CAP_ID=1
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 # Execute on the trigger contract, WAVS will pick this up and submit the result
 # on chain via the operators.
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast
+
+source .env # uses FUNDED_KEY as the executor (local: anvil account)
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast
 ```
 
 ## Show the result
@@ -357,14 +376,27 @@ forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID
 Query the latest submission contract id from the previous request made.
 
 ```bash docci-delay-per-cmd=2 docci-output-contains="1"
-make get-trigger
+RPC_URL=${RPC_URL} make get-trigger
 ```
 
 ```bash docci-delay-per-cmd=2 docci-output-contains="BTC"
-TRIGGER_ID=1 make show-result
+TRIGGER_ID=1 RPC_URL=${RPC_URL} make show-result
 ```
 
-## Claude Code
+## Update Threshold
+
+```bash docci-ignore
+export ECDSA_CONTRACT=`cat .nodes/avs_deploy.json | jq -r .addresses.stakeRegistry`
+
+TOTAL_WEIGHT=`cast call ${ECDSA_CONTRACT} "getLastCheckpointTotalWeight()(uint256)" --rpc-url ${RPC_URL} --json | jq -r .[0]`
+TWO_THIRDS=`echo $((TOTAL_WEIGHT * 2 / 3))`
+
+cast send ${ECDSA_CONTRACT} "updateStakeThreshold(uint256)" ${TWO_THIRDS} --rpc-url ${RPC_URL} --private-key ${FUNDED_KEY}
+
+make operator-list
+```
+
+# Claude Code
 
 To spin up a sandboxed instance of [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) in a Docker container that only has access to this project's files, run the following command:
 

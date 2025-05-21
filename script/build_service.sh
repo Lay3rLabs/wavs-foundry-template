@@ -87,4 +87,4 @@ $BASE_CMD workflow component --id ${WORKFLOW_ID} config --values 'key=value,key2
 $BASE_CMD manager set-evm --chain-name ${SUBMIT_CHAIN} --address `cast --to-checksum ${SERVICE_MANAGER_ADDRESS}` > /dev/null
 $BASE_CMD validate > /dev/null
 
-echo "Configuration file created at ${FILE_LOCATION}"
+echo "Configuration file created ${FILE_LOCATION}. Watching events from '${TRIGGER_CHAIN}' & submitting to '${SUBMIT_CHAIN}'."
