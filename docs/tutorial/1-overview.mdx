@@ -1,5 +1,6 @@
 ---
-title: 1. Oracle Service Overview
+title: 1. Oracle service tutorial
+description: Introduction to WAVS tutorial series
 ---
 <!--docsignore
 import { HomeIcon, AppWindow, CircuitBoard, Layers, Microscope, Grid2x2, CloudSun, ChevronRight } from 'lucide-react';
@@ -19,7 +20,7 @@ The price oracle service example has three basic parts:
 
 2. [A service component](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/evm-price-oracle/src/lib.rs): The service component contains the business logic of a service. It is written in Rust (support for more languages is coming soon), compiled to WASM, and run by operators in the WAVS runtime. In this example, operators will listen for a new trigger event to be emitted and then run the service component off-chain, using the asset ID data from the trigger event as input. The component contains logic to fetch the price of the asset from the CoinMarketCap price feed API, which is then processed and encoded before being sent back on-chain.
 
-3. [A submission contract](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsSubmit.sol): Also known as the “service handler,” this contract contains the on-chain submission logic for the service. It validates and stores the processed data returned by the WAVS component. When an operator submits a response, the contract verifies the data’s integrity by checking the operator’s signature and then associates it with the original trigger ID, bringing the queried price on-chain.
+3. [A submission contract](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsSubmit.sol): Also known as the "service handler," this contract contains the on-chain submission logic for the service. It validates and stores the processed data returned by the WAVS component. When an operator submits a response, the contract verifies the data's integrity by checking the operator's signature and then associates it with the original trigger ID, bringing the queried price on-chain.
 
 These three parts come together to create a basic oracle service using WAVS. To learn more about services and how they work, visit the [How it works page](../how-it-works).
 

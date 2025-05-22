@@ -1,0 +1,131 @@
+---
+title: Blockchain interactions
+description: Interacting with blockchains from WAVS components
+---
+<!--docsignore
+import { Callout } from 'fumadocs-ui/components/callout';
+import { DocsPage } from 'fumadocs-ui/page';
+docsignore-->
+
+Components can interact with blockchains and smart contracts by using crates like [`wavs-wasi-utils`](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/). This page provides an overview of the dependencies and configuration needed to interact with Ethereum and other EVM-compatible chains. For more information on other helpful crates, see the [Utilities and crates](./utilities) page.
+
+{/* todo: Verify all code on this page. */}
+
+## Dependencies
+
+The following dependencies are commonly required in your component's `Cargo.toml` for Ethereum interactions:
+
+```toml
+[dependencies]
+# Core WAVS blockchain functionality
+wit-bindgen-rt = { workspace = true, features = ["bitflags"] }  # Required for WASI bindings
+wavs-wasi-utils = "=0.4.0-beta.2"                               # Blockchain interaction utilities
+wstd = "0.5.3"                                                  # WASI standard library
+
+# Alloy crates for Ethereum interaction
+alloy-sol-macro = { version = "1.1.0", features = ["json"] }    # sol! macro for interfaces
+alloy-sol-types = "1.1.0"                                       # ABI handling & type generation
+alloy-network = "0.15.10"                                       # Network trait and Ethereum network type
+alloy-provider = { version = "0.15.10", default-features = false, features = ["rpc-api"] }  # RPC provider
+alloy-rpc-types = "0.15.10"                                     # RPC type definitions
+alloy-contract = "0.15.10"                                      # Contract interaction utilities
+
+# Other useful crates
+anyhow = "1.0.98"                                              # Error handling
+serde = { version = "1.0.219", features = ["derive"] }         # Serialization/deserialization
+serde_json = "1.0.140"                                         # JSON handling
+```
+
+Note: The `workspace = true` syntax can be used if your project is part of a workspace that defines these versions centrally. Otherwise, use the explicit versions shown above.
+
+## Chain Configuration
+
+Chain configurations are defined in the root `wavs.toml` file. This allows components to access RPC endpoints and chain IDs without hardcoding them.
+
+```toml wavs.toml
+# Local / Testnet
+[default.chains.evm.local]
+chain_id = "31337"
+ws_endpoint = "ws://localhost:8545"
+http_endpoint = "http://localhost:8545"
+poll_interval_ms = 7000
+
+# Mainnet
+[default.chains.evm.evmereum]
+chain_id = "1"
+ws_endpoint = "wss://eth.drpc.org"
+http_endpoint = "https://eth.drpc.org"
+```
+
+## Accessing Configuration and Provider
+
+WAVS provides host bindings to get the chain config for a given chain name in the wavs.toml file. The `new_evm_provider` from [`wavs-wasi-utils`](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/evm/fn.new_evm_provider.html) can be used to create a provider for a given chain.
+
+```rust lib.rs
+use crate::bindings::host::get_evm_chain_config;
+use alloy_network::Ethereum;
+use alloy_provider::RootProvider;
+use wavs_wasi_utils::evm::new_evm_provider;
+
+// Get the chain config for a specific chain defined in wavs.toml
+let chain_config = get_evm_chain_config("local")?;
+
+// Create an Alloy provider instance using the HTTP endpoint
+let provider: RootProvider<Ethereum> = new_evm_provider::<Ethereum>(
+    chain_config.http_endpoint.unwrap()
+)?;
+```
+
+## Example: Querying NFT Balance
+
+Here's an example demonstrating how to query the balance of an ERC721 NFT contract for a given owner address:
+
+```rust lib.rs
+// Import required dependencies
+use crate::bindings::host::get_evm_chain_config;  // WAVS host binding to get chain configuration
+use alloy_network::Ethereum;                      // Ethereum network type
+use alloy_provider::RootProvider;                 // Provider for making RPC calls
+use alloy_sol_types::sol;                         // Macro for generating Solidity bindings
+use wavs_wasi_utils::evm::{                      // WAVS utilities for EVM interaction
+    alloy_primitives::{Address, U256},           // Ethereum primitive types
+    new_evm_provider,                            // Function to create EVM provider
+};
+use wstd::runtime::block_on;                      // Utility to run async code in sync context
+
+// Define the ERC721 interface using the sol! macro
+// This generates Rust types and functions for interacting with the contract
+sol! {
+    interface IERC721 {
+        // Define the balanceOf function that returns how many NFTs an address owns
+        function balanceOf(address owner) external view returns (uint256);
+    }
+}
+// Function to check if an address owns any NFTs from a specific contract
+pub fn query_nft_ownership(address: Address, nft_contract: Address) -> Result<bool, String> {
+    // block_on allows us to run async code in a synchronous function
+    block_on(async move {
+        // Get the chain configuration for the local network
+        let chain_config = get_evm_chain_config("local").unwrap();
+        
+        // Create a provider that will handle RPC communication
+        let provider: RootProvider<Ethereum> = new_evm_provider::<Ethereum>(
+            chain_config.http_endpoint.unwrap()
+        );
+
+        // Create a contract instance using the generated IERC721 interface
+        let contract = IERC721::new(nft_contract, &provider);
+        
+        // Call the balanceOf function on the contract
+        // .call() executes the function as a view call (no state changes)
+        // .await? handles the async operation and propagates any errors
+        let balance = contract.balanceOf(address).call().await?;
+        
+        // Return true if the address owns at least one NFT (balance > 0)
+        Ok(balance > U256::ZERO)
+    })
+}
+```
+
+For another approach using the `alloy-contract` crate, visit the example in the [Utilities and crates](./utilities#alloy-contract-crate) page.
+
+See the [wavs-wasi-utils documentation](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/) and the [Alloy documentation](https://docs.rs/alloy/latest/alloy/) for more detailed information.

@@ -1,5 +1,6 @@
 ---
 title: WAVS design considerations
+description: Best practices and design patterns for WAVS services
 ---
 <!--docsignore
 import { Callout } from 'fumadocs-ui/components/callout';
@@ -12,7 +13,7 @@ WAVS works best with the "serverless function" approach, wherein the priority of
 
 ## Aggregation and deterministic queries
 
-WAVS currently supports "exact match" [aggregation](./how-it-works#signing-and-aggregation), meaning that consensus is reached if 2/3 of submitted responses from operators are identical. This approach fits many common use cases, but it means that developers must build their components to receive and process data only from deterministic or immutable sources, such as:
+WAVS currently supports "exact match" [aggregation](./handbook/submission#aggregator), meaning that consensus is reached if a threshold amount of submitted responses from operators are identical. This approach fits many common use cases, but it means that developers must build their components to receive and process data only from deterministic or immutable sources, such as:
 
 - Data from the input event trigger
 - Ethereum queries at a given block height
