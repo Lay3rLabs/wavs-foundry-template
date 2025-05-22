@@ -349,7 +349,7 @@ OPERATOR_ADDRESS=`cast wallet address ${AVS_PRIVATE_KEY}`
 export WAVSServiceManagerAddress=`jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json`
 export StakeRegistryAddress=`jq -r .addresses.stakeRegistry .nodes/avs_deploy.json`
 
-DELEGATION=0.001ether AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make operator-register
+DELEGATION=0.001ether AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make V=1 operator-register
 
 # Verify registration
 make operator-list
