@@ -283,8 +283,8 @@ warg publish release --registry http://${REGISTRY} --name ${PKG_NAMESPACE}:${PKG
 export AGGREGATOR_URL=http://127.0.0.1:8001
 
 # Testnet: set values (default: local if not set)
-export TRIGGER_CHAIN=holesky
-export SUBMIT_CHAIN=holesky
+# export TRIGGER_CHAIN=holesky
+# export SUBMIT_CHAIN=holesky
 
 # Package not found with wa.dev? -- make sure it is public
 REGISTRY=${REGISTRY} sh ./script/build_service.sh
@@ -346,13 +346,13 @@ AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMO
 OPERATOR_ADDRESS=`cast wallet address ${AVS_PRIVATE_KEY}`
 
 # Register the operator with the WAVS service manager
-export WAVSServiceManagerAddress=`jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json`
-export StakeRegistryAddress=`jq -r .addresses.stakeRegistry .nodes/avs_deploy.json`
+export WAVS_SERVICE_MANAGER_ADDRESS=`jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json`
+export STAKE_REGISTRY_ADDRESS=`jq -r .addresses.stakeRegistry .nodes/avs_deploy.json`
 
 DELEGATION=0.001ether AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make V=1 operator-register
 
 # Verify registration
-make operator-list
+STAKE_REGISTRY_ADDRESS=${STAKE_REGISTRY_ADDRESS} make operator-list
 ```
 
 ## Trigger the Service
