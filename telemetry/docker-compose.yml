@@ -1,0 +1,27 @@
+
+services:
+  # Default all-memory Jaeger
+  jaeger:
+    image: jaegertracing/jaeger:2.5.0
+    container_name: wavs-jaeger
+    network_mode: "host"
+    stop_signal: SIGKILL
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "4317:4317" # OTLP gRPC
+      - "16686:16686" # Jaeger UI
+
+  # Prometheus is used to display metrics
+  prometheus:
+    image: prom/prometheus:v3.3.0
+    container_name: wavs-prometheus
+    network_mode: "host"
+    stop_signal: SIGKILL
+    ports:
+      - "9090:9090" # Prometheus UI and OTLP receiver
+    volumes:
+      - ./telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.enable-otlp-receiver"
