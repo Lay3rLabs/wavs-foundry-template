@@ -12,7 +12,6 @@ sh ./build_service.sh
 - FILE_LOCATION: The save location of the configuration file
 - TRIGGER_ADDRESS: The address to trigger the service
 - SUBMIT_ADDRESS: The address to submit the service
-- WASM_DIGEST: The digest of the component to use that is already in WAVS
 - TRIGGER_EVENT: The event to trigger the service (e.g. "NewTrigger(bytes)")
 - FUEL_LIMIT: The fuel limit (wasm compute metering) for the service
 - MAX_GAS: The maximum chain gas for the submission Tx
@@ -53,10 +52,6 @@ if [ -z "$SUBMIT_ADDRESS" ]; then
 fi
 if [ -z "$DEPLOY_ENV" ]; then
     DEPLOY_ENV=$(sh ./script/get-deploy-status.sh)
-fi
-
-if [[ "$WASM_DIGEST" == sha256:* ]]; then
-    export WASM_DIGEST=${WASM_DIGEST#sha256:}
 fi
 # === Core ===
 
