@@ -272,7 +272,7 @@ export PKG_VERSION="0.1.0"
 export PKG_NAME="evmrustoracle"
 export REGISTRY=`sh ./script/get-registry.sh`
 
-# Local: example | Testnet: your wa.dev namespace
+# Local: example | Testnet: your wa.dev namespace (update --registry to `https://`)
 export PKG_NAMESPACE=example
 
 # `failed to send request to registry server: error sending request for url`? - warg reset
@@ -347,12 +347,10 @@ OPERATOR_ADDRESS=`cast wallet address ${AVS_PRIVATE_KEY}`
 
 # Register the operator with the WAVS service manager
 export WAVS_SERVICE_MANAGER_ADDRESS=`jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json`
-export STAKE_REGISTRY_ADDRESS=`jq -r .addresses.stakeRegistry .nodes/avs_deploy.json`
-
 DELEGATION=0.001ether AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make V=1 operator-register
 
 # Verify registration
-STAKE_REGISTRY_ADDRESS=${STAKE_REGISTRY_ADDRESS} make operator-list
+WAVS_SERVICE_MANAGER_ADDRESS=${WAVS_SERVICE_MANAGER_ADDRESS} make operator-list
 ```
 
 ## Trigger the Service

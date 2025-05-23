@@ -128,11 +128,11 @@ upload-to-ipfs:
 
 ## operator-list: listing the AVS operators | ENV_FILE
 operator-list:
-	@if [ -z "${STAKE_REGISTRY_ADDRESS}" ]; then \
-		echo "Error: STAKE_REGISTRY_ADDRESS is not set. Please set it to the deployed WAVS stake registry." && exit 1; \
+	@if [ -z "${WAVS_SERVICE_MANAGER_ADDRESS}" ]; then \
+		echo "Error: WAVS_SERVICE_MANAGER_ADDRESS is not set. Please set it to the deployed WAVS stake registry." && exit 1; \
 	fi
 	@docker run --rm --network host --env-file ${ENV_FILE} \
-		-e STAKE_REGISTRY_ADDRESS=${STAKE_REGISTRY_ADDRESS} \
+		-e WAVS_SERVICE_MANAGER_ADDRESS=${WAVS_SERVICE_MANAGER_ADDRESS} \
 		-v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ${MIDDLEWARE_DOCKER_IMAGE}
 
 AVS_PRIVATE_KEY?=""
@@ -145,12 +145,8 @@ operator-register:
 	@if [ -z "${WAVS_SERVICE_MANAGER_ADDRESS}" ]; then \
 		echo "Error: WAVS_SERVICE_MANAGER_ADDRESS is not set. Please set it to the deployed WAVS service manager." && exit 1; \
 	fi
-	@if [ -z "${STAKE_REGISTRY_ADDRESS}" ]; then \
-		echo "Error: STAKE_REGISTRY_ADDRESS is not set. Please set it to the deployed WAVS stake registry." && exit 1; \
-	fi
 	@docker run --rm --network host \
 		-e WAVS_SERVICE_MANAGER_ADDRESS=${WAVS_SERVICE_MANAGER_ADDRESS} \
-		-e STAKE_REGISTRY_ADDRESS=${STAKE_REGISTRY_ADDRESS} \
 		--env-file ${ENV_FILE} \
 		-v ./.nodes:/root/.nodes \
 		--entrypoint /wavs/register.sh ${MIDDLEWARE_DOCKER_IMAGE} "${AVS_PRIVATE_KEY}" "${DELEGATION}"
