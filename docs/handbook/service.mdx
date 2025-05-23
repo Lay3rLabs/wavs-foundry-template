@@ -1,0 +1,124 @@
+---
+title: Service manifest and manager
+description: Overview of the service.json manifest file and service manager contract
+---
+<!--docsignore
+import { Callout } from 'fumadocs-ui/components/callout';
+import { DocsPage } from 'fumadocs-ui/page';
+docsignore-->
+
+
+A service is a collection of smart contracts, operators, and offchain components that make up a WAVS AVS. The different parts of a service are defined in a service manifest or `service.json` file. This file can be stored on IPFS or an HTTP/HTTPS server, and its URL is set on the service manager contract during deployment, allowing the system to fetch the service definition when needed.
+
+The service manifest defines the configuration and different parts of a WAVS service, including information about the service, workflows, components, submission, service manager contract, and more.
+
+Below is an example of a service manifest:
+
+{/* todo: verify this example is correct. add info on how this is uploaded to ipfs? Add/link to info on how it is created in the template. */}
+
+```json service.json
+{
+    // Basic service information
+    "id": "example-service-123",
+    "name": "Example WAVS Service",
+    
+    // Workflows define the different execution paths in your service
+    "workflows": {
+        // Each workflow has a unique ID
+        "default": {
+            // Trigger defines what initiates the workflow
+            "trigger": {
+                // This example uses an EVM contract event trigger
+                "evm_contract_event": {
+                    "chain_name": "ethereum",
+                    "address": "0x1234567890123456789012345678901234567890",
+                    "event_hash": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+                }
+            },
+
+            // Component defines the WASI component to execute
+            "component": {
+                "source": {
+                    //  (SHA-256) hash that identifies a specific version of a WASI component's code in WAVS
+                    "digest": "sha256:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+                },
+                
+                // Permissions define what the component can access
+                "permissions": {
+                    // HTTP host permissions
+                    "allowed_http_hosts": "all"  // Options: "all", ["host1", "host2"], or "none"
+                    // File system permissions
+                    "file_system": true
+                },
+
+                // Resource limits
+                "fuel_limit": 1000000,           // Optional: Maximum compute units
+                "time_limit_seconds": 30,        // Optional: Maximum execution time
+
+                // Component-specific configuration
+                "config": {
+                    "api_key": "your-api-key",
+                    "endpoint": "https://api.example.com",
+                    "timeout": "30s"
+                },
+
+                // Environment variables to be passed to the component
+                "env_keys": [
+                    "WAVS_ENV_API_KEY",
+                    "WAVS_ENV_SECRET"
+                ]
+            },
+
+            // Submit defines where the results are sent
+            "submit": {
+                // The aggregator configuration
+                "aggregator": {
+                    "url": "http://127.0.0.1:8001"
+                }
+            },
+
+            "aggregators": [
+                {
+                    "evm": {
+                        // The identifier for the chain the submission contract (set in wavs.toml)
+                        "chain_name": "ethereum",
+                        // The address of the submission contract with the service handler interface
+                        "address": "0xfedcba9876543210fedcba9876543210fedcba98",
+                        // The maximum amount of gas for submission
+                        "max_gas": 1000000  // Optional
+                    }
+                }
+            ]
+        } //other workflows can be added here
+    },
+
+    // Service status
+    "status": "active",  // Options: "active" or "inactive"
+
+    // Service manager configuration
+    "manager": {
+        "evm": {
+            "chain_name": "ethereum",
+            // The address of the service manager contract
+            "address": "0xabcdef1234567890abcdef1234567890abcdef12"
+        }
+    }
+}
+```
+
+For more information on the different parts of a service manifest, see the following sections:
+
+- [Workflows](./workflows)
+- [Triggers](./triggers)
+- [Components](./components/component)
+- [Submission and aggregator](./submission)
+
+## Service manager
+
+{/* todo: verify this information is correct */}
+
+The service manager contract defines the set of registered operators for a service. Only operators registered in this contract are considered valid signers for result submissions in a service. Each registered operator is assigned a weight. These weights count toward a threshold or quorum, which is the minimum weight required for result submissions to be valid.
+
+The service manager also maintains a service URI that points to the service manifest, connecting the operators to the service.
+
+Signatures are created by operators using their private keys to sign an envelope containing the data, and these signatures are collected by the aggregator which then sends them to the service manager contract for validation. The service manager contract validates that the signatures are from registered operators, checks that their total weight meets the threshold, and ensures the operators are properly sorted before allowing the data to be processed by the service handler contract.
