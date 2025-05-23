@@ -8,7 +8,7 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 docsignore-->
 
 {/* todo: update once the template is updated */}
-## Start Anvil, WAVS, and Deploy Eigenlayer
+## Start Anvil, WAVS, and deploy Eigenlayer
 
 1. Create a `.env` file for your project by copying over the example with the following command:
 
@@ -33,7 +33,7 @@ You can stop the services with `ctrl+c`. Some MacOS terminals require pressing t
 
 With the chain and WAVS running, you can deploy and run your service.
 
-## Local Testnet Values
+## Local testnet values
 
 ```bash docci-delay-after=2
 export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
@@ -81,7 +81,7 @@ SERVICE_URL=http://127.0.0.1:9999/service.json make deploy-service
 </Callout>
 
 
-## Trigger the Service
+## Trigger the service
 
 Next, use your deployed trigger contract to trigger the oracle to be run. In the following command, you'll specify the `COIN_MARKET_CAP_ID` as `1`, which corresponds to the ID of Bitcoin.
 

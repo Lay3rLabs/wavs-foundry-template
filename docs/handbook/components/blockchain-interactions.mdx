@@ -38,7 +38,7 @@ serde_json = "1.0.140"                                         # JSON handling
 
 Note: The `workspace = true` syntax can be used if your project is part of a workspace that defines these versions centrally. Otherwise, use the explicit versions shown above.
 
-## Chain Configuration
+## Chain configuration
 
 Chain configurations are defined in the root `wavs.toml` file. This allows components to access RPC endpoints and chain IDs without hardcoding them.
 
@@ -57,7 +57,7 @@ ws_endpoint = "wss://eth.drpc.org"
 http_endpoint = "https://eth.drpc.org"
 ```
 
-## Accessing Configuration and Provider
+## Accessing configuration and provider
 
 WAVS provides host bindings to get the chain config for a given chain name in the wavs.toml file. The `new_evm_provider` from [`wavs-wasi-utils`](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/evm/fn.new_evm_provider.html) can be used to create a provider for a given chain.
 
@@ -76,7 +76,7 @@ let provider: RootProvider<Ethereum> = new_evm_provider::<Ethereum>(
 )?;
 ```
 
-## Example: Querying NFT Balance
+## Example: Querying NFT balance
 
 Here's an example demonstrating how to query the balance of an ERC721 NFT contract for a given owner address:
 

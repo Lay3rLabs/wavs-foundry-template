@@ -26,7 +26,7 @@ serde_json = "1.0.140"             # JSON handling
 
 Since WASI components run in a synchronous environment but network requests are asynchronous, you can use `block_on` from the `wstd` crate to bridge this gap. The `block_on` function allows you to run async code within a synchronous context, which is essential for making HTTP requests in WAVS components.
 
-### Making HTTP Requests
+### Making HTTP requests
 
 The `wavs-wasi-utils` crate provides several functions for making HTTP requests. See the [HTTP module documentation](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/http/index.html) for more details.
 
@@ -42,7 +42,7 @@ fetch_string(request)  // Fetches response as string
 fetch_bytes(request)   // Fetches raw response bytes
 ```
 
-### Example: GET Request with Headers
+### Example: GET request with headers
 
 Here's an example showing how to make a GET request with custom headers:
 
@@ -92,7 +92,7 @@ fn process_data() -> Result<ApiResponse, String> {
 }
 ```
 
-### Example: POST Request with JSON Data
+### Example: POST request with JSON data
 
 For making POST requests with JSON data, you can use the `http_request_post_json` helper function:
 

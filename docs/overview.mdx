@@ -67,7 +67,7 @@ To learn more about service components, visit the [How it works](/how-it-works#s
 Along with your component, you'll also need to define how the results of your service are submitted on-chain. With WAVS, you can use an [aggregator and submission contracts](/how-it-works#submission) to define this logic.
 
 
-### Run your Service
+### Run your service
 
 AVS builders define their service in a [service manifest or service.json file](./handbook/service) with a workflow that includes a trigger, service component, and submission logic. Registered operators will then listen for the triggers specified by your service. Once triggered, operators will run your service off-chain, where data from a trigger is passed to a service component and run in a sandboxed WASI environment. Operators sign the result of the service computation and the verified result can be returned as an on-chain response.
 
@@ -87,7 +87,7 @@ WAVS is composable by nature, allowing an AVS to dynamically run and manage mult
 
 The WAVS platform is secured via Ethereum restaking on EigenLayer, which provides a base security layer for AVSs built using WAVS. Restaking refers to the utilization of staked Ethereum to secure AVSs by imposing additional slashing terms on the staked Ethereum for operator misbehavior. In this way, the cryptoeconomic security of Ethereum is extended to WAVS AVSs.
 
-## Full-Stack Decentralization
+## Full-stack decentralization
 
 WAVS enables full-stack decentralization by unifying off-chain computation with on-chain verifiability. The chain layer connects to Ethereum and other chains, while the security layer extends cryptoeconomic security via EigenLayer restaking. At the AVS layer, lightweight WAVS powers WASM-based services to process off-chain computations triggered by on-chain events. Operators validate, sign, and commit the results back on-chain, ensuring verifiability and trust-minimized execution. This architecture makes WAVS a scalable, decentralized framework for full-stack applications.
 
