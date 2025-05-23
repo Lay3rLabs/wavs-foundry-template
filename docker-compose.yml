@@ -6,45 +6,38 @@
 #
 ###################################
 
-services:
-  wavs:
-    image: "ghcr.io/lay3rlabs/wavs:0.4.0-beta.5"
-    container_name: "wavs"
-    stop_signal: SIGKILL
-    network_mode: "host"
-    env_file: "./.env"
-    ports:
-      - "8000:8000"
-    environment:
-      WAVS_HOME: "/wavs/packages/wavs"
-      WAVS_CLI_HOME: "/wavs/packages/cli"
-      WAVS_AGGREGATOR_HOME: "/wavs/packages/aggregator"
-    command: ["wavs"]
-    volumes:
-      - "./:/wavs"
-      - "./.docker:/root/wavs/cli/"
+# docker volume rm $(docker volume ls -q -f "dangling=true")
 
-  aggregator:
-    image: "ghcr.io/lay3rlabs/wavs:0.4.0-beta.5"
-    depends_on: ["wavs"]
-    container_name: "wavs-aggregator"
-    stop_signal: SIGKILL
-    env_file: "./.env"
-    ports:
-      - "8001:8001"
-    command: ["wavs-aggregator"]
+
+services:
+  warg-server:
+    image: "ghcr.io/reecepbcups/warg-registry:v0.9.3"
+    container_name: "warg-server"
+    environment:
+      WARG_OPERATOR_KEY: ecdsa-p256:I+UlDo0HxyBBFeelhPPWmD+LnklOpqZDkrFP5VduASk=
+      WARG_NAMESPACE: example
+      WKG_REGISTRY: http://localhost:5000
+      WARG_CONTENT_BASE_URL: http://localhost:8090
+      WARG_LISTEN: 0.0.0.0:8090
+      WARG_VERBOSE: 1
     volumes:
-      - ".:/wavs"
-    network_mode: "host"
+      - warg-data:/var/lib/warg-server/data
+    ports:
+      - 8090:8090
+    command: ["--rm"]
 
   ipfs:
-    image: "ipfs/kubo:v0.34.1"
-    container_name: "ipfs"
-    stop_signal: SIGKILL
-    network_mode: "host"
+    image: ipfs/kubo:v0.34.1
+    container_name: ipfs
+    network_mode: host
     ports:
       - "4001:4001"
       - "4001:4001/udp"
       - "8080:8080"
       - "5001:5001"
-    command: ["daemon", "--offline"]
+    stop_signal: SIGKILL
+    command: daemon
+    restart: unless-stopped
+
+volumes:
+  warg-data:
