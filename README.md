@@ -272,12 +272,7 @@ export PKG_VERSION="0.1.0"
 export PKG_NAME="evmrustoracle"
 export REGISTRY=`sh ./script/get-registry.sh`
 
-# Local: example | Testnet: your wa.dev namespace (update --registry to `https://`)
-export PKG_NAMESPACE=example
-
-# `failed to send request to registry server: error sending request for url`? - warg reset
-# TODO: root inclusion issue does not matter for localhost, why is it happening though?
-warg publish release --registry http://${REGISTRY} --name ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
+sh script/upload-to-wasi-registry.sh
 
 # Build your service JSON
 export AGGREGATOR_URL=http://127.0.0.1:8001
