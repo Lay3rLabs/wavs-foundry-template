@@ -90,7 +90,8 @@ upload-component:
 
 ## deploy-service: deploying the WAVS component service json | SERVICE_URL, CREDENTIAL, WAVS_ENDPOINT
 deploy-service:
-	@sleep 1
+# this wait is required to ensure the WAVS service has time to service check
+	@sleep 2
 	@if [ -z "${SERVICE_URL}" ]; then \
 		echo "Error: SERVICE_URL is not set. Set SERVICE_URL to a link / ipfs url."; \
 		exit 1; \

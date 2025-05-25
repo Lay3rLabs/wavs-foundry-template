@@ -268,11 +268,13 @@ Deploy the compiled component with the contract information from the previous st
 # warg reset --registry http://127.0.0.1:8090
 
 export COMPONENT_FILENAME=evm_price_oracle.wasm
-export PKG_VERSION="0.1.0"
-export PKG_NAME="evmrustoracle"
 export REGISTRY=`sh ./script/get-registry.sh`
+export PKG_NAME="evmrustoracle"
+export PKG_VERSION="0.1.0"
 export PKG_NAMESPACE=`sh ./script/get-wasi-namespace.sh`
 
+# Upload the component to the registry
+# local or wa.dev depending on DEPLOY_ENV in .env
 sh script/upload-to-wasi-registry.sh
 
 # Build your service JSON

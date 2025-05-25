@@ -25,6 +25,7 @@ DEPLOY_ENV=$(sh ./script/get-deploy-status.sh)
 
 # If local, we wkg upload TO local
 if [ "$DEPLOY_ENV" = "LOCAL" ]; then
+    echo "Publishing to local registry (http://${REGISTRY})..."
     output=$(warg publish release --registry http://${REGISTRY} --name ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} 2>&1)
     exit_code=$?
 
@@ -44,5 +45,6 @@ if [ "$DEPLOY_ENV" = "LOCAL" ]; then
 
     exit 0
 else
+    echo "Publishing to remote registry (https://${REGISTRY})..."
     warg publish release --registry https://${REGISTRY} --name ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
 fi
