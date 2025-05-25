@@ -2,16 +2,6 @@
 
 cd `git rev-parse --show-toplevel` || exit
 
-if [ ! -f .env ]; then
-    echo ".env file not found, attempting to copy create"
-    cp .env.example .env
-
-    if [ $? -ne 0 ]; then
-        echo "Failed to copy .env.example to .env"
-        exit 1
-    fi
-fi
-
 DEPLOY_ENV=$(sh ./script/get-deploy-status.sh)
 
 if [ "$DEPLOY_ENV" = "LOCAL" ]; then

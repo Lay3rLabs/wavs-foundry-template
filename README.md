@@ -246,15 +246,15 @@ docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/
 
 ```bash docci-delay-per-cmd=2
 export RPC_URL=`sh ./script/get-rpc.sh`
-
 export DEPLOYER_PK=$(cat .nodes/deployer)
-export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
+
+export SERVICE_MANAGER_ADDRESS=$(jq -r '.addresses.WavsServiceManager' .nodes/avs_deploy.json)
 
 forge create SimpleSubmit --json --broadcast -r ${RPC_URL} --private-key "${DEPLOYER_PK}" --constructor-args "${SERVICE_MANAGER_ADDRESS}" > .docker/submit.json
-export SERVICE_SUBMISSION_ADDR=`jq -r .deployedTo .docker/submit.json`
+export SERVICE_SUBMISSION_ADDR=`jq -r '.deployedTo' .docker/submit.json`
 
 forge create SimpleTrigger --json --broadcast -r ${RPC_URL} --private-key "${DEPLOYER_PK}" > .docker/trigger.json
-export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
+export SERVICE_TRIGGER_ADDR=`jq -r '.deployedTo' .docker/trigger.json`
 ```
 
 ## Deploy Service
@@ -268,16 +268,14 @@ Deploy the compiled component with the contract information from the previous st
 # warg reset --registry http://127.0.0.1:8090
 
 export COMPONENT_FILENAME=evm_price_oracle.wasm
-export PKG_VERSION="0.1.0"
-export PKG_NAME="evmrustoracle"
 export REGISTRY=`sh ./script/get-registry.sh`
+export PKG_NAME="evmrustoracle"
+export PKG_VERSION="0.1.0"
+export PKG_NAMESPACE=`sh ./script/get-wasi-namespace.sh`
 
-# Local: example | Testnet: your wa.dev namespace (update --registry to `https://`)
-export PKG_NAMESPACE=example
-
-# `failed to send request to registry server: error sending request for url`? - warg reset
-# TODO: root inclusion issue does not matter for localhost, why is it happening though?
-warg publish release --registry http://${REGISTRY} --name ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
+# Upload the component to the registry
+# local or wa.dev depending on DEPLOY_ENV in .env
+sh script/upload-to-wasi-registry.sh
 
 # Build your service JSON
 export AGGREGATOR_URL=http://127.0.0.1:8001
@@ -288,9 +286,12 @@ export AGGREGATOR_URL=http://127.0.0.1:8001
 
 # Package not found with wa.dev? -- make sure it is public
 REGISTRY=${REGISTRY} sh ./script/build_service.sh
+```
 
+## Upload to IPFS
+
+```bash
 # Upload service.json to IPFS
-# TODO: add support for pinata here natively too
 export SERVICE_FILE=.docker/service.json
 
 # local: 127.0.0.1:5001
@@ -338,7 +339,7 @@ WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${SERVICE_URI} make deploy-servi
 Each service gets their own key path (hd_path). The first service starts at 1 and increments from there. Get the service ID
 
 ```bash
-export SERVICE_ID=`curl -s http://localhost:8000/app | jq -r .services[0].id`
+export SERVICE_ID=`curl -s http://localhost:8000/app | jq -r '.services[0].id'`
 export HD_INDEX=`curl -s http://localhost:8000/service-key/${SERVICE_ID} | jq -rc .secp256k1.hd_index | tr -d '[]'`
 
 source infra/wavs-1/.env
@@ -346,7 +347,7 @@ AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMO
 OPERATOR_ADDRESS=`cast wallet address ${AVS_PRIVATE_KEY}`
 
 # Register the operator with the WAVS service manager
-export WAVS_SERVICE_MANAGER_ADDRESS=`jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json`
+export WAVS_SERVICE_MANAGER_ADDRESS=`jq -r '.addresses.WavsServiceManager' .nodes/avs_deploy.json`
 DELEGATION=0.001ether AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make V=1 operator-register
 
 # Verify registration
@@ -384,9 +385,9 @@ TRIGGER_ID=1 RPC_URL=${RPC_URL} make show-result
 ## Update Threshold
 
 ```bash docci-ignore
-export ECDSA_CONTRACT=`cat .nodes/avs_deploy.json | jq -r .addresses.stakeRegistry`
+export ECDSA_CONTRACT=`cat .nodes/avs_deploy.json | jq -r '.addresses.stakeRegistry'`
 
-TOTAL_WEIGHT=`cast call ${ECDSA_CONTRACT} "getLastCheckpointTotalWeight()(uint256)" --rpc-url ${RPC_URL} --json | jq -r .[0]`
+TOTAL_WEIGHT=`cast call ${ECDSA_CONTRACT} "getLastCheckpointTotalWeight()(uint256)" --rpc-url ${RPC_URL} --json | jq -r '.[0]'`
 TWO_THIRDS=`echo $((TOTAL_WEIGHT * 2 / 3))`
 
 cast send ${ECDSA_CONTRACT} "updateStakeThreshold(uint256)" ${TWO_THIRDS} --rpc-url ${RPC_URL} --private-key ${FUNDED_KEY}
