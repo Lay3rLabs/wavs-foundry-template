@@ -246,8 +246,8 @@ docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/
 
 ```bash docci-delay-per-cmd=2
 export RPC_URL=`sh ./script/get-rpc.sh`
-
 export DEPLOYER_PK=$(cat .nodes/deployer)
+
 export SERVICE_MANAGER_ADDRESS=$(jq -r '.addresses.WavsServiceManager' .nodes/avs_deploy.json)
 
 forge create SimpleSubmit --json --broadcast -r ${RPC_URL} --private-key "${DEPLOYER_PK}" --constructor-args "${SERVICE_MANAGER_ADDRESS}" > .docker/submit.json
@@ -271,6 +271,7 @@ export COMPONENT_FILENAME=evm_price_oracle.wasm
 export PKG_VERSION="0.1.0"
 export PKG_NAME="evmrustoracle"
 export REGISTRY=`sh ./script/get-registry.sh`
+export PKG_NAMESPACE=`sh ./script/get-wasi-namespace.sh`
 
 sh script/upload-to-wasi-registry.sh
 
@@ -283,9 +284,12 @@ export AGGREGATOR_URL=http://127.0.0.1:8001
 
 # Package not found with wa.dev? -- make sure it is public
 REGISTRY=${REGISTRY} sh ./script/build_service.sh
+```
 
+## Upload to IPFS
+
+```bash
 # Upload service.json to IPFS
-# TODO: add support for pinata here natively too
 export SERVICE_FILE=.docker/service.json
 
 # local: 127.0.0.1:5001
