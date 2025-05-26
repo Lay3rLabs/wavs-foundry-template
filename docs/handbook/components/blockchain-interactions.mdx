@@ -9,8 +9,6 @@ docsignore-->
 
 Components can interact with blockchains and smart contracts by using crates like [`wavs-wasi-utils`](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/). This page provides an overview of the dependencies and configuration needed to interact with Ethereum and other EVM-compatible chains. For more information on other helpful crates, see the [Utilities and crates](./utilities) page.
 
-{/* todo: Verify all code on this page. */}
-
 ## Dependencies
 
 The following dependencies are commonly required in your component's `Cargo.toml` for Ethereum interactions:
@@ -51,7 +49,7 @@ http_endpoint = "http://localhost:8545"
 poll_interval_ms = 7000
 
 # Mainnet
-[default.chains.evm.evmereum]
+[default.chains.evm.ethereum]
 chain_id = "1"
 ws_endpoint = "wss://eth.drpc.org"
 http_endpoint = "https://eth.drpc.org"
@@ -68,17 +66,17 @@ use alloy_provider::RootProvider;
 use wavs_wasi_utils::evm::new_evm_provider;
 
 // Get the chain config for a specific chain defined in wavs.toml
-let chain_config = get_evm_chain_config("local")?;
+let chain_config = get_evm_chain_config("local").unwrap();
 
 // Create an Alloy provider instance using the HTTP endpoint
 let provider: RootProvider<Ethereum> = new_evm_provider::<Ethereum>(
-    chain_config.http_endpoint.unwrap()
-)?;
+    chain_config.http_endpoint.unwrap(),
+);
 ```
 
 ## Example: Querying NFT balance
 
-Here's an example demonstrating how to query the balance of an ERC721 NFT contract for a given owner address:
+Here's an [example](https://github.com/Lay3rLabs/wavs-art/blob/main/components/autonomous-artist/src/evm.rs) demonstrating how to query the balance of an ERC721 NFT contract for a given owner address:
 
 ```rust lib.rs
 // Import required dependencies
@@ -90,6 +88,7 @@ use wavs_wasi_utils::evm::{                      // WAVS utilities for EVM inter
     alloy_primitives::{Address, U256},           // Ethereum primitive types
     new_evm_provider,                            // Function to create EVM provider
 };
+use alloy_rpc_types::TransactionInput;
 use wstd::runtime::block_on;                      // Utility to run async code in sync context
 
 // Define the ERC721 interface using the sol! macro
@@ -100,27 +99,34 @@ sol! {
         function balanceOf(address owner) external view returns (uint256);
     }
 }
+
 // Function to check if an address owns any NFTs from a specific contract
 pub fn query_nft_ownership(address: Address, nft_contract: Address) -> Result<bool, String> {
     // block_on allows us to run async code in a synchronous function
     block_on(async move {
         // Get the chain configuration for the local network
         let chain_config = get_evm_chain_config("local").unwrap();
-        
+
         // Create a provider that will handle RPC communication
         let provider: RootProvider<Ethereum> = new_evm_provider::<Ethereum>(
             chain_config.http_endpoint.unwrap()
         );
 
         // Create a contract instance using the generated IERC721 interface
-        let contract = IERC721::new(nft_contract, &provider);
-        
+        let balance_call = IERC721::balanceOf { owner: address };
+
+        let tx = alloy_rpc_types::eth::TransactionRequest {
+            to: Some(TxKind::Call(nft_contract)),
+            input: TransactionInput { input: Some(balance_call.abi_encode().into()), data: None },
+            ..Default::default()
+        };
+
         // Call the balanceOf function on the contract
         // .call() executes the function as a view call (no state changes)
-        // .await? handles the async operation and propagates any errors
-        let balance = contract.balanceOf(address).call().await?;
-        
+        let result = provider.call(tx).await.map_err(|e| e.to_string())?;
+
         // Return true if the address owns at least one NFT (balance > 0)
+        let balance: U256 = U256::from_be_slice(&result);
         Ok(balance > U256::ZERO)
     })
 }
