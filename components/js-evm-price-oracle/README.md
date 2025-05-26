@@ -30,6 +30,7 @@ Build all wasi components from the root of the repo. You can also run this comma
 
 ```bash docci-output-contains="Successfully written"
 # Builds only this component, not all.
+warg reset
 WASI_BUILD_DIR=js-evm-price-oracle make wasi-build
 ```
 
