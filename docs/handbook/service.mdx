@@ -14,14 +14,14 @@ The service manifest defines the configuration and different parts of a WAVS ser
 
 Below is an example of a service manifest:
 
-{/* todo: verify this example is correct. add info on how this is uploaded to ipfs? Add/link to info on how it is created in the template. */}
+{/* todo: add info on how this is uploaded to ipfs? Add/link to info on how it is created in the template. */}
 
 ```json service.json
 {
     // Basic service information
     "id": "example-service-123",
     "name": "Example WAVS Service",
-    
+
     // Workflows define the different execution paths in your service
     "workflows": {
         // Each workflow has a unique ID
@@ -39,10 +39,20 @@ Below is an example of a service manifest:
             // Component defines the WASI component to execute
             "component": {
                 "source": {
-                    //  (SHA-256) hash that identifies a specific version of a WASI component's code in WAVS
-                    "digest": "sha256:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+                    "Registry": {
+                        "registry": {
+                        //  (SHA-256) hash that identifies a specific version of a WASI component's code in WAVS
+                        "digest": "882b992af8f78e0aaceaf9609c7ba2ce80a22c521789c94ae1960c43a98295f5",
+                        // The domain the warg WASI component is hosted on
+                        "domain": "localhost:8090",
+                        // The version of this component
+                        "version": "0.1.0",
+                        // The package name of the component on the domain registry
+                        "package": "example:evmrustoracle"
+                        }
+                    }
                 },
-                
+
                 // Permissions define what the component can access
                 "permissions": {
                     // HTTP host permissions
@@ -57,7 +67,6 @@ Below is an example of a service manifest:
 
                 // Component-specific configuration
                 "config": {
-                    "api_key": "your-api-key",
                     "endpoint": "https://api.example.com",
                     "timeout": "30s"
                 },
@@ -106,6 +115,22 @@ Below is an example of a service manifest:
 }
 ```
 
+## Upload
+
+This file should be uploaded to IPFS, or some other hosted service that all operators can access. The template launches a local IPFS for testing. Use a service like [Pinata](https://app.pinata.cloud/developers/api-keys) for production services.
+
+```bash
+# Upload to local or remote IPFS (smart routes based on .env deploy configuration)
+SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs
+
+# smart grabs the IPFS gateway and fetches the content that was uploaded
+export IPFS_GATEWAY=$(sh script/get-ipfs-gateway.sh)
+curl "${IPFS_GATEWAY}/ipfs/${ipfs_cid}"
+
+# Then the admin of the contracts can set it
+cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${SERVICE_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
+```
+
 For more information on the different parts of a service manifest, see the following sections:
 
 - [Workflows](./workflows)
@@ -115,10 +140,8 @@ For more information on the different parts of a service manifest, see the follo
 
 ## Service manager
 
-{/* todo: verify this information is correct */}
-
-The service manager contract defines the set of registered operators for a service. Only operators registered in this contract are considered valid signers for result submissions in a service. Each registered operator is assigned a weight. These weights count toward a threshold or quorum, which is the minimum weight required for result submissions to be valid.
+The service manager contract defines the set of registered operators for a service. Only operators registered in this contract are considered valid signers for result submissions in a service. Each registered operator is assigned a weight. These weights count toward a threshold for their submission power.
 
 The service manager also maintains a service URI that points to the service manifest, connecting the operators to the service.
 
-Signatures are created by operators using their private keys to sign an envelope containing the data, and these signatures are collected by the aggregator which then sends them to the service manager contract for validation. The service manager contract validates that the signatures are from registered operators, checks that their total weight meets the threshold, and ensures the operators are properly sorted before allowing the data to be processed by the service handler contract.
+Signatures are created by operators using their private keys to sign an envelope containing the data, and these signatures are collected by the aggregator which then submits them to the service manager contract for validation. The service manager contract validates that the signatures are from registered operators, checks that their total weight meets the threshold, and ensures the operators are properly sorted before allowing the data to be processed by the service handler contract.

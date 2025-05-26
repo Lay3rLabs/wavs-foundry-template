@@ -38,17 +38,17 @@ Basic Pattern:
 ```rust
 mod solidity {
     use alloy_sol_macro::sol;
-    
+
     // Generate types from Solidity file
     sol!("../../src/interfaces/ITypes.sol");
-    
+
     // Or define types inline
     sol! {
         struct TriggerInfo {
             uint64 triggerId;
             bytes data;
         }
-        
+
         event NewTrigger(TriggerInfo _triggerInfo);
     }
 }

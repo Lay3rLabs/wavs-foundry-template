@@ -7,18 +7,16 @@ import { Callout } from 'fumadocs-ui/components/callout';
 import { DocsPage } from 'fumadocs-ui/page';
 docsignore-->
 
-{/* todo: verify code examples on this page */}
 Service components contain the main business logic of a WAVS service.
 
 ## Component languages
 
-WAVS enables developers to write components in different programming languages. These languages are compiled to WebAssembly (WASM) bytecode where they can be executed offchain in the WAVS runtime.
+WAVS enables developers to write components in different programming languages. These languages are compiled to WebAssembly (WASM) bytecode where they can be executed off-chain in the WAVS runtime.
 
 The examples in this documentation are mainly written in Rust, but there are also examples of components written in the following languages:
 
-{/* todo: link to examples */}
--  [Go example](link)
--  [JavaScript example](link)
+-  [Go example](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/components/golang-evm-price-oracle)
+-  [Typescript / JS example](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/components/js-evm-price-oracle)
 
 ## Component structure
 
@@ -87,7 +85,7 @@ impl Guest for Component {
     fn run(action: TriggerAction) -> Result<Option<WasmResponse>, String> {
         // 1. Decode the trigger data using the decode_trigger_event function from trigger.rs
         let (trigger_id, req, dest) = decode_trigger_event(action.data)?;
-        
+
         // 2. Process the data (your business logic)
         let res = block_on(async move {
             let resp_data = get_price_feed(id).await?;
@@ -99,9 +97,9 @@ impl Guest for Component {
             // For on-chain submissions, the output is abi encoded using the encode_trigger_output function from trigger.rs
             Destination::Ethereum => Some(encode_trigger_output(trigger_id, &res)),
             // For local testing via wasi-exec, the output is returned as raw bytes
-            Destination::CliOutput => Some(WasmResponse { 
-                payload: res.into(), 
-                ordering: None 
+            Destination::CliOutput => Some(WasmResponse {
+                payload: res.into(),
+                ordering: None
             }),
         };
         Ok(output)
@@ -128,6 +126,8 @@ println!("Debug message: {:?}", data);
 For production, you can use a `host::log()` function which takes a `LogLevel` and writes its output via the tracing mechanism. Along with the string that the developer provides, it attaches additional context such as the `ServiceID`, `WorkflowID`, and component `Digest`.
 
 ```rust lib.rs
+use bindings::host::{self, LogLevel};
+
 host::log(LogLevel::Info, "Production logging message");
 ```
 
@@ -161,8 +161,15 @@ A component is defined in the [workflow](../workflows) object of the [service.js
 //   "workflow-example": {
 //    "trigger": { ... }, the trigger for the workflow
         "component": { // the WASI component containing the business logic of the workflow
-            "source": {  // Where the component code comes from
-            "Digest": "65747b4b1a7fa98cab6abd9a81a6102068de77b1040b94de904112272b226f51"  // SHA-256 hash of the component's bytecode
+            "source": { // Where the component code comes from
+            "Registry": {
+                "registry": {
+                "digest": "882b992af8f78e0aaceaf9609c7ba2ce80a22c521789c94ae1960c43a98295f5", // SHA-256 hash of the component's bytecode
+                "domain": "localhost:8090",
+                "version": "0.1.0",
+                "package": "example:evmrustoracle"
+                }
+            }
         },
         "permissions": {  // What the component can access
             "allowed_http_hosts": "all",  // Can make HTTP requests to any host
@@ -171,7 +178,7 @@ A component is defined in the [workflow](../workflows) object of the [service.js
         "fuel_limit": null,  // Computational limits for the component
         "time_limit_seconds": 1800,  // Can run for up to 30 minutes
         "config": {  // Configuration variables passed to the component
-            "Variable_1": "0xb5d4D4a87Cb07f33b5FAd6736D8F1EE7D255d9E9",  // NFT contract address
+            "variable_1": "0xb5d4D4a87Cb07f33b5FAd6736D8F1EE7D255d9E9",  // NFT contract address
             "variable_2": "0x34045B4b0cdfADf87B840bCF544161168c8ab85A"  // Reward token address
         },
         "env_keys": [  // Secret environment variables the component can access from .env

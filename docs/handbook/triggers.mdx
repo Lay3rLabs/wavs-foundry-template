@@ -203,13 +203,3 @@ Executes your component at regular block intervals on a specified EVM or Cosmos 
   }
 }
 ```
-
-{/* todo: update this info when https://github.com/Lay3rLabs/WAVS/issues/612 is resolved */}
-
-The `chain-name` in your block trigger configuration is set in `wavs.toml` under the `[default.chains.evm.<chain_name>]` or `[default.chains.cosmos.<chain_name>]` section. It also needs to be added to the `active_trigger_chains` list in `wavs.toml`.
-
-```toml
-[wavs]
-active_trigger_chains = ["<chain_name>"]
-```
-

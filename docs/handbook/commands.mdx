@@ -7,11 +7,32 @@ import { Callout } from 'fumadocs-ui/components/callout';
 import { DocsPage } from 'fumadocs-ui/page';
 docsignore-->
 
-{/* todo: generate this page from make help. */}
 ## Commands
 
 ```bash
 make help
 ```
 
-{/* todo: generate this page from make help. */}
+```bash
+build                     building the project
+wasi-build                building WAVS wasi components | WASI_BUILD_DIR
+wasi-exec                 executing the WAVS wasi component(s) | COMPONENT_FILENAME, COIN_MARKET_CAP_ID
+clean                     cleaning the project files
+clean-docker              remove unused docker containers
+fmt                       formatting solidity and rust code
+test                      running tests
+setup                     install initial dependencies
+start-all-local           starting anvil and core services (like IPFS for example)
+get-trigger-from-deploy   getting the trigger address from the script deploy
+get-submit-from-deploy    getting the submit address from the script deploy
+wavs-cli                  running wavs-cli in docker
+upload-component          uploading the WAVS component | COMPONENT_FILENAME, WAVS_ENDPOINT
+deploy-service            deploying the WAVS component service json | SERVICE_URL, CREDENTIAL, WAVS_ENDPOINT
+get-trigger               get the trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
+show-result               showing the result | SERVICE_SUBMISSION_ADDR, TRIGGER_ID, RPC_URL
+upload-to-ipfs            uploading the a service config to IPFS | SERVICE_FILE, [PINATA_API_KEY]
+operator-list             listing the AVS operators | ENV_FILE
+operator-register         listing the AVS operators | ENV_FILE, AVS_PRIVATE_KEY
+update-submodules         update the git submodules
+check-requirements        verify system requirements are installed
+```

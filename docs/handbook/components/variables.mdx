@@ -9,8 +9,6 @@ docsignore-->
 
 ## Environment variables
 
-{/* todo: verify this section before release. Add instructions on flags for the wasi-exec command to pass config variables */}
-
 Components can be configured with two types of variables:
 
 ### Public variables
@@ -72,4 +70,12 @@ WAVS_ENV_MY_API_KEY=your_secret_key_here
 
 ```rust
 let api_key = std::env::var("WAVS_ENV_MY_API_KEY")?;
+```
+
+## Local Execution
+
+When running components locally (raw), use the `--config` flag to set values in a KEY=VALUE format, comma-separated: `--config a=1,b=2`.
+
+```bash
+wavs-cli exec --component <COMPONENT> --input <INPUT> --config api_endpoint=https://api.example.com
 ```

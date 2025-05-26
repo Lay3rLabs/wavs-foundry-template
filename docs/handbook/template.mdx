@@ -36,7 +36,7 @@ wavs-foundry-template/
 ├── src/
 │   ├── contracts/        # Trigger and submission contracts
 │   └── interfaces/       # Solidity interfaces
-├── script/               # Deployment scripts
+├── script/               # Deployment & interaction scripts
 ├── wavs.toml             # WAVS service configuration
 ├── docs/                 # Documentation
 └── .env                  # Private environment variables
@@ -56,7 +56,7 @@ There are several toml files in the template that are used to configure the serv
 
 - `wavs.toml` is used to configure the WAVS service itself, including chains (local, testnets, mainnet) and configurations.
 - `Cargo.toml` in the root directory is used to configure the workspace and includes dependencies, build settings, and component metadata.
-- `/components/*/Cargo.toml` in each component directory is used to configure the Rust component and includes dependencies, build settings, and component metadata. It can inherit dependencies from the root `Cargo.toml` file using `workspace = true`.
+- `components/*/Cargo.toml` in each component directory is used to configure the Rust component and includes dependencies, build settings, and component metadata. It can inherit dependencies from the root `Cargo.toml` file using `workspace = true`.
 
 These files can be customized to suit your specific needs, and many settings can be overridden using environment variables.
 
@@ -93,7 +93,7 @@ lto = true
 
 [package.metadata.component]
 package = "component:evm-price-oracle"
-target = "wavs:worker/layer-trigger-world@0.4.0-beta.1"
+target = "wavs:worker/layer-trigger-world@0.4.0-beta.4"
 
 ```
 
