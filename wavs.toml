@@ -107,8 +107,6 @@ gas_denom = "untrn"
 # The directory to store the data. Default is "/var/wavs"
 data = "~/wavs"
 
-active_trigger_chains = ["local", "holesky"]
-
 cors_allowed_origins = [
     "https://lay3rlabs.github.io/*",
     "http://localhost:*",

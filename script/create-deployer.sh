@@ -45,7 +45,7 @@ else
             echo "Deployer balance is now $BALANCE"
             break
         fi
-        echo "    [!] Waiting for balance to be funded by another account to this deployer (${RPC_URL})..."
+        echo "    [!] Waiting for balance to be funded by another account to this deployer..."
         sleep 5
     done
 fi
