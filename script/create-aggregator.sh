@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 set -e
-set -x
+# set -x
 
 # have an optional argument $1, if set, use it as the agg index
 # otherwise, use the default of 1
@@ -45,7 +45,7 @@ cat > "${AGG_LOC}/start.sh" << EOF
 #!/bin/bash
 cd \$(dirname "\$0") || exit 1
 
-IMAGE=ghcr.io/lay3rlabs/wavs:248e294
+IMAGE=ghcr.io/lay3rlabs/wavs:542ffb7
 INSTANCE=wavs-aggregator-${AGGREGATOR_INDEX}
 
 docker kill \${INSTANCE} > /dev/null 2>&1 || true
