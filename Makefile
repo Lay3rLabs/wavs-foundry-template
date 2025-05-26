@@ -4,13 +4,12 @@
 SUDO := $(shell if groups | grep -q docker; then echo ''; else echo 'sudo'; fi)
 
 # Define common variables
-ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 CARGO=cargo
 COIN_MARKET_CAP_ID?=1
 COMPONENT_FILENAME?=evm_price_oracle.wasm
 CREDENTIAL?=""
-DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:0.4.0-beta.5
-MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
+DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:487a781
+MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.5
 IPFS_ENDPOINT?=http://127.0.0.1:5001
 RPC_URL?=http://127.0.0.1:8545
 SERVICE_FILE?=.docker/service.json
@@ -20,6 +19,7 @@ WASI_BUILD_DIR ?= ""
 WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ${DOCKER_IMAGE} wavs-cli
 WAVS_ENDPOINT?="http://127.0.0.1:8000"
 ENV_FILE?=.env
+-include ${ENV_FILE}
 
 # Default target is build
 default: build
@@ -47,7 +47,7 @@ clean: clean-docker
 
 ## clean-docker: remove unused docker containers
 clean-docker:
-	@$(SUDO) docker rm -v $(shell $(SUDO) docker ps -a --filter status=exited -q) 2> /dev/null || true
+	@$(SUDO) docker rm -v $(shell $(SUDO) docker ps -a --filter status=exited -q) > /dev/null 2>&1 || true
 
 ## fmt: formatting solidity and rust code
 fmt:
@@ -63,8 +63,8 @@ setup: check-requirements
 	@forge install
 	@npm install
 
-## start-all: starting anvil and WAVS with docker compose
-start-all: clean-docker setup-env
+## start-all-local: starting anvil and core services (like IPFS for example)
+start-all-local: clean-docker setup-env
 	@sh ./script/start_all.sh
 
 ## get-trigger-from-deploy: getting the trigger address from the script deploy
@@ -81,13 +81,27 @@ wavs-cli:
 
 ## upload-component: uploading the WAVS component | COMPONENT_FILENAME, WAVS_ENDPOINT
 upload-component:
-# TODO: move to `$(WAVS_CMD) upload-component ./compiled/${COMPONENT_FILENAME} --wavs-endpoint ${WAVS_ENDPOINT}`
+	@if [ -z "${COMPONENT_FILENAME}" ]; then \
+		echo "Error: COMPONENT_FILENAME is not set. Please set it to your WAVS component filename."; \
+		exit 1; \
+	fi
 	@wget --post-file=./compiled/${COMPONENT_FILENAME} --header="Content-Type: application/wasm" -O - ${WAVS_ENDPOINT}/upload | jq -r .digest
 
-SERVICE_URL?="http://127.0.0.1:8080/ipfs/service.json"
 ## deploy-service: deploying the WAVS component service json | SERVICE_URL, CREDENTIAL, WAVS_ENDPOINT
 deploy-service:
-	@$(WAVS_CMD) deploy-service --service-url "$(SERVICE_URL)" --log-level=info --data /data/.docker --home /data $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),) $(if $(CREDENTIAL),--evm-credential $(CREDENTIAL),)
+# this wait is required to ensure the WAVS service has time to service check
+	@sleep 2
+	@if [ -z "${SERVICE_URL}" ]; then \
+		echo "Error: SERVICE_URL is not set. Set SERVICE_URL to a link / ipfs url."; \
+		exit 1; \
+	fi
+	@if [ -n "${WAVS_ENDPOINT}" ]; then \
+		if [ "$$(curl -s -o /dev/null -w "%{http_code}" ${WAVS_ENDPOINT}/app)" != "200" ]; then \
+			echo "Error: WAVS_ENDPOINT is not reachable. Please check the WAVS_ENDPOINT."; \
+			exit 1; \
+		fi; \
+	fi
+	@$(WAVS_CMD) deploy-service --service-url ${SERVICE_URL} --log-level=debug --data /data/.docker --home /data $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),)
 
 ## get-trigger: get the trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
 get-trigger:
@@ -99,26 +113,43 @@ show-result:
 	@forge script ./script/ShowResult.s.sol ${SERVICE_SUBMISSION_ADDR} ${TRIGGER_ID} --sig 'data(string,uint64)' --rpc-url $(RPC_URL) --broadcast
 
 
-## upload-to-ipfs: uploading the a service config to IPFS | IPFS_ENDPOINT, SERVICE_FILE
+PINATA_API_KEY?=""
+## upload-to-ipfs: uploading the a service config to IPFS | SERVICE_FILE, [PINATA_API_KEY]
 upload-to-ipfs:
-	@curl -s -X POST "${IPFS_ENDPOINT}/api/v0/add?pin=true" \
-		-H "Content-Type: multipart/form-data" \
-		-F file=@${SERVICE_FILE} | jq -r .Hash
+	@if [ `sh script/get-deploy-status.sh` = "LOCAL" ]; then \
+		curl -X POST "http://127.0.0.1:5001/api/v0/add?pin=true" -H "Content-Type: multipart/form-data" -F file=@${SERVICE_FILE} | jq -r .Hash; \
+	else \
+		if [ -z "${PINATA_API_KEY}" ]; then \
+			echo "Error: PINATA_API_KEY is not set. Please set it to your Pinata API key -- https://app.pinata.cloud/developers/api-keys."; \
+			exit 1; \
+		fi; \
+		curl -X POST --url https://uploads.pinata.cloud/v3/files --header "Authorization: Bearer ${PINATA_API_KEY}" --header 'Content-Type: multipart/form-data' --form file=@${SERVICE_FILE} --form network=public --form name=service-`date +"%b-%d-%Y"`.json | jq -r .data.cid; \
+	fi
 
 ## operator-list: listing the AVS operators | ENV_FILE
 operator-list:
-	@docker run --rm --network host --env-file ${ENV_FILE} -v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ${MIDDLEWARE_DOCKER_IMAGE}
+	@if [ -z "${WAVS_SERVICE_MANAGER_ADDRESS}" ]; then \
+		echo "Error: WAVS_SERVICE_MANAGER_ADDRESS is not set. Please set it to the deployed WAVS stake registry." && exit 1; \
+	fi
+	@docker run --rm --network host --env-file ${ENV_FILE} \
+		-e WAVS_SERVICE_MANAGER_ADDRESS=${WAVS_SERVICE_MANAGER_ADDRESS} \
+		-v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ${MIDDLEWARE_DOCKER_IMAGE}
 
 AVS_PRIVATE_KEY?=""
-DELEGATION?="0.01ether"
+DELEGATION?="0.001ether"
 ## operator-register: listing the AVS operators | ENV_FILE, AVS_PRIVATE_KEY
 operator-register:
 	@if [ -z "${AVS_PRIVATE_KEY}" ]; then \
-		echo "Error: AVS_PRIVATE_KEY is not set. Please set it to your AVS private key."; \
-		exit 1; \
+		echo "Error: AVS_PRIVATE_KEY is not set. Please set it to your AVS private key." && exit 1; \
 	fi
-	# TODO: add "${DELEGATION}" to this line when updating to testnet
-	@docker run --rm --network host --env-file ${ENV_FILE} -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh ${MIDDLEWARE_DOCKER_IMAGE} "${AVS_PRIVATE_KEY}"
+	@if [ -z "${WAVS_SERVICE_MANAGER_ADDRESS}" ]; then \
+		echo "Error: WAVS_SERVICE_MANAGER_ADDRESS is not set. Please set it to the deployed WAVS service manager." && exit 1; \
+	fi
+	@docker run --rm --network host \
+		-e WAVS_SERVICE_MANAGER_ADDRESS=${WAVS_SERVICE_MANAGER_ADDRESS} \
+		--env-file ${ENV_FILE} \
+		-v ./.nodes:/root/.nodes \
+		--entrypoint /wavs/register.sh ${MIDDLEWARE_DOCKER_IMAGE} "${AVS_PRIVATE_KEY}" "${DELEGATION}"
 
 
 ## update-submodules: update the git submodules

@@ -12,7 +12,6 @@ sh ./build_service.sh
 - FILE_LOCATION: The save location of the configuration file
 - TRIGGER_ADDRESS: The address to trigger the service
 - SUBMIT_ADDRESS: The address to submit the service
-- WASM_DIGEST: The digest of the component to use that is already in WAVS
 - TRIGGER_EVENT: The event to trigger the service (e.g. "NewTrigger(bytes)")
 - FUEL_LIMIT: The fuel limit (wasm compute metering) for the service
 - MAX_GAS: The maximum chain gas for the submission Tx
@@ -27,16 +26,21 @@ TRIGGER_EVENT=${TRIGGER_EVENT:-"NewTrigger(bytes)"}
 TRIGGER_CHAIN=${TRIGGER_CHAIN:-"local"}
 SUBMIT_CHAIN=${SUBMIT_CHAIN:-"local"}
 AGGREGATOR_URL=${AGGREGATOR_URL:-""}
-IS_TESTNET=${IS_TESTNET:-"false"}
+DEPLOY_ENV=${DEPLOY_ENV:-""}
 # used in make upload-component
 WAVS_ENDPOINT=${WAVS_ENDPOINT:-"http://localhost:8000"}
-export DOCKER_DEFAULT_PLATFORM=linux/amd64
+REGISTRY=${REGISTRY:-"wa.dev"}
 
-BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-beta.5 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
+BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:487a781 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
-    echo "SERVICE_MANAGER_ADDRESS is not set. Please set it to the address of the service manager."
-    exit 1
+    # DevEx: attempt to grab it from the location if not set already
+    export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager ./.nodes/avs_deploy.json)
+
+    if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
+        echo "SERVICE_MANAGER_ADDRESS is not set. Please set it to the address of the service manager."
+        exit 1
+    fi
 fi
 
 
@@ -46,8 +50,8 @@ fi
 if [ -z "$SUBMIT_ADDRESS" ]; then
     SUBMIT_ADDRESS=`make get-submit-from-deploy`
 fi
-if [[ "$WASM_DIGEST" == sha256:* ]]; then
-    WASM_DIGEST=${WASM_DIGEST#sha256:}
+if [ -z "$DEPLOY_ENV" ]; then
+    DEPLOY_ENV=$(sh ./script/get-deploy-status.sh)
 fi
 # === Core ===
 
@@ -68,17 +72,7 @@ if [ -n "$AGGREGATOR_URL" ]; then
 fi
 $BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDRESS} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
 
-if [ "$IS_TESTNET" = "false" ]; then
-    if [ -z "$WASM_DIGEST" ]; then
-        echo "WASM_DIGEST is not set. You must upload the component directly to the wavs instance."
-        echo "(( optionally: \`export IS_TESTNET=true\` and upload your component to the wa.dev registry ))."
-        exit 1
-    fi
-    $BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST}
-else
-    # use the package directly, no need to upload component to the instance itself. 
-    $BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --version ${PKG_VERSION} --package ${PKG_NAME}
-fi
+$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --domain ${REGISTRY} --package ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION}
 
 $BASE_CMD workflow component --id ${WORKFLOW_ID} permissions --http-hosts '*' --file-system true > /dev/null
 $BASE_CMD workflow component --id ${WORKFLOW_ID} time-limit --seconds 30 > /dev/null
@@ -88,9 +82,4 @@ $BASE_CMD workflow component --id ${WORKFLOW_ID} config --values 'key=value,key2
 $BASE_CMD manager set-evm --chain-name ${SUBMIT_CHAIN} --address `cast --to-checksum ${SERVICE_MANAGER_ADDRESS}` > /dev/null
 $BASE_CMD validate > /dev/null
 
-# inform aggregator if set
-if [ -n "$AGGREGATOR_URL" ]; then
-    wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(cat ${FILE_LOCATION})"'}' ${AGGREGATOR_URL}/register-service -O -
-fi
-
-echo "Configuration file created at ${FILE_LOCATION}"
+echo "Configuration file created ${FILE_LOCATION}. Watching events from '${TRIGGER_CHAIN}' & submitting to '${SUBMIT_CHAIN}'."
