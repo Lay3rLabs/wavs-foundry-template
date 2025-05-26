@@ -1,40 +1,49 @@
 ---
-description: Overview of the WAVS handbook structure and contents for building WAVS services.
-globs: **/*.rs
+description: Overview of the WAVS handbook structure and contents
+globs: **/*.md
 alwaysApply: true
 ---
 # WAVS Handbook Overview
 
-This document serves as a guide to the WAVS handbook, detailing the structure and contents necessary for understanding and building WAVS AVS (Autonomous Virtual Services).
+This handbook outlines the main sections for building and understanding a WAVS AVS.
 
-## Getting Started
+1. Follow the [Oracle component tutorial](/tutorial/1-overview) first to learn WAVS service basics.
 
-- Follow the [Oracle component tutorial](/tutorial/1-overview) for an introduction to WAVS service development.
+2. Core Concepts:
+   - [How it works](../how-it-works): Components of a WAVS AVS.
+   - [Design](../design): Design considerations.
 
-## Handbook Contents
+3. Services:
+   - [Service](./service): Structure and manifest definition.
+   - [Workflows](./workflows): Execution paths, triggers, components, submissions.
+   - [Triggers](./triggers): Types of triggers (EVM, Cosmos, cron, block intervals).
+   - [Submission and Aggregator](./submission): Blockchain result submission.
 
-### Core Concepts
-- **How it Works**: Provides insight into the WAVS AVS architecture and its components.
-- **Design**: Discusses design principles and considerations for WAVS services.
+4. Components:
+   - [Component Overview](./components/component): Lifecycle and trigger handling.
+   - [Variables](./components/variables): Public and private config variables.
+   - [Utilities and Crates](./components/utilities): Available tools for components.
+   - [Blockchain Interactions](./components/blockchain-interactions): Smart contract and blockchain calls.
+   - [Network Requests](./components/network-requests): HTTP requests to external APIs.
 
-### Services
-- **Service Definition**: Explains the structure of WAVS services and their definition in the service manifest.
-- **Workflows**: Describes how workflows orchestrate service execution, including triggers and submissions.
-- **Triggers**: Covers the various event types that can initiate services.
-- **Submission and Aggregator**: Details the process of submitting results to the blockchain.
+5. Development:
+   - [Template](./template): Template structure and customization.
+   - [Makefile Commands](./commands): Build, deploy, and manage commands.
 
-### Components
-- **Component Overview**: Outlines component structure, lifecycle, and how to process data and handle triggers.
-- **Variables**: Discusses configuring components with variables.
-- **Utilities and Crates**: Introduces utilities and crates available for component development.
-- **Blockchain Interactions**: Explains interacting with blockchains and smart contracts.
-- **Network Requests**: Guides on making HTTP requests to external APIs.
-
-### Development
-- **Template**: Offers a starting point with the WAVS template, including structure and customization.
-- **Makefile Commands**: Provides commands for building, deploying, and managing WAVS services.
-
-Each section is designed to equip developers with the knowledge and tools needed to build robust WAVS services. Start with the Service section to grasp the basics, then delve into other sections as needed.
+Start with the Service section to grasp basics, then explore others as needed.
 
 For more information:
 - [Oracle component tutorial](/tutorial/1-overview)
+- [How it works](../how-it-works)
+- [Design](../design)
+- [Service](./service)
+- [Workflows](./workflows)
+- [Triggers](./triggers)
+- [Submission and Aggregator](./submission)
+- [Component Overview](./components/component)
+- [Variables](./components/variables)
+- [Utilities and Crates](./components/utilities)
+- [Blockchain Interactions](./components/blockchain-interactions)
+- [Network Requests](./components/network-requests)
+- [Template](./template)
+- [Makefile Commands](./commands)

@@ -1,19 +1,54 @@
 ---
-description: CLI commands for WAVS development
+description: Summary of Makefile commands for WAVS development CLI tasks
 globs: **/Makefile
 alwaysApply: true
 ---
 # Makefile Commands for WAVS Development
 
-This rule file provides the necessary command to access the help menu for WAVS development via the Makefile.
+This rule summarizes the CLI commands available in the WAVS Makefile for building, testing, deploying, and managing WAVS components and services.
 
-To view all available commands for WAVS development, use the following command in your terminal:
+1. Common commands:
+   - `make help`: Show help information.
+   - `build`: Build the project.
+   - `wasi-build`: Build WAVS WASI components. Uses `WASI_BUILD_DIR`.
+   - `wasi-exec`: Execute WAVS WASI components. Requires `COMPONENT_FILENAME`, `COIN_MARKET_CAP_ID`.
+   - `clean`: Clean project files.
+   - `clean-docker`: Remove unused Docker containers.
+   - `fmt`: Format Solidity and Rust code.
+   - `test`: Run tests.
+   - `setup`: Install initial dependencies.
+   - `start-all-local`: Start local services like Anvil and IPFS.
+   - `update-submodules`: Update git submodules.
+   - `check-requirements`: Verify system requirements.
 
+2. Deployment and service management:
+   - `upload-component`: Upload WAVS component. Requires `COMPONENT_FILENAME`, `WAVS_ENDPOINT`.
+   - `deploy-service`: Deploy WAVS component service JSON. Requires `SERVICE_URL`, `CREDENTIAL`, `WAVS_ENDPOINT`.
+   - `get-trigger-from-deploy`: Get trigger address from deploy script.
+   - `get-submit-from-deploy`: Get submit address from deploy script.
+   - `get-trigger`: Get trigger ID. Requires `SERVICE_TRIGGER_ADDR`, `RPC_URL`.
+   - `show-result`: Show result. Requires `SERVICE_SUBMISSION_ADDR`, `TRIGGER_ID`, `RPC_URL`.
+   - `upload-to-ipfs`: Upload service config to IPFS. Requires `SERVICE_FILE`, optional `[PINATA_API_KEY]`.
+
+3. Operator management:
+   - `operator-list`: List AVS operators. Requires `ENV_FILE`.
+   - `operator-register`: Register AVS operators. Requires `ENV_FILE`, `AVS_PRIVATE_KEY`.
+
+Guidelines:
+- Use environment variables as indicated for commands requiring parameters.
+- Run `make help` to see available commands.
+- Use `clean` and `clean-docker` to maintain a clean environment.
+- Format code regularly with `fmt` to maintain consistency.
+- Use `setup` before starting development to install dependencies.
+
+Example usage:
 ```bash
-make help
+make build
+make wasi-build
+make upload-component COMPONENT_FILENAME=component.wasm WAVS_ENDPOINT=https://wavs.example.com
+make operator-register ENV_FILE=.env AVS_PRIVATE_KEY=key123
 ```
 
-This command will display a list of all the commands available in the Makefile that are relevant to WAVS development. It's a quick way to get an overview of the tools and commands at your disposal for managing and developing the WAVS project.
-
 For more information:
-- No additional links provided.
+- [WAVS Documentation](https://docs.wavs.example.com)
+- [Makefile Reference](https://www.gnu.org/software/make/manual/make.html)

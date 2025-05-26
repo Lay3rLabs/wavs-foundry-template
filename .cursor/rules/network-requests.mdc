@@ -1,40 +1,37 @@
 ---
-description: Guide on making HTTP requests in WAVS components using wavs-wasi-utils crate.
+description: How to make HTTP requests from WAVS components using wavs-wasi-utils
 globs: **/*.rs
 alwaysApply: true
 ---
 # Network Requests in WAVS Components
 
-This guide covers how to make HTTP requests from WAVS components using the `wavs-wasi-utils` crate, including setting up dependencies, making GET and POST requests, and handling responses.
+Use the [`wavs-wasi-utils`](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/index.html) crate to make HTTP requests from WAVS components. Since WASI runs synchronously, use `block_on` from the `wstd` crate to run async HTTP calls.
 
-### Dependencies Setup
+### Dependencies
 
-Add the following dependencies to your `Cargo.toml` to get started:
+Add these to `Cargo.toml`:
 
 ```toml
 [dependencies]
-wavs-wasi-utils = "=0.4.0-beta.2"
-wstd = "0.5.3"
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
+wavs-wasi-utils = "0.4.0-beta.4"   # HTTP utilities
+wstd = "0.5.3"                     # Runtime utilities (includes block_on)
+serde = { version = "1.0.219", features = ["derive"] }  # Serialization
+serde_json = "1.0.140"             # JSON handling
 ```
 
-Use `block_on` from `wstd` for running async code in a synchronous WASI environment.
+### HTTP Request Functions
 
-### Making HTTP Requests
+- `http_request_get(url)` — creates a GET request
+- `http_request_post_json(url, data)` — creates a POST request with JSON body
+- `http_request_post_form(url, data)` — creates a POST request with form data
 
-`wavs-wasi-utils` provides functions for GET and POST requests and fetching responses:
+### Response Fetching Functions
 
-- **GET Request**: `http_request_get(url)`
-- **POST Request with JSON**: `http_request_post_json(url, data)`
-- **POST Request with Form Data**: `http_request_post_form(url, data)`
-- **Fetch JSON Response**: `fetch_json(request)`
-- **Fetch String Response**: `fetch_string(request)`
-- **Fetch Bytes Response**: `fetch_bytes(request)`
+- `fetch_json(request)` — fetches and parses JSON response
+- `fetch_string(request)` — fetches response as string
+- `fetch_bytes(request)` — fetches raw response bytes
 
-### Examples
-
-**GET Request with Headers**:
+### Example: GET Request with Custom Headers
 
 ```rust
 use wstd::runtime::block_on;
@@ -43,7 +40,9 @@ use wavs_wasi_utils::http::{fetch_json, http_request_get};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
-struct ApiResponse {}
+struct ApiResponse {
+    // ... your response fields
+}
 
 async fn make_request() -> Result<ApiResponse, String> {
     let url = "https://api.example.com/endpoint";
@@ -56,11 +55,11 @@ async fn make_request() -> Result<ApiResponse, String> {
 }
 
 fn process_data() -> Result<ApiResponse, String> {
-    block_on(async { make_request().await })?
+    block_on(async move { make_request().await })?
 }
 ```
 
-**POST Request with JSON Data**:
+### Example: POST Request with JSON Data
 
 ```rust
 use wstd::runtime::block_on;
@@ -74,18 +73,36 @@ struct PostData {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct PostResponse {}
+struct PostResponse {
+    // ... response fields
+}
 
 async fn make_post_request() -> Result<PostResponse, String> {
     let url = "https://api.example.com/endpoint";
-    let post_data = PostData { key1: "value1".to_string(), key2: 42 };
-    let response: PostResponse = fetch_json(http_request_post_json(&url, &post_data)?).await.map_err(|e| e.to_string())?;
+    let post_data = PostData {
+        key1: "value1".to_string(),
+        key2: 42,
+    };
+    let response: PostResponse = fetch_json(
+        http_request_post_json(&url, &post_data)?
+    ).await.map_err(|e| e.to_string())?;
     Ok(response)
 }
 
 fn process_data() -> Result<PostResponse, String> {
-    block_on(async { make_post_request().await })?
+    block_on(async move { make_post_request().await })?
 }
 ```
 
-For detailed information on making network requests in WAVS components, refer to the [wavs-wasi-utils documentation](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/).
+### Guidelines & Best Practices
+
+1. Use `block_on` to run async HTTP requests in synchronous WASI components.
+2. Use serde derives to serialize/deserialize JSON data automatically.
+3. Set appropriate headers (e.g., `Accept`, `Content-Type`, `User-Agent`) for API requests.
+4. Use `http_request_post_json` for JSON POST requests as it sets headers automatically.
+5. Handle errors by converting them to strings for easier debugging.
+
+For more information:
+- [wavs-wasi-utils crate documentation](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/)
+- [HTTP module docs](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/http/index.html)
+- [Variables page](./variables)

@@ -1,17 +1,17 @@
 ---
-description: Explains the structure and purpose of the service.json manifest and the service manager contract in WAVS AVS.
-globs: **/*.rs
+description: Defines the WAVS service manifest structure and service manager contract usage
+globs: **/service.json
 alwaysApply: true
 ---
-# Service Manifest and Manager Overview
+# Service Manifest and Manager
 
-A service in WAVS AVS comprises smart contracts, operators, and off-chain components, all defined within a `service.json` manifest. This manifest outlines the service's configuration, including workflows, components, and submission details. It's stored on IPFS or an HTTP/HTTPS server, with its URL set in the service manager contract for system access upon deployment.
+The service manifest (`service.json`) defines a WAVS service's configuration, including workflows, components, submission, and the service manager contract. It is hosted on IPFS or HTTP(S) and linked via the service manager contract.
 
-## Service Manifest (`service.json`)
+1. Generate Manifest  
+Use `wavs-cli service` or the provided [build_service.sh](https://github.com/Lay3rLabs/wavs-foundry-template/blob/main/script/build_service.sh) script to create a service manifest with one component.
 
-The `service.json` file contains detailed information about the service, such as ID, name, workflows, components, and the service manager contract. Below is an example structure of a service manifest:
-
-```json
+2. Manifest Structure Example  
+```json service.json
 {
     "id": "example-service-123",
     "name": "Example WAVS Service",
@@ -26,7 +26,14 @@ The `service.json` file contains detailed information about the service, such as
             },
             "component": {
                 "source": {
-                    "digest": "sha256:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+                    "Registry": {
+                        "registry": {
+                            "digest": "882b992af8f78e0aaceaf9609c7ba2ce80a22c521789c94ae1960c43a98295f5",
+                            "domain": "localhost:8090",
+                            "version": "0.1.0",
+                            "package": "example:evmrustoracle"
+                        }
+                    }
                 },
                 "permissions": {
                     "allowed_http_hosts": "all",
@@ -35,7 +42,6 @@ The `service.json` file contains detailed information about the service, such as
                 "fuel_limit": 1000000,
                 "time_limit_seconds": 30,
                 "config": {
-                    "api_key": "your-api-key",
                     "endpoint": "https://api.example.com",
                     "timeout": "30s"
                 },
@@ -70,12 +76,33 @@ The `service.json` file contains detailed information about the service, such as
 }
 ```
 
-## Service Manager Contract
+3. Upload Manifest  
+Upload the manifest to IPFS or a publicly accessible HTTP(S) server. For testing, launch a local IPFS node; for production, use services like Pinata.
 
-The service manager contract is pivotal in defining the registered operators for a service, assigning weights to these operators, and ensuring that submissions meet a required threshold or quorum. It also maintains the service URI, linking operators to the service, and validates signatures from these operators before processing data through the service handler contract.
+```bash
+SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs
 
-For more information:
-- [Workflows](./workflows)
-- [Triggers](./triggers)
-- [Components](./components/component)
-- [Submission and aggregator](./submission)
+export IPFS_GATEWAY=$(sh script/get-ipfs-gateway.sh)
+curl "${IPFS_GATEWAY}/ipfs/${ipfs_cid}"
+
+cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${SERVICE_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
+```
+
+4. Service Manager Contract  
+- Registers operators with assigned weights to validate result submissions.  
+- Maintains the service URI linking to the manifest.  
+- Validates operator signatures against weights and threshold before processing data.
+
+Best Practices:  
+- Ensure the manifest is accessible to all operators.  
+- Use proper permission settings in components.  
+- Keep the service manager contract address updated in the manifest.  
+- Register operators and set appropriate weights to secure submissions.
+
+For more details, see:  
+- [Workflows](./workflows)  
+- [Triggers](./triggers)  
+- [Components](./components/component)  
+- [Submission and aggregator](./submission)  
+- [build_service.sh script](https://github.com/Lay3rLabs/wavs-foundry-template/blob/main/script/build_service.sh)  
+- [Pinata IPFS Service](https://app.pinata.cloud/developers/api-keys)

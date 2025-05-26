@@ -1,18 +1,17 @@
 ---
-description: Guide on creating and configuring submission contracts and the aggregator for EVM chains.
+description: Rules for configuring submission contracts and aggregators for submitting workflow results to EVM chains
 globs: **/*.rs
 alwaysApply: true
 ---
 # Submission and Aggregator Configuration
 
-This document outlines the process for setting up submission contracts and aggregators to submit workflow results to an EVM chain.
+Defines how to submit workflow results to an EVM chain via an aggregator service and how to implement submission contracts.
 
-## Submit Definition
+1. **Submit Definition in service.json**
 
-The `submit` field in `service.json` specifies how results are sent to a submission contract or an aggregator.
+- Use the `submit` field to specify submission logic.
+- For aggregator submission:
 
-- **Aggregator Submission**: Results are sent to an aggregator service, which then submits them to the EVM chain.
-  
 ```json
 "submit": {
     "aggregator": {
@@ -30,17 +29,16 @@ The `submit` field in `service.json` specifies how results are sent to a submiss
 ]
 ```
 
-- **No Submission**: Set `submit` to `none` if no submission to a contract is required. The service runs without submitting results.
+- Set `"submit": "none"` if no submission is needed; results will not be sent on-chain.
 
-## Submission Contract
+2. **Submission Contract Requirements**
 
-Submission contracts verify and submit component outputs to the blockchain. They must implement `handleSignedEnvelope()` from `IWavsServiceHandler` to validate data and signatures.
+- Must implement `handleSignedEnvelope()` from the `IWavsServiceHandler` interface.
+- Use `IWavsServiceManager` to validate data and signatures.
+- The contract validates operator signatures and processes component output.
+- The `DataWithId` struct must match the component output format.
 
-- **Chaining Workflows**: Workflows can trigger other workflows by setting the trigger event of one to the submission event of another. For chaining workflows, refer to the [Workflows page](./workflows).
-
-## Template Submission Example
-
-A template submission contract example is provided, illustrating how to validate operator signatures and store data.
+3. **Example Submission Contract**
 
 ```solidity
 import {IWavsServiceManager} from "@wavs/interfaces/IWavsServiceManager.sol";
@@ -57,25 +55,37 @@ contract SimpleSubmit is ITypes, IWavsServiceHandler {
     function handleSignedEnvelope(Envelope calldata envelope, SignatureData calldata signatureData) external {
         _serviceManager.validate(envelope, signatureData);
         DataWithId memory dataWithId = abi.decode(envelope.payload, (DataWithId));
+        // Custom data processing logic here
     }
 }
 ```
 
-- The contract validates data and signatures, then processes the data as per custom logic.
+4. **Aggregator Overview**
 
-## Aggregator
+- Collects signed responses from multiple operators.
+- Validates each operator's signature.
+- Aggregates signatures once a threshold is met (exact match consensus).
+- Submits aggregated data to the submission contract.
+- Currently supports ECDSA signatures; BLS support planned.
 
-The aggregator collects, validates, and submits data from multiple operators to the blockchain. It uses ECDSA signatures for validation and supports exact match aggregation for consensus.
+5. **Aggregator Submission Flow**
 
-## Aggregator Submission Flow
+1. Operator runs component → returns `WasmResponse` with `payload` and optional `ordering`.
+2. Operator creates and signs an Envelope with result data.
+3. Packet (envelope + signature + route info) sent to aggregator `/packet` endpoint.
+4. Aggregator validates signature and queues packets by trigger event and service ID.
+5. When threshold met:
+   - Combine signatures into one `SignatureData`.
+   - Validate combined signatures on-chain via service manager.
+6. If valid, aggregator calls `handleSignedEnvelope()` on submit contract with signatures and payload.
+7. Submit contract validates data and signatures via service manager.
 
-1. Operators run components generating `WasmResponse` with result data.
-2. Operators sign the result data, creating an Envelope with an ECDSA signature.
-3. The signed Envelope is sent to the aggregator.
-4. The aggregator validates signatures and queues packets for aggregation.
-5. Upon reaching the threshold, the aggregator combines signatures and submits them to the blockchain.
-6. The submission contract validates and processes the aggregated data.
+6. **Chaining Workflows**
+
+- Workflows can be chained by triggering one workflow on the submission event of another.
+- See the [Workflows page](./workflows) for details.
 
 For more information:
-- [WAVS Solidity Package](https://www.npmjs.com/package/@wavs/solidity?activeTab=code)
-- [Template Submission Contract](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsSubmit.sol)
+- [@wavs Solidity Package](https://www.npmjs.com/package/@wavs/solidity?activeTab=code)
+- [Template Submission Contract](https://github.com/Lay3rLabs/wavs-foundry-template/blob/main/src/contracts/WavsSubmit.sol)
+- [Workflows Documentation](./workflows)
