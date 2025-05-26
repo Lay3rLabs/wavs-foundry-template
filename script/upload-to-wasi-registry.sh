@@ -20,29 +20,28 @@ fi
 
 cd `git rev-parse --show-toplevel` || exit
 
-DEPLOY_ENV=$(sh ./script/get-deploy-status.sh)
-
-if [ "$DEPLOY_ENV" = "LOCAL" ]; then
-    echo "Publishing to local registry (http://${REGISTRY})..."
-    output=$(warg publish release --registry http://${REGISTRY} --name ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} 2>&1)
-    exit_code=$?
-
-    # Check for specific error conditions in the output
-    if [[ $exit_code -ne 0 ]]; then
-        if [[ "$output" =~ "failed to prove inclusion" ]]; then
-            echo "Package uploaded to local registry successfully..."
-        elif [[ "$output" =~ "error sending request for url" ]]; then
-            echo "NOTE: Check to make sure you are running the registry locally"
-            echo "${output}"
-            exit 1
-        else
-            echo "Unknown error occurred ${output}"
-            exit 1
-        fi
-    fi
-
-    exit 0
-else
-    echo "Publishing to remote registry (https://${REGISTRY})..."
-    warg publish release --registry https://${REGISTRY} --name ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true
+PROTOCOL="https"
+if [[ "$REGISTRY" == *"localhost"* ]] || [[ "$REGISTRY" == *"127.0.0.1"* ]]; then
+    PROTOCOL="http"
 fi
+echo "Publishing to registry (${PROTOCOL}://${REGISTRY})..."
+
+
+output=$(warg publish release --registry ${PROTOCOL}://${REGISTRY} --name ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} || true 2>&1)
+exit_code=$?
+
+# Check for specific error conditions in the output
+if [[ $exit_code -ne 0 ]]; then
+    if [[ "$output" =~ "failed to prove inclusion" ]]; then
+        echo "Package uploaded to local registry successfully..."
+    elif [[ "$output" =~ "error sending request for url" ]]; then
+        echo "NOTE: Check to make sure you are running the registry locally"
+        echo "${output}"
+        exit 1
+    else
+        echo "Unknown error occurred ${output}"
+        exit 1
+    fi
+fi
+
+exit 0
