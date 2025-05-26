@@ -1,23 +1,25 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import sys
-import argparse
 from pathlib import Path
-import openai
 from typing import Optional
+
+import openai
 from dotenv import load_dotenv
+
 
 def clean_triple_backticks(content: str) -> str:
     """Remove triple backticks from the start and end of the file while preserving code block backticks."""
     # Remove leading triple backticks if they exist
     if content.startswith('```'):
         content = content[3:]
-    
+
     # Remove trailing triple backticks if they exist
     if content.endswith('```'):
         content = content[:-3]
-    
+
     return content
 
 def clean_leading_blank_lines(content: str) -> str:
@@ -130,14 +132,14 @@ Here's the documentation to convert:
 """
 
     response = client.chat.completions.create(
-        model="gpt-4-turbo-preview",
+        model="gpt-4.1-mini-2025-04-14",
         messages=[
             {"role": "system", "content": "You are a technical documentation expert who specializes in converting documentation into concise rule files for llms to follow. You read documentation and summarize its content into rulefiles that are direct and concise. For references, always use full markdown links like [Link Text](https://url.com). Never add triple backticks (```) at the start or end of the file. Make sure to preserve all code examples and their formatting."},
             {"role": "user", "content": prompt}
         ],
         temperature=0.3,
     )
-    
+
     # Clean up the content
     content = response.choices[0].message.content
     content = clean_triple_backticks(content)
@@ -187,14 +189,21 @@ def main():
         print("Error: OpenAI API key not provided. Use --api-key, set OPENAI_API_KEY environment variable, or add it to your .env file.")
         sys.exit(1)
 
+    print("Using OpenAI API key:", api_key)
+
     # Create output directory if it doesn't exist
     os.makedirs(args.output_dir, exist_ok=True)
 
+    print(f"Output directory: {args.output_dir}")
+
     # Process all .mdx files in the input directory and its subdirectories
     input_dir = Path(args.input_dir)
+    print(f"Searching for .mdx files in {input_dir}...")
     for mdx_file in input_dir.rglob('*.mdx'):
         print(f"\nProcessing {mdx_file}...")
         process_file(str(mdx_file), args.output_dir, api_key)
 
+    print("All files processed.")
+
 if __name__ == '__main__':
-    main() 
+    main()
