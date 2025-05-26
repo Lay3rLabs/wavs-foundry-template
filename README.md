@@ -214,7 +214,7 @@ To see details on how to access both traces and metrics, please check out [Telem
 
 ### Start the backend
 
-```bash docci-background docci-delay-after=15
+```bash docci-background docci-delay-after=5
 # This must remain running in your terminal. Use another terminal to run other commands.
 # You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
 cp .env.example .env
@@ -296,7 +296,7 @@ export SERVICE_FILE=.docker/service.json
 
 # local: 127.0.0.1:5001
 # testnet: https://app.pinata.cloud/. set PINATA_API_KEY to JWT token in .env
-ipfs_cid=`SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs`
+export ipfs_cid=`SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs`
 
 # LOCAL: http://127.0.0.1:8080
 # TESTNET: https://gateway.pinata.cloud/
@@ -314,8 +314,6 @@ cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${SERVICE_URI}" -r
 sh ./script/create-aggregator.sh 1
 sh ./infra/aggregator-1/start.sh
 
-# was previously in the build_service.sh step.
-# TODO: this takes in a file contents, maybe the SERVICE_URL would be better?
 wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(jq -c . ${SERVICE_FILE})"'}' ${AGGREGATOR_URL}/register-service -O -
 ```
 
@@ -330,7 +328,6 @@ sh ./infra/wavs-1/start.sh
 
 # Deploy the service JSON to WAVS so it now watches and submits.
 # 'opt in' for WAVS to watch (this is before we register to Eigenlayer)
-# TODO: also ensure the default_registry.toml is correct when you started wavs. Maybe we make this CLI only?
 WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${SERVICE_URI} make deploy-service
 ```
 
@@ -366,7 +363,9 @@ export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 # Execute on the trigger contract, WAVS will pick this up and submit the result
 # on chain via the operators.
 
-source .env # uses FUNDED_KEY as the executor (local: anvil account)
+# uses FUNDED_KEY as the executor (local: anvil account)
+source .env
+
 forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast
 ```
 

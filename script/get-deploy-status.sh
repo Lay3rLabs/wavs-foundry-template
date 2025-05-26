@@ -13,7 +13,6 @@ fi
 # Extract DEPLOY_ENV from the file
 DEPLOY_ENV=$(grep "^DEPLOY_ENV=" .env | cut -d '=' -f2)
 
-# Convert to uppercase
 DEPLOY_ENV=$(echo "$DEPLOY_ENV" | tr '[:lower:]' '[:upper:]')
 
 echo "$DEPLOY_ENV"

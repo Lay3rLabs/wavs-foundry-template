@@ -65,7 +65,6 @@ if [ "$DEPLOY_ENV" = "LOCAL" ]; then
     echo "Local aggregator \`${AGGREGATOR_ADDR}\` funded with ${BAL}ether"
 else
     # New account on testnet, must be funded externally (i.e. metamask)
-    # TODO: just pay from the deployer?
     echo "Fund aggregator ${AGGREGATOR_ADDR} with some ETH, or change this value in ${ENV_FILENAME}"
     sleep 5
 

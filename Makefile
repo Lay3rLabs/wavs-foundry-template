@@ -81,7 +81,6 @@ wavs-cli:
 
 ## upload-component: uploading the WAVS component | COMPONENT_FILENAME, WAVS_ENDPOINT
 upload-component:
-# TODO: move to `$(WAVS_CMD) upload-component ./compiled/${COMPONENT_FILENAME} --wavs-endpoint ${WAVS_ENDPOINT}`
 	@if [ -z "${COMPONENT_FILENAME}" ]; then \
 		echo "Error: COMPONENT_FILENAME is not set. Please set it to your WAVS component filename."; \
 		exit 1; \

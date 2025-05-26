@@ -72,6 +72,4 @@ EOF
 
 cp wavs.toml ${OPERATOR_LOC}/wavs.toml
 
-# TODO: if testnet change active_trigger_chains from local -> holesky
-
 echo "Operator ${OPERATOR_INDEX} created at ${OPERATOR_LOC}"
