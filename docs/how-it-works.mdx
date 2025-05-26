@@ -11,7 +11,7 @@ docsignore-->
 
 WAVS is a decentralized execution framework for AVSs (Autonomous Verifiable Services), enabling the results of off-chain computation to be brought verifiably on-chain. It provides a runtime for executing WASI-based service components, allowing developers to define event-driven off-chain workflows while inheriting Ethereum's security via EigenLayer restaking.
 
-{/* todo: quick technical review of this page. Add info on the registry???*/}
+{/* todo: quick technical review of this page. */}
 
 ## The flow
 
@@ -36,8 +36,6 @@ Before diving into each part of a WAVS service individually, it's important to u
 
 ## WAVS parts
 
-The WAVS platform consists of several different parts that work together to form a decentralized off-chain execution layer for AVSs.
-
 ### Service manager
 
 The service manager is a contract that defines a service's operator set. It is used to register operators and define their weights, set the threshold for aggregator submissions, and maintain the URI of the service manifest. For more information, see the [Service page](./handbook/service#service-manager).
@@ -52,7 +50,7 @@ Workflows are the building blocks of a WAVS service flow. They define the differ
 
 ### Triggers
 
-A trigger is the event that activates a WAVS service. Triggers can be EVM or Cosmos events, cron jobs, or blockheight triggers. When a specified event is triggered, WAVS operators detect it and execute the corresponding service component off-chain. The results are then verified and submitted back on-chain, completing the execution cycle. For more information, see the [Triggers page](./handbook/triggers).
+A trigger is the event that activates a WAVS service. Triggers can be EVM or Cosmos events, cron, or blockheight triggers. When a specified event is triggered, WAVS operators detect it and execute the corresponding service component off-chain. The results are then verified and submitted back on-chain, completing the execution cycle. For more information, see the [Triggers page](./handbook/triggers).
 
 ### Service components
 
@@ -84,8 +82,13 @@ There are significant advantages in leveraging a WASM/WASI-based platform for AV
 
 ## Registry
 
-{/* todo: add info on the registry */}
-The WAVS registry is a decentralized registry of service components...
+WAVS uses a registry to store the WASM components. A service like [wa.dev](https://wa.dev) is recommended for proper distribution in production. A similar registry environment is emulated locally in docker compose for rapid development without an API key.
+- Build your component
+- Compile the component
+- Upload the component to the registry
+- Set the registry in your service using the wavs-cli command in the `build_service.sh` script:
+
+`wavs-cli workflow component --id ${WORKFLOW_ID} set-source-registry --domain ${REGISTRY} --package ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION}`
 
 ### Signing and aggregation
 

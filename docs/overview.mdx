@@ -13,7 +13,7 @@ docsignore-->
 ## What is WAVS?
 {/* todo: verify the info in this page and update if needed */}
 
-WAVS is a [WASI](./how-it-works#wasm-and-wasi) runtime for building AVSs (Autonomous Verifiable Services). With WAVS, you can create, manage, and operate high-performance AVSs using the languages you already know and love (like [Rust, Go, and JavaScript](./handbook/components/component#languages), with more languages coming soon). By providing a base layer of AVS infrastructure, WAVS lets you focus on implementing the core logic of your service. WAVS compiles that logic to [WASM](./how-it-works#wasm-and-wasi), and lets you deploy it as lightweight service components.
+WAVS is a [WASI](./how-it-works#wasm-and-wasi) runtime for building AVSs (Autonomous Verifiable Services). With WAVS, you can create, manage, and operate high-performance AVSs using the languages you already know and love (like [Rust, Go, and JavaScript](./handbook/components/component#languages), with more languages like Python coming soon). By providing a base layer of AVS infrastructure, WAVS lets you focus on implementing the core logic of your service. WAVS compiles that logic to [WASM](./how-it-works#wasm-and-wasi), and lets you deploy it as lightweight service components.
 
 Better yet, WAVS solves the trust problem in off-chain compute: it separates services from the operators that run them. Builders create their components, and operators run them in WAVS runtime at near-native speed. Then, operators sign the results of the off-chain computation and place them on-chain. Boom: off-chain compute with on-chain verifiability.
 
