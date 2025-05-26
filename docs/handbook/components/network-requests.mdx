@@ -7,7 +7,6 @@ import { Callout } from 'fumadocs-ui/components/callout';
 import { DocsPage } from 'fumadocs-ui/page';
 docsignore-->
 
-{/* todo: verify these examples */}
 Components can make network requests to external APIs using the [`wavs-wasi-utils` crate](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/index.html).
 
 To learn how to use variables like API keys in a component, visit the [Variables page](./variables).
@@ -18,7 +17,7 @@ The following dependencies are required for making HTTP requests from a componen
 
 ```toml Cargo.toml
 [dependencies]
-wavs-wasi-utils = "=0.4.0-beta.2"  # HTTP utilities
+wavs-wasi-utils = "0.4.0-beta.4"   # HTTP utilities
 wstd = "0.5.3"                     # Runtime utilities (includes block_on)
 serde = { version = "1.0.219", features = ["derive"] }  # Serialization
 serde_json = "1.0.140"             # JSON handling
@@ -61,7 +60,7 @@ struct ApiResponse {
 async fn make_request() -> Result<ApiResponse, String> {
     let url = "https://api.example.com/endpoint";
     let mut req = http_request_get(&url).map_err(|e| e.to_string())?;
-    
+
     // Set required headers for API requests
     req.headers_mut().insert(
         "Accept",
@@ -75,12 +74,12 @@ async fn make_request() -> Result<ApiResponse, String> {
         "User-Agent",
         HeaderValue::from_static("Mozilla/5.0")
     );
-    
+
     // Use fetch_json to automatically parse the response
     let json: ApiResponse = fetch_json(req)
         .await
         .map_err(|e| e.to_string())?;
-        
+
     Ok(json)
 }
 
@@ -119,12 +118,12 @@ async fn make_post_request() -> Result<PostResponse, String> {
         key1: "value1".to_string(),
         key2: 42,
     };
-    
+
     // http_request_post_json automatically sets JSON headers
     let response: PostResponse = fetch_json(
         http_request_post_json(&url, &post_data)?
     ).await.map_err(|e| e.to_string())?;
-    
+
     Ok(response)
 }
 

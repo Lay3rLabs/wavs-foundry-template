@@ -7,15 +7,11 @@ import { Callout } from 'fumadocs-ui/components/callout';
 import { DocsPage } from 'fumadocs-ui/page';
 docsignore-->
 
-{/*  todo: verify all code on this page. do we need to add info on eigenlayer here? */}
-
 This page describes the submission and aggregator services used to submit results from a workflow to a submission contract on an EVM chain.
 
 ## Submit definition
 
 The `submit` field in a service.json file specifies the submission logic for a service. The `aggregator` type sends results to an aggregator service, which validates the results and submits them to a target contract on an EVM chain.
-
-
 
 ```json service.json
     "submit": {  // Where results are sent
@@ -93,21 +89,21 @@ contract SimpleSubmit is ITypes, IWavsServiceHandler {
 
 ## Aggregator
 
-{/* todo: verify this is correct. link to design page. Add more info if appropriate. */}
-The aggregator is used to collect and validate responses from multiple operators before submitting them to the blockchain. It acts as an intermediary that receives signed responses from operators, validates each operator's ECDSA signature, aggregates signatures when enough operators have responded, and submits the aggregated data to the target contract. The aggregator supports exact match aggregation, meaning that consensus is reached if a threshold amount of submitted responses from operators are identical.
+{/* todo: link to design page. */}
+The aggregator is used to collect and validate responses from multiple operators before submitting them to the blockchain. It acts as an intermediary that receives signed responses from operators, validates each operator's signature, aggregates signatures when enough operators have responded, and submits the aggregated data to the submission contract. The aggregator supports exact match aggregation, meaning that consensus is reached if a threshold amount of submitted responses from operators are identical.
 
-WAVS currently uses ECDSA signatures for aggregation, but will support BLS signatures in the future.
+WAVS currently uses ECDSA signatures for aggregation, but will also support BLS signatures in the future.
 
 ## Aggregator submission flow
 
 1. An operator runs a component which returns a `WasmResponse` containing:
    - `payload`: The result data
    - `ordering`: Optional ordering information
-2. The operator creates an Envelope containing the result data and signs it with their ECDSA private key, creating an ECDSA signature.
-3. A Packet containing the envelope, ECDSA signature, and route information (service ID and workflow ID) is created and sent to the aggregator's `/packet` endpoint.
-4. The aggregator validates the packet's ECDSA signature by recovering the operator's address and adds it to a queue of packets with the same trigger event and service ID.
+2. The operator creates an Envelope containing the result data and signs it with their private key, creating an signature.
+3. A Packet containing the envelope, signature, and route information (service ID and workflow ID) is created and sent to the aggregator's `/packet` endpoint.
+4. The aggregator validates the packet's signature by recovering the operator's address and adds it to a queue of packets with the same trigger event and service ID.
 5. When enough packets accumulate to meet the threshold (determined by the service manager contract), the aggregator:
-   - Combines the ECDSA signatures from all packets into a single SignatureData structure
-   - Validates the combined ECDSA signatures on-chain through the service manager contract
-6. If validation succeeds, the aggregator sends the operator ECDSA signatures and payload result data as a single transaction to the `handleSignedEnvelope()` function on the submit contract specified in the service's manifest.
+   - Combines the signatures from all packets into a single SignatureData structure
+   - Validates the combined signatures on-chain through the service manager contract
+6. If validation succeeds, the aggregator sends the operator signatures and payload result data as a single transaction to the `handleSignedEnvelope()` function on the submit contract specified in the service's manifest.
 7. The `handleSignedEnvelope()` function validates the data and signatures via the service manager contract.

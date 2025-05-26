@@ -9,6 +9,14 @@ docsignore-->
 
 Components can interact with blockchains and smart contracts by using crates like [`wavs-wasi-utils`](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/). This page provides an overview of the dependencies and configuration needed to interact with Ethereum and other EVM-compatible chains. For more information on other helpful crates, see the [Utilities and crates](./utilities) page.
 
+### `wavs-wasi-utils` crate
+
+The `wavs-wasi-utils` crate provides a set of helpful functions for making HTTP requests and interacting with the blockchain. It also provides a macro for decoding trigger data for use in the component.
+
+Learn more in the [crate documentation](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/index.html).
+
+The `decode_event_log_data` macro is a utility for decoding Ethereum event logs from triggers into typed Rust events. It takes raw log data (topics and data) from the WAVS worker bindings and converts it into a Rust type that implements `SolEvent`.
+
 ## Dependencies
 
 The following dependencies are commonly required in your component's `Cargo.toml` for Ethereum interactions:
@@ -17,7 +25,7 @@ The following dependencies are commonly required in your component's `Cargo.toml
 [dependencies]
 # Core WAVS blockchain functionality
 wit-bindgen-rt = { workspace = true, features = ["bitflags"] }  # Required for WASI bindings
-wavs-wasi-utils = "=0.4.0-beta.2"                               # Blockchain interaction utilities
+wavs-wasi-utils = "0.4.0-beta.4"                                # Blockchain interaction utilities
 wstd = "0.5.3"                                                  # WASI standard library
 
 # Alloy crates for Ethereum interaction
@@ -54,6 +62,64 @@ chain_id = "1"
 ws_endpoint = "wss://eth.drpc.org"
 http_endpoint = "https://eth.drpc.org"
 ```
+
+### Sol! macro
+
+The `sol!` macro from `alloy-sol-macro` allows you to generate Rust types from Solidity interface files.
+
+You can write Solidity definitions (interfaces, structs, enums, custom errors, events, and function signatures) directly inside the `sol!` macro invocation in your Rust code.
+
+At compile time, the `sol!` macro parses that Solidity syntax and automatically generates the equivalent Rust types, structs, enums, and associated functions (like `abi_encode()` for calls or `abi_decode()` for return data/events) needed to interact with smart contracts based on those definitions.
+
+Required Dependencies:
+
+```toml
+[dependencies]
+alloy-sol-macro = { workspace = true }  # For Solidity type generation
+alloy-sol-types = { workspace = true }  # For ABI handling
+```
+
+Basic Pattern:
+
+```rust
+mod solidity {
+    use alloy_sol_macro::sol;
+
+    // Generate types from Solidity file
+    sol!("../../src/interfaces/ITypes.sol");
+
+    // Or define types inline
+    sol! {
+        struct TriggerInfo {
+            uint64 triggerId;
+            bytes data;
+        }
+
+        event NewTrigger(TriggerInfo _triggerInfo);
+    }
+}
+```
+
+In the template, the `sol!` macro is used in the `trigger.rs` component file to generate Rust types from the `ITypes.sol` file.
+
+```rust trigger.rs
+mod solidity {
+    use alloy_sol_macro::sol;
+    pub use ITypes::*;
+
+    // The objects here will be generated automatically into Rust types.
+    // If you update the .sol file, you must re-run `cargo build` to see the changes.
+    sol!("../../src/interfaces/ITypes.sol");
+}
+```
+
+The macro reads a Solidity interface file and generates corresponding Rust types and encoding/decoding functions. In the example above, it reads `ITypes.sol` which defines:
+- `NewTrigger` event
+- `TriggerInfo` struct
+- `DataWithId` struct
+
+More documentation on the `sol!` macro can be found at: https://docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html
+
 
 ## Accessing configuration and provider
 
@@ -135,3 +201,21 @@ pub fn query_nft_ownership(address: Address, nft_contract: Address) -> Result<bo
 For another approach using the `alloy-contract` crate, visit the example in the [Utilities and crates](./utilities#alloy-contract-crate) page.
 
 See the [wavs-wasi-utils documentation](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/) and the [Alloy documentation](https://docs.rs/alloy/latest/alloy/) for more detailed information.
+
+
+### Alloy ecosystem crates
+
+The Alloy ecosystem provides a comprehensive set of crates for Ethereum development:
+
+- [`alloy-primitives`](https://docs.rs/alloy-primitives/latest/alloy_primitives/): Core Ethereum types (`Address`, `U256`, `Bytes`, etc.)
+- [`alloy-provider`](https://docs.rs/alloy-provider/latest/alloy_provider/): Ethereum node interaction (RPC, WebSocket, batching)
+- [`alloy-network`](https://docs.rs/alloy-network/latest/alloy_network/): Network types and chain-specific functionality
+- [`alloy-sol-types`](https://docs.rs/alloy-sol-types/latest/alloy_sol_types/): ABI handling and type generation
+
+### Utility crates
+
+Essential utility crates for WAVS components:
+
+- [`wstd`](https://docs.rs/wstd/latest/wstd/): WASI standard library with `block_on` for async operations
+- [`serde`](https://docs.rs/serde/latest/serde/)/[`serde_json`](https://docs.rs/serde_json/latest/serde_json/): Data serialization and JSON handling
+- [`anyhow`](https://docs.rs/anyhow/latest/anyhow/): Error handling and propagation

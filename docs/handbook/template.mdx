@@ -7,8 +7,6 @@ import { Callout } from 'fumadocs-ui/components/callout';
 import { DocsPage } from 'fumadocs-ui/page';
 docsignore-->
 
-{/* todo: verify all content is correct. link to appropriate pages. */}
-
 <Callout title="Follow the tutorial" type="info">
 
 Before reading this guide, follow the [Oracle component tutorial](/tutorial/1-overview) to learn the basics of building a WAVS service.
@@ -97,4 +95,17 @@ target = "wavs:worker/layer-trigger-world@0.4.0-beta.4"
 
 ```
 
-{/* todo: add info on the wavs.toml file here  */}
+## wavs.toml config
+
+The [`wavs.toml`](https://github.com/Lay3rLabs/wavs-foundry-template/blob/main/wavs.toml) file contains configuration settings for all WAVS components:
+- Default general settings (shared across all processes)
+- WAVS server-specific settings
+- CLI-specific settings
+- Aggregator-specific settings
+
+### Environment Variable Overrides
+
+Environment variables can override configuration values using these patterns:
+- WAVS server settings: WAVS_<UPPERCASE_KEY>
+- CLI settings: WAVS_CLI_<UPPERCASE_KEY>
+- Aggregator settings: WAVS_AGGREGATOR_<UPPERCASE_KEY>

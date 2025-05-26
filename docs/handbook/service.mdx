@@ -7,14 +7,15 @@ import { Callout } from 'fumadocs-ui/components/callout';
 import { DocsPage } from 'fumadocs-ui/page';
 docsignore-->
 
-
 A service is a collection of smart contracts, operators, and offchain components that make up a WAVS AVS. The different parts of a service are defined in a service manifest or `service.json` file. This file can be stored on IPFS or an HTTP/HTTPS server, and its URL is set on the service manager contract during deployment, allowing the system to fetch the service definition when needed.
 
 The service manifest defines the configuration and different parts of a WAVS service, including information about the service, workflows, components, submission, service manager contract, and more.
 
-Below is an example of a service manifest:
+## Generate Manifest
 
-{/* todo: add info on how this is uploaded to ipfs? Add/link to info on how it is created in the template. */}
+Easily create this JSON file using the `wavs-cli service` command. The template provides a script to generate a 1 component service with ease, [build_service.sh](https://github.com/Lay3rLabs/wavs-foundry-template/blob/main/script/build_service.sh).
+
+## Example Manifest
 
 ```json service.json
 {

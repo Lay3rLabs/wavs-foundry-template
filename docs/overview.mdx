@@ -11,7 +11,6 @@ docsignore-->
 <img alt="WAVS" src="https://raw.githubusercontent.com/Lay3rLabs/WAVS-docs/refs/heads/main/public/banners/intro.png" />
 
 ## What is WAVS?
-{/* todo: verify the info in this page and update if needed */}
 
 WAVS is a [WASI](./how-it-works#wasm-and-wasi) runtime for building AVSs (Autonomous Verifiable Services). With WAVS, you can create, manage, and operate high-performance AVSs using the languages you already know and love (like [Rust, Go, and JavaScript](./handbook/components/component#languages), with more languages like Python coming soon). By providing a base layer of AVS infrastructure, WAVS lets you focus on implementing the core logic of your service. WAVS compiles that logic to [WASM](./how-it-works#wasm-and-wasi), and lets you deploy it as lightweight service components.
 
@@ -32,6 +31,7 @@ WAVS supports a wide range of AVS use cases, enabling powerful, verifiable off-c
 - **Crosschain Bridges**: Build secure, decentralized bridges with WAVS. Lock assets on one chain, trigger a verifiable service component, and mint them on another—all with trust-minimized execution.
 - **Dynamic applications**: WAVS combines on-chain and off-chain services to build a cross-chain, decentralized application layer.
 - **Intelligent protocols**: Build protocols that are verifiably aware of on-chain and off-chain events without relying on centralized infrastructure. Compose services and applications to enable complex webs of decentralized transaction flows.
+- **TEEs**: WAVS can be used to build TEEs (Trusted Execution Environments) that run off-chain computations in a secure and verifiable manner, ensuring data integrity and confidentiality.
 
 ## Building a service
 
@@ -64,7 +64,7 @@ To learn more about service components, visit the [How it works](/how-it-works#s
 
 ### Submission logic
 
-Along with your component, you'll also need to define how the results of your service are submitted on-chain. With WAVS, you can use an [aggregator and submission contracts](/how-it-works#submission) to define this logic.
+Along with your component, you'll also need to define how the results of your service are submitted on-chain. With WAVS, you can use an [aggregator and submission contract](/how-it-works#submission) to define this logic.
 
 
 ### Run your service

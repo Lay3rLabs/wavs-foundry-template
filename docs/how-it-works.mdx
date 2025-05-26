@@ -11,15 +11,13 @@ docsignore-->
 
 WAVS is a decentralized execution framework for AVSs (Autonomous Verifiable Services), enabling the results of off-chain computation to be brought verifiably on-chain. It provides a runtime for executing WASI-based service components, allowing developers to define event-driven off-chain workflows while inheriting Ethereum's security via EigenLayer restaking.
 
-{/* todo: quick technical review of this page. */}
-
 ## The flow
 
 Before diving into each part of a WAVS service individually, it's important to understand the basic execution flow of WAVS.
 
 <img alt="WAVS overview" src="https://raw.githubusercontent.com/Lay3rLabs/WAVS-docs/refs/heads/main/public/diagrams/workflows.png" />
 
-1. A service is a collection of on-chain contracts and off-chain logic run by a set of registered operators, bringing the results of off-chain computation on-chain verifiably. A service's operator set is defined in a service manager contract. A service manifest (service.json) defines the configuration and different parts of a WAVS service, including information about the service, workflows, components, submission, service manager contract, aggregator configuration, and more. The service contracts and manifest are deployed, and operators register to run the service.
+1. A service is a collection of on-chain contracts and off-chain logic run by a set of registered operators, bringing the results of off-chain computation on-chain verifiably. A service's operator set is defined in a service manager contract. A service manifest (service.json) defines the configuration and different parts of a WAVS service, including information about the service, workflows, components, submission, watch trigger, aggregator, and more. The service contracts and manifest are deployed and operators register to run the service.
 
 2. Services contain one or more workflows, which define the different execution paths in your service. Each workflow contains a trigger, a service component, and submission logic. Triggers are defined events that activate a workflow. Registered operators running WAVS nodes maintain lookup maps to track and detect triggers. Triggers can be:
    - Any on-chain EVM or Cosmos event from a specified contract address and event signature
@@ -28,9 +26,9 @@ Before diving into each part of a WAVS service individually, it's important to u
 
 3. When a trigger is detected, operators run the workflow's corresponding service component off-chain in the WAVS runtime.
 
-4. Each operator signs the result of their off-chain computation and submits it to an aggregator.
+4. Each operator signs the result of their off-chain computation and submits it to the aggregator.
 
-5. The aggregator accepts results from the operators and verifies that the result payloads match and that the signatures are valid. Once enough verified submissions are received (the threshold is defined in the service manager), the aggregator submits the bundled ECDSA signatures and result payloads as a single transaction to the submission contract specified in the service's manifest.
+5. The aggregator accepts results from the operators and verifies that the result payloads match and that the signatures are valid. Once enough verified submissions are received (the threshold is defined in the service manager), the aggregator submits the bundled signatures and result payloads as a single transaction to the submission contract specified in the service's manifest.
 
 6. The `handleSignedEnvelope()` function on the submission contract validates the data and signatures via the service manager contract. The workflow is complete, bringing the result of the off-chain computation verifiably on-chain. Services and workflows can be chained together by setting the submission event of one workflow to be the trigger of another.
 
@@ -94,7 +92,7 @@ WAVS uses a registry to store the WASM components. A service like [wa.dev](https
 
 When a service is triggered, each operator registered to the service will run the service component on their machine and generate the result. These results are signed by the operator before being submitted to an aggregator.
 
-For services that submit results on Ethereum, an off-chain aggregator can be used to conserve gas fees. Instead of each individual operator submitting results of a service directly on-chain, operators sign the results and submit them off-chain to an aggregator, which aggregates the results and submits a result to be posted to the chain in a single transaction. Results are signed using an operator's individual private key to produce an ECDSA signature, which is used to prove that the result is associated with an operator's specific private and public key pair. The aggregator accepts the result submissions from operators, verifies their validity, and compares the responses. If there is a consensus among valid operator results, the results and verified signatures are submitted on-chain as a single transaction. Support for BLS signatures and a decentralized aggregator are currently under development.
+For services that submit results on Ethereum, an off-chain aggregator can be used to conserve gas fees. Instead of each individual operator submitting results of a service directly on-chain, operators sign the results and submit them off-chain to an aggregator, which aggregates the results and submits a result to be posted to the chain in a single transaction. Results are signed using an operator's individual private key to produce an signature, which is used to prove that the result is associated with an operator's specific private and public key pair. The aggregator accepts the result submissions from operators, verifies their validity, and compares the responses. If there is a consensus among valid operator results, the results and verified signatures are submitted on-chain as a single transaction. Support for BLS signatures and a decentralized aggregator are currently under development.
 
 To learn more about the aggregator, visit the [Submission and aggregator page](./handbook/submission#aggregator).
 
