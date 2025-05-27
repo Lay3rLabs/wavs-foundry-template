@@ -20,9 +20,8 @@
 [default]
 log_level = ["info", "wavs=debug"]
 
-# The IPFS gateway URL used to access IPFS content over HTTP.
-ipfs_gateway = "http://127.0.0.1:8080/ipfs/"
-# ipfs_gateway = "https://gateway.pinata.cloud/ipfs/" # testnet / production
+# The IPFS gateway URL used to access IPFS content over HTTP. (set in wavs start command for now)
+# ipfs_gateway = "https://gateway.pinata.cloud/ipfs/"
 
 # The domain used for the warg wasi registry
 registry_domain = "localhost:8090"

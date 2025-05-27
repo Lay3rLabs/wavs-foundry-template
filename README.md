@@ -312,6 +312,7 @@ cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${IPFS_URI}" -r ${
 
 ```bash
 sh ./script/create-aggregator.sh 1
+
 sh ./infra/aggregator-1/start.sh
 
 wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(jq -c . ${SERVICE_FILE})"'}' ${AGGREGATOR_URL}/register-service -O -
@@ -322,9 +323,9 @@ wget -q --header="Content-Type: application/json" --post-data='{"service": '"$(j
 ```bash
 sh ./script/create-operator.sh 1
 
-# [!] UPDATE PROPER VALUES FOR TESTNET HERE (`wavs.toml`: registry, ipfs_gateway)
+# [!] UPDATE PROPER VALUES FOR TESTNET HERE (`wavs.toml`: ipfs_gateway)
 
-sh ./infra/wavs-1/start.sh
+IPFS_GATEWAY=${IPFS_GATEWAY}/ipfs/ sh ./infra/wavs-1/start.sh
 
 # Deploy the service JSON to WAVS so it now watches and submits.
 # 'opt in' for WAVS to watch (this is before we register to Eigenlayer)
