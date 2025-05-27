@@ -2,9 +2,11 @@
 
 set -e
 
+TESTNET_RPC_URL=$(grep -E '^TESTNET_RPC_URL=' .env | cut -d '=' -f2- | tr -d '"')
+
 PORT=8545
 MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.5
-FORK_RPC_URL=${FORK_RPC_URL:-"https://ethereum-holesky-rpc.publicnode.com"}
+FORK_RPC_URL=${FORK_RPC_URL:-"${TESTNET_RPC_URL}"}
 DEPLOY_ENV=$(sh ./script/get-deploy-status.sh)
 
 ## == Start watcher ==
