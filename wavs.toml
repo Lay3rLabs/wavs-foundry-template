@@ -80,8 +80,8 @@ http_endpoint = "https://ethereum-sepolia-rpc.publicnode.com"
 
 [default.chains.evm.holesky]
 chain_id = "17000"
-ws_endpoint = "wss://ethereum-holesky-rpc.publicnode.com"
-http_endpoint = "https://ethereum-holesky-rpc.publicnode.com"
+ws_endpoint = "wss://holesky.drpc.org"
+http_endpoint = "https://holesky.drpc.org"
 
 [default.chains.evm.holesky-fork]
 chain_id = "17000"

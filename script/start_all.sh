@@ -2,7 +2,13 @@
 
 set -e
 
-TESTNET_RPC_URL=$(grep -E '^TESTNET_RPC_URL=' .env | cut -d '=' -f2- | tr -d '"')
+if [ -f .env ] && grep -q '^TESTNET_RPC_URL=' .env; then
+  TESTNET_RPC_URL=$(grep -E '^TESTNET_RPC_URL=' .env | cut -d '=' -f2- | tr -d '"')
+else
+  rpc_url="https://holesky.drpc.org"
+  echo "No TESTNET_RPC_URL found in .env, using default ${rpc_url}"
+  TESTNET_RPC_URL=${rpc_url}
+fi
 
 PORT=8545
 MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.5

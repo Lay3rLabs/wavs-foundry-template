@@ -102,7 +102,7 @@ deploy-service:
 			exit 1; \
 		fi; \
 	fi
-	@echo $(WAVS_CMD) deploy-service --service-url ${SERVICE_URL} --log-level=debug --data /data/.docker --home /data $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),) $(if $(IPFS_GATEWAY),--ipfs-gateway $(IPFS_GATEWAY),)
+	@$(WAVS_CMD) deploy-service --service-url ${SERVICE_URL} --log-level=debug --data /data/.docker --home /data $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),) $(if $(IPFS_GATEWAY),--ipfs-gateway $(IPFS_GATEWAY),)
 
 ## get-trigger: get the trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
 get-trigger:
