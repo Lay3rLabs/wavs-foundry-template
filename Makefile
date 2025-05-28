@@ -9,7 +9,7 @@ COIN_MARKET_CAP_ID?=1
 COMPONENT_FILENAME?=evm_price_oracle.wasm
 CREDENTIAL?=""
 DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:fd8b66e
-MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.5
+MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.6
 IPFS_ENDPOINT?=http://127.0.0.1:5001
 RPC_URL?=http://127.0.0.1:8545
 SERVICE_FILE?=.docker/service.json
@@ -134,7 +134,7 @@ operator-list:
 	fi
 	@docker run --rm --network host --env-file ${ENV_FILE} \
 		-e WAVS_SERVICE_MANAGER_ADDRESS=${SERVICE_MANAGER_ADDRESS} \
-		-v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ${MIDDLEWARE_DOCKER_IMAGE}
+		-v ./.nodes:/root/.nodes ${MIDDLEWARE_DOCKER_IMAGE} list_operator
 
 AVS_PRIVATE_KEY?=""
 DELEGATION?="0.001ether"
@@ -150,7 +150,7 @@ operator-register:
 		-e WAVS_SERVICE_MANAGER_ADDRESS=${SERVICE_MANAGER_ADDRESS} \
 		--env-file ${ENV_FILE} \
 		-v ./.nodes:/root/.nodes \
-		--entrypoint /wavs/register.sh ${MIDDLEWARE_DOCKER_IMAGE} "${AVS_PRIVATE_KEY}" "${DELEGATION}"
+		${MIDDLEWARE_DOCKER_IMAGE} register "${AVS_PRIVATE_KEY}" "${DELEGATION}"
 
 
 ## update-submodules: update the git submodules
