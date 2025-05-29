@@ -91,7 +91,6 @@ IPFS_GATEWAY?="https://ipfs.io/ipfs"
 ## deploy-service: deploying the WAVS component service json | SERVICE_URL, CREDENTIAL, WAVS_ENDPOINT
 deploy-service:
 # this wait is required to ensure the WAVS service has time to service check
-	@sleep 2
 	@if [ -z "${SERVICE_URL}" ]; then \
 		echo "Error: SERVICE_URL is not set. Set SERVICE_URL to a link / ipfs url."; \
 		exit 1; \
@@ -126,6 +125,11 @@ upload-to-ipfs:
 		fi; \
 		curl -X POST --url https://uploads.pinata.cloud/v3/files --header "Authorization: Bearer ${PINATA_API_KEY}" --header 'Content-Type: multipart/form-data' --form file=@${SERVICE_FILE} --form network=public --form name=service-`date +"%b-%d-%Y"`.json | jq -r .data.cid; \
 	fi
+
+COMMAND?=""
+wavs-middleware:
+	@docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ${MIDDLEWARE_DOCKER_IMAGE} ${COMMAND}
+
 
 ## operator-list: listing the AVS operators | ENV_FILE
 operator-list:

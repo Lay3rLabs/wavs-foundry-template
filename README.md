@@ -232,7 +232,7 @@ make start-all-local
 sh ./script/create-deployer.sh
 
 ## Deploy Eigenlayer from Deployer
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.6 deploy
+COMMAND=deploy make wavs-middleware
 ```
 
 ## Deploy Service Contracts

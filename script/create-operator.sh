@@ -69,6 +69,9 @@ if [ ! "\$(docker ps -q -f name=\${WAVS_INSTANCE})" ]; then
   echo "Container \${WAVS_INSTANCE} is not running. Reason:"
   docker run --rm --name \${WAVS_INSTANCE} --network host --env-file .env -v \$(pwd):/root/wavs \${IMAGE} wavs --home /root/wavs --ipfs-gateway \${IPFS_GATEWAY} --host 0.0.0.0 --log-level info
 fi
+
+# give wavs a chance to start up & health check
+sleep 3
 EOF
 
 cp wavs.toml ${OPERATOR_LOC}/wavs.toml
