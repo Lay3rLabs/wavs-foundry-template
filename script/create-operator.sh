@@ -55,7 +55,7 @@ cat > "${OPERATOR_LOC}/start.sh" << EOF
 #!/bin/bash
 cd \$(dirname "\$0") || exit 1
 
-IMAGE=ghcr.io/lay3rlabs/wavs:latest
+IMAGE=ghcr.io/lay3rlabs/wavs:5bab604
 WAVS_INSTANCE=wavs-${OPERATOR_INDEX}
 IPFS_GATEWAY=\${IPFS_GATEWAY:-"https://ipfs.io/ipfs/"}
 
