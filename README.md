@@ -334,8 +334,8 @@ export SERVICE_ID=`curl -s http://localhost:8000/app | jq -r '.services[0].id'`
 export HD_INDEX=`curl -s http://localhost:8000/service-key/${SERVICE_ID} | jq -rc '.secp256k1.hd_index'`
 
 source infra/wavs-1/.env
-# TODO: make these different, but first just use the same pattern as before and fill in the extra args
-export OPERATOR_PRIVATE_KEY=`cast wallet private-key --mnemonic "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index ${HD_INDEX}`
+# These are different, and always the same operator key when deploying multiple services
+export OPERATOR_PRIVATE_KEY=`cast wallet private-key --mnemonic "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 0`
 export AVS_SIGNING_ADDRESS=`cast wallet address --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index ${HD_INDEX}`
 
 
