@@ -9,7 +9,7 @@ COIN_MARKET_CAP_ID?=1
 COMPONENT_FILENAME?=evm_price_oracle.wasm
 CREDENTIAL?=""
 DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:fd8b66e
-MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.6
+MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:e0328ea
 IPFS_ENDPOINT?=http://127.0.0.1:5001
 RPC_URL?=http://127.0.0.1:8545
 SERVICE_FILE?=.docker/service.json
@@ -136,12 +136,16 @@ operator-list:
 		-e WAVS_SERVICE_MANAGER_ADDRESS=${SERVICE_MANAGER_ADDRESS} \
 		-v ./.nodes:/root/.nodes ${MIDDLEWARE_DOCKER_IMAGE} list_operator
 
-AVS_PRIVATE_KEY?=""
+OPERATOR_PRIVATE_KEY?=""
+AVS_SIGNING_ADDRESS?=""
 DELEGATION?="0.001ether"
-## operator-register: listing the AVS operators | ENV_FILE, AVS_PRIVATE_KEY
+## operator-register: listing the AVS operators | ENV_FILE, OPERATOR_PRIVATE_KEY
 operator-register:
-	@if [ -z "${AVS_PRIVATE_KEY}" ]; then \
-		echo "Error: AVS_PRIVATE_KEY is not set. Please set it to your AVS private key." && exit 1; \
+	@if [ -z "${OPERATOR_PRIVATE_KEY}" ]; then \
+		echo "Error: OPERATOR_PRIVATE_KEY is not set. Please set it to your operator private key." && exit 1; \
+	fi
+	@if [ -z "${AVS_SIGNING_ADDRESS}" ]; then \
+		echo "Error: AVS_SIGNING_ADDRESS is not set. Please set it to the signing address returned from your WAVS node." && exit 1; \
 	fi
 	@if [ -z "${SERVICE_MANAGER_ADDRESS}" ]; then \
 		echo "Error: SERVICE_MANAGER_ADDRESS is not set. Please set it to the deployed WAVS service manager." && exit 1; \
@@ -150,7 +154,7 @@ operator-register:
 		-e WAVS_SERVICE_MANAGER_ADDRESS=${SERVICE_MANAGER_ADDRESS} \
 		--env-file ${ENV_FILE} \
 		-v ./.nodes:/root/.nodes \
-		${MIDDLEWARE_DOCKER_IMAGE} register "${AVS_PRIVATE_KEY}" "${DELEGATION}"
+		${MIDDLEWARE_DOCKER_IMAGE} register "${OPERATOR_PRIVATE_KEY}" "${AVS_SIGNING_ADDRESS}" "${DELEGATION}"
 
 
 ## update-submodules: update the git submodules

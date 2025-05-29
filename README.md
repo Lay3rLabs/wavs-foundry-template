@@ -325,6 +325,8 @@ WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${IPFS_URI} IPFS_GATEWAY=${IPFS_
 
 ## Register service specific operator
 
+Making test mnemonic: `cast wallet new-mnemonic --json | jq -r .mnemonic`
+
 Each service gets their own key path (hd_path). The first service starts at 1 and increments from there. Get the service ID
 
 ```bash
@@ -332,11 +334,14 @@ export SERVICE_ID=`curl -s http://localhost:8000/app | jq -r '.services[0].id'`
 export HD_INDEX=`curl -s http://localhost:8000/service-key/${SERVICE_ID} | jq -rc '.secp256k1.hd_index'`
 
 source infra/wavs-1/.env
-export AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index ${HD_INDEX}`
+# TODO: make these different, but first just use the same pattern as before and fill in the extra args
+export OPERATOR_PRIVATE_KEY=`cast wallet private-key --mnemonic "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index ${HD_INDEX}`
+export AVS_SIGNING_ADDRESS=`cast wallet address --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index ${HD_INDEX}`
+
 
 # Register the operator with the WAVS service manager
 export SERVICE_MANAGER_ADDRESS=`jq -r '.addresses.WavsServiceManager' .nodes/avs_deploy.json`
-DELEGATION=0.001ether AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make V=1 operator-register
+DELEGATION=0.001ether OPERATOR_PRIVATE_KEY=${OPERATOR_PRIVATE_KEY} AVS_SIGNING_ADDRESS=${AVS_SIGNING_ADDRESS} make V=1 operator-register
 
 # Verify registration
 SERVICE_MANAGER_ADDRESS=${SERVICE_MANAGER_ADDRESS} make operator-list
