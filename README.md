@@ -340,10 +340,11 @@ export AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSIO
 
 # Register the operator with the WAVS service manager
 export SERVICE_MANAGER_ADDRESS=`jq -r '.addresses.WavsServiceManager' .nodes/avs_deploy.json`
-DELEGATION=0.001ether AVS_PRIVATE_KEY=${AVS_PRIVATE_KEY} make V=1 operator-register
+
+COMMAND="register ${AVS_PRIVATE_KEY} 0.001ether" make wavs-middleware
 
 # Verify registration
-SERVICE_MANAGER_ADDRESS=${SERVICE_MANAGER_ADDRESS} make operator-list
+COMMAND="list_operator" PAST_BLOCKS=500 make wavs-middleware
 ```
 
 ## Trigger the Service

@@ -127,35 +127,12 @@ upload-to-ipfs:
 	fi
 
 COMMAND?=""
+PAST_BLOCKS?=500
 wavs-middleware:
-	@docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ${MIDDLEWARE_DOCKER_IMAGE} ${COMMAND}
-
-
-## operator-list: listing the AVS operators | ENV_FILE
-operator-list:
-	@if [ -z "${SERVICE_MANAGER_ADDRESS}" ]; then \
-		echo "Error: SERVICE_MANAGER_ADDRESS is not set. Please set it to the deployed WAVS stake registry." && exit 1; \
-	fi
-	@docker run --rm --network host --env-file ${ENV_FILE} \
-		-e WAVS_SERVICE_MANAGER_ADDRESS=${SERVICE_MANAGER_ADDRESS} \
-		-v ./.nodes:/root/.nodes ${MIDDLEWARE_DOCKER_IMAGE} list_operator
-
-AVS_PRIVATE_KEY?=""
-DELEGATION?="0.001ether"
-## operator-register: listing the AVS operators | ENV_FILE, AVS_PRIVATE_KEY
-operator-register:
-	@if [ -z "${AVS_PRIVATE_KEY}" ]; then \
-		echo "Error: AVS_PRIVATE_KEY is not set. Please set it to your AVS private key." && exit 1; \
-	fi
-	@if [ -z "${SERVICE_MANAGER_ADDRESS}" ]; then \
-		echo "Error: SERVICE_MANAGER_ADDRESS is not set. Please set it to the deployed WAVS service manager." && exit 1; \
-	fi
-	@docker run --rm --network host \
-		-e WAVS_SERVICE_MANAGER_ADDRESS=${SERVICE_MANAGER_ADDRESS} \
-		--env-file ${ENV_FILE} \
-		-v ./.nodes:/root/.nodes \
-		${MIDDLEWARE_DOCKER_IMAGE} register "${AVS_PRIVATE_KEY}" "${DELEGATION}"
-
+	@docker run --rm --network host --env-file .env \
+		$(if ${SERVICE_MANAGER_ADDRESS},-e WAVS_SERVICE_MANAGER_ADDRESS=${SERVICE_MANAGER_ADDRESS}) \
+		$(if ${PAST_BLOCKS},-e PAST_BLOCKS=${PAST_BLOCKS}) \
+		-v ./.nodes:/root/.nodes ${MIDDLEWARE_DOCKER_IMAGE} ${COMMAND}
 
 ## update-submodules: update the git submodules
 update-submodules:
