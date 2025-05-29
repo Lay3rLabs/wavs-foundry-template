@@ -231,7 +231,7 @@ make start-all-local
 bash ./script/create-deployer.sh
 
 ## Deploy Eigenlayer from Deployer
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:e0328ea deploy
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:763f787 deploy
 ```
 
 ## Deploy Service Contracts
@@ -378,6 +378,8 @@ TRIGGER_ID=1 RPC_URL=${RPC_URL} make show-result
 ```
 
 ## Update Threshold
+
+TODO: this is no longer needed. 2/3 is built into the system now, and it is calculated dynamically
 
 ```bash docci-ignore
 export ECDSA_CONTRACT=`cat .nodes/avs_deploy.json | jq -r '.addresses.stakeRegistry'`
