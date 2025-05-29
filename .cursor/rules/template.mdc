@@ -1,6 +1,6 @@
 ---
-description: Overview and customization guide for the WAVS Foundry template structure and configuration
-globs: **/*
+description: 
+globs: 
 alwaysApply: true
 ---
 # WAVS Foundry Template Overview
@@ -101,7 +101,7 @@ Override config values via environment variables:
 ---
 
 For more information:
-- [WAVS Foundry Template GitHub](https://github.com/Lay3rLabs/wavs-foundry-template)
-- [Oracle Component Tutorial](https://docs.wavs.com/tutorial/1-overview)
-- [WAVS Design Considerations](https://docs.wavs.com/design)
-- [wavs.toml example](https://github.com/Lay3rLabs/wavs-foundry-template/blob/main/wavs.toml)
+- [WAVS Foundry Template GitHub](mdc:https:/github.com/Lay3rLabs/wavs-foundry-template)
+- [Oracle Component Tutorial](mdc:https:/docs.wavs.com/tutorial/1-overview)
+- [WAVS Design Considerations](mdc:https:/docs.wavs.com/design)
+- [wavs.toml example](mdc:https:/github.com/Lay3rLabs/wavs-foundry-template/blob/main/wavs.toml)

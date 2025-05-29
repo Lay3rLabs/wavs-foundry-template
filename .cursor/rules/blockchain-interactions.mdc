@@ -1,6 +1,6 @@
 ---
-description: Guide for interacting with Ethereum and EVM-compatible blockchains from WAVS components using Rust crates and configuration.
-globs: **/*.rs
+description: 
+globs: 
 alwaysApply: true
 ---
 # Blockchain Interactions in WAVS Components
@@ -136,17 +136,17 @@ pub fn query_nft_ownership(address: Address, nft_contract: Address) -> Result<bo
 - `anyhow`: Error handling.
 
 For more information:
-- [wavs-wasi-utils crate documentation](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/index.html)
-- [Alloy sol! macro documentation](https://docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html)
-- [Utilities and crates page](./utilities)
-- [wavs-wasi-utils docs](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/)
-- [Alloy documentation](https://docs.rs/alloy/latest/alloy/)
-- [Example querying NFT ownership](https://github.com/Lay3rLabs/wavs-art/blob/main/components/autonomous-artist/src/evm.rs)
-- [alloy-primitives](https://docs.rs/alloy-primitives/latest/alloy_primitives/)
-- [alloy-provider](https://docs.rs/alloy-provider/latest/alloy_provider/)
-- [alloy-network](https://docs.rs/alloy-network/latest/alloy_network/)
-- [alloy-sol-types](https://docs.rs/alloy-sol-types/latest/alloy_sol_types/)
-- [wstd](https://docs.rs/wstd/latest/wstd/)
-- [serde](https://docs.rs/serde/latest/serde/)
-- [serde_json](https://docs.rs/serde_json/latest/serde_json/)
-- [anyhow](https://docs.rs/anyhow/latest/anyhow/)
+- [wavs-wasi-utils crate documentation](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/index.html)
+- [Alloy sol! macro documentation](mdc:https:/docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html)
+- [Utilities and crates page](mdc:utilities)
+- [wavs-wasi-utils docs](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils)
+- [Alloy documentation](mdc:https:/docs.rs/alloy/latest/alloy)
+- [Example querying NFT ownership](mdc:https:/github.com/Lay3rLabs/wavs-art/blob/main/components/autonomous-artist/src/evm.rs)
+- [alloy-primitives](mdc:https:/docs.rs/alloy-primitives/latest/alloy_primitives)
+- [alloy-provider](mdc:https:/docs.rs/alloy-provider/latest/alloy_provider)
+- [alloy-network](mdc:https:/docs.rs/alloy-network/latest/alloy_network)
+- [alloy-sol-types](mdc:https:/docs.rs/alloy-sol-types/latest/alloy_sol_types)
+- [wstd](mdc:https:/docs.rs/wstd/latest/wstd)
+- [serde](mdc:https:/docs.rs/serde/latest/serde)
+- [serde_json](mdc:https:/docs.rs/serde_json/latest/serde_json)
+- [](mdc:https:/docs.rs/anyhow/latest/anyhow)

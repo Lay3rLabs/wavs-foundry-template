@@ -38,7 +38,15 @@ pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, 
             let trigger_info = solidity::TriggerInfo::abi_decode(&event._triggerInfo)?;
             Ok((trigger_info.triggerId, trigger_info.data.to_vec(), Destination::Ethereum))
         }
-        TriggerData::Raw(data) => Ok((0, data.clone(), Destination::CliOutput)),
+        TriggerData::Raw(data) => {
+            // Try to decode as a function call first
+            if let Ok(decoded) = String::abi_decode(&data) {
+                Ok((0, decoded.as_bytes().to_vec(), Destination::CliOutput))
+            } else {
+                // If decoding fails, use the raw data
+                Ok((0, data.clone(), Destination::CliOutput))
+            }
+        }
         _ => Err(anyhow::anyhow!("Unsupported trigger data type")),
     }
 }

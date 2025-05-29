@@ -1,6 +1,6 @@
 ---
-description: Rules for configuring submission contracts and aggregators for submitting workflow results to EVM chains
-globs: **/*.rs
+description: 
+globs: 
 alwaysApply: true
 ---
 # Submission and Aggregator Configuration
@@ -83,9 +83,9 @@ contract SimpleSubmit is ITypes, IWavsServiceHandler {
 6. **Chaining Workflows**
 
 - Workflows can be chained by triggering one workflow on the submission event of another.
-- See the [Workflows page](./workflows) for details.
+- See the [Workflows page](mdc:workflows) for details.
 
 For more information:
-- [@wavs Solidity Package](https://www.npmjs.com/package/@wavs/solidity?activeTab=code)
-- [Template Submission Contract](https://github.com/Lay3rLabs/wavs-foundry-template/blob/main/src/contracts/WavsSubmit.sol)
-- [Workflows Documentation](./workflows)
+- [@wavs Solidity Package](mdc:https:/www.npmjs.com/package/@wavs/solidity?activeTab=code)
+- [Template Submission Contract](mdc:https:/github.com/Lay3rLabs/wavs-foundry-template/blob/main/src/contracts/WavsSubmit.sol)
+- [](mdc:workflows)

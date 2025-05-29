@@ -35,7 +35,8 @@ wasi-build:
 wasi-exec: pull-image
 	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
 	--component "/data/compiled/$(COMPONENT_FILENAME)" \
-	--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)`
+	--input $(COIN_MARKET_CAP_ID) \
+
 
 ## clean: cleaning the project files
 clean: clean-docker

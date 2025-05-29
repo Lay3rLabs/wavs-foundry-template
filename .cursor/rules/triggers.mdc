@@ -1,6 +1,6 @@
 ---
-description: Setup and manage WAVS service triggers for onchain events and scheduled executions
-globs: **/*.rs
+description: 
+globs: 
 alwaysApply: true
 ---
 # WAVS Service Triggers
@@ -49,7 +49,7 @@ pub enum TriggerData {
 }
 ```
 
-5. `TriggerAction` is converted to WASI format and passed to the component, which decodes it using the `decode_event_log_data!` macro from [`wavs-wasi-utils`](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html).
+5. `TriggerAction` is converted to WASI format and passed to the component, which decodes it using the `decode_event_log_data!` macro from [`wavs-wasi-utils`](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html).
 
 ## Trigger Configuration
 
@@ -176,6 +176,6 @@ Passes block height and chain name to the component.
 ---
 
 For more information:
-- [WAVS WASI Utils `decode_event_log_data!` Macro](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html)
-- [Cron Expression Reference](https://crontab.guru/)
-- [WAVS Components Documentation](./components/component)
+- [WAVS WASI Utils `decode_event_log_data!` Macro](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html)
+- [Cron Expression Reference](mdc:https:/crontab.guru)
+- [](mdc:components/component)

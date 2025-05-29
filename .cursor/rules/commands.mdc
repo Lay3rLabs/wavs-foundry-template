@@ -1,6 +1,6 @@
 ---
-description: Summary of Makefile commands for WAVS development CLI tasks
-globs: **/Makefile
+description: 
+globs: 
 alwaysApply: true
 ---
 # Makefile Commands for WAVS Development
@@ -50,5 +50,5 @@ make operator-register ENV_FILE=.env AVS_PRIVATE_KEY=key123
 ```
 
 For more information:
-- [WAVS Documentation](https://docs.wavs.example.com)
-- [Makefile Reference](https://www.gnu.org/software/make/manual/make.html)
+- [WAVS Documentation](mdc:https:/docs.wavs.example.com)
+- [](mdc:https:/www.gnu.org/software/make/manual/make.html)

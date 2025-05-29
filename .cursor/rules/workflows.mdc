@@ -1,6 +1,6 @@
 ---
-description: Define and manage WAVS service workflows including triggers, components, submissions, and chaining.
-globs: **/service.json
+description: 
+globs: 
 alwaysApply: true
 ---
 # WAVS Service Workflows
@@ -134,10 +134,10 @@ Example:
 - WAVS supports triggers based on contract events or block heights on Cosmos and EVM chains.
 - Enables cross-chain services that monitor one chain and submit results to another (e.g., Ethereum).
 
-For more details, see the [Trigger page](./triggers).
+For more details, see the [Trigger page](mdc:triggers).
 
 For more information:
-- [WAVS Design Considerations](../design)
-- [Trigger Documentation](./triggers)
-- [Component Documentation](./component)
-- [Submission Documentation](./submission)
+- [WAVS Design Considerations](mdc:../design)
+- [Trigger Documentation](mdc:triggers)
+- [Component Documentation](mdc:component)
+- [](mdc:submission)

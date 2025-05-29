@@ -1,11 +1,11 @@
 ---
-description: How to make HTTP requests from WAVS components using wavs-wasi-utils
-globs: **/*.rs
+description: 
+globs: 
 alwaysApply: true
 ---
 # Network Requests in WAVS Components
 
-Use the [`wavs-wasi-utils`](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/index.html) crate to make HTTP requests from WAVS components. Since WASI runs synchronously, use `block_on` from the `wstd` crate to run async HTTP calls.
+Use the [`wavs-wasi-utils`](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/index.html) crate to make HTTP requests from WAVS components. Since WASI runs synchronously, use `block_on` from the `wstd` crate to run async HTTP calls.
 
 ### Dependencies
 
@@ -103,6 +103,6 @@ fn process_data() -> Result<PostResponse, String> {
 5. Handle errors by converting them to strings for easier debugging.
 
 For more information:
-- [wavs-wasi-utils crate documentation](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/)
-- [HTTP module docs](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/http/index.html)
-- [Variables page](./variables)
+- [wavs-wasi-utils crate documentation](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils)
+- [HTTP module docs](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/http/index.html)
+- [](mdc:variables)

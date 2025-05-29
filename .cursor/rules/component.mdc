@@ -1,6 +1,6 @@
 ---
-description: Overview of WAVS service components, their structure, and implementation in Rust
-globs: **/*.rs
+description: 
+globs: 
 alwaysApply: true
 ---
 # WAVS Service Components Overview
@@ -42,7 +42,7 @@ mod solidity {
 }
 ```
 
-- Use `decode_event_log_data!` macro from [`wavs-wasi-utils`](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html).
+- Use `decode_event_log_data!` macro from [`wavs-wasi-utils`](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html).
 - Use `sol!` macro from `alloy-sol-macro` to generate Rust types from Solidity interfaces.
 
 ### Component Logic
@@ -71,7 +71,7 @@ impl Guest for Component {
 ```
 
 - Business logic can include blockchain calls, network requests, off-chain computations.
-- See [design considerations](../../design) for suitable component types.
+- See [design considerations](mdc:../../design) for suitable component types.
 
 #### Logging
 
@@ -146,16 +146,16 @@ Define components in the workflow object:
 - `config`: Configuration variables.
 - `env_keys`: Secret environment variables accessible by the component.
 
-For config and env keys details, see the [variables](./variables) page.
+For config and env keys details, see the [variables](mdc:variables) page.
 
 ---
 
 For more information:
-- [Go example component](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/components/golang-evm-price-oracle)
-- [TypeScript/JS example component](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/components/js-evm-price-oracle)
-- [`decode_event_log_data!` macro docs](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html)
-- [Utilities and crates (sol! macro)](./utilities#sol-macro)
-- [Design considerations](../../design)
-- [Variables page](./variables)
-- [Workflows](../workflows)
-- [Service manifest](../service)
+- [Go example component](mdc:https:/github.com/Lay3rLabs/wavs-foundry-template/tree/main/components/golang-evm-price-oracle)
+- [TypeScript/JS example component](mdc:https:/github.com/Lay3rLabs/wavs-foundry-template/tree/main/components/js-evm-price-oracle)
+- [`decode_event_log_data!` macro docs](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html)
+- [Utilities and crates (sol! macro)](mdc:utilities#sol-macro)
+- [Design considerations](mdc:../../design)
+- [Variables page](mdc:variables)
+- [Workflows](mdc:../workflows)
+- [](mdc:../service)

@@ -1,6 +1,6 @@
 ---
-description: Managing public and private configuration variables in WAVS components
-globs: **/*.rs
+description: 
+globs: 
 alwaysApply: true
 ---
 # Variables in WAVS Components
@@ -59,4 +59,4 @@ wavs-cli exec --component <COMPONENT> --input <INPUT> --config api_endpoint=http
 ```
 
 For more information:
-- [WAVS Environment Variables Documentation](https://docs.wavs.com/environment-variables)
+- [](mdc:https:/docs.wavs.com/environment-variables)

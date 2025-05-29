@@ -1,6 +1,6 @@
 ---
-description: Defines the WAVS service manifest structure and service manager contract usage
-globs: **/service.json
+description: 
+globs: 
 alwaysApply: true
 ---
 # Service Manifest and Manager
@@ -8,7 +8,7 @@ alwaysApply: true
 The service manifest (`service.json`) defines a WAVS service's configuration, including workflows, components, submission, and the service manager contract. It is hosted on IPFS or HTTP(S) and linked via the service manager contract.
 
 1. Generate Manifest  
-Use `wavs-cli service` or the provided [build_service.sh](https://github.com/Lay3rLabs/wavs-foundry-template/blob/main/script/build_service.sh) script to create a service manifest with one component.
+Use `wavs-cli service` or the provided [build_service.sh](mdc:https:/github.com/Lay3rLabs/wavs-foundry-template/blob/main/script/build_service.sh) script to create a service manifest with one component.
 
 2. Manifest Structure Example  
 ```json service.json
@@ -100,9 +100,9 @@ Best Practices:
 - Register operators and set appropriate weights to secure submissions.
 
 For more details, see:  
-- [Workflows](./workflows)  
-- [Triggers](./triggers)  
-- [Components](./components/component)  
-- [Submission and aggregator](./submission)  
-- [build_service.sh script](https://github.com/Lay3rLabs/wavs-foundry-template/blob/main/script/build_service.sh)  
-- [Pinata IPFS Service](https://app.pinata.cloud/developers/api-keys)
+- [Workflows](mdc:workflows)  
+- [Triggers](mdc:triggers)  
+- [Components](mdc:components/component)  
+- [Submission and aggregator](mdc:submission)  
+- [build_service.sh script](mdc:https:/github.com/Lay3rLabs/wavs-foundry-template/blob/main/script/build_service.sh)  
+- [](mdc:https:/app.pinata.cloud/developers/api-keys)
