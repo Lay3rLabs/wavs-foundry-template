@@ -231,7 +231,7 @@ make start-all-local
 bash ./script/create-deployer.sh
 
 ## Deploy Eigenlayer from Deployer
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:763f787 deploy
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:1956ecf deploy
 ```
 
 ## Deploy Service Contracts
