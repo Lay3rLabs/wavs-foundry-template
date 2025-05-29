@@ -16,9 +16,9 @@ SERVICE_FILE?=.docker/service.json
 SERVICE_SUBMISSION_ADDR?=`jq -r .deployedTo .docker/submit.json`
 SERVICE_TRIGGER_ADDR?=`jq -r .deployedTo .docker/trigger.json`
 WASI_BUILD_DIR ?= ""
-WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ${DOCKER_IMAGE} wavs-cli
-WAVS_ENDPOINT?="http://127.0.0.1:8000"
 ENV_FILE?=.env
+WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f ${ENV_FILE} && echo "--env-file ./${ENV_FILE}") -v $$(pwd):/data ${DOCKER_IMAGE} wavs-cli
+WAVS_ENDPOINT?="http://127.0.0.1:8000"
 -include ${ENV_FILE}
 
 # Default target is build
@@ -129,7 +129,7 @@ upload-to-ipfs:
 COMMAND?=""
 PAST_BLOCKS?=500
 wavs-middleware:
-	@docker run --rm --network host --env-file .env \
+	@docker run --rm --network host --env-file ${ENV_FILE} \
 		$(if ${SERVICE_MANAGER_ADDRESS},-e WAVS_SERVICE_MANAGER_ADDRESS=${SERVICE_MANAGER_ADDRESS}) \
 		$(if ${PAST_BLOCKS},-e PAST_BLOCKS=${PAST_BLOCKS}) \
 		-v ./.nodes:/root/.nodes ${MIDDLEWARE_DOCKER_IMAGE} ${COMMAND}
@@ -155,11 +155,11 @@ _build_forge:
 
 .PHONY: setup-env
 setup-env:
-	@if [ ! -f .env ]; then \
+	@if [ ! -f ${ENV_FILE} ]; then \
 		if [ -f .env.example ]; then \
-			echo "Creating .env file from .env.example..."; \
-			cp .env.example .env; \
-			echo ".env file created successfully!"; \
+			echo "Creating ${ENV_FILE} file from .env.example..."; \
+			cp .env.example ${ENV_FILE}; \
+			echo "${ENV_FILE} file created successfully!"; \
 		fi; \
 	fi
 
