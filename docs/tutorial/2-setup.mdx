@@ -79,11 +79,20 @@ Install the following for building WebAssembly components. Visit the [Cargo Comp
 {/* This section is also in [](./5-build.mdx). Remember to update there as well */}
 ```bash docci-ignore
 cargo install cargo-binstall
-cargo binstall cargo-component warg-cli wkg --locked --no-confirm --force
+cargo binstall cargo-component wasm-tools warg-cli wkg --locked --no-confirm --force
 
 # Configure default registry
 wkg config --default-registry wa.dev
 ```
+
+<Callout title="WSL Ubuntu GLIB out of date" type="error">
+
+If you are on Ubuntu LTS but encounter an error like `wkg: /lib/x86_64-linux-gnu/libm.so.6: version 'GLIBC_2.38' not found (required by wkg)`:
+
+```bash
+sudo do-release-upgrade
+```
+</Callout>
 
 ## Foundry
 
@@ -202,5 +211,9 @@ Visit the [JQ Documentation](https://jqlang.org/download/) for more info.
 
 Node v21+ is needed for the WAVS template. Visit the [NVM Installation guide](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) to install Node Version Manager and update your Node version.
 
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+nvm install --lts
+```
 
 After setting up your system, continue to the next page to create your project.

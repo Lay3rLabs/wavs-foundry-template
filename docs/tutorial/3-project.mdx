@@ -7,12 +7,12 @@ import { Callout } from 'fumadocs-ui/components/callout';
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 docsignore-->
 
-{/* todo: update once the template is updated */}
+{/* todo: update --branch main once the template is updated */}
 
 1. After setting up your environment, open a terminal and run the following command to create your WAVS Foundry Template project. In this example, your project will be called `my-wavs`.
 
 ```bash docci-ignore
-forge init --template Lay3rLabs/wavs-foundry-template my-wavs
+forge init --branch main --template Lay3rLabs/wavs-foundry-template my-wavs
 ```
 
 2. Then, enter your project:
@@ -31,11 +31,11 @@ code .
 
 This template repo contains all the files you'll need to build, run, and test WAVS services locally.
 
-The template already contains the necessary files for the oracle example to run. For example, the trigger ([`WavsTrigger.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsTrigger.sol)) and submission ([`WavsSubmit.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsSubmit.sol)) contracts can be found in the [`/my-wavs/src/contracts`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src) folder.
+The template already contains the necessary files for the oracle example to run. For example, the trigger ([`WavsTrigger.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/src/contracts/WavsTrigger.sol)) and submission ([`WavsSubmit.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/src/contracts/WavsSubmit.sol)) contracts can be found in the [`/my-wavs/src/contracts`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/src) folder.
 
-In [`/evm-price-oracle/src/lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/components/evm-price-oracle/src/lib.rs) you'll find the oracle service component.
+In [`/evm-price-oracle/src/lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/components/evm-price-oracle/src/lib.rs) you'll find the oracle service component.
 
-This template uses a [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile) and environment variables to help with your developer experience. If you are ever curious about one of the `Make` commands in the following sections, you can always look at the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile) to learn more.
+This template uses a [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/Makefile) and environment variables to help with your developer experience. If you are ever curious about one of the `Make` commands in the following sections, you can always look at the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/Makefile) to learn more.
 
 <Callout title="Info" type="info">
 
