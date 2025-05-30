@@ -158,7 +158,6 @@ Now build the WASI components into the `compiled` output directory.
 
 ```bash
 # Remove `WASI_BUILD_DIR` to build all components.
-warg reset
 WASI_BUILD_DIR=components/evm-price-oracle make wasi-build
 ```
 
@@ -262,9 +261,6 @@ Deploy the compiled component with the contract information from the previous st
 
 ```bash docci-delay-per-cmd=3
 # ** Testnet Setup: https://wa.dev/account/credentials
-#
-# If you get errors:
-# warg reset --registry http://127.0.0.1:8090
 
 export COMPONENT_FILENAME=evm_price_oracle.wasm
 export REGISTRY=`sh ./script/get-registry.sh`
