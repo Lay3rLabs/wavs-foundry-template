@@ -231,7 +231,7 @@ make start-all-local
 bash ./script/create-deployer.sh
 
 ## Deploy Eigenlayer from Deployer
-docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:1956ecf deploy
+docker run --rm --network host --env-file .env -v ./.nodes:/root/.nodes ghcr.io/lay3rlabs/wavs-middleware:cd0ca86 deploy
 ```
 
 ## Deploy Service Contracts
@@ -375,21 +375,6 @@ RPC_URL=${RPC_URL} make get-trigger
 
 ```bash docci-delay-per-cmd=2 docci-output-contains="BTC"
 TRIGGER_ID=1 RPC_URL=${RPC_URL} make show-result
-```
-
-## Update Threshold
-
-TODO: this is no longer needed. 2/3 is built into the system now, and it is calculated dynamically
-
-```bash docci-ignore
-export ECDSA_CONTRACT=`cat .nodes/avs_deploy.json | jq -r '.addresses.stakeRegistry'`
-
-TOTAL_WEIGHT=`cast call ${ECDSA_CONTRACT} "getLastCheckpointTotalWeight()(uint256)" --rpc-url ${RPC_URL} --json | jq -r '.[0]'`
-TWO_THIRDS=`echo $((TOTAL_WEIGHT * 2 / 3))`
-
-cast send ${ECDSA_CONTRACT} "updateStakeThreshold(uint256)" ${TWO_THIRDS} --rpc-url ${RPC_URL} --private-key ${FUNDED_KEY}
-
-make operator-list
 ```
 
 # Claude Code
