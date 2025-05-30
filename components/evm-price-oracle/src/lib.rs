@@ -1,10 +1,16 @@
 mod trigger;
+use alloy_sol_types::{sol_data::Bytes, SolType, SolValue};
 use trigger::{decode_trigger_event, encode_trigger_output, Destination};
-use wavs_wasi_utils::http::{fetch_json, http_request_get};
+use wavs_wasi_utils::{
+    evm::alloy_primitives,
+    http::{fetch_json, http_request_get},
+};
 pub mod bindings;
 use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
 use serde::{Deserialize, Serialize};
 use wstd::{http::HeaderValue, runtime::block_on};
+// import solidity from triggers
+use trigger::solidity;
 
 struct Component;
 export!(Component with_types_in bindings);
@@ -30,12 +36,46 @@ impl Guest for Component {
         let (trigger_id, req, dest) =
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
 
-        // Convert bytes to string and parse first char as u64
-        let input = std::str::from_utf8(&req).map_err(|e| e.to_string())?;
-        println!("input id: {}", input);
+        // Decode the string using proper ABI decoding
+        // string_data is the hex input, so the number 1 if 0x31 for example
+        let string_data = if let Ok(decoded) = <solidity::DataWithId as SolValue>::abi_decode(&req)
+        {
+            // If it has a function selector (from cast abi-encode "f(string)" format)
+            decoded.data
+        } else {
+            // Fallback: try decoding just as a string parameter (no function selector)
+            match String::abi_decode(&req) {
+                Ok(s) => alloy_primitives::Bytes::from(s.into_bytes()),
+                Err(e) => return Err(format!("Failed to decode input as ABI string: {}", e)),
+            }
+            // alloy_primitives::Bytes::from(s.into_bytes())
+        };
 
-        let id = input.chars().next().ok_or("Empty input")?;
-        let id = id.to_digit(16).ok_or("Invalid hex digit")? as u64;
+        println!("Decoded string input: {}", string_data);
+        println!("Decoded string input: {}", string_data.to_string());
+
+        // convert to a string from hex
+        let id = match String::from_utf8(string_data.to_vec()) {
+            Ok(s) => s,
+            Err(e) => return Err(format!("Failed to convert bytes to string: {}", e)),
+        };
+        println!("Parsed ID from input: {}", id);
+
+        // Convert the string ID to a u64
+        let id = match id.trim().parse::<u64>() {
+            Ok(id) => id,
+            Err(e) => return Err(format!("Failed to parse ID from input: {}", e)),
+        };
+
+        // convert string_data to a u64
+        // let id = match string_data.to_string().parse::<u64>() {
+        //     Ok(id) => id,
+        //     Err(e) => return Err(format!("Failed to parse ID from input: {}", e)),
+        // };
+
+        // Parse the first character as a hex digit for the ID
+        // let id = string_data.chars().next().ok_or("Empty input")?;
+        // let id = id.to_digit(16).ok_or("Invalid hex digit")? as u64;
 
         let res = block_on(async move {
             let resp_data = get_price_feed(id).await?;
