@@ -161,7 +161,6 @@ Now build the WASI components into the `compiled` output directory.
 
 ```bash
 # Remove `WASI_BUILD_DIR` to build all components.
-warg reset
 WASI_BUILD_DIR=components/evm-price-oracle make wasi-build
 ```
 
@@ -232,7 +231,7 @@ make start-all-local
 
 ```bash
 # local: create deployer & auto fund. testnet: create & iterate check balance
-sh ./script/create-deployer.sh
+bash ./script/create-deployer.sh
 
 ## Deploy Eigenlayer from Deployer
 COMMAND=deploy make wavs-middleware
@@ -248,7 +247,7 @@ COMMAND=deploy make wavs-middleware
 `SERVICE_MANAGER_ADDR` is the address of the Eigenlayer service manager contract. It was deployed in the previous step. Then you deploy the trigger and submission contracts which depends on the service manager. The service manager will verify that a submission is valid (from an authorized operator) before saving it to the blockchain. The trigger contract is any arbitrary contract that emits some event that WAVS will watch for. Yes, this can be on another chain (e.g. an L2) and then the submission contract on the L1 *(Ethereum for now because that is where Eigenlayer is deployed)*.
 
 ```bash docci-delay-per-cmd=2
-export RPC_URL=`sh ./script/get-rpc.sh`
+export RPC_URL=`bash ./script/get-rpc.sh`
 export DEPLOYER_PK=$(cat .nodes/deployer)
 export SERVICE_MANAGER_ADDRESS=$(jq -r '.addresses.WavsServiceManager' .nodes/avs_deploy.json)
 
@@ -265,19 +264,16 @@ Deploy the compiled component with the contract information from the previous st
 
 ```bash docci-delay-per-cmd=3
 # ** Testnet Setup: https://wa.dev/account/credentials
-#
-# If you get errors:
-# warg reset --registry http://127.0.0.1:8090
 
 export COMPONENT_FILENAME=evm_price_oracle.wasm
-export REGISTRY=`sh ./script/get-registry.sh`
+export REGISTRY=`bash ./script/get-registry.sh`
 export PKG_NAME="evmrustoracle"
 export PKG_VERSION="0.1.0"
-export PKG_NAMESPACE=`sh ./script/get-wasi-namespace.sh`
+export PKG_NAMESPACE=`bash ./script/get-wasi-namespace.sh`
 
 # Upload the component to the registry
 # local or wa.dev depending on DEPLOY_ENV in .env
-sh script/upload-to-wasi-registry.sh
+bash script/upload-to-wasi-registry.sh
 
 # Testnet: set values (default: local if not set)
 # export TRIGGER_CHAIN=holesky
@@ -285,7 +281,7 @@ sh script/upload-to-wasi-registry.sh
 
 # Package not found with wa.dev? -- make sure it is public
 export AGGREGATOR_URL=http://127.0.0.1:8001
-REGISTRY=${REGISTRY} sh ./script/build_service.sh
+REGISTRY=${REGISTRY} bash ./script/build_service.sh
 ```
 
 ## Upload to IPFS
@@ -300,7 +296,7 @@ export ipfs_cid=`SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs`
 
 # LOCAL: http://127.0.0.1:8080
 # TESTNET: https://gateway.pinata.cloud/
-export IPFS_GATEWAY="$(sh script/get-ipfs-gateway.sh)/ipfs/"
+export IPFS_GATEWAY="$(bash script/get-ipfs-gateway.sh)/ipfs/"
 
 export IPFS_URI="ipfs://${ipfs_cid}"
 curl "${IPFS_GATEWAY}${ipfs_cid}"
@@ -311,9 +307,9 @@ cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${IPFS_URI}" -r ${
 ## Start Aggregator
 
 ```bash
-sh ./script/create-aggregator.sh 1
+bash ./script/create-aggregator.sh 1
 
-IPFS_GATEWAY=${IPFS_GATEWAY} sh ./infra/aggregator-1/start.sh
+IPFS_GATEWAY=${IPFS_GATEWAY} bash ./infra/aggregator-1/start.sh
 
 wget -q --header="Content-Type: application/json" --post-data="{\"uri\": \"${IPFS_URI}\"}" ${AGGREGATOR_URL}/register-service -O -
 ```
@@ -321,9 +317,9 @@ wget -q --header="Content-Type: application/json" --post-data="{\"uri\": \"${IPF
 ## Start WAVS
 
 ```bash
-sh ./script/create-operator.sh 1
+bash ./script/create-operator.sh 1
 
-IPFS_GATEWAY=${IPFS_GATEWAY} sh ./infra/wavs-1/start.sh
+IPFS_GATEWAY=${IPFS_GATEWAY} bash ./infra/wavs-1/start.sh
 
 # Deploy the service JSON to WAVS so it now watches and submits.
 # 'opt in' for WAVS to watch (this is before we register to Eigenlayer)
@@ -332,6 +328,8 @@ WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${IPFS_URI} IPFS_GATEWAY=${IPFS_
 
 ## Register service specific operator
 
+Making test mnemonic: `cast wallet new-mnemonic --json | jq -r .mnemonic`
+
 Each service gets their own key path (hd_path). The first service starts at 1 and increments from there. Get the service ID
 
 ```bash
@@ -339,12 +337,15 @@ export SERVICE_ID=`curl -s http://localhost:8000/app | jq -r '.services[0].id'`
 export HD_INDEX=`curl -s http://localhost:8000/service-key/${SERVICE_ID} | jq -rc '.secp256k1.hd_index'`
 
 source infra/wavs-1/.env
-export AVS_PRIVATE_KEY=`cast wallet private-key --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index ${HD_INDEX}`
+# These are different, and always the same operator key when deploying multiple services
+export OPERATOR_PRIVATE_KEY=`cast wallet private-key --mnemonic "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 0`
+export AVS_SIGNING_ADDRESS=`cast wallet address --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index ${HD_INDEX}`
+
 
 # Register the operator with the WAVS service manager
 export SERVICE_MANAGER_ADDRESS=`jq -r '.addresses.WavsServiceManager' .nodes/avs_deploy.json`
 
-COMMAND="register ${AVS_PRIVATE_KEY} 0.001ether" make wavs-middleware
+COMMAND="register ${OPERATOR_PRIVATE_KEY} ${AVS_SIGNING_ADDRESS} 0.001ether" make wavs-middleware
 
 # Verify registration
 COMMAND="list_operator" PAST_BLOCKS=500 make wavs-middleware
@@ -378,19 +379,6 @@ RPC_URL=${RPC_URL} make get-trigger
 
 ```bash docci-delay-per-cmd=2 docci-output-contains="BTC"
 TRIGGER_ID=1 RPC_URL=${RPC_URL} make show-result
-```
-
-## Update Threshold
-
-```bash docci-ignore
-export ECDSA_CONTRACT=`cat .nodes/avs_deploy.json | jq -r '.addresses.stakeRegistry'`
-
-TOTAL_WEIGHT=`cast call ${ECDSA_CONTRACT} "getLastCheckpointTotalWeight()(uint256)" --rpc-url ${RPC_URL} --json | jq -r '.[0]'`
-TWO_THIRDS=`echo $((TOTAL_WEIGHT * 2 / 3))`
-
-cast send ${ECDSA_CONTRACT} "updateStakeThreshold(uint256)" ${TWO_THIRDS} --rpc-url ${RPC_URL} --private-key ${FUNDED_KEY}
-
-make operator-list
 ```
 
 # Claude Code
