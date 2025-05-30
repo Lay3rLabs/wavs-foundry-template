@@ -1,0 +1,181 @@
+---
+description: Setup and manage WAVS service triggers for onchain events and scheduled executions
+globs: **/*.rs
+alwaysApply: true
+---
+# WAVS Service Triggers
+
+Triggers prompt WAVS services to run by listening for onchain events or schedules. Operators detect triggers, verify them, and execute components off-chain.
+
+## Trigger Lifecycle
+
+1. Deploy a service with `service.json` manifest containing service, workflow, and trigger info.
+2. Operators maintain lookup maps for triggers by chain, contract, and event IDs.
+3. On trigger detection, verify and create a `TriggerAction` with config and event data.
+4. `TriggerAction` struct:
+
+```rust
+pub struct TriggerAction {
+    pub config: TriggerConfig,  // service_id, workflow_id, trigger type
+    pub data: TriggerData,      // actual trigger data
+}
+
+pub struct TriggerConfig {
+    pub service_id: ServiceID,
+    pub workflow_id: WorkflowID,
+    pub trigger: Trigger,
+}
+
+pub enum TriggerData {
+    CosmosContractEvent {
+        contract_address: layer_climb_address::Address,
+        chain_name: ChainName,
+        event: cosmwasm_std::Event,
+        block_height: u64,
+    },
+    EvmContractEvent {
+        contract_address: alloy_primitives::Address,
+        chain_name: ChainName,
+        log: LogData,
+        block_height: u64,
+    },
+    BlockInterval {
+        chain_name: ChainName,
+        block_height: u64,
+    },
+    Cron {
+        trigger_time: Timestamp,
+    }
+}
+```
+
+5. `TriggerAction` is converted to WASI format and passed to the component, which decodes it using the `decode_event_log_data!` macro from [`wavs-wasi-utils`](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html).
+
+## Trigger Configuration
+
+Set triggers in the `trigger` field of `service.json`. Each workflow requires one trigger.
+
+### EVM Event Trigger
+
+Listens for specific contract events on EVM chains, passing raw logs to components.
+
+```json
+"trigger": {
+  "evm_contract_event": {
+    "address": "0x00000000219ab540356cbb839cbe05303d7705fa",
+    "chain_name": "ethereum-mainnet",
+    "event_hash": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+  }
+}
+```
+
+Configure EVM chain in `wavs.toml`:
+
+```toml
+[default.chains.evm.local]
+chain_id = "31337"
+ws_endpoint = "ws://localhost:8545"
+http_endpoint = "http://localhost:8545"
+poll_interval_ms = 7000
+```
+
+Set EVM credential in `.env`:
+
+```env
+WAVS_CLI_EVM_CREDENTIAL="0x5ce146f435835b1762ed602088740d201b68fd94bf808f97fd04588f1a63c9ab"
+```
+
+### Cosmos Event Trigger
+
+Monitors Cosmos smart contract events, passing emitted contract data to components.
+
+```json
+"trigger": {
+  "cosmos_contract_event": {
+    "address": {
+      "Cosmos": {
+        "bech32_addr": "neutron1qlaq54uh9f52d3p66q77s6kh9k9ee3vasy8gkdkk3yvgezcs6zts0mkcv4",
+        "prefix_len": 7
+      }
+    },
+    "chain_name": "neutron",
+    "event_type": "send_nft"
+  }
+}
+```
+
+Configure Cosmos chain in `wavs.toml`:
+
+```toml
+[default.chains.cosmos.neutron]
+chain_id = "pion-1"
+bech32_prefix = "neutron"
+rpc_endpoint = "https://rpc-falcron.pion-1.ntrn.tech"
+grpc_endpoint = "http://grpc-falcron.pion-1.ntrn.tech:80"
+gas_price = 0.0053
+gas_denom = "untrn"
+```
+
+Set Cosmos mnemonic in `.env`:
+
+```env
+WAVS_CLI_COSMOS_MNEMONIC="large slab plate twenty laundry illegal vacuum phone drum example topic reason"
+```
+
+### Cron Trigger
+
+Executes components on a schedule defined by a cron expression with optional start/end times.
+
+```json
+"trigger": {
+  "cron": {
+    "schedule": "0 */5 * * * *",
+    "start_time": 1704067200000000000,
+    "end_time": 1735689599000000000
+  }
+}
+```
+
+Cron expression format:
+
+```
+* * * * * *
+│ │ │ │ │ └─ Day of week (0-6, Sunday=0)
+│ │ │ │ └─── Month (1-12)
+│ │ │ └───── Day of month (1-31)
+│ │ └─────── Hour (0-23)
+│ └───────── Minute (0-59)
+└─────────── Second (0-59)
+```
+
+Examples:
+
+- `0 */5 * * * *` — every 5 minutes at 0 seconds
+- `0 0 */6 * * *` — every 6 hours at 0 minutes and seconds
+- `0 0 0 * * *` — daily at midnight
+
+**Note:** Cron triggers may have slight latency due to network and clock drift. Use block triggers for precise timing.
+
+### Block Trigger
+
+Runs components at regular block intervals on EVM or Cosmos chains.
+
+```json
+"trigger": {
+  "block_interval": {
+    "chain_name": "ethereum-mainnet",
+    "n_blocks": 10,
+    "start_block": null,
+    "end_block": null
+  }
+}
+```
+
+Passes block height and chain name to the component.
+
+---
+
+For more information:
+- [WAVS WASI Utils `decode_event_log_data!` Macro](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html)
+- [Cron Expression Reference](https://crontab.guru/)
+- [WAVS Components Documentation](./components/component)

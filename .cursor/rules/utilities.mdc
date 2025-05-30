@@ -1,0 +1,118 @@
+---
+description: Guide on utilizing utilities and crates for WAVS component development in Rust.
+globs: **/*.rs
+alwaysApply: true
+---
+# Utilities and Crates for WAVS Component Development
+
+This document outlines the essential utilities and crates for developing WAVS components, focusing on HTTP requests, blockchain interactions, and Solidity integration in Rust.
+
+### `wavs-wasi-utils` Crate
+
+- Provides functions for HTTP requests and blockchain interactions.
+- Includes a macro for decoding Ethereum event logs into typed Rust events.
+
+For more information:
+- [Crate documentation](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/index.html)
+
+### Sol! Macro
+
+- Generates Rust types from Solidity interface files.
+- Allows writing Solidity definitions within Rust code for compile-time parsing and Rust type generation.
+
+Required Dependencies:
+
+```toml
+[dependencies]
+alloy-sol-macro = { workspace = true }
+alloy-sol-types = { workspace = true }
+```
+
+Basic Usage Pattern:
+
+```rust
+mod solidity {
+    use alloy_sol_macro::sol;
+    
+    sol!("../../src/interfaces/ITypes.sol");
+    
+    sol! {
+        struct TriggerInfo {
+            uint64 triggerId;
+            bytes data;
+        }
+        
+        event NewTrigger(TriggerInfo _triggerInfo);
+    }
+}
+```
+
+Example in `trigger.rs`:
+
+```rust
+mod solidity {
+    use alloy_sol_macro::sol;
+    pub use ITypes::*;
+    
+    sol!("../../src/interfaces/ITypes.sol");
+}
+```
+
+For more information:
+- [Sol! macro documentation](https://docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html)
+
+### `alloy-contract` Crate
+
+- Provides a high-level interface for Ethereum smart contract interactions.
+- Features type-safe contract function calls, ABI encoding/decoding, and more.
+
+Example Usage:
+
+```rust
+use alloy_primitives::{Address, U256};
+use alloy_sol_types::sol;
+use alloy_provider::RootProvider;
+use alloy_network::Ethereum;
+use wavs_wasi_utils::evm::new_evm_provider;
+use crate::bindings::host::get_evm_chain_config;
+
+sol! {
+    #[sol(rpc)]
+    contract ERC721 {
+        function balanceOf(address owner) external view returns (uint256);
+        function totalSupply() external view returns (uint256);
+        function ownerOfTokenByIndex(uint256 index) external view returns (address);
+    }
+}
+
+let chain_config = get_evm_chain_config("local")?;
+let provider: RootProvider<Ethereum> = new_evm_provider::<Ethereum>(
+    chain_config.http_endpoint.unwrap()
+)?;
+
+let contract = ERC721::new(contract_address, &provider);
+
+let balance = contract.balanceOf(owner).call().await?;
+let total_supply = contract.totalSupply().call().await?;
+let owner = contract.ownerOfTokenByIndex(index).call().await?;
+```
+
+### Alloy Ecosystem Crates
+
+- Core Ethereum types, RPC interaction, network types, and ABI handling are covered by the Alloy ecosystem crates.
+
+For more information:
+- [alloy-primitives](https://docs.rs/alloy-primitives/latest/alloy_primitives/)
+- [alloy-provider](https://docs.rs/alloy-provider/latest/alloy_provider/)
+- [alloy-network](https://docs.rs/alloy-network/latest/alloy_network/)
+- [alloy-sol-types](https://docs.rs/alloy-sol-types/latest/alloy_sol_types/)
+
+### Utility Crates
+
+- Essential crates for WASI standard library, data serialization, and error handling.
+
+For more information:
+- [wstd](https://docs.rs/wstd/latest/wstd/)
+- [serde](https://docs.rs/serde/latest/serde/)
+- [serde_json](https://docs.rs/serde_json/latest/serde_json/)
+- [anyhow](https://docs.rs/anyhow/latest/anyhow/)

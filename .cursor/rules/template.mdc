@@ -1,0 +1,107 @@
+---
+description: Overview and customization guide for the WAVS Foundry template structure and configuration
+globs: **/*
+alwaysApply: true
+---
+# WAVS Foundry Template Overview
+
+This guide explains the WAVS Foundry template structure and configuration files to help customize and build your WAVS service.
+
+1. **Template Structure**
+
+The WAVS template repository layout:
+
+```bash
+wavs-foundry-template/
+├── README.md               # Tutorial commands
+├── makefile                # Build, deploy commands and configs
+├── components/             # WASI components
+│   └── evm-price-oracle/
+│       ├── src/
+│       │   ├── lib.rs         # Main component logic
+│       │   ├── trigger.rs     # Trigger handling
+│       │   └── bindings.rs    # Generated bindings (`make build`)
+│       └── Cargo.toml      # Component dependencies
+├── compiled/               # Compiled WASM files (`make build`)
+├── src/
+│   ├── contracts/          # Trigger and submission contracts
+│   └── interfaces/         # Solidity interfaces
+├── script/                 # Deployment & interaction scripts
+├── wavs.toml               # WAVS service configuration
+├── docs/                   # Documentation
+└── .env                    # Private environment variables
+```
+
+- `README.md`: tutorial commands
+- `makefile`: commands for building/deploying and service variables
+- `components/`: component logic; `make wasi-build` generates bindings and compiles to `compiled/`
+- `src/`: Solidity contracts and interfaces
+- `script/`: scripts used by makefile for deploy, trigger, test
+- `.env`: private keys and environment variables (copy from `.env.example`)
+
+2. **TOML Configuration Files**
+
+- `wavs.toml`: configures WAVS service (chains, networks, settings)
+- Root `Cargo.toml`: workspace config, dependencies, build settings, metadata
+- `components/*/Cargo.toml`: Rust component config, dependencies, build settings; can inherit from root with `workspace = true`
+
+Example component `Cargo.toml`:
+
+```toml
+[package]
+name = "evm-price-oracle"
+edition.workspace = true
+version.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+wit-bindgen-rt = { workspace = true }
+wavs-wasi-utils = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+alloy-sol-macro = { workspace = true }
+wstd = { workspace = true }
+alloy-sol-types = { workspace = true }
+anyhow = { workspace = true }
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+codegen-units = 1
+opt-level = "s"
+debug = false
+strip = true
+lto = true
+
+[package.metadata.component]
+package = "component:evm-price-oracle"
+target = "wavs:worker/layer-trigger-world@0.4.0-beta.4"
+```
+
+3. **wavs.toml Configuration**
+
+The `wavs.toml` file configures all WAVS components with:
+
+- General default settings (shared by all processes)
+- WAVS server-specific settings
+- CLI-specific settings
+- Aggregator-specific settings
+
+4. **Environment Variable Overrides**
+
+Override config values via environment variables:
+
+- WAVS server: `WAVS_<UPPERCASE_KEY>`
+- CLI: `WAVS_CLI_<UPPERCASE_KEY>`
+- Aggregator: `WAVS_AGGREGATOR_<UPPERCASE_KEY>`
+
+---
+
+For more information:
+- [WAVS Foundry Template GitHub](https://github.com/Lay3rLabs/wavs-foundry-template)
+- [Oracle Component Tutorial](https://docs.wavs.com/tutorial/1-overview)
+- [WAVS Design Considerations](https://docs.wavs.com/design)
+- [wavs.toml example](https://github.com/Lay3rLabs/wavs-foundry-template/blob/main/wavs.toml)
