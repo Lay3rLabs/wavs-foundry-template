@@ -27,7 +27,7 @@
     "@defi-wonderland/natspec-smells": "1.1.6",
     "@openzeppelin/contracts": "^5.2.0",
     "forge-std": "github:foundry-rs/forge-std#v1.9.6",
-    "@wavs/solidity": "0.4.0-beta.1",
+    "@wavs/solidity": "0.4.0-rc",
     "lint-staged": ">=10",
     "solhint-community": "4.0.0",
     "sort-package-json": "2.10.0"

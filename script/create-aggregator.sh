@@ -45,7 +45,7 @@ cat > "${AGG_LOC}/start.sh" << EOF
 #!/bin/bash
 cd \$(dirname "\$0") || exit 1
 
-IMAGE=ghcr.io/lay3rlabs/wavs:99aa44a
+IMAGE=ghcr.io/lay3rlabs/wavs:0.4.0-rc
 INSTANCE=wavs-aggregator-${AGGREGATOR_INDEX}
 IPFS_GATEWAY=\${IPFS_GATEWAY:-"https://ipfs.io/ipfs/"}
 
