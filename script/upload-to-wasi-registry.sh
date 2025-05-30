@@ -28,8 +28,8 @@ echo "Publishing to registry (${PROTOCOL}://${REGISTRY})..."
 
 
 output=$(warg publish release --registry ${PROTOCOL}://${REGISTRY} --name ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION} ./compiled/${COMPONENT_FILENAME} 2>&1)
-warg reset --registry ${PROTOCOL}://${REGISTRY}
 exit_code=$?
+warg reset --registry ${PROTOCOL}://${REGISTRY}
 
 # Check for specific error conditions in the output
 if [[ $exit_code -ne 0 ]]; then
