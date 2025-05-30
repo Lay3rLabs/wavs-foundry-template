@@ -1,7 +1,7 @@
 #!/bin/bash
 # set -e
 
-SP=""; if [ "$(uname)" == *"Darwin"* ]; then SP=" "; fi
+SP=""; if [[ "$(uname)" == *"Darwin"* ]]; then SP=" "; fi
 
 cd $(git rev-parse --show-toplevel) || exit 1
 

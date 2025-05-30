@@ -18,7 +18,7 @@ if [ -z "$RPC_URL" ]; then
     RPC_URL=`sh ./script/get-rpc.sh`
 fi
 
-SP=""; if [ "$(uname)" == *"Darwin"* ]; then SP=" "; fi
+SP=""; if [[ "$(uname)" == *"Darwin"* ]]; then SP=" "; fi
 
 cd $(git rev-parse --show-toplevel) || exit 1
 
