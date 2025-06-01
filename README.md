@@ -231,7 +231,7 @@ make start-all-local
 
 ```bash
 # local: create deployer & auto fund. testnet: create & iterate check balance
-bash ./script/create-deployer.sh
+make deployer-create
 
 ## Deploy Eigenlayer from Deployer
 COMMAND=deploy make wavs-middleware
@@ -247,9 +247,9 @@ COMMAND=deploy make wavs-middleware
 `SERVICE_MANAGER_ADDR` is the address of the Eigenlayer service manager contract. It was deployed in the previous step. Then you deploy the trigger and submission contracts which depends on the service manager. The service manager will verify that a submission is valid (from an authorized operator) before saving it to the blockchain. The trigger contract is any arbitrary contract that emits some event that WAVS will watch for. Yes, this can be on another chain (e.g. an L2) and then the submission contract on the L1 *(Ethereum for now because that is where Eigenlayer is deployed)*.
 
 ```bash docci-delay-per-cmd=2
-export RPC_URL=`bash ./script/get-rpc.sh`
-export DEPLOYER_PK=$(cat .nodes/deployer)
-export SERVICE_MANAGER_ADDRESS=$(jq -r '.addresses.WavsServiceManager' .nodes/avs_deploy.json)
+export RPC_URL=`make get-rpc`
+export DEPLOYER_PK=`make get-deployer`
+export SERVICE_MANAGER_ADDRESS=`make get-service-manager`
 
 forge create SimpleSubmit --json --broadcast -r ${RPC_URL} --private-key "${DEPLOYER_PK}" --constructor-args "${SERVICE_MANAGER_ADDRESS}" > .docker/submit.json
 export SERVICE_SUBMISSION_ADDR=`jq -r '.deployedTo' .docker/submit.json`
@@ -266,14 +266,14 @@ Deploy the compiled component with the contract information from the previous st
 # ** Testnet Setup: https://wa.dev/account/credentials
 
 export COMPONENT_FILENAME=evm_price_oracle.wasm
-export REGISTRY=`bash ./script/get-registry.sh`
+export REGISTRY=`make get-wasi-registry`
 export PKG_NAME="evmrustoracle"
 export PKG_VERSION="0.1.0"
-export PKG_NAMESPACE=`bash ./script/get-wasi-namespace.sh`
+export PKG_NAMESPACE=`make get-wasi-namespace`
 
 # Upload the component to the registry
 # local or wa.dev depending on DEPLOY_ENV in .env
-bash script/upload-to-wasi-registry.sh
+make upload-component
 
 # Testnet: set values (default: local if not set)
 # export TRIGGER_CHAIN=holesky
@@ -281,7 +281,7 @@ bash script/upload-to-wasi-registry.sh
 
 # Package not found with wa.dev? -- make sure it is public
 export AGGREGATOR_URL=http://127.0.0.1:8001
-REGISTRY=${REGISTRY} bash ./script/build_service.sh
+REGISTRY=${REGISTRY} make --no-print-directory build-service
 ```
 
 ## Upload to IPFS
@@ -294,9 +294,9 @@ export SERVICE_FILE=.docker/service.json
 # testnet: https://app.pinata.cloud/. set PINATA_API_KEY to JWT token in .env
 export ipfs_cid=`SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs`
 
-# LOCAL: http://127.0.0.1:8080
-# TESTNET: https://gateway.pinata.cloud/
-export IPFS_GATEWAY="$(bash script/get-ipfs-gateway.sh)/ipfs/"
+# LOCAL: http://127.0.0.1:8080/ipfs/
+# TESTNET: https://gateway.pinata.cloud/ipfs/
+export IPFS_GATEWAY=`make get-ipfs-gateway`
 
 export IPFS_URI="ipfs://${ipfs_cid}"
 curl "${IPFS_GATEWAY}${ipfs_cid}"
@@ -307,23 +307,24 @@ cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${IPFS_URI}" -r ${
 ## Start Aggregator
 
 ```bash
-bash ./script/create-aggregator.sh 1
+AGGREGATOR_INDEX=1 make aggregator-create
 
-IPFS_GATEWAY=${IPFS_GATEWAY} bash ./infra/aggregator-1/start.sh
+IPFS_GATEWAY=${IPFS_GATEWAY} make aggregator-start
 
-wget -q --header="Content-Type: application/json" --post-data="{\"uri\": \"${IPFS_URI}\"}" ${AGGREGATOR_URL}/register-service -O -
+IPFS_URI=${IPFS_URI} AGGREGATOR_URL=${AGGREGATOR_URL} make aggregator-register
 ```
 
 ## Start WAVS
 
 ```bash
-bash ./script/create-operator.sh 1
+OPERATOR_INDEX=1 make operator-create
 
-IPFS_GATEWAY=${IPFS_GATEWAY} bash ./infra/wavs-1/start.sh
+IPFS_GATEWAY=${IPFS_GATEWAY} make operator-start
 
 # Deploy the service JSON to WAVS so it now watches and submits.
 # 'opt in' for WAVS to watch (this is before we register to Eigenlayer)
-WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${IPFS_URI} IPFS_GATEWAY=${IPFS_GATEWAY} make deploy-service
+export WAVS_ENDPOINT=http://127.0.0.1:8000
+SERVICE_URL=${IPFS_URI} IPFS_GATEWAY=${IPFS_GATEWAY} make deploy-service
 ```
 
 ## Register service specific operator
@@ -341,10 +342,8 @@ source infra/wavs-1/.env
 export OPERATOR_PRIVATE_KEY=`cast wallet private-key --mnemonic "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 0`
 export AVS_SIGNING_ADDRESS=`cast wallet address --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index ${HD_INDEX}`
 
-
 # Register the operator with the WAVS service manager
-export SERVICE_MANAGER_ADDRESS=`jq -r '.addresses.WavsServiceManager' .nodes/avs_deploy.json`
-
+export SERVICE_MANAGER_ADDRESS=`make get-service-manager`
 COMMAND="register ${OPERATOR_PRIVATE_KEY} ${AVS_SIGNING_ADDRESS} 0.001ether" make wavs-middleware
 
 # Verify registration

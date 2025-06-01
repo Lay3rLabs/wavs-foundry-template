@@ -79,14 +79,6 @@ get-submit-from-deploy:
 wavs-cli:
 	@$(WAVS_CMD) $(filter-out $@,$(MAKECMDGOALS))
 
-## upload-component: uploading the WAVS component | COMPONENT_FILENAME, WAVS_ENDPOINT
-upload-component:
-	@if [ -z "${COMPONENT_FILENAME}" ]; then \
-		echo "Error: COMPONENT_FILENAME is not set. Please set it to your WAVS component filename."; \
-		exit 1; \
-	fi
-	@wget --post-file=./compiled/${COMPONENT_FILENAME} --header="Content-Type: application/wasm" -O - ${WAVS_ENDPOINT}/upload | jq -r .digest
-
 IPFS_GATEWAY?="https://ipfs.io/ipfs"
 ## deploy-service: deploying the WAVS component service json | SERVICE_URL, CREDENTIAL, WAVS_ENDPOINT
 deploy-service:
@@ -137,6 +129,52 @@ wavs-middleware:
 ## update-submodules: update the git submodules
 update-submodules:
 	@git submodule update --init --recursive
+
+## get-rpc: get the RPC URL based on the .env DEPLOY_ENV
+get-rpc:
+	@bash ./script/get-rpc.sh
+
+get-deployer:
+	@cat .nodes/deployer
+
+get-service-manager:
+	@jq -r '.addresses.WavsServiceManager' .nodes/avs_deploy.json
+
+get-wasi-namespace:
+	@bash ./script/get-wasi-namespace.sh
+
+get-wasi-registry:
+	@bash ./script/get-registry.sh
+
+upload-component:
+	@bash script/upload-to-wasi-registry.sh
+
+build-service:
+	@bash ./script/build_service.sh
+
+deployer-create:
+	@bash ./script/create-deployer.sh
+
+operator-create:
+	@bash ./script/create-operator.sh
+
+operator-start:
+	@bash ./infra/wavs-1/start.sh
+
+aggregator-create:
+	@bash ./script/create-aggregator.sh
+
+aggregator-start:
+	@bash ./infra/aggregator-1/start.sh
+
+aggregator-register:
+	@wget -q --header="Content-Type: application/json" --post-data="{\"uri\": \"${IPFS_URI}\"}" ${AGGREGATOR_URL}/register-service -O -
+
+deploy-status:
+	@bash ./script/get-deploy-status.sh
+
+get-ipfs-gateway:
+	@echo "$$(bash script/get-ipfs-gateway.sh)"/ipfs/
 
 # Declare phony targets
 .PHONY: build clean fmt bindings test

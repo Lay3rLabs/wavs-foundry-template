@@ -27,8 +27,6 @@ TRIGGER_CHAIN=${TRIGGER_CHAIN:-"local"}
 SUBMIT_CHAIN=${SUBMIT_CHAIN:-"local"}
 AGGREGATOR_URL=${AGGREGATOR_URL:-""}
 DEPLOY_ENV=${DEPLOY_ENV:-""}
-# used in make upload-component
-WAVS_ENDPOINT=${WAVS_ENDPOINT:-"http://localhost:8000"}
 REGISTRY=${REGISTRY:-"wa.dev"}
 
 BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-rc wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
@@ -51,7 +49,7 @@ if [ -z "$SUBMIT_ADDRESS" ]; then
     SUBMIT_ADDRESS=`make get-submit-from-deploy`
 fi
 if [ -z "$DEPLOY_ENV" ]; then
-    DEPLOY_ENV=$(sh ./script/get-deploy-status.sh)
+    DEPLOY_ENV=`make deploy-status`
 fi
 # === Core ===
 
@@ -63,7 +61,7 @@ echo "Service ID: ${SERVICE_ID}"
 WORKFLOW_ID=`$BASE_CMD workflow add | jq -r .workflow_id`
 echo "Workflow ID: ${WORKFLOW_ID}"
 
-$BASE_CMD workflow trigger --id ${WORKFLOW_ID} set-evm --address ${TRIGGER_ADDRESS} --chain-name ${TRIGGER_CHAIN} --event-hash ${TRIGGER_EVENT_HASH} > /dev/null
+$BASE_CMD workflow trigger --id ${WORKFLOW_ID} set-evm --address ${TRIGGER_ADDRESS} --chain-name ${TRIGGER_CHAIN} --event-hash ${TRIGGER_EVENT_HASH}
 
 # If no aggregator is set, use the default
 SUB_CMD="set-evm"

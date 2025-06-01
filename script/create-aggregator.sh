@@ -4,9 +4,6 @@ set -e
 
 # have an optional argument $1, if set, use it as the agg index
 # otherwise, use the default of 1
-if [ -n "$1" ]; then
-    AGGREGATOR_INDEX=$1
-fi
 if [ -z "$AGGREGATOR_INDEX" ]; then
     AGGREGATOR_INDEX=1
 fi
