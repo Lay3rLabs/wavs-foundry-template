@@ -1,6 +1,6 @@
 {
   "name": "wavs-foundry-template",
-  "version": "1.0.0",
+  "version": "0.4.0",
   "license": "MIT",
   "scripts": {
     "build": "forge build",
