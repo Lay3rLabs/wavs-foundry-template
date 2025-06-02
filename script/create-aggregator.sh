@@ -47,7 +47,7 @@ cd \$(dirname "\$0") || exit 1
 
 IMAGE=ghcr.io/lay3rlabs/wavs:0.4.0-rc
 INSTANCE=wavs-aggregator-${AGGREGATOR_INDEX}
-IPFS_GATEWAY=\${IPFS_GATEWAY:-"https://ipfs.io/ipfs/"}
+IPFS_GATEWAY=\${IPFS_GATEWAY:-"https://gateway.pinata.cloud/ipfs/"}
 
 docker kill \${INSTANCE} > /dev/null 2>&1 || true
 docker rm \${INSTANCE} > /dev/null 2>&1 || true

@@ -126,7 +126,7 @@ SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs
 
 # smart grabs the IPFS gateway and fetches the content that was uploaded
 export IPFS_GATEWAY=$(sh script/get-ipfs-gateway.sh)
-curl "${IPFS_GATEWAY}/ipfs/${ipfs_cid}"
+curl "${IPFS_GATEWAY}${ipfs_cid}"
 
 # Then the admin of the contracts can set it
 cast send ${WAVS_SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${SERVICE_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
