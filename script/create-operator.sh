@@ -57,7 +57,7 @@ cd \$(dirname "\$0") || exit 1
 
 IMAGE=ghcr.io/lay3rlabs/wavs:0.4.0-rc
 WAVS_INSTANCE=wavs-${OPERATOR_INDEX}
-IPFS_GATEWAY=\${IPFS_GATEWAY:-"https://ipfs.io/ipfs/"}
+IPFS_GATEWAY=\${IPFS_GATEWAY:-"https://gateway.pinata.cloud/ipfs/"}
 
 docker kill \${WAVS_INSTANCE} > /dev/null 2>&1 || true
 docker rm \${WAVS_INSTANCE} > /dev/null 2>&1 || true
