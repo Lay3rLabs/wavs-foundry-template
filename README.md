@@ -263,12 +263,7 @@ Deploy the compiled component with the contract information from the previous st
 export COMPONENT_FILENAME=evm_price_oracle.wasm
 export PKG_NAME="evmrustoracle"
 export PKG_VERSION="0.1.0"
-export REGISTRY=`bash ./script/get-registry.sh`
-export PKG_NAMESPACE=`bash ./script/get-wasi-namespace.sh`
-
-# Upload the component to the registry
-# local or wa.dev depending on DEPLOY_ENV in .env
-bash script/upload-to-wasi-registry.sh
+source script/upload-to-wasi-registry.sh || true
 
 # Testnet: set values (default: local if not set)
 # export TRIGGER_CHAIN=holesky
