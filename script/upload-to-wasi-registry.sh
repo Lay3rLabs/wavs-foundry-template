@@ -42,11 +42,7 @@ if [[ $exit_code -ne 0 ]]; then
     elif [[ "$output" =~ "error sending request for url" ]]; then
         echo "NOTE: Check to make sure you are running the registry locally"
         echo "${output}"
-        # exit 1
     else
         echo "Unknown error occurred ${output}"
-        # exit 1
     fi
 fi
-
-# exit 0
