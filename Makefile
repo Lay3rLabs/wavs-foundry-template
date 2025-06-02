@@ -111,8 +111,7 @@ deploy-service:
 		echo "🔍 Checking WAVS service at ${WAVS_ENDPOINT}..."; \
 		if [ "$$(curl -s -o /dev/null -w "%{http_code}" ${WAVS_ENDPOINT}/app)" != "200" ]; then \
 			echo "❌ WAVS service not reachable at ${WAVS_ENDPOINT}"; \
-			echo "💡 Try: make start-all-local"; \
-			echo "⏳ Or wait 30s for services to start"; \
+			echo "💡 Re-try running in 1 second, if not then validate the wavs service is online / started."; \
 			exit 1; \
 		fi; \
 		echo "✅ WAVS service is running"; \
