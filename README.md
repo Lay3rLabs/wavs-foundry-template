@@ -26,6 +26,12 @@ If prompted, remove containerd with `sudo apt remove containerd.io`.
 - **Windows WSL**: [docker desktop wsl](https://docs.docker.com/desktop/wsl/#turn-on-docker-desktop-wsl-2) & `sudo chmod 666 /var/run/docker.sock`
 - [Docker Documentation](https://docs.docker.com/get-started/get-docker/)
 
+> **Note:** `sudo` is only used for Docker-related commands in this project. If you prefer not to use sudo with Docker, you can add your user to the Docker group with:
+> ```bash
+> sudo groupadd docker && sudo usermod -aG docker $USER
+> ```
+> After adding yourself to the group, log out and back in for changes to take effect.
+
 ### Docker Compose
 - **MacOS**: Already installed with Docker installer
 > `sudo apt remove docker-compose-plugin` may be required if you get a `dpkg` error
