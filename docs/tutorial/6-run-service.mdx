@@ -36,7 +36,7 @@ With the chain and WAVS running, you can deploy and run your service.
 ## Local testnet values
 
 ```bash docci-delay-after=2
-export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
+export WAVS_SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
 export PRIVATE_KEY=$(cat .nodes/deployer)
 export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
 ```

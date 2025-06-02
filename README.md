@@ -229,6 +229,8 @@ make start-all-local
 
 ## Create Deployer, upload Eigenlayer
 
+These sections can be run on the **same** machine, or separate for testnet environments. Runt the following steps on the deployer/aggregator machine.
+
 ```bash
 # local: create deployer & auto fund. testnet: create & iterate check balance
 bash ./script/create-deployer.sh
@@ -247,15 +249,8 @@ COMMAND=deploy make wavs-middleware
 `SERVICE_MANAGER_ADDR` is the address of the Eigenlayer service manager contract. It was deployed in the previous step. Then you deploy the trigger and submission contracts which depends on the service manager. The service manager will verify that a submission is valid (from an authorized operator) before saving it to the blockchain. The trigger contract is any arbitrary contract that emits some event that WAVS will watch for. Yes, this can be on another chain (e.g. an L2) and then the submission contract on the L1 *(Ethereum for now because that is where Eigenlayer is deployed)*.
 
 ```bash docci-delay-per-cmd=2
-export RPC_URL=`bash ./script/get-rpc.sh`
-export DEPLOYER_PK=$(cat .nodes/deployer)
-export SERVICE_MANAGER_ADDRESS=$(jq -r '.addresses.WavsServiceManager' .nodes/avs_deploy.json)
-
-forge create SimpleSubmit --json --broadcast -r ${RPC_URL} --private-key "${DEPLOYER_PK}" --constructor-args "${SERVICE_MANAGER_ADDRESS}" > .docker/submit.json
-export SERVICE_SUBMISSION_ADDR=`jq -r '.deployedTo' .docker/submit.json`
-
-forge create SimpleTrigger --json --broadcast -r ${RPC_URL} --private-key "${DEPLOYER_PK}" > .docker/trigger.json
-export SERVICE_TRIGGER_ADDR=`jq -r '.deployedTo' .docker/trigger.json`
+# Forge deploy SimpleSubmit & SimpleTrigger
+source script/deploy-contracts.sh
 ```
 
 ## Deploy Service
@@ -266,14 +261,9 @@ Deploy the compiled component with the contract information from the previous st
 # ** Testnet Setup: https://wa.dev/account/credentials
 
 export COMPONENT_FILENAME=evm_price_oracle.wasm
-export REGISTRY=`bash ./script/get-registry.sh`
 export PKG_NAME="evmrustoracle"
 export PKG_VERSION="0.1.0"
-export PKG_NAMESPACE=`bash ./script/get-wasi-namespace.sh`
-
-# Upload the component to the registry
-# local or wa.dev depending on DEPLOY_ENV in .env
-bash script/upload-to-wasi-registry.sh
+source script/upload-to-wasi-registry.sh || true
 
 # Testnet: set values (default: local if not set)
 # export TRIGGER_CHAIN=holesky
@@ -288,23 +278,12 @@ REGISTRY=${REGISTRY} bash ./script/build_service.sh
 
 ```bash
 # Upload service.json to IPFS
-export SERVICE_FILE=.docker/service.json
-
-# local: 127.0.0.1:5001
-# testnet: https://app.pinata.cloud/. set PINATA_API_KEY to JWT token in .env
-export ipfs_cid=`SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs`
-
-# LOCAL: http://127.0.0.1:8080
-# TESTNET: https://gateway.pinata.cloud/
-export IPFS_GATEWAY="$(bash script/get-ipfs-gateway.sh)/ipfs/"
-
-export IPFS_URI="ipfs://${ipfs_cid}"
-curl "${IPFS_GATEWAY}${ipfs_cid}"
-
-cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${IPFS_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
+SERVICE_FILE=.docker/service.json source ./script/ipfs-upload.sh
 ```
 
 ## Start Aggregator
+
+**TESTNET** You can move the aggregator it to its own machine for testnet deployments, it's easiest to run this on the deployer machine first. If moved, ensure you set the env variables correctly (copy pasted from the previous steps on the other machine).
 
 ```bash
 bash ./script/create-aggregator.sh 1
@@ -315,6 +294,8 @@ wget -q --header="Content-Type: application/json" --post-data="{\"uri\": \"${IPF
 ```
 
 ## Start WAVS
+
+**TESTNET** The WAVS service should be run in its own machine (creation, start, and opt-in). If moved, make sure you set the env variables correctly (copy pasted from the previous steps on the other machine).
 
 ```bash
 bash ./script/create-operator.sh 1
@@ -333,18 +314,9 @@ Making test mnemonic: `cast wallet new-mnemonic --json | jq -r .mnemonic`
 Each service gets their own key path (hd_path). The first service starts at 1 and increments from there. Get the service ID
 
 ```bash
-export SERVICE_ID=`curl -s http://localhost:8000/app | jq -r '.services[0].id'`
-export HD_INDEX=`curl -s http://localhost:8000/service-key/${SERVICE_ID} | jq -rc '.secp256k1.hd_index'`
+source ./script/avs-signing-key.sh
 
-source infra/wavs-1/.env
-# These are different, and always the same operator key when deploying multiple services
-export OPERATOR_PRIVATE_KEY=`cast wallet private-key --mnemonic "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 0`
-export AVS_SIGNING_ADDRESS=`cast wallet address --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index ${HD_INDEX}`
-
-
-# Register the operator with the WAVS service manager
-export SERVICE_MANAGER_ADDRESS=`jq -r '.addresses.WavsServiceManager' .nodes/avs_deploy.json`
-
+# TESTNET: set WAVS_SERVICE_MANAGER_ADDRESS
 COMMAND="register ${OPERATOR_PRIVATE_KEY} ${AVS_SIGNING_ADDRESS} 0.001ether" make wavs-middleware
 
 # Verify registration

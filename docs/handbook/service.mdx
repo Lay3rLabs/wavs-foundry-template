@@ -129,7 +129,7 @@ export IPFS_GATEWAY=$(sh script/get-ipfs-gateway.sh)
 curl "${IPFS_GATEWAY}/ipfs/${ipfs_cid}"
 
 # Then the admin of the contracts can set it
-cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${SERVICE_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
+cast send ${WAVS_SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${SERVICE_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
 ```
 
 For more information on the different parts of a service manifest, see the following sections:
