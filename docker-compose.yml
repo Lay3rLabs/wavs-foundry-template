@@ -1,8 +1,6 @@
 ###################################
 #
-# make start-all
-#
-# docker exec -it wavs bash
+# make start-all-local
 #
 ###################################
 
