@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 export RPC_URL=`bash ./script/get-rpc.sh`
 
 # local: 127.0.0.1:5001
