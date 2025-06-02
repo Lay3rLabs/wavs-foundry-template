@@ -8,7 +8,7 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 docsignore-->
 
 {/* todo: update once the template is updated */}
-## Start Anvil, WAVS, and deploy Eigenlayer
+## Local: Start Anvil, WAVS, and deploy Eigenlayer
 
 1. Create a `.env` file for your project by copying over the example with the following command:
 
@@ -16,15 +16,15 @@ docsignore-->
 cp .env.example .env
 ```
 
-2. Use the following command to start an Anvil test chain and the WAVS runtime while deploying core EigenLayer contracts for your service:
+2. Use the following command to start an Anvil test chain, IPFS, Registry, and some optional telemetry. This only runs with `LOCAL` being set in the `.env` (default).
 
-```bash docci-background docci-delay-after=15
-make start-all
+```bash docci-background docci-delay-after=5
+make start-all-local
 ```
 
 <Callout title="Keep WAVS running" type="info">
 
-The `start-all` command must remain running in your terminal. Open another terminal to run other commands.
+The command must remain running in your terminal. Open another terminal to run other commands.
 
 You can stop the services with `ctrl+c`. Some MacOS terminals require pressing this twice.
 
@@ -33,59 +33,105 @@ You can stop the services with `ctrl+c`. Some MacOS terminals require pressing t
 
 With the chain and WAVS running, you can deploy and run your service.
 
-## Local testnet values
+## Create Deployer
+
+An account is required to upload the contracts and be the original admin of them. This script creates a new wallet then sets a balance if using a local deployment, or waits until it has testnet funds before returning.
+
+You can skip this step by setting `FUNDED_KEY=` in `.env` to a private key of your choice that has network funds.
 
 ```bash docci-delay-after=2
-export WAVS_SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json)
-export PRIVATE_KEY=$(cat .nodes/deployer)
-export MY_ADDR=$(cast wallet address --private-key $PRIVATE_KEY)
+bash ./script/create-deployer.sh
+```
+
+## Deploy Eigenlayer Middleware
+
+Local deployments use the real testnet contracts via a forked anvil instance. This middleware will setup all the required contracts and configurations for the base of your AVS.
+
+```bash docci-delay-after=2
+COMMAND=deploy make wavs-middleware
 ```
 
 ## Deploy solidity contracts
 
-Open a new terminal and run the following from the root of your project to upload your Service's Trigger and Submission contracts:
-
 ```bash docci-delay-per-cmd=2
-forge create SimpleSubmit --json --broadcast -r http://127.0.0.1:8545 --private-key "${PRIVATE_KEY}" --constructor-args "${SERVICE_MANAGER_ADDRESS}" > .docker/submit.json
-export SERVICE_SUBMISSION_ADDR=`jq -r .deployedTo .docker/submit.json`
-
-forge create SimpleTrigger --json --broadcast -r http://127.0.0.1:8545 --private-key "${PRIVATE_KEY}" > .docker/trigger.json
-export SERVICE_TRIGGER_ADDR=`jq -r .deployedTo .docker/trigger.json`
+source script/deploy-contracts.sh
 ```
 
-## Deploy your service to WAVS
+## Deploy Service
 
-The following command will deploy your WASI component and service information to WAVS to be run by operators when triggered:
+Deploy the compiled component with the contract information from the previous steps.
 
-```bash docci-ignore (run in the next codeblock)
-SERVICE_URL=http://127.0.0.1:9999/service.json make deploy-service
-```
+```bash docci-delay-per-cmd=3
+# ** Testnet Setup: https://wa.dev/account/credentials
 
-This command specifies the event emitted from your trigger contract as the on-chain event that will trigger your service. In the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L95-L102), you can also see that it specifies the submission contract as the `submit-address`, as well as the filename of your component.
-
-<Callout title="Customize variables" type="info">
-
-Open the [`Makefile`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/Makefile#L9-L22) to view the different variables that you can customize, including the trigger event, the component filename, and the service config.
-
-You can also modify variables by specifying them before running the `make` command:
-
-```bash docci-delay-per-cmd=2
-# Build your service JSON
 export COMPONENT_FILENAME=evm_price_oracle.wasm
-AGGREGATOR_URL=http://127.0.0.1:8001 sh ./script/build_service.sh
+export PKG_NAME="evmrustoracle"
+export PKG_VERSION="0.1.0"
+source script/upload-to-wasi-registry.sh || true
 
-# Deploy the service JSON
-SERVICE_URL=http://127.0.0.1:9999/service.json make deploy-service
+# Upload the component to the registry
+# local or wa.dev depending on DEPLOY_ENV in .env
+sh script/upload-to-wasi-registry.sh
+
+# Testnet: set values (default: local if not set)
+# export TRIGGER_CHAIN=holesky
+# export SUBMIT_CHAIN=holesky
+
+# Package not found with wa.dev? -- make sure it is public
+export AGGREGATOR_URL=http://127.0.0.1:8001
+REGISTRY=${REGISTRY} bash ./script/build_service.sh
 ```
 
-</Callout>
+
+## Upload to IPFS
+
+```bash docci-delay-per-cmd=2
+# Upload service.json to IPFS
+SERVICE_FILE=.docker/service.json source ./script/ipfs-upload.sh
+```
+
+## Aggregator
+
+```bash docci-delay-per-cmd=2
+bash ./script/create-aggregator.sh 1
+
+IPFS_GATEWAY=${IPFS_GATEWAY} bash ./infra/aggregator-1/start.sh
+
+wget -q --header="Content-Type: application/json" --post-data="{\"uri\": \"${IPFS_URI}\"}" ${AGGREGATOR_URL}/register-service -O -
+```
+
+## WAVS
+
+```bash
+bash ./script/create-operator.sh 1
+
+IPFS_GATEWAY=${IPFS_GATEWAY} bash ./infra/wavs-1/start.sh
+
+# Deploy the service JSON to WAVS so it now watches and submits.
+# 'opt in' for WAVS to watch (this is before we register to Eigenlayer)
+WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${IPFS_URI} IPFS_GATEWAY=${IPFS_GATEWAY} make deploy-service
+```
+
+## Register service specific operator
+
+Each service gets its own key path (hd_path). The first service starts at 1 and increments from there. Get the service ID
+
+```bash
+source ./script/avs-signing-key.sh
+
+# TESTNET: set WAVS_SERVICE_MANAGER_ADDRESS
+COMMAND="register ${OPERATOR_PRIVATE_KEY} ${AVS_SIGNING_ADDRESS} 0.001ether" make wavs-middleware
+
+# Verify registration
+COMMAND="list_operator" PAST_BLOCKS=500 make wavs-middleware
+```
 
 
 ## Trigger the service
 
 Next, use your deployed trigger contract to trigger the oracle to be run. In the following command, you'll specify the `COIN_MARKET_CAP_ID` as `1`, which corresponds to the ID of Bitcoin.
 
-Running this command will execute [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/script/Trigger.s.sol) and pass the ID to the trigger contract, starting the following chain of events:
+Running this command will execute [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/script/Trigger.s.sol) and pass the ID to the trigger contract, starting the following chain of events:
 
 1. The trigger contract will emit an event with the specified ID as its data.
 2. Operators listening for the event will receive the data and run it in the oracle component off-chain.
@@ -94,9 +140,15 @@ Running this command will execute [`/script/Trigger.s.sol`](https://github.com/L
 
 
 ```bash docci-delay-per-cmd=2
+# Request BTC from CMC
 export COIN_MARKET_CAP_ID=1
+# Get the trigger address from previous Deploy forge script
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url http://localhost:8545 --broadcast
+
+# uses FUNDED_KEY as the executor (local: anvil account)
+source .env
+
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast
 ```
 
 ## Show the result
@@ -105,7 +157,7 @@ Run the following to view the result of your service in your terminal:
 
 ```bash docci-delay-per-cmd=2 docci-output-contains="BTC"
 # Get the latest TriggerId and show the result via `script/ShowResult.s.sol`
-make show-result
+TRIGGER_ID=1 RPC_URL=${RPC_URL} make show-result
 ```
 
 Congratulations, you've just made a simple Bitcoin price oracle service using WAVS!
