@@ -229,6 +229,8 @@ make start-all-local
 
 ## Create Deployer, upload Eigenlayer
 
+These sections can be run on the **same** machine, or separate for testnet environments. Runt the following steps on the deployer/aggregator machine.
+
 ```bash
 # local: create deployer & auto fund. testnet: create & iterate check balance
 bash ./script/create-deployer.sh
@@ -281,12 +283,12 @@ REGISTRY=${REGISTRY} bash ./script/build_service.sh
 
 ```bash
 # Upload service.json to IPFS
-export SERVICE_FILE=.docker/service.json
-
-source ./script/ipfs-upload.sh
+SERVICE_FILE=.docker/service.json source ./script/ipfs-upload.sh
 ```
 
 ## Start Aggregator
+
+**TESTNET** You can move the aggregator it to its own machine for testnet deployments, it's easiest to run this on the deployer machine first. If moved, ensure you set the env variables correctly (copy pasted from the previous steps on the other machine).
 
 ```bash
 bash ./script/create-aggregator.sh 1
@@ -297,6 +299,8 @@ wget -q --header="Content-Type: application/json" --post-data="{\"uri\": \"${IPF
 ```
 
 ## Start WAVS
+
+**TESTNET** The WAVS service should be run in its own machine (creation, start, and opt-in). If moved, make sure you set the env variables correctly (copy pasted from the previous steps on the other machine).
 
 ```bash
 bash ./script/create-operator.sh 1
@@ -315,17 +319,9 @@ Making test mnemonic: `cast wallet new-mnemonic --json | jq -r .mnemonic`
 Each service gets their own key path (hd_path). The first service starts at 1 and increments from there. Get the service ID
 
 ```bash
-export SERVICE_ID=`curl -s http://localhost:8000/app | jq -r '.services[0].id'`
-export HD_INDEX=`curl -s http://localhost:8000/service-key/${SERVICE_ID} | jq -rc '.secp256k1.hd_index'`
+source ./script/operator-info.sh
 
-source infra/wavs-1/.env
-# These are different, and always the same operator key when deploying multiple services
-export OPERATOR_PRIVATE_KEY=`cast wallet private-key --mnemonic "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index 0`
-export AVS_SIGNING_ADDRESS=`cast wallet address --mnemonic-path "$WAVS_SUBMISSION_MNEMONIC" --mnemonic-index ${HD_INDEX}`
-
-
-# Register the operator with the WAVS service manager
-export SERVICE_MANAGER_ADDRESS=`jq -r '.addresses.WavsServiceManager' .nodes/avs_deploy.json`
+# TESTNET: set WAVS_SERVICE_MANAGER_ADDRESS
 COMMAND="register ${OPERATOR_PRIVATE_KEY} ${AVS_SIGNING_ADDRESS} 0.001ether" make wavs-middleware
 
 # Verify registration

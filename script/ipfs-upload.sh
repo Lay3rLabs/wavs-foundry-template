@@ -16,7 +16,7 @@ export IPFS_URI="ipfs://${ipfs_cid}"
 curl "${IPFS_GATEWAY}${ipfs_cid}"
 
 if [ "$DEPLOYER_PK" ]; then
-    cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${IPFS_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
+    cast send ${WAVS_SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${IPFS_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
 fi
 
 echo ""
