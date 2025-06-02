@@ -20,13 +20,9 @@
 [default]
 log_level = ["info", "wavs=debug"]
 
-# The IPFS gateway URL used to access IPFS content over HTTP.
-ipfs_gateway = "http://127.0.0.1:8080/ipfs/"
-# ipfs_gateway = "https://gateway.pinata.cloud/ipfs/" # testnet / production
-
-# The domain used for the warg wasi registry
-registry_domain = "localhost:8090"
-# registry_domain = "wa.dev" # testnet / production
+# The IPFS gateway URL used to access IPFS content over HTTP. (set in wavs start command for now)
+# ipfs_gateway = "https://gateway.pinata.cloud/ipfs/"
+# ipfs_gateway = "http://127.0.0.1:8080/ipfs/"
 
 # Those configs are global and shared between wavs and aggregator
 # jaeger = "http://localhost:4317"
@@ -80,8 +76,8 @@ http_endpoint = "https://ethereum-sepolia-rpc.publicnode.com"
 
 [default.chains.evm.holesky]
 chain_id = "17000"
-ws_endpoint = "wss://ethereum-holesky-rpc.publicnode.com"
-http_endpoint = "https://ethereum-holesky-rpc.publicnode.com"
+ws_endpoint = "wss://holesky.drpc.org"
+http_endpoint = "https://holesky.drpc.org"
 
 [default.chains.evm.holesky-fork]
 chain_id = "17000"
@@ -134,19 +130,6 @@ cors_allowed_origins = [
 data = "~/wavs/cli"
 
 # wavs_endpoint = "http://localhost:8000"
-
-# CLI-specific chain overrides
-[cli.chains.evm.local]
-aggregator_endpoint = "http://localhost:8001"
-
-[cli.chains.evm.local2]
-aggregator_endpoint = "http://localhost:8001"
-
-[cli.chains.evm.sepolia]
-aggregator_endpoint = "http://localhost:8001"
-
-[cli.chains.evm.holesky]
-aggregator_endpoint = "http://localhost:8001"
 
 # ----------------------------
 # Aggregator specific settings

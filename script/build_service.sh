@@ -31,14 +31,14 @@ DEPLOY_ENV=${DEPLOY_ENV:-""}
 WAVS_ENDPOINT=${WAVS_ENDPOINT:-"http://localhost:8000"}
 REGISTRY=${REGISTRY:-"wa.dev"}
 
-BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:487a781 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
+BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-rc wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
-if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
+if [ -z "$WAVS_SERVICE_MANAGER_ADDRESS" ]; then
     # DevEx: attempt to grab it from the location if not set already
-    export SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager ./.nodes/avs_deploy.json)
+    export WAVS_SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager ./.nodes/avs_deploy.json)
 
-    if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
-        echo "SERVICE_MANAGER_ADDRESS is not set. Please set it to the address of the service manager."
+    if [ -z "$WAVS_SERVICE_MANAGER_ADDRESS" ]; then
+        echo "WAVS_SERVICE_MANAGER_ADDRESS is not set. Please set it to the address of the service manager."
         exit 1
     fi
 fi
@@ -79,7 +79,7 @@ $BASE_CMD workflow component --id ${WORKFLOW_ID} time-limit --seconds 30 > /dev/
 $BASE_CMD workflow component --id ${WORKFLOW_ID} env --values WAVS_ENV_SOME_SECRET > /dev/null
 $BASE_CMD workflow component --id ${WORKFLOW_ID} config --values 'key=value,key2=value2' > /dev/null
 
-$BASE_CMD manager set-evm --chain-name ${SUBMIT_CHAIN} --address `cast --to-checksum ${SERVICE_MANAGER_ADDRESS}` > /dev/null
+$BASE_CMD manager set-evm --chain-name ${SUBMIT_CHAIN} --address `cast --to-checksum ${WAVS_SERVICE_MANAGER_ADDRESS}` > /dev/null
 $BASE_CMD validate > /dev/null
 
 echo "Configuration file created ${FILE_LOCATION}. Watching events from '${TRIGGER_CHAIN}' & submitting to '${SUBMIT_CHAIN}'."

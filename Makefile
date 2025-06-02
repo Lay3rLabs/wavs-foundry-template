@@ -8,17 +8,17 @@ CARGO=cargo
 COIN_MARKET_CAP_ID?=1
 COMPONENT_FILENAME?=evm_price_oracle.wasm
 CREDENTIAL?=""
-DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:487a781
-MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.5
+DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:0.4.0-rc
+MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:5ebc489
 IPFS_ENDPOINT?=http://127.0.0.1:5001
 RPC_URL?=http://127.0.0.1:8545
 SERVICE_FILE?=.docker/service.json
 SERVICE_SUBMISSION_ADDR?=`jq -r .deployedTo .docker/submit.json`
 SERVICE_TRIGGER_ADDR?=`jq -r .deployedTo .docker/trigger.json`
 WASI_BUILD_DIR ?= ""
-WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ${DOCKER_IMAGE} wavs-cli
-WAVS_ENDPOINT?="http://127.0.0.1:8000"
 ENV_FILE?=.env
+WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f ${ENV_FILE} && echo "--env-file ./${ENV_FILE}") -v $$(pwd):/data ${DOCKER_IMAGE} wavs-cli
+WAVS_ENDPOINT?="http://127.0.0.1:8000"
 -include ${ENV_FILE}
 
 # Default target is build
@@ -87,21 +87,21 @@ upload-component:
 	fi
 	@wget --post-file=./compiled/${COMPONENT_FILENAME} --header="Content-Type: application/wasm" -O - ${WAVS_ENDPOINT}/upload | jq -r .digest
 
+IPFS_GATEWAY?="https://ipfs.io/ipfs"
 ## deploy-service: deploying the WAVS component service json | SERVICE_URL, CREDENTIAL, WAVS_ENDPOINT
 deploy-service:
 # this wait is required to ensure the WAVS service has time to service check
-	@sleep 2
 	@if [ -z "${SERVICE_URL}" ]; then \
 		echo "Error: SERVICE_URL is not set. Set SERVICE_URL to a link / ipfs url."; \
 		exit 1; \
 	fi
 	@if [ -n "${WAVS_ENDPOINT}" ]; then \
 		if [ "$$(curl -s -o /dev/null -w "%{http_code}" ${WAVS_ENDPOINT}/app)" != "200" ]; then \
-			echo "Error: WAVS_ENDPOINT is not reachable. Please check the WAVS_ENDPOINT."; \
+			echo "Error: WAVS_ENDPOINT is not reachable. Please check WAVS is online, or run this again in a few seconds."; \
 			exit 1; \
 		fi; \
 	fi
-	@$(WAVS_CMD) deploy-service --service-url ${SERVICE_URL} --log-level=debug --data /data/.docker --home /data $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),)
+	@$(WAVS_CMD) deploy-service --service-url ${SERVICE_URL} --log-level=debug --data /data/.docker --home /data $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),) $(if $(IPFS_GATEWAY),--ipfs-gateway $(IPFS_GATEWAY),)
 
 ## get-trigger: get the trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
 get-trigger:
@@ -126,31 +126,13 @@ upload-to-ipfs:
 		curl -X POST --url https://uploads.pinata.cloud/v3/files --header "Authorization: Bearer ${PINATA_API_KEY}" --header 'Content-Type: multipart/form-data' --form file=@${SERVICE_FILE} --form network=public --form name=service-`date +"%b-%d-%Y"`.json | jq -r .data.cid; \
 	fi
 
-## operator-list: listing the AVS operators | ENV_FILE
-operator-list:
-	@if [ -z "${WAVS_SERVICE_MANAGER_ADDRESS}" ]; then \
-		echo "Error: WAVS_SERVICE_MANAGER_ADDRESS is not set. Please set it to the deployed WAVS stake registry." && exit 1; \
-	fi
+COMMAND?=""
+PAST_BLOCKS?=500
+wavs-middleware:
 	@docker run --rm --network host --env-file ${ENV_FILE} \
-		-e WAVS_SERVICE_MANAGER_ADDRESS=${WAVS_SERVICE_MANAGER_ADDRESS} \
-		-v ./.nodes:/root/.nodes --entrypoint /wavs/list_operator.sh ${MIDDLEWARE_DOCKER_IMAGE}
-
-AVS_PRIVATE_KEY?=""
-DELEGATION?="0.001ether"
-## operator-register: listing the AVS operators | ENV_FILE, AVS_PRIVATE_KEY
-operator-register:
-	@if [ -z "${AVS_PRIVATE_KEY}" ]; then \
-		echo "Error: AVS_PRIVATE_KEY is not set. Please set it to your AVS private key." && exit 1; \
-	fi
-	@if [ -z "${WAVS_SERVICE_MANAGER_ADDRESS}" ]; then \
-		echo "Error: WAVS_SERVICE_MANAGER_ADDRESS is not set. Please set it to the deployed WAVS service manager." && exit 1; \
-	fi
-	@docker run --rm --network host \
-		-e WAVS_SERVICE_MANAGER_ADDRESS=${WAVS_SERVICE_MANAGER_ADDRESS} \
-		--env-file ${ENV_FILE} \
-		-v ./.nodes:/root/.nodes \
-		--entrypoint /wavs/register.sh ${MIDDLEWARE_DOCKER_IMAGE} "${AVS_PRIVATE_KEY}" "${DELEGATION}"
-
+		$(if ${WAVS_SERVICE_MANAGER_ADDRESS},-e WAVS_SERVICE_MANAGER_ADDRESS=${WAVS_SERVICE_MANAGER_ADDRESS}) \
+		$(if ${PAST_BLOCKS},-e PAST_BLOCKS=${PAST_BLOCKS}) \
+		-v ./.nodes:/root/.nodes ${MIDDLEWARE_DOCKER_IMAGE} ${COMMAND}
 
 ## update-submodules: update the git submodules
 update-submodules:
@@ -173,11 +155,11 @@ _build_forge:
 
 .PHONY: setup-env
 setup-env:
-	@if [ ! -f .env ]; then \
+	@if [ ! -f ${ENV_FILE} ]; then \
 		if [ -f .env.example ]; then \
-			echo "Creating .env file from .env.example..."; \
-			cp .env.example .env; \
-			echo ".env file created successfully!"; \
+			echo "Creating ${ENV_FILE} file from .env.example..."; \
+			cp .env.example ${ENV_FILE}; \
+			echo "${ENV_FILE} file created successfully!"; \
 		fi; \
 	fi
 

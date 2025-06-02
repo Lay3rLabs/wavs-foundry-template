@@ -1,7 +1,7 @@
 #!/bin/bash
 # set -e
 
-SP=""; if [ "$(uname)" == *"Darwin"* ]; then SP=" "; fi
+SP=""; if [[ "$(uname)" == *"Darwin"* ]]; then SP=" "; fi
 
 cd $(git rev-parse --show-toplevel) || exit 1
 
@@ -55,19 +55,23 @@ cat > "${OPERATOR_LOC}/start.sh" << EOF
 #!/bin/bash
 cd \$(dirname "\$0") || exit 1
 
-IMAGE=ghcr.io/lay3rlabs/wavs:487a781
+IMAGE=ghcr.io/lay3rlabs/wavs:0.4.0-rc
 WAVS_INSTANCE=wavs-${OPERATOR_INDEX}
+IPFS_GATEWAY=\${IPFS_GATEWAY:-"https://ipfs.io/ipfs/"}
 
 docker kill \${WAVS_INSTANCE} > /dev/null 2>&1 || true
 docker rm \${WAVS_INSTANCE} > /dev/null 2>&1 || true
 
-docker run -d --rm --name \${WAVS_INSTANCE} --network host --env-file .env -v \$(pwd):/root/wavs \${IMAGE} wavs --home /root/wavs --host 0.0.0.0 --log-level info
+docker run -d --rm --name \${WAVS_INSTANCE} --network host --env-file .env -v \$(pwd):/root/wavs \${IMAGE} wavs --home /root/wavs --ipfs-gateway \${IPFS_GATEWAY} --host 0.0.0.0 --log-level info
 sleep 0.25
 
 if [ ! "\$(docker ps -q -f name=\${WAVS_INSTANCE})" ]; then
   echo "Container \${WAVS_INSTANCE} is not running. Reason:"
-  docker run --rm --name \${WAVS_INSTANCE} --network host --env-file .env -v \$(pwd):/root/wavs \${IMAGE} wavs --home /root/wavs --host 0.0.0.0 --log-level info
+  docker run --rm --name \${WAVS_INSTANCE} --network host --env-file .env -v \$(pwd):/root/wavs \${IMAGE} wavs --home /root/wavs --ipfs-gateway \${IPFS_GATEWAY} --host 0.0.0.0 --log-level info
 fi
+
+# give wavs a chance to start up & health check
+sleep 3
 EOF
 
 cp wavs.toml ${OPERATOR_LOC}/wavs.toml
