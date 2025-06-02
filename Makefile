@@ -50,6 +50,25 @@ clean: clean-docker
 clean-docker:
 	@$(SUDO) docker rm -v $(shell $(SUDO) docker ps -a --filter status=exited -q) > /dev/null 2>&1 || true
 
+
+## validate-component: validate a WAVS component against best practices
+validate-component:
+	@if [ -z "$(COMPONENT)" ]; then \
+		echo "Usage: make validate-component COMPONENT=your-component-name"; \
+		echo "Example: make validate-component COMPONENT=eth-price-oracle"; \
+		exit 1; \
+	fi
+	@if [ ! -d "./components/$(COMPONENT)" ]; then \
+		echo "Error: Component directory ./components/$(COMPONENT) not found"; \
+		exit 1; \
+	fi
+	@if [ ! -d "./test_utils" ]; then \
+		echo "Error: Test utilities not found. Please ensure test_utils exists."; \
+		exit 1; \
+	fi
+	@cd test_utils && ./validate_component.sh $(COMPONENT)
+
+
 ## fmt: formatting solidity and rust code
 fmt:
 	@forge fmt --check
