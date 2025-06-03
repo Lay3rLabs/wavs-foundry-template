@@ -70,9 +70,9 @@ use trigger::{decode_trigger_event, encode_trigger_output, Destination};
 use wavs_wasi_utils::http::{fetch_json, http_request_get};
 pub mod bindings;  // Never edit bindings.rs!
 use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
+use alloy_sol_types::SolValue;
 use serde::{Deserialize, Serialize};
 use wstd::{http::HeaderValue, runtime::block_on};
-use alloy_sol_types::{sol, SolCall, SolValue};
 use anyhow::Result;
 
 struct Component;
@@ -83,9 +83,26 @@ impl Guest for Component {
         let (trigger_id, req, dest) = 
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
             
-        // 1. Decode input data
-        // 2. Process data
-        // 3. Return encoded output
+        // Clone request data to avoid ownership issues
+        let req_clone = req.clone();
+            
+        // Decode the string using proper ABI decoding
+        let string_data =
+            if let Ok(decoded) = trigger::solidity::submitStringCall::abi_decode(&req_clone) {
+                // If it has a function selector (from cast abi-encode "f(string)" format)
+                decoded.data
+            } else {
+                // Fallback: try decoding just as a string parameter (no function selector)
+                match <String as SolValue>::abi_decode(&req_clone) {
+                    Ok(s) => s,
+                    Err(e) => return Err(format!("Failed to decode input as ABI string: {}", e)),
+                }
+            };
+
+        println!("Decoded string input: {}", string_data);
+            
+        // Process the decoded data here
+        let result = process_data(string_data)?;
         
         let output = match dest {
             Destination::Ethereum => Some(encode_trigger_output(trigger_id, &result)),
@@ -93,6 +110,12 @@ impl Guest for Component {
         };
         Ok(output)
     }
+}
+
+// Example processing function - replace with your actual logic
+fn process_data(input: String) -> Result<Vec<u8>, String> {
+    // Your processing logic here
+    Ok(input.as_bytes().to_vec())
 }
 ```
 
@@ -115,11 +138,11 @@ pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, 
     match trigger_data {
         TriggerData::EvmContractEvent(TriggerDataEvmContractEvent { log, .. }) => {
             let event: solidity::NewTrigger = decode_event_log_data!(log)?;
-            let trigger_info = solidity::TriggerInfo::abi_decode(&event._triggerInfo)?;
+            let trigger_info = <solidity::TriggerInfo as SolValue>::abi_decode(&event._triggerInfo)?;
             Ok((trigger_info.triggerId, trigger_info.data.to_vec(), Destination::Ethereum))
         }
         TriggerData::Raw(data) => {
-            if let Ok(decoded) = String::abi_decode(&data) {
+            if let Ok(decoded) = <String as SolValue>::abi_decode(&data) {
                 Ok((0, decoded.as_bytes().to_vec(), Destination::CliOutput))
             } else {
                 Ok((0, data.clone(), Destination::CliOutput))
@@ -140,10 +163,15 @@ pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> WasmR
     }
 }
 
-mod solidity {
+pub mod solidity {
     use alloy_sol_macro::sol;
     pub use ITypes::*;
     sol!("../../src/interfaces/ITypes.sol");
+
+    // Define a simple struct representing the function that encodes string input
+    sol! {
+        function submitString(string data) external;
+    }
 }
 ```
 
