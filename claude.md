@@ -70,7 +70,7 @@ use trigger::{decode_trigger_event, encode_trigger_output, Destination};
 use wavs_wasi_utils::http::{fetch_json, http_request_get};
 pub mod bindings;  // Never edit bindings.rs!
 use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
-use alloy_sol_types::SolValue;
+use alloy_sol_types::{SolCall, SolValue};
 use serde::{Deserialize, Serialize};
 use wstd::{http::HeaderValue, runtime::block_on};
 use anyhow::Result;
@@ -141,13 +141,7 @@ pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, 
             let trigger_info = <solidity::TriggerInfo as SolValue>::abi_decode(&event._triggerInfo)?;
             Ok((trigger_info.triggerId, trigger_info.data.to_vec(), Destination::Ethereum))
         }
-        TriggerData::Raw(data) => {
-            if let Ok(decoded) = <String as SolValue>::abi_decode(&data) {
-                Ok((0, decoded.as_bytes().to_vec(), Destination::CliOutput))
-            } else {
-                Ok((0, data.clone(), Destination::CliOutput))
-            }
-        }
+        TriggerData::Raw(data) => Ok((0, data.clone(), Destination::CliOutput)),
         _ => Err(anyhow::anyhow!("Unsupported trigger data type")),
     }
 }
