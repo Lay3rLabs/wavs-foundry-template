@@ -29,7 +29,7 @@ AGGREGATOR_URL=${AGGREGATOR_URL:-""}
 DEPLOY_ENV=${DEPLOY_ENV:-""}
 REGISTRY=${REGISTRY:-"wa.dev"}
 
-BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-rc wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
+BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:35c96a4 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 if [ -z "$WAVS_SERVICE_MANAGER_ADDRESS" ]; then
     export WAVS_SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager ./.nodes/avs_deploy.json)

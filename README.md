@@ -320,9 +320,10 @@ Making test mnemonic: `cast wallet new-mnemonic --json | jq -r .mnemonic`
 Each service gets their own key path (hd_path). The first service starts at 1 and increments from there. Get the service ID
 
 ```bash
-source ./script/avs-signing-key.sh
+SERVICE_INDEX=0 source ./script/avs-signing-key.sh
 
 # TESTNET: set WAVS_SERVICE_MANAGER_ADDRESS
+export WAVS_SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager ./.nodes/avs_deploy.json)
 COMMAND="register ${OPERATOR_PRIVATE_KEY} ${AVS_SIGNING_ADDRESS} 0.001ether" make wavs-middleware
 
 # Verify registration
