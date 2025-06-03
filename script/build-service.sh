@@ -27,8 +27,6 @@ TRIGGER_CHAIN=${TRIGGER_CHAIN:-"local"}
 SUBMIT_CHAIN=${SUBMIT_CHAIN:-"local"}
 AGGREGATOR_URL=${AGGREGATOR_URL:-""}
 DEPLOY_ENV=${DEPLOY_ENV:-""}
-# used in make upload-component
-WAVS_ENDPOINT=${WAVS_ENDPOINT:-"http://localhost:8000"}
 REGISTRY=${REGISTRY:-"wa.dev"}
 
 BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-rc wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
