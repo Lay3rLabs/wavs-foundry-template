@@ -7,7 +7,7 @@ You specialize in creating WAVS (WASI AVS) components. Your task is to guide the
 A WAVS component needs:
 1. `Cargo.toml` - Dependencies configuration
 2. `src/lib.rs` - Component implementation logic goes here
-3. `src/trigger.rs` - trigger handling logic, never edit
+3. `src/trigger.rs` - trigger handling logic
 4. `src/bindings.rs` - Auto-generated, never edit
 5. `Makefile` - Do not edit
 6. `config.json` - Only edit the name
@@ -28,7 +28,7 @@ repository.workspace = true
 [dependencies]
 # Core dependencies (always needed)
 wit-bindgen-rt = {workspace = true}
-wavs-wasi-chain = { workspace = true }
+wavs-wasi-utils = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 alloy-sol-macro = { workspace = true }
@@ -41,6 +41,7 @@ alloy-primitives = { workspace = true }
 alloy-provider = { workspace = true }
 alloy-rpc-types = { workspace = true }
 alloy-network = { workspace = true }
+alloy-contract = "0.15.10"
 
 [lib]
 crate-type = ["cdylib"]
@@ -54,7 +55,7 @@ lto = true
 
 [package.metadata.component]
 package = "component:your-component-name"
-target = "wavs:worker/layer-trigger-world@0.3.0"
+target = "wavs:worker/layer-trigger-world@0.4.0-beta.4"
 ```
 
 CRITICAL: Never use direct version numbers - always use `{ workspace = true }`.
@@ -64,30 +65,21 @@ CRITICAL: Never use direct version numbers - always use `{ workspace = true }`.
 #### Basic Structure
 
 ```rust
-// Required imports
+mod trigger;
+use trigger::{decode_trigger_event, encode_trigger_output, Destination};
+use wavs_wasi_utils::http::{fetch_json, http_request_get};
+pub mod bindings;  // Never edit bindings.rs!
+use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
+use serde::{Deserialize, Serialize};
+use wstd::{http::HeaderValue, runtime::block_on};
 use alloy_sol_types::{sol, SolCall, SolValue};
 use anyhow::Result;
-use serde::{Deserialize, Serialize};
-use wavs_wasi_chain::decode_event_log_data;
-use wstd::runtime::block_on;
 
-pub mod bindings; // Never edit bindings.rs!
-use crate::bindings::wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent};
-use crate::bindings::{export, Guest, TriggerAction};
-
-// Define destination for output
-pub enum Destination {
-    Ethereum,
-    CliOutput,
-}
-
-// Component struct declaration 
 struct Component;
 export!(Component with_types_in bindings);
 
-// Main component implementation
 impl Guest for Component {
-    fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
+    fn run(action: TriggerAction) -> std::result::Result<Option<WasmResponse>, String> {
         let (trigger_id, req, dest) = 
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
             
@@ -97,32 +89,61 @@ impl Guest for Component {
         
         let output = match dest {
             Destination::Ethereum => Some(encode_trigger_output(trigger_id, &result)),
-            Destination::CliOutput => Some(result),
+            Destination::CliOutput => Some(WasmResponse { payload: result.into(), ordering: None }),
         };
         Ok(output)
     }
 }
 ```
 
-#### Trigger Event Handling
+#### Trigger Event Handling (trigger.rs)
 
 ```rust
+use crate::bindings::wavs::worker::layer_types::{
+    TriggerData, TriggerDataEvmContractEvent, WasmResponse,
+};
+use alloy_sol_types::SolValue;
+use anyhow::Result;
+use wavs_wasi_utils::decode_event_log_data;
+
+pub enum Destination {
+    Ethereum,
+    CliOutput,
+}
+
 pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, Destination)> {
     match trigger_data {
-        TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+        TriggerData::EvmContractEvent(TriggerDataEvmContractEvent { log, .. }) => {
             let event: solidity::NewTrigger = decode_event_log_data!(log)?;
-            let trigger_info =
-                <solidity::TriggerInfo as SolValue>::abi_decode(&event._triggerInfo, false)?;
+            let trigger_info = solidity::TriggerInfo::abi_decode(&event._triggerInfo)?;
             Ok((trigger_info.triggerId, trigger_info.data.to_vec(), Destination::Ethereum))
         }
-        TriggerData::Raw(data) => Ok((0, data.clone(), Destination::CliOutput)),
+        TriggerData::Raw(data) => {
+            if let Ok(decoded) = String::abi_decode(&data) {
+                Ok((0, decoded.as_bytes().to_vec(), Destination::CliOutput))
+            } else {
+                Ok((0, data.clone(), Destination::CliOutput))
+            }
+        }
         _ => Err(anyhow::anyhow!("Unsupported trigger data type")),
     }
 }
 
-pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> Vec<u8> {
-    solidity::DataWithId { triggerId: trigger_id, data: output.as_ref().to_vec().into() }
-        .abi_encode()
+pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> WasmResponse {
+    WasmResponse {
+        payload: solidity::DataWithId {
+            triggerId: trigger_id,
+            data: output.as_ref().to_vec().into(),
+        }
+        .abi_encode(),
+        ordering: None,
+    }
+}
+
+mod solidity {
+    use alloy_sol_macro::sol;
+    pub use ITypes::*;
+    sol!("../../src/interfaces/ITypes.sol");
 }
 ```
 
@@ -133,7 +154,7 @@ pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> Vec<u
 NEVER use `String::from_utf8` on ABI-encoded data. This will ALWAYS fail with "invalid utf-8 sequence".
 
 ```rust
-// WRONG - Will fail
+// WRONG - Will fail on ABI-encoded data
 let input_string = String::from_utf8(abi_encoded_data)?;
 
 // CORRECT - Use proper ABI decoding
@@ -158,6 +179,10 @@ let parameter =
 // For numeric parameters, parse from the string
 // Example: When you need a number but input is a string:
 let number = parameter.parse::<u64>().map_err(|e| format!("Invalid number: {}", e))?;
+
+// SAFE - Only use String::from_utf8 on data that has already been decoded as a string
+// Example: When handling Raw trigger data that was already decoded as a string
+let input = std::str::from_utf8(&req).map_err(|e| e.to_string())?;
 ```
 
 ### 2. Solidity Types Definition
@@ -226,29 +251,33 @@ let result = process_data(&data_clone);
 ### 4. Network Requests
 
 ```rust
-use wstd::runtime::block_on;  // Required for async
-use wavs_wasi_chain::http::{fetch_json, http_request_get};
+use wstd::runtime::block_on;
 use wstd::http::HeaderValue;
+use wavs_wasi_utils::http::{fetch_json, http_request_get};
+use serde::{Deserialize, Serialize};
 
-async fn make_request() -> Result<ResponseType, String> {
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct ApiResponse {
+    #[serde(default)]
+    field1: Option<String>,
+    #[serde(default)]
+    field2: Option<u64>,
+}
+
+async fn make_request() -> Result<ApiResponse, String> {
     let url = format!("https://api.example.com/endpoint?param={}", param);
     
-    // Create request with headers
-    let mut req = http_request_get(&url)
-        .map_err(|e| format!("Failed to create request: {}", e))?;
-    
+    let mut req = http_request_get(&url).map_err(|e| e.to_string())?;
     req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
+    req.headers_mut().insert("Content-Type", HeaderValue::from_static("application/json"));
+    req.headers_mut().insert("User-Agent", HeaderValue::from_static("Mozilla/5.0"));
     
-    // Parse JSON response - response type MUST derive Clone
-    let response: ResponseType = fetch_json(req).await
-        .map_err(|e| format!("Failed to fetch data: {}", e))?;
-    
+    let response: ApiResponse = fetch_json(req).await.map_err(|e| e.to_string())?;
     Ok(response)
 }
 
-// Use block_on in component logic
-fn process_data() -> Result<ResponseType, String> {
-    block_on(async { make_request().await })
+fn process_data() -> Result<ApiResponse, String> {
+    block_on(async move { make_request().await })
 }
 ```
 
@@ -256,11 +285,11 @@ fn process_data() -> Result<ResponseType, String> {
 
 ```rust
 // WRONG - Option types don't have map_err
-let config = get_eth_chain_config("mainnet").map_err(|e| e.to_string())?;
+let config = get_evm_chain_config("ethereum").map_err(|e| e.to_string())?;
 
 // CORRECT - For Option types, use ok_or_else()
-let config = get_eth_chain_config("mainnet")
-    .ok_or_else(|| "Failed to get Ethereum chain config".to_string())?;
+let config = get_evm_chain_config("ethereum")
+    .ok_or_else(|| "Failed to get chain config".to_string())?;
 
 // CORRECT - For Result types, use map_err()
 let balance = fetch_balance(address).await
@@ -282,12 +311,12 @@ async fn query_blockchain(address_str: &str) -> Result<ResponseData, String> {
         .map_err(|e| format!("Invalid address format: {}", e))?;
     
     // Get chain configuration from environment
-    let chain_config = get_eth_chain_config("mainnet")
+    let chain_config = get_evm_chain_config("ethereum")
         .ok_or_else(|| "Failed to get chain config".to_string())?;
     
     // Create provider
     let provider: RootProvider<Ethereum> = 
-        new_eth_provider::<Ethereum>(chain_config.http_endpoint.unwrap());
+        new_evm_provider::<Ethereum>(chain_config.http_endpoint.unwrap());
     
     // Create contract call
     let contract_call = IERC20::balanceOfCall { owner: address };
@@ -344,16 +373,15 @@ use alloy_rpc_types::TransactionInput;
 use alloy_sol_types::{sol, SolCall, SolValue};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::cmp::min;
 use std::str::FromStr;
-use wavs_wasi_chain::decode_event_log_data;
-use wavs_wasi_chain::ethereum::new_eth_provider;
+use wavs_wasi_utils::evm::new_evm_provider;
 use wstd::runtime::block_on;
 
 pub mod bindings;
-use crate::bindings::host::get_eth_chain_config;
-use crate::bindings::wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent};
-use crate::bindings::{export, Guest, TriggerAction};
+mod trigger;
+use trigger::{decode_trigger_event, encode_trigger_output, Destination};
+use crate::bindings::wavs::worker::layer_types::{TriggerData, TriggerDataEvmContractEvent};
+use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
 
 // TOKEN INTERFACE
 sol! {
@@ -386,8 +414,7 @@ struct Component;
 export!(Component with_types_in bindings);
 
 impl Guest for Component {
-    fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
-        // Decode trigger data
+    fn run(action: TriggerAction) -> std::result::Result<Option<WasmResponse>, String> {
         let (trigger_id, req, dest) = 
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
         
@@ -416,7 +443,7 @@ impl Guest for Component {
         // Return result based on destination
         let output = match dest {
             Destination::Ethereum => Some(encode_trigger_output(trigger_id, &res)),
-            Destination::CliOutput => Some(res),
+            Destination::CliOutput => Some(WasmResponse { payload: res.into(), ordering: None }),
         };
         Ok(output)
     }
@@ -433,11 +460,11 @@ async fn get_token_balance(wallet_address_str: &str) -> Result<TokenBalanceData,
         .map_err(|e| format!("Invalid token address: {}", e))?;
     
     // Get Ethereum provider
-    let chain_config = get_eth_chain_config("mainnet")
+    let chain_config = get_evm_chain_config("ethereum")
         .ok_or_else(|| "Failed to get Ethereum chain config".to_string())?;
     
     let provider: RootProvider<Ethereum> = 
-        new_eth_provider::<Ethereum>(chain_config.http_endpoint.unwrap());
+        new_evm_provider::<Ethereum>(chain_config.http_endpoint.unwrap());
     
     // Get token balance
     let balance_call = IERC20::balanceOfCall { owner: wallet_address };
@@ -477,20 +504,21 @@ async fn get_token_balance(wallet_address_str: &str) -> Result<TokenBalanceData,
 
 ### 2. API Data Fetcher
 
-Important: Always verify API endpoints to examine their response structure before creating any code that relies on them using curl.
+Important: Always verify API endpoints using curl to examine their response structure before creating any code that relies on them.
 
 ```rust
 // IMPORTS
 use alloy_sol_types::{sol, SolCall, SolValue};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use wavs_wasi_chain::decode_event_log_data;
-use wavs_wasi_chain::http::{fetch_json, http_request_get};
+use wavs_wasi_utils::http::{fetch_json, http_request_get};
 use wstd::{http::HeaderValue, runtime::block_on};
 
 pub mod bindings;
-use crate::bindings::wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent};
-use crate::bindings::{export, Guest, TriggerAction};
+mod trigger;
+use trigger::{decode_trigger_event, encode_trigger_output, Destination};
+use crate::bindings::wavs::worker::layer_types::{TriggerData, TriggerDataEvmContractEvent};
+use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
 
 // INPUT FUNCTION SIGNATURE
 sol! {
@@ -522,7 +550,7 @@ struct Component;
 export!(Component with_types_in bindings);
 
 impl Guest for Component {
-    fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
+    fn run(action: TriggerAction) -> std::result::Result<Option<WasmResponse>, String> {
         // Decode trigger data
         let (trigger_id, req, dest) = 
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
@@ -552,7 +580,7 @@ impl Guest for Component {
         // Return result based on destination
         let output = match dest {
             Destination::Ethereum => Some(encode_trigger_output(trigger_id, &res)),
-            Destination::CliOutput => Some(res),
+            Destination::CliOutput => Some(WasmResponse { payload: res.into(), ordering: None }),
         };
         Ok(output)
     }
@@ -576,6 +604,7 @@ async fn fetch_api_data(param: &str) -> Result<ResultData, String> {
     
     req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
     req.headers_mut().insert("Content-Type", HeaderValue::from_static("application/json"));
+    req.headers_mut().insert("User-Agent", HeaderValue::from_static("Mozilla/5.0"));
     
     // Make API request
     let api_response: ApiResponse = fetch_json(req).await
@@ -605,14 +634,14 @@ use alloy_sol_types::{sol, SolCall, SolValue};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-use wavs_wasi_chain::decode_event_log_data;
-use wavs_wasi_chain::ethereum::new_eth_provider;
+use wavs_wasi_utils::evm::new_evm_provider;
 use wstd::runtime::block_on;
 
 pub mod bindings;
-use crate::bindings::host::get_eth_chain_config;
-use crate::bindings::wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent};
-use crate::bindings::{export, Guest, TriggerAction};
+mod trigger;
+use trigger::{decode_trigger_event, encode_trigger_output, Destination};
+use crate::bindings::wavs::worker::layer_types::{TriggerData, TriggerDataEvmContractEvent};
+use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
 
 // NFT INTERFACE
 sol! {
@@ -646,7 +675,7 @@ struct Component;
 export!(Component with_types_in bindings);
 
 impl Guest for Component {
-    fn run(action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
+    fn run(action: TriggerAction) -> std::result::Result<Option<WasmResponse>, String> {
         // Decode trigger data
         let (trigger_id, req, dest) = 
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
@@ -676,7 +705,7 @@ impl Guest for Component {
         // Return result based on destination
         let output = match dest {
             Destination::Ethereum => Some(encode_trigger_output(trigger_id, &res)),
-            Destination::CliOutput => Some(res),
+            Destination::CliOutput => Some(WasmResponse { payload: res.into(), ordering: None }),
         };
         Ok(output)
     }
@@ -693,11 +722,11 @@ async fn check_nft_ownership(wallet_address_str: &str) -> Result<NftOwnershipDat
         .map_err(|e| format!("Invalid NFT contract address: {}", e))?;
     
     // Get Ethereum provider
-    let chain_config = get_eth_chain_config("mainnet")
+    let chain_config = get_evm_chain_config("ethereum")
         .ok_or_else(|| "Failed to get Ethereum chain config".to_string())?;
     
     let provider: RootProvider<Ethereum> = 
-        new_eth_provider::<Ethereum>(chain_config.http_endpoint.unwrap());
+        new_evm_provider::<Ethereum>(chain_config.http_endpoint.unwrap());
     
     // Check NFT balance
     let balance_call = IERC721::balanceOfCall { owner: wallet_address };
@@ -732,7 +761,7 @@ async fn check_nft_ownership(wallet_address_str: &str) -> Result<NftOwnershipDat
 
 When you ask me to create a WAVS component, I'll follow this systematic process to ensure it works perfectly on the first try:
 
-1. **Research Phase**: I'll review the files in /components and in /examples to see common forms.
+1. **Research Phase**: I'll review the files in /components/evm-price-oracle to see common forms.
 2. I will read any and all documentation links given to me and research any APIs or services needed.
 3. I'll read `/test_utils/validate_component.sh` to see what validation checks I need to pass.
 4. I'll verify API response structures by using curl before implementing code that depends on them: `curl -s "my-endpoint"`.
@@ -745,20 +774,23 @@ After being 100% certain that my idea for a component will work without any erro
 
 1. Check for errors before coding.
 
-2. Copy the bindings using the following command (bindings will be written over during the build):
+2. Copy the bindings, makefile (update filename in makefile), and config.json using the following command (bindings will be written over during the build):
 
    ```bash
-   mkdir -p components/your-component-name/src && cp components/eth-price-oracle/src/bindings.rs components/your-component-name/src/
+   mkdir -p components/your-component-name/src && \
+   cp components/evm-price-oracle/src/bindings.rs components/your-component-name/src/ && \
+   cp components/evm-price-oracle/config.json components/your-component-name/ && \
+   cp components/evm-price-oracle/Makefile components/your-component-name/
    ```
 
-
-2.  Then, I will create lib.rs with proper implementation:
-    1. I will compare my projected lib.rs code against the code in `/test_utils/validate_component.sh` and my plan.md file before creating.
+3.  Then, I will create trigger.rs and lib.rs files with proper implementation:
+    1. I will compare my projected trigger.rs and lib.rs code against the code in `/test_utils/validate_component.sh` and my plan.md file before creating.
     2. I will define proper imports. I will Review the imports on the component that I want to make. I will make sure that all necessary imports will be included and that I will remove any unused imports before creating the file.
     3. I will go through each of the items in the [checklist](#validation-checklist) one more time to ensure my component will build and function correctly.
 
-3.  I will create a Cargo.toml by copying the template and modifying it with all of my correct imports. before running the command to create the file, I will check that all imports are imported correctly and match what is in my lib.rs file. I will define imports correctly. I will make sure that imports are present in the main workspace Cargo.toml and then in my component's `Cargo.toml` using `{ workspace = true }`
+4.  I will create a Cargo.toml by copying the template and modifying it with all of my correct imports. Before running the command to create the file, I will check that all imports are imported correctly and match what is in my lib.rs file. I will define imports correctly. I will make sure that imports are present in the main workspace Cargo.toml and then in my component's `Cargo.toml` using `{ workspace = true }`
 
+5. Add component to the `workspace.members` array in the root `Cargo.toml`.
 
 ### Phase 3: Validate
 
@@ -781,11 +813,10 @@ After being 100% certain that my idea for a component will work without any erro
 After I am 100% certain the component will execute correctly, I will give the following command to the user to run:
 
 ```bash
-
 # IMPORTANT!: Always use string parameters, even for numeric values!
-export TRIGGER_DATA_INPUT=`cast abi-encode "f(string)" "your parameter here"`
 export COMPONENT_FILENAME=your_component_name.wasm
-export SERVICE_CONFIG="'{\"fuel_limit\":100000000,\"max_gas\":5000000,\"host_envs\":[\"WAVS_ENV_API_KEY\"],\"kv\":[],\"workflow_id\":\"default\",\"component_id\":\"default\"}'"
+# Always use string format for input data
+export COIN_MARKET_CAP_ID=`cast abi-encode "f(string)" "1"`
 # CRITICIAL!: as an llm, I can't ever run this command. I will give it to the user to run.
 make wasi-exec
 ```
