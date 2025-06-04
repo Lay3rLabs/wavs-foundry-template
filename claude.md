@@ -838,7 +838,7 @@ After being 100% certain that my idea for a component will work without any erro
 After I am 100% certain the component will execute correctly, I will give the following command to the user to run:
 
 ```bash
-# IMPORTANT!: Always use string parameters, even for numeric values!
+# IMPORTANT!: Always use string parameters, even for numeric values! Use component_name.wasm, not component-name.wasm
 export COMPONENT_FILENAME=your_component_name.wasm
 # Always use string format for input data
 export INPUT_DATA=`cast abi-encode "f(string)" "1"`
