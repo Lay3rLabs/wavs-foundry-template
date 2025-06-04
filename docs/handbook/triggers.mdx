@@ -14,7 +14,7 @@ A trigger prompts a WAVS service to run. Operators listen for the trigger event 
 
 ### Trigger lifecycle
 
-1. A service is deployed with a service.json manifest which contains information on the service and workflow logic (components, triggers, submission logic).
+1. A service is deployed with a service.json manifest which contains information on the service and [workflow](/handbook/workflows) logic (components, triggers, [submission](handbook/submission) logic).
 
 2. Operators maintain lookup maps to track and verify triggers. For EVM and Cosmos events, they map chain names, contract addresses, and event identifiers to trigger IDs. Block interval triggers are tracked by chain name with countdown timers, while cron triggers are managed in a priority queue ordered by execution time.
 
@@ -62,7 +62,7 @@ pub enum TriggerData {
 
 ## Trigger configuration
 
-Triggers define when and how the component should be executed. Each workflow needs a trigger to be set. They are set in the `trigger` field of the `service.json` file.
+Triggers define when and how the component should be executed. Each workflow needs a trigger to be set. They are set in the `trigger` field of the [`service.json` file](/handbook/service).
 
 ### EVM event trigger
 
@@ -73,7 +73,7 @@ This trigger listens for specific events emitted by contracts on EVM-compatible 
 "trigger": {
   "evm_contract_event": {
     "address": "0x00000000219ab540356cbb839cbe05303d7705fa", // Contract address to monitor
-    "chain_name": "ethereum-mainnet", // Chain to monitor
+    "chain_name": "ethereum", // Chain to monitor
     "event_hash": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef" // Event hash (32 bytes)
   }
 }
@@ -83,18 +83,17 @@ This trigger listens for specific events emitted by contracts on EVM-compatible 
 Your evm chain information must be set in `wavs.toml` under the `[default.chains.evm.<chain_name>]` section:
 
 ```toml wavs.toml
-# Local / Testnet
-[default.chains.evm.local]
-chain_id = "31337"
-ws_endpoint = "ws://localhost:8545"
-http_endpoint = "http://localhost:8545"
-poll_interval_ms = 7000
+# Mainnet
+[default.chains.evm.ethereum]
+chain_id = "1"
+ws_endpoint = "wss://eth.drpc.org"
+http_endpoint = "https://eth.drpc.org"
 ```
 
 You'll need to set your EVM chain credential in your `.env` file to establish a connection for monitoring the EVM chain:
 
 ```env .env
-WAVS_CLI_EVM_CREDENTIAL="0x5ce146f435835b1762ed602088740d201b68fd94bf808f97fd04588f1a63c9ab"
+WAVS_CLI_EVM_CREDENTIAL="0x5ze146f435835b1762ed602088740d201b68fd94bf808f97fd04588f1a63c9ab"
 ```
 
 ### Cosmos event trigger
