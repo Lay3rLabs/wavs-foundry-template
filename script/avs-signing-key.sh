@@ -5,6 +5,11 @@ export DEFAULT_ENV_FILE=${DEFAULT_ENV_FILE:-"infra/wavs-1/.env"}
 SERVICE_INDEX=${SERVICE_INDEX:-0}
 
 SERVICE_ID=`curl -s http://localhost:8000/app | jq -r ".services[${SERVICE_INDEX}].id"`
+if [ -z "$SERVICE_ID" ] || [ "$SERVICE_ID" == "null" ]; then
+  echo "Error: SERVICE_ID is null or not found for index ${SERVICE_INDEX}."
+  exit 1
+fi
+
 HD_INDEX=`curl -s http://localhost:8000/service-key/${SERVICE_ID} | jq -rc '.secp256k1.hd_index'`
 
 source ${DEFAULT_ENV_FILE}
