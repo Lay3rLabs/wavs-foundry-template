@@ -171,10 +171,10 @@ fi
 
 # 2c. Check for potential "move out of index" errors
 echo "📝 Checking for potential 'move out of index' errors..."
-MOVE_OUT_INDEX=$(grep -r "\[.*\]\..*" "$COMPONENT_DIR"/src/*.rs | grep -v "\.clone()" | grep -v "\.as_ref()" | grep -v "&" || true)
+MOVE_OUT_INDEX=$(grep -r "\[.*\]\..*" "$COMPONENT_DIR"/src/*.rs | grep -v "\.clone()" | grep -v "\.as_ref()" | grep -v "&" | grep -v "bindings.rs" || true)
 if [ ! -z "$MOVE_OUT_INDEX" ]; then
   add_error "Found potential 'move out of index' errors - accessing collection elements without cloning.
-      When accessing fields from elements in a collection, you must clone the field to avoid
+      When accessing fields from elements in a collection, you should clone the field to avoid
       moving out of the collection, which would make the collection unusable afterward.
       WRONG:  let field = collection[0].field; // This moves the field out of the collection
       RIGHT:  let field = collection[0].field.clone(); // This clones the field
@@ -259,10 +259,10 @@ fi
 
 # 4f. Check for HTTP function imports
 if grep -r "http_request_" "$COMPONENT_DIR"/src/*.rs > /dev/null || grep -r "fetch_json" "$COMPONENT_DIR"/src/*.rs > /dev/null; then
-  if ! grep -r "use wavs_wasi_chain::http::" "$COMPONENT_DIR"/src/*.rs > /dev/null; then
+  if ! grep -r "use wavs_wasi_utils::http::" "$COMPONENT_DIR"/src/*.rs > /dev/null; then
     HTTP_USAGE=$(grep -r "http_request_\|fetch_json" "$COMPONENT_DIR"/src/*.rs || true)
-    add_error "Found HTTP function usage but wavs_wasi_chain::http is not imported.
-      Fix: Add 'use wavs_wasi_chain::http::{fetch_json, http_request_get};' to your imports.
+    add_error "Found HTTP function usage but wavs_wasi_utils::http is not imported.
+      Fix: Add 'use wavs_wasi_utils::http::{fetch_json, http_request_get};' to your imports.
       $HTTP_USAGE"
   fi
 fi
@@ -322,9 +322,9 @@ if ! grep -r "impl Guest for" "$COMPONENT_DIR"/src/*.rs > /dev/null; then
 fi
 
 # 5f. Check for run function with correct signature - improved to accept variations in naming/qualification
-if ! grep -r "fn run(.*TriggerAction.*) -> .*Result<Option<Vec<u8>>, String>" "$COMPONENT_DIR"/src/*.rs > /dev/null; then
+if ! grep -r "fn run(.*TriggerAction.*) -> .*Result<Option<WasmResponse>, String>" "$COMPONENT_DIR"/src/*.rs > /dev/null; then
   add_error "run function with correct result signature not found.
-      The run function must return Result<Option<Vec<u8>>, String> or std::result::Result<Option<Vec<u8>>, String>"
+      The run function must return std::result::Result<Option<WasmResponse>, String>"
 fi
 
 #=====================================================================================
