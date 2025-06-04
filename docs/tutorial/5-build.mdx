@@ -8,7 +8,6 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 docsignore-->
 
 <Callout title="Before proceeding" type="warn">
-{/* todo: update once the template is updated */}
 
 {/* This section is also in [](./2-setup.mdx). Remember to update there as well */}
 
@@ -18,10 +17,13 @@ docsignore-->
 
 ```bash docci-ignore
 cargo install cargo-binstall
-cargo binstall cargo-component warg-cli wkg --locked --no-confirm --force
+cargo binstall cargo-component wasm-tools warg-cli wkg --locked --no-confirm --force
 
 # Configure default registry
 wkg config --default-registry wa.dev
+
+# Allow publishing to a registry
+warg key new
 ```
 
 

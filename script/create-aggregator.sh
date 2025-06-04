@@ -18,7 +18,7 @@ if [ -z "$RPC_URL" ]; then
     RPC_URL=`sh ./script/get-rpc.sh`
 fi
 
-SP=""; if [ "$(uname)" == *"Darwin"* ]; then SP=" "; fi
+SP=""; if [[ "$(uname)" == *"Darwin"* ]]; then SP=" "; fi
 
 cd $(git rev-parse --show-toplevel) || exit 1
 
@@ -45,15 +45,18 @@ cat > "${AGG_LOC}/start.sh" << EOF
 #!/bin/bash
 cd \$(dirname "\$0") || exit 1
 
-IMAGE=ghcr.io/lay3rlabs/wavs:fd8b66e
+IMAGE=ghcr.io/lay3rlabs/wavs:35c96a4
 INSTANCE=wavs-aggregator-${AGGREGATOR_INDEX}
-IPFS_GATEWAY=\${IPFS_GATEWAY:-"https://ipfs.io/ipfs/"}
+IPFS_GATEWAY=\${IPFS_GATEWAY:-"https://gateway.pinata.cloud/ipfs/"}
 
 docker kill \${INSTANCE} > /dev/null 2>&1 || true
 docker rm \${INSTANCE} > /dev/null 2>&1 || true
 
 docker run -d --name \${INSTANCE} --network host --stop-signal SIGKILL --env-file .env --user 1000:1000 -v .:/wavs \\
   \${IMAGE} wavs-aggregator --log-level debug --host 0.0.0.0 --port 8001 --ipfs-gateway \${IPFS_GATEWAY}
+
+# give it a chance to start up
+sleep 1
 EOF
 
 cp wavs.toml ${AGG_LOC}/wavs.toml

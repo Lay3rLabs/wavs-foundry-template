@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # set -e
-SP=""; if [ "$(uname)" == *"Darwin"* ]; then SP=" "; fi
+SP=""; if [[ "$(uname)" == *"Darwin"* ]]; then SP=" "; fi
 
 # if DEPLOY_ENV is not set, grab it from the ./script/get-deploy-status.sh
 if [ -z "$DEPLOY_ENV" ]; then

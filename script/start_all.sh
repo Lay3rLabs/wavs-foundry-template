@@ -11,7 +11,7 @@ else
 fi
 
 PORT=8545
-MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.5
+MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.6
 FORK_RPC_URL=${FORK_RPC_URL:-"${TESTNET_RPC_URL}"}
 DEPLOY_ENV=$(sh ./script/get-deploy-status.sh)
 
@@ -35,6 +35,7 @@ if [ "$DEPLOY_ENV" = "LOCAL" ]; then
   done
 
   FILES="-f docker-compose.yml -f telemetry/docker-compose.yml"
+  docker compose ${FILES} pull
   docker compose ${FILES} up --force-recreate -d
   trap "docker compose ${FILES} down --remove-orphans && docker kill wavs-1 wavs-aggregator-1 > /dev/null 2>&1 && echo -e '\nKilled IPFS + Local WARG, and wavs instances'" EXIT
 

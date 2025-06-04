@@ -1,8 +1,6 @@
 ###################################
 #
-# make start-all
-#
-# docker exec -it wavs bash
+# make start-all-local
 #
 ###################################
 
@@ -13,6 +11,7 @@ services:
   warg-server:
     image: "ghcr.io/reecepbcups/warg-registry:v0.9.3"
     container_name: "warg-server"
+    platform: linux/amd64
     environment:
       WARG_OPERATOR_KEY: ecdsa-p256:I+UlDo0HxyBBFeelhPPWmD+LnklOpqZDkrFP5VduASk=
       WARG_NAMESPACE: example
@@ -20,8 +19,6 @@ services:
       WARG_CONTENT_BASE_URL: http://localhost:8090
       WARG_LISTEN: 0.0.0.0:8090
       WARG_VERBOSE: 1
-    volumes:
-      - warg-data:/var/lib/warg-server/data
     ports:
       - 8090:8090
     command: ["--rm"]
@@ -38,6 +35,3 @@ services:
     stop_signal: SIGKILL
     command: daemon
     restart: unless-stopped
-
-volumes:
-  warg-data:
