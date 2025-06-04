@@ -11,7 +11,8 @@ Use the `wavs-wasi-utils` crate and Alloy ecosystem crates to interact with Ethe
 
 ```toml
 [dependencies]
-wit-bindgen-rt = { workspace = true, features = ["bitflags"] }
+wit-bindgen-rt = { version = "0.42.1", features = ["bitflags"] }
+wit-bindgen = "0.42.1"
 wavs-wasi-utils = "0.4.0-beta.4"
 wstd = "0.5.3"
 
