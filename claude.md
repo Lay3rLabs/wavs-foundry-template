@@ -276,7 +276,7 @@ let result = process_data(&data_clone);
 ```rust
 use wstd::runtime::block_on;
 use wstd::http::HeaderValue;
-use wavs_wasi_utils::http::{fetch_json, http_request_get};
+use wavs_wasi_utils::http::{fetch_json, http_request_get, http_request_post_json};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
@@ -301,6 +301,24 @@ async fn make_request() -> Result<ApiResponse, String> {
 
 fn process_data() -> Result<ApiResponse, String> {
     block_on(async move { make_request().await })
+}
+
+// POST request with JSON data
+#[derive(Debug, Serialize, Clone)]
+struct PostData {
+    key: String,
+    value: i32,
+}
+
+async fn make_post_request(data: PostData) -> Result<ApiResponse, String> {
+    let mut req = http_request_post_json("https://api.example.com/endpoint", &data)
+        .map_err(|e| e.to_string())?;
+    
+    // Add additional headers (JSON headers are set automatically)
+    req.headers_mut().insert("Authorization", HeaderValue::from_str("Bearer token")?);
+    
+    let response: ApiResponse = fetch_json(req).await.map_err(|e| e.to_string())?;
+    Ok(response)
 }
 ```
 
