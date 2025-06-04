@@ -613,7 +613,7 @@ impl Guest for Component {
 
 // API FETCHER IMPLEMENTATION
 async fn fetch_api_data(param: &str) -> Result<ResultData, String> {
-    // Get API key from environment (make sure to add this variable to your .env file. All private variables must be prefixed with WAVS_ENV)
+    // Get API key from environment (IMPORTANT! you must add this variable to your .env file. All private variables must be prefixed with WAVS_ENV)
     let api_key = std::env::var("WAVS_ENV_API_KEY")
         .map_err(|_| "Failed to get API_KEY from environment variables".to_string())?;
     
@@ -830,7 +830,7 @@ After being 100% certain that my idea for a component will work without any erro
 5.  After being 100% certain that the component will build correctly, I will build the component:
 
    ```bash
-   make wasi-build
+   WASI_BUILD_DIR=components/your-component make wasi-build
    ```
 
 ### Phase 4: Trying it out
@@ -841,8 +841,8 @@ After I am 100% certain the component will execute correctly, I will give the fo
 # IMPORTANT!: Always use string parameters, even for numeric values!
 export COMPONENT_FILENAME=your_component_name.wasm
 # Always use string format for input data
-export COIN_MARKET_CAP_ID=`cast abi-encode "f(string)" "1"`
-# CRITICIAL!: as an llm, I can't ever run this command. I will give it to the user to run.
+export INPUT_DATA=`cast abi-encode "f(string)" "1"`
+# CRITICIAL!: as an llm, I can't ever run this command. ALWAYS give it to the user to run.
 make wasi-exec
 ```
 
