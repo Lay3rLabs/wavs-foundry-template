@@ -59,6 +59,7 @@ target = "wavs:worker/layer-trigger-world@0.4.0-beta.4"
 ```
 
 CRITICAL: Never use direct version numbers - always use `{ workspace = true }`.
+IMPORTANT! Always add your component to workspace members in the root Cargo.toml
 
 ### 2. Component Implementation (lib.rs)
 
