@@ -13,13 +13,13 @@ contract SimpleTrigger is ISimpleTrigger {
     mapping(address _creator => TriggerId[] _triggerIds) internal _triggerIdsByCreator;
 
     /// @inheritdoc ISimpleTrigger
-    function addTrigger(bytes memory _data) external {
+    function addTrigger(string memory _data) external {
         // Get the next trigger id
         nextTriggerId = TriggerId.wrap(TriggerId.unwrap(nextTriggerId) + 1);
         TriggerId _triggerId = nextTriggerId;
 
         // Create the trigger
-        Trigger memory _trigger = Trigger({creator: msg.sender, data: _data});
+        Trigger memory _trigger = Trigger({creator: msg.sender, data: bytes(_data)});
 
         // Update storages
         triggersById[_triggerId] = _trigger;

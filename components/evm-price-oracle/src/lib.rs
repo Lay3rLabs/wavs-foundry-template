@@ -1,6 +1,9 @@
 mod trigger;
 use trigger::{decode_trigger_event, encode_trigger_output, Destination};
-use wavs_wasi_utils::http::{fetch_json, http_request_get};
+use wavs_wasi_utils::{
+    evm::alloy_primitives::hex,
+    http::{fetch_json, http_request_get},
+};
 pub mod bindings;
 use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
 use alloy_sol_types::{SolCall, SolValue};
@@ -9,6 +12,66 @@ use wstd::{http::HeaderValue, runtime::block_on};
 
 struct Component;
 export!(Component with_types_in bindings);
+
+// Corrected decoding function - handles hex string input
+fn decode_trigger_data(req_data: &[u8]) -> Result<String, String> {
+    // First, convert the input bytes to a string to check if it's a hex string
+    let input_str = String::from_utf8(req_data.to_vec())
+        .map_err(|e| format!("Input is not valid UTF-8: {}", e))?;
+
+    // Check if it's a hex string (starts with "0x")
+    let hex_data = if input_str.starts_with("0x") {
+        // Decode the hex string to bytes
+        hex::decode(&input_str[2..]).map_err(|e| format!("Failed to decode hex string: {}", e))?
+    } else {
+        // If it's not a hex string, assume the input is already binary data
+        req_data.to_vec()
+    };
+
+    // Now ABI decode the binary data as a string parameter
+    match <String as SolValue>::abi_decode(&hex_data) {
+        Ok(decoded_string) => Ok(decoded_string),
+        Err(e) => Err(format!("Failed to decode input as ABI string: {}", e)),
+    }
+}
+
+// If you need to handle both parameter-only data AND complete function calls:
+fn decode_trigger_data_flexible(req_data: &[u8]) -> Result<String, String> {
+    // First, convert the input bytes to a string to check if it's a hex string
+    let input_str = String::from_utf8(req_data.to_vec())
+        .map_err(|e| format!("Input is not valid UTF-8: {}", e))?;
+
+    // Check if it's a hex string (starts with "0x")
+    let hex_data = if input_str.starts_with("0x") {
+        // Decode the hex string to bytes
+        hex::decode(&input_str[2..]).map_err(|e| format!("Failed to decode hex string: {}", e))?
+    } else {
+        // If it's not a hex string, assume the input is already binary data
+        req_data.to_vec()
+    };
+
+    // Check if this looks like a complete function call (has selector + data)
+    if hex_data.len() >= 4 {
+        let potential_selector = &hex_data[0..4];
+        let expected_selector = trigger::solidity::addTriggerCall::SELECTOR;
+
+        if potential_selector == expected_selector {
+            // This is a complete function call with selector
+            match trigger::solidity::addTriggerCall::abi_decode(&hex_data) {
+                Ok(decoded_call) => return Ok(decoded_call.data),
+                Err(_) => {
+                    // Fall through to parameter-only decoding
+                }
+            }
+        }
+    }
+
+    // Decode as parameter-only data (from cast abi-encode)
+    match <String as SolValue>::abi_decode(&hex_data) {
+        Ok(decoded_string) => Ok(decoded_string),
+        Err(e) => Err(format!("Failed to decode input as ABI string: {}", e)),
+    }
+}
 
 impl Guest for Component {
     /// Main entry point for the price oracle component.
@@ -35,19 +98,29 @@ impl Guest for Component {
         println!("Input length: {} bytes", req.len());
         let req_clone = req.clone(); // Clone to avoid ownership issues
 
-        // Decode the string using proper ABI decoding
-        let string_data =
-            if let Ok(decoded) = trigger::solidity::submitStringCall::abi_decode(&req_clone) {
-                // If it has a function selector (from cast abi-encode "f(string)" format)
-                decoded.data
-            } else {
-                // Fallback: try decoding just as a string parameter (no function selector)
-                match <String as SolValue>::abi_decode(&req_clone) {
-                    Ok(s) => s,
-                    Err(e) => return Err(format!("Failed to decode input as ABI string: {}", e)),
-                }
-            };
+        // print out req_clone as raw bytes, hex, and string
+        println!("Raw bytes: {:?}", req_clone);
+        println!("Hex: {}", hex::encode(&req_clone));
+        println!("String: {}", String::from_utf8_lossy(&req_clone));
 
+        // Decode the string using proper ABI decoding
+        // let string_data = if let Ok(decoded) = decode_trigger_data_flexible(&req_clone) {
+        //     // If it has a function selector (from `cast abi-encode "f(string)"`` format`)
+        //     decoded
+        // } else {
+        //     // Fallback: try decoding just as a string parameter (no function selector)
+        //     decode_trigger_data(&req_clone)?
+        // };
+
+        let test: Result<String, String> = decode_trigger_data_flexible(&req_clone);
+        match test {
+            Ok(decoded) => {
+                println!("decode_trigger_data_flexible Decoded string input: {}", decoded)
+            }
+            Err(e) => println!("decode_trigger_data_flexible Decoding failed: {}", e),
+        }
+
+        let string_data = decode_trigger_data(&req_clone)?;
         println!("Decoded string input: {}", string_data);
 
         // Parse the first character as a hex digit for the ID

@@ -37,7 +37,7 @@ wasi-build:
 wasi-exec: pull-image
 	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
 	--component "/data/compiled/$(COMPONENT_FILENAME)" \
-	--input $(INPUT_DATA) \
+	--input $(shell cast abi-encode "f(string)" "${INPUT_DATA}") \
 
 
 ## clean: cleaning the project files

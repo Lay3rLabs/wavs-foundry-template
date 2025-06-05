@@ -175,7 +175,7 @@ WASI_BUILD_DIR=components/evm-price-oracle make wasi-build
 How to test the component locally for business logic validation before on-chain deployment. An ID of 1 for the oracle component is Bitcoin.
 
 ```bash
-COIN_MARKET_CAP_ID=1 make wasi-exec
+INPUT_DATA="1" make wasi-exec
 ```
 
 Expected output:
@@ -264,7 +264,6 @@ source script/deploy-contracts.sh
 Deploy the compiled component with the contract information from the previous steps. Review the [makefile](./Makefile) for more details and configuration options.`TRIGGER_EVENT` is the event that the trigger contract emits and WAVS watches for. By altering `SERVICE_TRIGGER_ADDR` you can watch events for contracts others have deployed.
 
 ```bash docci-delay-per-cmd=3
-
 export COMPONENT_FILENAME=evm_price_oracle.wasm
 export PKG_NAME="evmrustoracle"
 export PKG_VERSION="0.1.0"
@@ -336,7 +335,8 @@ Anyone can now call the [trigger contract](./src/contracts/WavsTrigger.sol) whic
 
 ```bash
 # Request BTC from CMC
-export COIN_MARKET_CAP_ID=1
+# export COIN_MARKET_CAP_ID=1
+export COIN_MARKET_CAP_ID=`cast abi-encode "addTrigger(string)" "1"`
 # Get the trigger address from previous Deploy forge script
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 # Execute on the trigger contract, WAVS will pick this up and submit the result
