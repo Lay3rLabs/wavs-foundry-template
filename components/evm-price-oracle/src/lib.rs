@@ -6,7 +6,7 @@ use wavs_wasi_utils::{
 };
 pub mod bindings;
 use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
-use alloy_sol_types::{SolCall, SolValue};
+use alloy_sol_types::SolValue;
 use serde::{Deserialize, Serialize};
 use wstd::{http::HeaderValue, runtime::block_on};
 
@@ -29,44 +29,6 @@ fn decode_trigger_data(req_data: &[u8]) -> Result<String, String> {
     };
 
     // Now ABI decode the binary data as a string parameter
-    match <String as SolValue>::abi_decode(&hex_data) {
-        Ok(decoded_string) => Ok(decoded_string),
-        Err(e) => Err(format!("Failed to decode input as ABI string: {}", e)),
-    }
-}
-
-// If you need to handle both parameter-only data AND complete function calls:
-fn decode_trigger_data_flexible(req_data: &[u8]) -> Result<String, String> {
-    // First, convert the input bytes to a string to check if it's a hex string
-    let input_str = String::from_utf8(req_data.to_vec())
-        .map_err(|e| format!("Input is not valid UTF-8: {}", e))?;
-
-    // Check if it's a hex string (starts with "0x")
-    let hex_data = if input_str.starts_with("0x") {
-        // Decode the hex string to bytes
-        hex::decode(&input_str[2..]).map_err(|e| format!("Failed to decode hex string: {}", e))?
-    } else {
-        // If it's not a hex string, assume the input is already binary data
-        req_data.to_vec()
-    };
-
-    // Check if this looks like a complete function call (has selector + data)
-    if hex_data.len() >= 4 {
-        let potential_selector = &hex_data[0..4];
-        let expected_selector = trigger::solidity::addTriggerCall::SELECTOR;
-
-        if potential_selector == expected_selector {
-            // This is a complete function call with selector
-            match trigger::solidity::addTriggerCall::abi_decode(&hex_data) {
-                Ok(decoded_call) => return Ok(decoded_call.data),
-                Err(_) => {
-                    // Fall through to parameter-only decoding
-                }
-            }
-        }
-    }
-
-    // Decode as parameter-only data (from cast abi-encode)
     match <String as SolValue>::abi_decode(&hex_data) {
         Ok(decoded_string) => Ok(decoded_string),
         Err(e) => Err(format!("Failed to decode input as ABI string: {}", e)),
@@ -102,23 +64,6 @@ impl Guest for Component {
         println!("Raw bytes: {:?}", req_clone);
         println!("Hex: {}", hex::encode(&req_clone));
         println!("String: {}", String::from_utf8_lossy(&req_clone));
-
-        // Decode the string using proper ABI decoding
-        // let string_data = if let Ok(decoded) = decode_trigger_data_flexible(&req_clone) {
-        //     // If it has a function selector (from `cast abi-encode "f(string)"`` format`)
-        //     decoded
-        // } else {
-        //     // Fallback: try decoding just as a string parameter (no function selector)
-        //     decode_trigger_data(&req_clone)?
-        // };
-
-        let test: Result<String, String> = decode_trigger_data_flexible(&req_clone);
-        match test {
-            Ok(decoded) => {
-                println!("decode_trigger_data_flexible Decoded string input: {}", decoded)
-            }
-            Err(e) => println!("decode_trigger_data_flexible Decoding failed: {}", e),
-        }
 
         let string_data = decode_trigger_data(&req_clone)?;
         println!("Decoded string input: {}", string_data);
