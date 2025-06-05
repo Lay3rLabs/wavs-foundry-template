@@ -190,3 +190,14 @@ A component is defined in the [workflow](../workflows) object of the [service.js
 ```
 
 For more information on component configuration variables and keys, visit the [variables](./variables) page.
+
+## Registry
+
+WAVS uses a registry to store the WASM components. A service like [wa.dev](https://wa.dev) is recommended for proper distribution in production. A similar registry environment is emulated locally in docker compose for rapid development without an API key:
+
+- Build your component
+- Compile the component
+- Upload the component to the registry
+- Set the registry in your service using the wavs-cli command in the `build_service.sh` script:
+
+`wavs-cli workflow component --id ${WORKFLOW_ID} set-source-registry --domain ${REGISTRY} --package ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION}`
