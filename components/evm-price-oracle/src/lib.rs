@@ -13,28 +13,6 @@ use wstd::{http::HeaderValue, runtime::block_on};
 struct Component;
 export!(Component with_types_in bindings);
 
-// Corrected decoding function - handles hex string input
-fn decode_trigger_data(req_data: &[u8]) -> Result<String, String> {
-    // First, convert the input bytes to a string to check if it's a hex string
-    let input_str = String::from_utf8(req_data.to_vec())
-        .map_err(|e| format!("Input is not valid UTF-8: {}", e))?;
-
-    // Check if it's a hex string (starts with "0x")
-    let hex_data = if input_str.starts_with("0x") {
-        // Decode the hex string to bytes
-        hex::decode(&input_str[2..]).map_err(|e| format!("Failed to decode hex string: {}", e))?
-    } else {
-        // If it's not a hex string, assume the input is already binary data
-        req_data.to_vec()
-    };
-
-    // Now ABI decode the binary data as a string parameter
-    match <String as SolValue>::abi_decode(&hex_data) {
-        Ok(decoded_string) => Ok(decoded_string),
-        Err(e) => Err(format!("Failed to decode input as ABI string: {}", e)),
-    }
-}
-
 impl Guest for Component {
     /// Main entry point for the price oracle component.
     /// WAVS is subscribed to watch for events emitted by the blockchain.
@@ -56,8 +34,26 @@ impl Guest for Component {
         let (trigger_id, req, dest) =
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
 
-        // Properly decode the ABI-encoded string using Solidity types
-        let string_data = decode_trigger_data(&req.clone())?;
+        // Decode trigger data inline - handles hex string input
+        let string_data = {
+            // First, convert the input bytes to a string to check if it's a hex string
+            let input_str = String::from_utf8(req.clone())
+                .map_err(|e| format!("Input is not valid UTF-8: {}", e))?;
+
+            // Check if it's a hex string (starts with "0x")
+            let hex_data = if input_str.starts_with("0x") {
+                // Decode the hex string to bytes
+                hex::decode(&input_str[2..])
+                    .map_err(|e| format!("Failed to decode hex string: {}", e))?
+            } else {
+                // If it's not a hex string, assume the input is already binary data
+                req.clone()
+            };
+
+            // Now ABI decode the binary data as a string parameter
+            <String as SolValue>::abi_decode(&hex_data)
+                .map_err(|e| format!("Failed to decode input as ABI string: {}", e))?
+        };
         println!("Decoded string input: {}", string_data);
 
         // Parse the first character as a hex digit for the ID
