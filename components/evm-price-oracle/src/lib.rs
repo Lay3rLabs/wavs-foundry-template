@@ -35,7 +35,7 @@ impl Guest for Component {
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
 
         // Decode trigger data inline - handles hex string input
-        let string_data = {
+        let request_input = {
             // First, convert the input bytes to a string to check if it's a hex string
             let input_str = String::from_utf8(req.clone())
                 .map_err(|e| format!("Input is not valid UTF-8: {}", e))?;
@@ -54,13 +54,13 @@ impl Guest for Component {
             <String as SolValue>::abi_decode(&hex_data)
                 .map_err(|e| format!("Failed to decode input as ABI string: {}", e))?
         };
-        println!("Decoded string input: {}", string_data);
+        println!("Decoded string input: {}", request_input);
 
         // Parse the entire string as a number for the ID
-        let id = string_data
+        let id = request_input
             .trim()
             .parse::<u64>()
-            .map_err(|_| format!("Invalid number: {}", string_data))?;
+            .map_err(|_| format!("Invalid number: {}", request_input))?;
 
         let res = block_on(async move {
             let resp_data = get_price_feed(id).await?;
