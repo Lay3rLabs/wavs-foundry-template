@@ -13,6 +13,7 @@ replace (
 
 require (
 	github.com/Lay3rLabs/wavs-wasi/go v0.4.0-beta.4
+	github.com/defiweb/go-eth v0.7.0
 	github.com/dev-wasm/dev-wasm-go/lib v0.0.0-20240907000152-b653306ed695
 	go.bytecodealliance.org/cm v0.2.2
 )
@@ -21,7 +22,6 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
 	github.com/defiweb/go-anymapper v0.3.0 // indirect
-	github.com/defiweb/go-eth v0.7.0 // indirect
 	github.com/defiweb/go-rlp v0.3.0 // indirect
 	github.com/defiweb/go-sigparser v0.6.0 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect

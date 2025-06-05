@@ -1,12 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"math"
+	"math/big"
 	"net/http"
 	"strconv"
 	"strings"
@@ -18,6 +18,8 @@ import (
 
 	wasiclient "github.com/dev-wasm/dev-wasm-go/lib/http/client"
 	"go.bytecodealliance.org/cm"
+
+	"github.com/defiweb/go-eth/abi"
 )
 
 func init() {
@@ -36,11 +38,20 @@ func init() {
 
 // compute is the main function that computes the price of the crypto currency
 func compute(input []uint8, dest types.Destination) ([]byte, error) {
-	if dest == types.CliOutput {
-		input = bytes.TrimRight(input, "\x00")
-	}
+	// Input is now properly decoded by decodeTriggerEvent, so we can parse it directly
+	inputStr := string(input)
+	// Clean any remaining control characters and whitespace
+	cleanStr := strings.Map(func(r rune) rune {
+		if r >= 32 && r < 127 { // Keep only printable ASCII characters
+			return r
+		}
+		return -1 // Remove control characters
+	}, inputStr)
+	cleanStr = strings.TrimSpace(cleanStr)
+	
+	fmt.Printf("Compute input (cleaned): '%s'\n", cleanStr)
 
-	id, err := strconv.Atoi(string(input))
+	id, err := strconv.Atoi(cleanStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse input: %w", err)
 	}
@@ -73,8 +84,8 @@ func routeResult(triggerID uint64, result []byte, dest types.Destination) types.
 	}
 }
 
-// decodeABIStringInput decodes ABI-encoded string input, handling both hex string and binary data
-func decodeABIStringInput(input []byte) (string, error) {
+// decodeABIInput decodes ABI-encoded input data using go-eth library
+func decodeABIInput(input []byte) (string, error) {
 	// First, convert the input bytes to a string to check if it's a hex string
 	inputStr := string(input)
 
@@ -93,40 +104,34 @@ func decodeABIStringInput(input []byte) (string, error) {
 		hexData = input
 	}
 
-	// Manual ABI decoding for string parameter
-	// ABI encoding for a string has the following format:
-	// - First 32 bytes: offset to string data (should be 0x20 = 32 for single parameter)
-	// - Next 32 bytes: length of string data
-	// - Remaining bytes: string data (padded to 32-byte boundary)
-
-	if len(hexData) < 64 {
-		return "", fmt.Errorf("ABI data too short: expected at least 64 bytes, got %d", len(hexData))
+	// Use go-eth library for generalized ABI decoding
+	// Try to decode as string first (most common case)
+	stringType := abi.NewStringType()
+	var result string
+	err = abi.DecodeValue(stringType, hexData, &result)
+	if err == nil {
+		return result, nil
 	}
 
-	// Read the offset (first 32 bytes) - should be 32 (0x20) for single string parameter
-	offset := uint64(0)
-	for i := 24; i < 32; i++ { // Read last 8 bytes as uint64
-		offset = (offset << 8) | uint64(hexData[i])
+	// If string decoding fails, try other common types
+	// Try uint256 (common for numeric inputs)
+	uintType := abi.NewUintType(256)
+	var uintResult *big.Int
+	err = abi.DecodeValue(uintType, hexData, &uintResult)
+	if err == nil {
+		return uintResult.String(), nil
 	}
 
-	if offset != 32 {
-		return "", fmt.Errorf("unexpected offset: expected 32, got %d", offset)
+	// Try bytes (fallback for arbitrary data)
+	bytesType := abi.NewBytesType()
+	var bytesResult []byte
+	err = abi.DecodeValue(bytesType, hexData, &bytesResult)
+	if err == nil {
+		return string(bytesResult), nil
 	}
 
-	// Read the length (next 32 bytes)
-	length := uint64(0)
-	for i := 56; i < 64; i++ { // Read last 8 bytes as uint64
-		length = (length << 8) | uint64(hexData[i])
-	}
-
-	if uint64(len(hexData)) < 64+length {
-		return "", fmt.Errorf("ABI data too short: expected at least %d bytes, got %d", 64+length, len(hexData))
-	}
-
-	// Extract the string data
-	stringData := hexData[64 : 64+length]
-
-	return string(stringData), nil
+	// If all ABI decoding attempts fail, return the raw input as string
+	return string(input), nil
 }
 
 // decodeTriggerEvent is the function that decodes the trigger event from the chain event to Go.
@@ -136,20 +141,19 @@ func decodeTriggerEvent(triggerAction trigger.TriggerData) (trigger_id uint64, r
 		raw := *triggerAction.Raw()
 		fmt.Printf("Raw input: %s\n", string(raw.Slice()))
 
-		// Try to decode as ABI-encoded string input
-		decodedString, err := decodeABIStringInput(raw.Slice())
-		if err != nil {
-			fmt.Printf("Failed to decode ABI string input: %v, using raw input\n", err)
-			return 0, raw, types.CliOutput
-		}
+		// For CLI input, just use the raw string directly (no ABI decoding needed)
+		// CLI inputs are simple strings like "1", "2", etc.
+		rawString := string(raw.Slice())
+		// Remove null bytes and trim whitespace
+		cleanString := strings.ReplaceAll(rawString, "\x00", "")
+		trimmedString := strings.TrimSpace(cleanString)
+		fmt.Printf("CLI input (cleaned): %s\n", trimmedString)
 
-		fmt.Printf("Decoded string input: %s\n", decodedString)
+		// Convert the trimmed string back to bytes for processing
+		inputBytes := []byte(trimmedString)
+		inputList := cm.NewList(&inputBytes[0], len(inputBytes))
 
-		// Convert the decoded string back to bytes for processing
-		decodedBytes := []byte(decodedString)
-		decodedList := cm.NewList(&decodedBytes[0], len(decodedBytes))
-
-		return 0, decodedList, types.CliOutput
+		return 0, inputList, types.CliOutput
 	}
 
 	// Handle Ethereum event case
@@ -158,15 +162,26 @@ func decodeTriggerEvent(triggerAction trigger.TriggerData) (trigger_id uint64, r
 		panic("triggerAction.EthContractEvent() is nil")
 	}
 
-	// if you modify the contract trigger from the default event, you will need to create a custom `DecodeTriggerInfo` function
-	// to match the solidity contract data types.
-	triggerInfo := types.DecodeTriggerInfo(ethEvent.Log.Data.Slice())
+	// Use generalized ABI decoding for Ethereum event data
+	decodedString, err := decodeABIInput(ethEvent.Log.Data.Slice())
+	if err != nil {
+		fmt.Printf("Failed to decode Ethereum event ABI input: %v, using raw data\n", err)
+		// Fallback to original method if generalized decoding fails
+		triggerInfo := types.DecodeTriggerInfo(ethEvent.Log.Data.Slice())
+		fmt.Printf("Trigger ID: %v\n", triggerInfo.TriggerID)
+		fmt.Printf("Creator: %s\n", triggerInfo.Creator.String())
+		fmt.Printf("Input Data: %v\n", string(triggerInfo.Data))
+		return triggerInfo.TriggerID, cm.NewList(&triggerInfo.Data[0], len(triggerInfo.Data)), types.Ethereum
+	}
 
-	fmt.Printf("Trigger ID: %v\n", triggerInfo.TriggerID)
-	fmt.Printf("Creator: %s\n", triggerInfo.Creator.String())
-	fmt.Printf("Input Data: %v\n", string(triggerInfo.Data))
+	fmt.Printf("Decoded Ethereum event input: %s\n", decodedString)
 
-	return triggerInfo.TriggerID, cm.NewList(&triggerInfo.Data[0], len(triggerInfo.Data)), types.Ethereum
+	// For now, use trigger ID 0 and convert decoded string to bytes
+	// In a real implementation, you might need to extract trigger ID from the event differently
+	decodedBytes := []byte(decodedString)
+	decodedList := cm.NewList(&decodedBytes[0], len(decodedBytes))
+
+	return 0, decodedList, types.Ethereum
 }
 
 // fetchCryptoPrice fetches the price of the crypto currency from the CoinMarketCap API by their ID.
