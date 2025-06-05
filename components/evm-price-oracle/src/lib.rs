@@ -56,9 +56,11 @@ impl Guest for Component {
         };
         println!("Decoded string input: {}", string_data);
 
-        // Parse the first character as a hex digit for the ID
-        let id = string_data.chars().next().ok_or("Empty input")?;
-        let id = id.to_digit(16).ok_or("Invalid hex digit")? as u64;
+        // Parse the entire string as a number for the ID
+        let id = string_data
+            .trim()
+            .parse::<u64>()
+            .map_err(|_| format!("Invalid number: {}", string_data))?;
 
         let res = block_on(async move {
             let resp_data = get_price_feed(id).await?;
