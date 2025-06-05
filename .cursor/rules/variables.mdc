@@ -1,0 +1,62 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Variables in WAVS Components
+
+WAVS components use two types of configuration variables: public variables set in the service manifest and private environment keys for sensitive data.
+
+## Public Variables
+
+Used for non-sensitive info, stored as strings in the `config` field of the service manifest.
+
+1. Add variables to `config` in the manifest:
+```json
+"component": {
+    "config": {
+        "api_endpoint": "https://api.example.com",
+        "max_retries": "3"
+    }
+}
+```
+2. Access in Rust component:
+```rust
+let value = host::config_var("api_endpoint");
+```
+
+## Environment Keys (Private Variables)
+
+Used for sensitive data, prefixed with `WAVS_ENV_`, set by operators in their environment.
+
+1. Create or copy `.env` file:
+```bash
+cp .env.example .env
+```
+2. Set environment variables in `.env` or shell config:
+```bash
+WAVS_ENV_MY_API_KEY=your_secret_key_here
+```
+3. Add keys to `env_keys` array in manifest:
+```json
+"component": {
+    "env_keys": [
+        "WAVS_ENV_API_KEY"
+    ]
+}
+```
+4. Access in Rust component:
+```rust
+let api_key = std::env::var("WAVS_ENV_MY_API_KEY")?;
+```
+
+## Local Execution
+
+Use `--config` flag with comma-separated `KEY=VALUE` pairs to set public variables locally:
+
+```bash
+wavs-cli exec --component <COMPONENT> --input <INPUT> --config api_endpoint=https://api.example.com
+```
+
+For more information:
+- [](mdc:https:/docs.wavs.com/environment-variables)

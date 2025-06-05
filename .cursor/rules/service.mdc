@@ -1,0 +1,108 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Service Manifest and Manager
+
+The service manifest (`service.json`) defines a WAVS service's configuration, including workflows, components, submission, and the service manager contract. It is hosted on IPFS or HTTP(S) and linked via the service manager contract.
+
+1. Generate Manifest  
+Use `wavs-cli service` or the provided [build_service.sh](mdc:https:/github.com/Lay3rLabs/wavs-foundry-template/blob/main/script/build_service.sh) script to create a service manifest with one component.
+
+2. Manifest Structure Example  
+```json service.json
+{
+    "id": "example-service-123",
+    "name": "Example WAVS Service",
+    "workflows": {
+        "default": {
+            "trigger": {
+                "evm_contract_event": {
+                    "chain_name": "ethereum",
+                    "address": "0x1234567890123456789012345678901234567890",
+                    "event_hash": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+                }
+            },
+            "component": {
+                "source": {
+                    "Registry": {
+                        "registry": {
+                            "digest": "882b992af8f78e0aaceaf9609c7ba2ce80a22c521789c94ae1960c43a98295f5",
+                            "domain": "localhost:8090",
+                            "version": "0.1.0",
+                            "package": "example:evmrustoracle"
+                        }
+                    }
+                },
+                "permissions": {
+                    "allowed_http_hosts": "all",
+                    "file_system": true
+                },
+                "fuel_limit": 1000000,
+                "time_limit_seconds": 30,
+                "config": {
+                    "endpoint": "https://api.example.com",
+                    "timeout": "30s"
+                },
+                "env_keys": [
+                    "WAVS_ENV_API_KEY",
+                    "WAVS_ENV_SECRET"
+                ]
+            },
+            "submit": {
+                "aggregator": {
+                    "url": "http://127.0.0.1:8001"
+                }
+            },
+            "aggregators": [
+                {
+                    "evm": {
+                        "chain_name": "ethereum",
+                        "address": "0xfedcba9876543210fedcba9876543210fedcba98",
+                        "max_gas": 1000000
+                    }
+                }
+            ]
+        }
+    },
+    "status": "active",
+    "manager": {
+        "evm": {
+            "chain_name": "ethereum",
+            "address": "0xabcdef1234567890abcdef1234567890abcdef12"
+        }
+    }
+}
+```
+
+3. Upload Manifest  
+Upload the manifest to IPFS or a publicly accessible HTTP(S) server. For testing, launch a local IPFS node; for production, use services like Pinata.
+
+```bash
+SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs
+
+export IPFS_GATEWAY=$(sh script/get-ipfs-gateway.sh)
+curl "${IPFS_GATEWAY}/ipfs/${ipfs_cid}"
+
+cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${SERVICE_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
+```
+
+4. Service Manager Contract  
+- Registers operators with assigned weights to validate result submissions.  
+- Maintains the service URI linking to the manifest.  
+- Validates operator signatures against weights and threshold before processing data.
+
+Best Practices:  
+- Ensure the manifest is accessible to all operators.  
+- Use proper permission settings in components.  
+- Keep the service manager contract address updated in the manifest.  
+- Register operators and set appropriate weights to secure submissions.
+
+For more details, see:  
+- [Workflows](mdc:workflows)  
+- [Triggers](mdc:triggers)  
+- [Components](mdc:components/component)  
+- [Submission and aggregator](mdc:submission)  
+- [build_service.sh script](mdc:https:/github.com/Lay3rLabs/wavs-foundry-template/blob/main/script/build_service.sh)  
+- [](mdc:https:/app.pinata.cloud/developers/api-keys)

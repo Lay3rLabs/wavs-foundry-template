@@ -85,7 +85,6 @@ impl Guest for Component {
     fn run(action: TriggerAction) -> Result<Option<WasmResponse>, String> {
         // 1. Decode the trigger data using the decode_trigger_event function from trigger.rs
         let (trigger_id, req, dest) = decode_trigger_event(action.data)?;
-
         // 2. Process the data (your business logic)
         let res = block_on(async move {
             let resp_data = get_price_feed(id).await?;

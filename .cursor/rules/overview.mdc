@@ -1,0 +1,49 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# WAVS Handbook Overview
+
+This handbook outlines the main sections for building and understanding a WAVS AVS.
+
+1. Follow the [Oracle component tutorial](mdc:tutorial/1-overview) first to learn WAVS service basics.
+
+2. Core Concepts:
+   - [How it works](mdc:../how-it-works): Components of a WAVS AVS.
+   - [Design](mdc:../design): Design considerations.
+
+3. Services:
+   - [Service](mdc:service): Structure and manifest definition.
+   - [Workflows](mdc:workflows): Execution paths, triggers, components, submissions.
+   - [Triggers](mdc:triggers): Types of triggers (EVM, Cosmos, cron, block intervals).
+   - [Submission and Aggregator](mdc:submission): Blockchain result submission.
+
+4. Components:
+   - [Component Overview](mdc:components/component): Lifecycle and trigger handling.
+   - [Variables](mdc:components/variables): Public and private config variables.
+   - [Utilities and Crates](mdc:components/utilities): Available tools for components.
+   - [Blockchain Interactions](mdc:components/blockchain-interactions): Smart contract and blockchain calls.
+   - [Network Requests](mdc:components/network-requests): HTTP requests to external APIs.
+
+5. Development:
+   - [Template](mdc:template): Template structure and customization.
+   - [Makefile Commands](mdc:commands): Build, deploy, and manage commands.
+
+Start with the Service section to grasp basics, then explore others as needed.
+
+For more information:
+- [Oracle component tutorial](mdc:tutorial/1-overview)
+- [How it works](mdc:../how-it-works)
+- [Design](mdc:../design)
+- [Service](mdc:service)
+- [Workflows](mdc:workflows)
+- [Triggers](mdc:triggers)
+- [Submission and Aggregator](mdc:submission)
+- [Component Overview](mdc:components/component)
+- [Variables](mdc:components/variables)
+- [Utilities and Crates](mdc:components/utilities)
+- [Blockchain Interactions](mdc:components/blockchain-interactions)
+- [Network Requests](mdc:components/network-requests)
+- [Template](mdc:template)
+- [](mdc:commands)

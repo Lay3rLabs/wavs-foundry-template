@@ -1,0 +1,91 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Submission and Aggregator Configuration
+
+Defines how to submit workflow results to an EVM chain via an aggregator service and how to implement submission contracts.
+
+1. **Submit Definition in service.json**
+
+- Use the `submit` field to specify submission logic.
+- For aggregator submission:
+
+```json
+"submit": {
+    "aggregator": {
+        "url": "http://127.0.0.1:8001"
+    }
+},
+"aggregators": [
+    {
+        "evm": {
+            "chain_name": "local",
+            "address": "0xd6f8ff0036d8b2088107902102f9415330868109",
+            "max_gas": 5000000
+        }
+    }
+]
+```
+
+- Set `"submit": "none"` if no submission is needed; results will not be sent on-chain.
+
+2. **Submission Contract Requirements**
+
+- Must implement `handleSignedEnvelope()` from the `IWavsServiceHandler` interface.
+- Use `IWavsServiceManager` to validate data and signatures.
+- The contract validates operator signatures and processes component output.
+- The `DataWithId` struct must match the component output format.
+
+3. **Example Submission Contract**
+
+```solidity
+import {IWavsServiceManager} from "@wavs/interfaces/IWavsServiceManager.sol";
+import {IWavsServiceHandler} from "@wavs/interfaces/IWavsServiceHandler.sol";
+import {ITypes} from "interfaces/ITypes.sol";
+
+contract SimpleSubmit is ITypes, IWavsServiceHandler {
+    IWavsServiceManager private _serviceManager;
+
+    constructor(IWavsServiceManager serviceManager) {
+        _serviceManager = serviceManager;
+    }
+
+    function handleSignedEnvelope(Envelope calldata envelope, SignatureData calldata signatureData) external {
+        _serviceManager.validate(envelope, signatureData);
+        DataWithId memory dataWithId = abi.decode(envelope.payload, (DataWithId));
+        // Custom data processing logic here
+    }
+}
+```
+
+4. **Aggregator Overview**
+
+- Collects signed responses from multiple operators.
+- Validates each operator's signature.
+- Aggregates signatures once a threshold is met (exact match consensus).
+- Submits aggregated data to the submission contract.
+- Currently supports ECDSA signatures; BLS support planned.
+
+5. **Aggregator Submission Flow**
+
+1. Operator runs component → returns `WasmResponse` with `payload` and optional `ordering`.
+2. Operator creates and signs an Envelope with result data.
+3. Packet (envelope + signature + route info) sent to aggregator `/packet` endpoint.
+4. Aggregator validates signature and queues packets by trigger event and service ID.
+5. When threshold met:
+   - Combine signatures into one `SignatureData`.
+   - Validate combined signatures on-chain via service manager.
+6. If valid, aggregator calls `handleSignedEnvelope()` on submit contract with signatures and payload.
+7. Submit contract validates data and signatures via service manager.
+
+6. **Chaining Workflows**
+
+- Workflows can be chained by triggering one workflow on the submission event of another.
+- See the [Workflows page](mdc:workflows) for details.
+
+For more information:
+- [@wavs Solidity Package](mdc:https:/www.npmjs.com/package/@wavs/solidity?activeTab=code)
+- [Template Submission Contract](mdc:https:/github.com/Lay3rLabs/wavs-foundry-template/blob/main/src/contracts/WavsSubmit.sol)
+- [](mdc:workflows)
