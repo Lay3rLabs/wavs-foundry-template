@@ -57,15 +57,7 @@ impl Guest for Component {
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
 
         // Properly decode the ABI-encoded string using Solidity types
-        println!("Input length: {} bytes", req.len());
-        let req_clone = req.clone(); // Clone to avoid ownership issues
-
-        // print out req_clone as raw bytes, hex, and string
-        println!("Raw bytes: {:?}", req_clone);
-        println!("Hex: {}", hex::encode(&req_clone));
-        println!("String: {}", String::from_utf8_lossy(&req_clone));
-
-        let string_data = decode_trigger_data(&req_clone)?;
+        let string_data = decode_trigger_data(&req.clone())?;
         println!("Decoded string input: {}", string_data);
 
         // Parse the first character as a hex digit for the ID
