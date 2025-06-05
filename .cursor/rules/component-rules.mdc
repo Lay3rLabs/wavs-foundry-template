@@ -846,7 +846,7 @@ After I am 100% certain the component will execute correctly, I will give the fo
 # IMPORTANT!: Always use string parameters, even for numeric values! Use component_name.wasm, not component-name.wasm
 export COMPONENT_FILENAME=your_component_name.wasm
 # Always use string format for input data
-export INPUT_DATA=`cast abi-encode "f(string)" "1"`
+export INPUT_DATA=`cast abi-encode "f(string)" "your-data"`
 # CRITICIAL!: as an llm, I can't ever run this command. ALWAYS give it to the user to run.
 make wasi-exec
 ```
