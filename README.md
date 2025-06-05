@@ -335,7 +335,6 @@ Anyone can now call the [trigger contract](./src/contracts/WavsTrigger.sol) whic
 
 ```bash
 # Request BTC from CMC
-# export COIN_MARKET_CAP_ID=1
 export COIN_MARKET_CAP_ID=`cast abi-encode "addTrigger(string)" "1"`
 # Get the trigger address from previous Deploy forge script
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
