@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -72,13 +73,83 @@ func routeResult(triggerID uint64, result []byte, dest types.Destination) types.
 	}
 }
 
+// decodeABIStringInput decodes ABI-encoded string input, handling both hex string and binary data
+func decodeABIStringInput(input []byte) (string, error) {
+	// First, convert the input bytes to a string to check if it's a hex string
+	inputStr := string(input)
+
+	var hexData []byte
+	var err error
+
+	// Check if it's a hex string (starts with "0x")
+	if strings.HasPrefix(inputStr, "0x") {
+		// Decode the hex string to bytes
+		hexData, err = hex.DecodeString(inputStr[2:])
+		if err != nil {
+			return "", fmt.Errorf("failed to decode hex string: %w", err)
+		}
+	} else {
+		// If it's not a hex string, assume the input is already binary data
+		hexData = input
+	}
+
+	// Manual ABI decoding for string parameter
+	// ABI encoding for a string has the following format:
+	// - First 32 bytes: offset to string data (should be 0x20 = 32 for single parameter)
+	// - Next 32 bytes: length of string data
+	// - Remaining bytes: string data (padded to 32-byte boundary)
+
+	if len(hexData) < 64 {
+		return "", fmt.Errorf("ABI data too short: expected at least 64 bytes, got %d", len(hexData))
+	}
+
+	// Read the offset (first 32 bytes) - should be 32 (0x20) for single string parameter
+	offset := uint64(0)
+	for i := 24; i < 32; i++ { // Read last 8 bytes as uint64
+		offset = (offset << 8) | uint64(hexData[i])
+	}
+
+	if offset != 32 {
+		return "", fmt.Errorf("unexpected offset: expected 32, got %d", offset)
+	}
+
+	// Read the length (next 32 bytes)
+	length := uint64(0)
+	for i := 56; i < 64; i++ { // Read last 8 bytes as uint64
+		length = (length << 8) | uint64(hexData[i])
+	}
+
+	if uint64(len(hexData)) < 64+length {
+		return "", fmt.Errorf("ABI data too short: expected at least %d bytes, got %d", 64+length, len(hexData))
+	}
+
+	// Extract the string data
+	stringData := hexData[64 : 64+length]
+
+	return string(stringData), nil
+}
+
 // decodeTriggerEvent is the function that decodes the trigger event from the chain event to Go.
 func decodeTriggerEvent(triggerAction trigger.TriggerData) (trigger_id uint64, req cm.List[uint8], dest types.Destination) {
 	// Handle CLI input case
 	if triggerAction.Raw() != nil {
 		raw := *triggerAction.Raw()
 		fmt.Printf("Raw input: %s\n", string(raw.Slice()))
-		return 0, raw, types.CliOutput
+
+		// Try to decode as ABI-encoded string input
+		decodedString, err := decodeABIStringInput(raw.Slice())
+		if err != nil {
+			fmt.Printf("Failed to decode ABI string input: %v, using raw input\n", err)
+			return 0, raw, types.CliOutput
+		}
+
+		fmt.Printf("Decoded string input: %s\n", decodedString)
+
+		// Convert the decoded string back to bytes for processing
+		decodedBytes := []byte(decodedString)
+		decodedList := cm.NewList(&decodedBytes[0], len(decodedBytes))
+
+		return 0, decodedList, types.CliOutput
 	}
 
 	// Handle Ethereum event case
