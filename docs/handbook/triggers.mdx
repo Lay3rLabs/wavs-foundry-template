@@ -14,7 +14,7 @@ A trigger prompts a WAVS service to run. Operators listen for the trigger event 
 
 ### Trigger lifecycle
 
-1. A service is deployed with a service.json manifest which contains information on the service and [workflow](/handbook/workflows) logic (components, triggers, [submission](handbook/submission) logic).
+1. A service is deployed with a service.json manifest which contains information on the service and [workflow](/handbook/workflows) logic (components, triggers, [submission](/handbook/submission) logic).
 
 2. Operators maintain lookup maps to track and verify triggers. For EVM and Cosmos events, they map chain names, contract addresses, and event identifiers to trigger IDs. Block interval triggers are tracked by chain name with countdown timers, while cron triggers are managed in a priority queue ordered by execution time.
 
