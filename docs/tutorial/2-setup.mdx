@@ -79,7 +79,11 @@ cargo install cargo-binstall
 cargo binstall cargo-component wasm-tools warg-cli wkg --locked --no-confirm --force
 
 # Configure default registry
+# Found at: $HOME/.config/wasm-pkg/config.toml
 wkg config --default-registry wa.dev
+
+# Allow publishing to a registry
+warg key new
 ```
 
 <Callout title="WSL Ubuntu GLIB out of date" type="error">
@@ -137,6 +141,8 @@ Visit the [Docker Documentation](https://docs.docker.com/get-started/get-docker/
 <Callout title="Docker for MacOS" type="warn">
 
 {/* This section is also in [](./5-build.mdx). Remember to update there as well */}
+
+If prompted, remove container with `sudo apt remove containerd.io`
 
 If you are using Docker Desktop, make sure it is open and running for this tutorial.
 
