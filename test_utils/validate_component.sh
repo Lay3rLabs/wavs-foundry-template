@@ -282,6 +282,41 @@ if grep -r "abi_encode" "$COMPONENT_DIR"/src/*.rs > /dev/null && ! grep -r "use.
   fi
 fi
 
+# After the existing import checks, add:
+echo "📝 Checking for missing dependencies..."
+# Get all local module names (mod foo;) from src/*.rs
+LOCAL_MODS=$(grep -h -E '^mod ' "$COMPONENT_DIR"/src/*.rs | sed -E 's/^mod ([a-zA-Z0-9_]+);/\1/' | sort | uniq)
+# Add known local modules
+LOCAL_MODS="$LOCAL_MODS trigger bindings"
+# Get all imports from the code, extract just the crate names
+IMPORTS=$(grep -h -r "^use" "$COMPONENT_DIR"/src/*.rs | \
+  sed -E 's/^use[[:space:]]+//' | \
+  sed -E 's/ as [^;]+//' | \
+  sed -E 's/[{].*//' | \
+  sed -E 's/;.*//' | \
+  cut -d: -f1 | \
+  awk -F'::' '{print $1}' | \
+  grep -vE '^(crate|self|super|std|core|wavs_wasi_utils|wstd)$' | \
+  sort | uniq)
+
+# Check each import against Cargo.toml dependencies
+for import in $IMPORTS; do
+  # Skip empty lines
+  if [[ -z "$import" ]]; then
+    continue
+  fi
+  # Skip local modules
+  if echo "$LOCAL_MODS" | grep -wq "$import"; then
+    continue
+  fi
+  # Convert import name to Cargo.toml format (replace underscores with hyphens)
+  cargo_name=$(echo "$import" | tr '_' '-')
+  # Check if the import is in Cargo.toml (either directly or as a workspace dependency)
+  if ! grep -q "$cargo_name.*=.*{.*workspace.*=.*true" "$COMPONENT_DIR/Cargo.toml" && ! grep -q "$cargo_name.*=.*\"" "$COMPONENT_DIR/Cargo.toml"; then
+    add_error "Import '$import' is used but not found in Cargo.toml dependencies.\n        Add it to your [dependencies] section in Cargo.toml and to [workspace.dependencies] in the root Cargo.toml."
+  fi
+done
+
 #=====================================================================================
 # COMPONENT STRUCTURE CHECKS 
 #=====================================================================================
@@ -531,3 +566,9 @@ else
   echo "🚀 Component is ready for building. Run the following command to build:"
   echo "    cd ../.. && make wasi-build"
 fi
+
+# After all static checks, add:
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🔍 CARGO CHECK (compilation test)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+cargo check --manifest-path "$(pwd)/../components/$COMPONENT_NAME/Cargo.toml" --target wasm32-wasip1
