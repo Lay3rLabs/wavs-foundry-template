@@ -54,7 +54,7 @@ The test utilities are organized into focused modules:
 These tests help you avoid the following common errors:
 
 1. Using `String::from_utf8` directly on ABI-encoded data
-2. Missing Clone derivation on API response structs 
+2. Missing Clone derivation on API response structs
 3. Using `map_err()` on Option types instead of `ok_or_else()`
 4. Improper Rust-Solidity type conversions
 5. Ownership issues with collection elements
