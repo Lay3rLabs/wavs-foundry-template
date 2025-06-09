@@ -83,9 +83,9 @@ if grep -r "TriggerData::Raw" "$COMPONENT_DIR"/src/*.rs > /dev/null ||
     add_error "Component appears to handle ABI-encoded input but doesn't use abi_decode methods.
       This will cause runtime errors when processing ABI-encoded data.
       For ABI-encoded input, use proper decoding methods:
-      1. FunctionCall::abi_decode(&data, false)
-      2. String::abi_decode(&data, false)
-      3. <Type as SolValue>::abi_decode(&data, false)"
+      1. <String as SolValue>::abi_decode(&hex_data)
+      2. <Type as SolValue>::abi_decode(&data)
+      3. functionCall::abi_decode(&data)"
   fi
   
   # Check for Solidity function definitions when receiving function calls
@@ -186,15 +186,15 @@ fi
 #=====================================================================================
 print_section "ERROR HANDLING CHECKS"
 
-# 3a. Check for map_err on Option types - focus only on get_eth_chain_config specifically
+# 3a. Check for map_err on Option types - focus only on get_evm_chain_config specifically
 echo "📝 Checking for map_err on Option types..."
-MAP_ERR_CHAIN_CONFIG=$(grep -r "get_eth_chain_config" "$COMPONENT_DIR"/src/*.rs | grep "map_err" | grep -v "ok_or_else" 2>/dev/null || true)
+MAP_ERR_CHAIN_CONFIG=$(grep -r "get_evm_chain_config" "$COMPONENT_DIR"/src/*.rs | grep "map_err" | grep -v "ok_or_else" 2>/dev/null || true)
 
 if [ ! -z "$MAP_ERR_CHAIN_CONFIG" ]; then
-  add_error "Found map_err used directly on get_eth_chain_config which returns Option, not Result.
+  add_error "Found map_err used directly on get_evm_chain_config which returns Option, not Result.
       Option types don't have map_err method - it's only available on Result types.
-      WRONG:  get_eth_chain_config(\"mainnet\").map_err(|e| e.to_string())?
-      RIGHT:  get_eth_chain_config(\"mainnet\").ok_or_else(|| \"Failed to get config\".to_string())?
+      WRONG:  get_evm_chain_config(\"ethereum\").map_err(|e| e.to_string())?
+      RIGHT:  get_evm_chain_config(\"ethereum\").ok_or_else(|| \"Failed to get config\".to_string())?
       $MAP_ERR_CHAIN_CONFIG"
 fi
 
