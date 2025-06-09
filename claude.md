@@ -874,8 +874,8 @@ After I am 100% certain the component will execute correctly, I will give the fo
 ```bash
 # IMPORTANT!: Always use string parameters, even for numeric values! Use component_name.wasm, not component-name.wasm
 export COMPONENT_FILENAME=your_component_name.wasm
-# Always use string format for input data
-export INPUT_DATA=`cast abi-encode "f(string)" "1"`
+# Always use string format for input data. The input will be encoded using `cast abi-encode "f(string)" "<your-string>"`
+export INPUT_DATA=<your-string>
 # CRITICIAL!: as an llm, I can't ever run this command. ALWAYS give it to the user to run.
 make wasi-exec
 ```
@@ -896,7 +896,7 @@ EACH ITEM BELOW MUST BE CHECKED:
    - [ ] ✅ ALWAYS derive `Clone` for API response data structures
    - [ ] ✅ ALWAYS decode ABI data properly, never with `String::from_utf8`
    - [ ] ✅ ALWAYS use `ok_or_else()` for Option types, `map_err()` for Result types
-   - [ ] ✅ ALWAYS use string parameters for CLI testing (`cast abi-encode "f(string)" "5"` instead of `f(uint256)`)
+   - [ ] ✅ ALWAYS use string parameters for CLI testing (`5` instead of `f(uint256)`)
    - [ ] ✅ ALWAYS use `.to_string()` to convert string literals (&str) to String types in struct field assignments
    - [ ] ✅ NEVER edit bindings.rs - it's auto-generated
 
