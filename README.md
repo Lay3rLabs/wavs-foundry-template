@@ -175,7 +175,11 @@ WASI_BUILD_DIR=components/evm-price-oracle make wasi-build
 How to test the component locally for business logic validation before on-chain deployment. An ID of 1 for the oracle component is Bitcoin.
 
 ```bash
-INPUT_DATA="1" make wasi-exec
+# Rust components
+INPUT_DATA="1" COMPONENT_FILENAME=evm_price_oracle.wasm make wasi-exec
+
+# Golang / Typescript
+INPUT_DATA="1" COMPONENT_FILENAME=golang_evm_price_oracle.wasm make wasi-exec-fixed
 ```
 
 Expected output:
@@ -335,7 +339,12 @@ Anyone can now call the [trigger contract](./src/contracts/WavsTrigger.sol) whic
 
 ```bash
 # Request BTC from CMC
+# rust:
 export COIN_MARKET_CAP_ID=`cast abi-encode "addTrigger(string)" "1"`
+
+# Golang & Typescript uses the raw value
+# export COIN_MARKET_CAP_ID="1"
+
 # Get the trigger address from previous Deploy forge script
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 # Execute on the trigger contract, WAVS will pick this up and submit the result
@@ -343,6 +352,7 @@ export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 
 # uses FUNDED_KEY as the executor (local: anvil account)
 source .env
+export RPC_URL=`sh ./script/get-rpc.sh`
 
 forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast
 ```
