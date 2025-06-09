@@ -429,25 +429,31 @@ fi
 # 9c. Check for string literals assigned to String type fields in structs
 echo "📝 Checking for string literal to String conversions..."
 # Look for patterns like 'field: "string literal",' in struct initializations
-STRING_FIELDS=$(grep -r -A 20 "pub struct" "$COMPONENT_DIR"/src/*.rs | grep "String" | sed -E 's/.*([a-zA-Z0-9_]+): String.*/\1/' || true)
-
-if [ ! -z "$STRING_FIELDS" ]; then
-  # For each string field, check for literals without to_string()
-  for FIELD in $STRING_FIELDS; do
-    # Look for patterns like 'field: "literal",' without to_string()
-    STRING_LITERAL_USAGE=$(grep -r "$FIELD: \"" "$COMPONENT_DIR"/src/*.rs | grep -v "\.to_string()" || true)
-    
-    if [ ! -z "$STRING_LITERAL_USAGE" ]; then
-      add_error "Found string literals assigned directly to String type fields without .to_string() conversion:
-      $STRING_LITERAL_USAGE
-      
-      This will cause a type mismatch error because &str cannot be assigned to String.
-      Fix: Always convert string literals to String type using .to_string():
-      WRONG:  field: \"literal string\",
-      RIGHT:  field: \"literal string\".to_string(),"
-      break
-    fi
-  done
+# Only check lib.rs to avoid auto-generated bindings.rs
+if [ -f "$COMPONENT_DIR/src/lib.rs" ]; then
+  STRING_FIELDS=$(grep -A 20 "pub struct" "$COMPONENT_DIR/src/lib.rs" | grep -E "^\s*pub\s+[a-zA-Z0-9_]+:\s+String," | sed -E 's/^\s*pub\s+([a-zA-Z0-9_]+):\s+String,.*/\1/' || true)
+  
+  if [ ! -z "$STRING_FIELDS" ]; then
+    # For each string field, check for literals without to_string()
+    for FIELD in $STRING_FIELDS; do
+      # Skip if field name is empty or contains special characters
+      if [[ "$FIELD" =~ ^[a-zA-Z0-9_]+$ ]]; then
+        # Look for patterns like 'field: "literal",' without to_string()
+        STRING_LITERAL_USAGE=$(grep -r "$FIELD: \"" "$COMPONENT_DIR"/src/lib.rs | grep -v "\.to_string()" || true)
+        
+        if [ ! -z "$STRING_LITERAL_USAGE" ]; then
+          add_error "Found string literals assigned directly to String type fields without .to_string() conversion:
+          $STRING_LITERAL_USAGE
+          
+          This will cause a type mismatch error because &str cannot be assigned to String.
+          Fix: Always convert string literals to String type using .to_string():
+          WRONG:  field: \"literal string\",
+          RIGHT:  field: \"literal string\".to_string(),"
+          break
+        fi
+      fi
+    done
+  fi
 fi
 
 #=====================================================================================
