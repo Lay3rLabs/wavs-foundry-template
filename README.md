@@ -19,7 +19,7 @@ A template for developing WebAssembly AVS applications using Rust and Solidity, 
 
 ### Docker
 
-If prompted, remove containerd with `sudo apt remove containerd.io`.
+If prompted, remove container with `sudo apt remove containerd.io`.
 
 - **MacOS**: `brew install --cask docker`
 - **Linux**: `sudo apt -y install docker.io`
@@ -292,7 +292,7 @@ SERVICE_FILE=.docker/service.json source ./script/ipfs-upload.sh
 
 ## Start Aggregator
 
-**TESTNET** You can move the aggregator it to its own machine for testnet deployments, it's easiest to run this on the deployer machine first. If moved, ensure you set the env variables correctly (copy pasted from the previous steps on the other machine).
+**TESTNET** You can move the aggregator it to its own machine for testnet deployments, it's easiest to run this on the deployer machine first. If moved, ensure you set the env variables correctly (copied and pasted from the previous steps on the other machine).
 
 ```bash
 bash ./script/create-aggregator.sh 1

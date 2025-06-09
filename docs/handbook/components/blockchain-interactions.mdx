@@ -7,7 +7,7 @@ import { Callout } from 'fumadocs-ui/components/callout';
 import { DocsPage } from 'fumadocs-ui/page';
 docsignore-->
 
-Components can interact with blockchains and smart contracts by using crates like [`wavs-wasi-utils`](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/). This page provides an overview of the dependencies and configuration needed to interact with Ethereum and other EVM-compatible chains. For more information on other helpful crates, see the [Utilities and crates](./utilities) page.
+Components can interact with blockchains and smart contracts by using crates like [`wavs-wasi-utils`](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/). This page provides an overview of the dependencies and configuration needed to interact with Ethereum and other EVM-compatible chains.
 
 ### `wavs-wasi-utils` crate
 
@@ -196,7 +196,7 @@ pub fn query_nft_ownership(address: Address, nft_contract: Address) -> Result<bo
 }
 ```
 
-For another approach using the `alloy-contract` crate, visit the example in the [Utilities and crates](./utilities#alloy-contract-crate) page.
+You can also use the `alloy-contract` crate to interact with smart contracts. See the [alloy-contract docs](https://crates.io/crates/alloy-contract) page for more information.
 
 See the [wavs-wasi-utils documentation](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/) and the [Alloy documentation](https://docs.rs/alloy/latest/alloy/) for more detailed information.
 
@@ -209,6 +209,7 @@ The Alloy ecosystem provides a comprehensive set of crates for Ethereum developm
 - [`alloy-provider`](https://docs.rs/alloy-provider/latest/alloy_provider/): Ethereum node interaction (RPC, WebSocket, batching)
 - [`alloy-network`](https://docs.rs/alloy-network/latest/alloy_network/): Network types and chain-specific functionality
 - [`alloy-sol-types`](https://docs.rs/alloy-sol-types/latest/alloy_sol_types/): ABI handling and type generation
+- [`alloy-contract`](https://docs.rs/alloy-contract/latest/alloy_contract/): Contract interaction utilities
 
 ### Utility crates
 

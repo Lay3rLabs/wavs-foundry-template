@@ -28,31 +28,13 @@ These contracts handle the creation of markets and conditional tokens.
 
 [`conditional-tokens-market-makers`](https://github.com/Lay3rLabs/conditional-tokens-market-makers) - these contracts are forked from Gnosis and updated to a recent Solidity version, and they are the market makers that create a market based on the conditional shares above.
 
-[`PredictionMarketFactory.sol`](https://github.com/Lay3rLabs/wavs-demos/blob/d13fd90b1407cdb876340e2f399769bb31b1dc52/src/PredictionMarketFactory.sol) - this contract sets up all the contracts required for a functioning prediction market using the forked contracts above, and it has the power to resolve the market once the outcome is determined by the oracle AVS.
+[`PredictionMarketFactory.sol`](https://github.com/Lay3rLabs/wavs-prediction-market/blob/main/src/contracts/PredictionMarketFactory.sol) - this contract sets up all the contracts required for a functioning prediction market using the forked contracts above, and it has the power to resolve the market once the outcome is determined by the oracle AVS.
 
 ### Extending the trigger contract
 
-In this demo, the oracle that resolves the market is triggered by the [`PredictionMarketOracleController.sol`](https://github.com/Lay3rLabs/wavs-demos/blob/d13fd90b1407cdb876340e2f399769bb31b1dc52/src/PredictionMarketOracleController.sol) contract.
+In this demo, the oracle that resolves the market is triggered by the [`PredictionMarketOracleController.sol`](https://github.com/Lay3rLabs/wavs-prediction-market/blob/main/src/contracts/PredictionMarketOracleController.sol) contract.
 
-This contract contains modifications to the `WavsTrigger.sol` contract from the [WAVS Foundry Template repo](https://github.com/Lay3rLabs/wavs-foundry-template/tree/v0.3.0/src/contracts/WavsTrigger.sol). Similar to the simple trigger contract, it passes data to the oracle AVS via the `NewTrigger` event.
-
-```rust
-    struct TriggerInputData {
-        address lmsrMarketMaker;
-        address conditionalTokens;
-        bool result;
-    }
-```
-
-In addition, it also contains logic to handle responses from the oracle service.
-
-```rust
-    struct AvsOutputData {
-        address lmsrMarketMaker;
-        address conditionalTokens;
-        bool result;
-    }
-```
+This contract contains modifications to the `WavsTrigger.sol` contract from the [WAVS Foundry Template repo](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/src/contracts/WavsTrigger.sol). Similar to the simple trigger contract, it passes data to the oracle AVS via the `NewTrigger` event.
 
 It extends the contract by storing trigger metadata, validating signed AVS outputs, and interacting with the external contracts mentioned above (`PredictionMarketFactory`, `MarketMaker`, and `ConditionalTokens`).
 
@@ -65,7 +47,7 @@ function addTrigger(
         require(msg.value == 0.1 ether, "Payment must be exactly 0.1 ETH");
 ```
 
-Take a look at the [`PredictionMarketOracleController.sol`](https://github.com/Lay3rLabs/wavs-demos/blob/d13fd90b1407cdb876340e2f399769bb31b1dc52/src/PredictionMarketOracleController.sol) file to get an idea of how the contract is structured.
+Take a look at the [`PredictionMarketOracleController.sol`](https://github.com/Lay3rLabs/wavs-prediction-market/blob/main/src/contracts/PredictionMarketOracleController.sol) file to get an idea of how the contract is structured.
 
 This contract is responsible for interacting with the oracle service, triggering WAVS to run the oracle, waiting for the oracle's response, and telling the market factory to resolve the market.
 
@@ -73,13 +55,43 @@ This contract is responsible for interacting with the oracle service, triggering
 
 Similar to the oracle you created in the tutorial, the prediction market uses a simple oracle service to resolve a market by bringing off-chain data on-chain.
 
-This WASI component runs in WAVS and fetches the prediction market's resolution when necessary. A wallet executes the [`PredictionMarketOracleController.sol`](https://github.com/Lay3rLabs/wavs-demos/blob/d13fd90b1407cdb876340e2f399769bb31b1dc52/src/PredictionMarketOracleController.sol#L83) contract's `addTrigger` function, which triggers WAVS to run this oracle by emitting an event. Then, WAVS commits the response from this oracle component with a signature back to the contract on-chain, and the market is resolved.
+This[ WASI component](https://github.com/Lay3rLabs/wavs-prediction-market/blob/main/components/prediction-market-oracle/src/lib.rs) runs in WAVS and fetches the prediction market's resolution when necessary. A wallet executes the [`PredictionMarketOracleController.sol`](https://github.com/Lay3rLabs/wavs-prediction-market/blob/main/src/contracts/PredictionMarketOracleController.sol#L65) contract's `addTrigger` function, which triggers WAVS to run this oracle by emitting an event. Then, WAVS commits the response from this oracle component with a signature back to the contract on-chain, and the market is resolved.
+
+Below is the `run` function for the Prediction Market oracle component. This function is responsible for fetching the price of Bitcoin and resolving the market based on the price.
+
+```rust
+impl Guest for Component {
+    fn run(action: TriggerAction) -> std::result::Result<Option<WasmResponse>, String> {
+        let market_maker_address =
+            config_var("market_maker").ok_or_else(|| "Failed to get market maker address")?;
+        let conditional_tokens_address = config_var("conditional_tokens")
+            .ok_or_else(|| "Failed to get conditional tokens address")?;
+
+        let trigger_info = decode_trigger_event(action.data)?;
+
+        let bitcoin_price = block_on(get_price_feed(1))?;
+
+        // Resolve the market as YES if the price of Bitcoin is over $1.
+        let result = bitcoin_price > 1.0;
+
+        Ok(Some(WasmResponse {
+            payload: encode_trigger_output(
+                trigger_info.triggerId,
+                Address::from_str(&market_maker_address).unwrap(),
+                Address::from_str(&conditional_tokens_address).unwrap(),
+                result,
+            ),
+            ordering: None,
+        }))
+    }
+}
+```
 
 Performing this market resolution via WAVS means prediction markets can exist in a fully decentralized manner. Because money is on the line, entrusting any party to honestly resolve the market is a critical security decision—WAVS enables distributing this trust over multiple independent parties, taking advantage of the verifiability and security of the existing WAVS infrastructure instead of relying on any centralized individual.
 
 ## Try it out
 
-You can run the prediction market demo locally by following the steps from the [README](https://github.com/Lay3rLabs/wavs-demos/blob/main/demos/PREDICTION_MARKET_DEMO.md).
+You can run the prediction market demo locally by following the steps from the [README](https://github.com/Lay3rLabs/wavs-prediction-market/tree/main).
 
 Follow along in the video tutorial to see how to run the prediction market demo locally:
 

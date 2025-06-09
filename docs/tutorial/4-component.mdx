@@ -12,11 +12,12 @@ The core logic of the price oracle in this example is located in the [`/evm-pric
 
 ## trigger.rs
 
-The [trigger.rs](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/components/evm-price-oracle/src/trigger.rs) file handles the decoding of incoming trigger data (`decode_event_log_data!()`) and prepares it for processing within the WAVS component. The `encode_trigger_output` function ensures that processed data is formatted correctly before being sent back. Update the code if you require different trigger types (e.g. Cosmos events) or if you are building a [custom trigger](./5-build#custom-triggers).
+The [trigger.rs](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/components/evm-price-oracle/src/trigger.rs) file handles the decoding of incoming trigger data from the trigger event emitted by the trigger contract. The component uses `decode_event_log_data!()` from the [wavs-wasi-utils crate](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/) to decode the event log data and prepares it for processing within the WAVS component. For more information on different trigger types, visit the [Triggers page](../handbook/triggers). To learn more about trigger input handling, visit the [Component page](../handbook/components/component#trigger-inputs).
 
-
-```rust
-use crate::bindings::wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent};
+```rust trigger.rs
+use crate::bindings::wavs::worker::layer_types::{
+    TriggerData, TriggerDataEvmContractEvent, WasmResponse,
+};
 use alloy_sol_types::SolValue;
 use anyhow::Result;
 use wavs_wasi_utils::decode_event_log_data;
@@ -28,9 +29,9 @@ pub enum Destination {
 
 pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, Destination)> {
     match trigger_data {
-        TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+        TriggerData::EvmContractEvent(TriggerDataEvmContractEvent { log, .. }) => {
             let event: solidity::NewTrigger = decode_event_log_data!(log)?;
-            let trigger_info = solidity::TriggerInfo::abi_decode(&event._triggerInfo, false)?;
+            let trigger_info = solidity::TriggerInfo::abi_decode(&event._triggerInfo)?;
             Ok((trigger_info.triggerId, trigger_info.data.to_vec(), Destination::Ethereum))
         }
         TriggerData::Raw(data) => Ok((0, data.clone(), Destination::CliOutput)),
@@ -38,9 +39,15 @@ pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, 
     }
 }
 
-pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> Vec<u8> {
-    solidity::DataWithId { triggerId: trigger_id, data: output.as_ref().to_vec().into() }
-        .abi_encode()
+pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> WasmResponse {
+    WasmResponse {
+        payload: solidity::DataWithId {
+            triggerId: trigger_id,
+            data: output.as_ref().to_vec().into(),
+        }
+        .abi_encode(),
+        ordering: None,
+    }
 }
 
 mod solidity {
@@ -49,15 +56,13 @@ mod solidity {
 
     sol!("../../src/interfaces/ITypes.sol");
 }
-
 ```
 
-## Oracle component definitions
+## Oracle component logic
 
 The [`lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/components/evm-price-oracle/src/lib.rs) file contains the main component logic for the oracle. The first section of the code imports the required modules for requests, serialization, and bindings, defines the component struct, and exports the component for execution within the WAVS runtime.
 
-```rust
-// !focus(1:13)
+```rust lib.rs
 mod trigger;
 use trigger::{decode_trigger_event, encode_trigger_output, Destination};
 use wavs_wasi_utils::http::{fetch_json, http_request_get};
@@ -65,7 +70,22 @@ pub mod bindings;
 use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
 use serde::{Deserialize, Serialize};
 use wstd::{http::HeaderValue, runtime::block_on};
+```
 
+The `run` function is the main entry point for the price oracle component. WAVS is subscribed to watch for events emitted by the blockchain. When WAVS observes an event is emitted, it will internally route the event and its data to this function (component). The processing then occurs before the output is returned back to WAVS to be submitted to the blockchain by the operator(s).
+
+This is why the `Destination::Ethereum` requires the encoded trigger output, it must be ABI encoded for the solidity contract.
+
+After the data is properly set by the operator through WAVS, any user can query the price data from the blockchain in the solidity contract. You can also return `None` as the output if nothing needs to be saved to the blockchain. (great for performing some off chain action)
+
+The `run` function:
+
+1. Receives a trigger action containing encoded data
+2. Decodes the input to get a cryptocurrency ID (in hex)
+3. Fetches current price data from CoinMarketCap
+4. Returns the encoded response based on the destination
+
+```rust lib.rs
 struct Component;
 export!(Component with_types_in bindings);
 
@@ -96,84 +116,13 @@ impl Guest for Component {
 }
 ```
 
-## Trigger data
-
-The next section decodes the event sent from the trigger and extracts the `trigger_id` and data. The `run` function in `lib.rs` calls `decode_trigger_event` from `trigger.rs` to parse the trigger input, retrieve the trigger ID, and process the data by converting it into an asset ID, which will be used in the query.
-
-```rust
-// !focus(1:11)
-impl Guest for Component {
-    fn run(action: TriggerAction) -> std::result::Result<Option<WasmResponse>, String> {
-        let (trigger_id, req, dest) =
-            decode_trigger_event(action.data).map_err(|e| e.to_string())?;
-
-        // Convert bytes to string and parse first char as u64
-        let input = std::str::from_utf8(&req).map_err(|e| e.to_string())?;
-        println!("input id: {}", input);
-
-        let id = input.chars().next().ok_or("Empty input")?;
-        let id = id.to_digit(16).ok_or("Invalid hex digit")? as u64;
-
-        let res = block_on(async move {
-            let resp_data = get_price_feed(id).await?;
-            println!("resp_data: {:?}", resp_data);
-            serde_json::to_vec(&resp_data).map_err(|e| e.to_string())
-        })?;
-
-        let output = match dest {
-            Destination::Ethereum => Some(encode_trigger_output(trigger_id, &res)),
-            Destination::CliOutput => Some(WasmResponse { payload: res.into(), ordering: None }),
-        };
-        Ok(output)
-    }
-}
-```
+Visit the [Component page](../handbook/components/component) for more information on the `run` function and the main requirements for component structure.
 
 ## Fetching price data
 
-Then, `get_price_feed(id).await` is called to fetch the asset price from CoinMarketCap.
+The `get_price_feed` function is responsible for fetching price data from CoinMarketCap's API. It takes the cryptocurrency ID passed from the trigger as input and returns a structured `PriceFeedData` containing the symbol, current price in USD, and server timestamp. For more information on making network requests in WAVS components, visit the [Network Requests page](../handbook/components/network-requests).
 
-```rust
-        // Convert bytes to string and parse first char as u64
-        let input = std::str::from_utf8(&req).map_err(|e| e.to_string())?;
-        println!("input id: {}", input);
-
-        let id = input.chars().next().ok_or("Empty input")?;
-        let id = id.to_digit(16).ok_or("Invalid hex digit")? as u64;
-
-// !focus(1:4)
-        let res = block_on(async move {
-            let resp_data = get_price_feed(id).await?;
-            println!("resp_data: {:?}", resp_data);
-            serde_json::to_vec(&resp_data).map_err(|e| e.to_string())
-        })?;
-
-
-        let output = match dest {
-            Destination::Ethereum => Some(encode_trigger_output(trigger_id, &res)),
-            Destination::CliOutput => Some(WasmResponse { payload: res.into(), ordering: None }),
-        };
-        Ok(output)
-    }
-}
-```
-
-
-## Price feed data
-
-The asset ID passed from the trigger is used in the API request to fetch the data from CoinMarketCap.
-
-The returned price data is then extracted from the response and converted into a structured format.
-
-```rust
-        let output = match dest {
-            Destination::Ethereum => Some(encode_trigger_output(trigger_id, &res)),
-            Destination::CliOutput => Some(WasmResponse { payload: res.into(), ordering: None }),
-        };
-        Ok(output)
-    }
-}
-// !focus(1:18)
+```rust lib.rs
 async fn get_price_feed(id: u64) -> Result<PriceFeedData, String> {
     let url = format!(
         "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id={}&range=1h",
@@ -194,70 +143,47 @@ async fn get_price_feed(id: u64) -> Result<PriceFeedData, String> {
 
     let json: Root = fetch_json(req).await.map_err(|e| e.to_string())?;
 
-    Ok(PriceFeedData {
-        symbol: json.data.symbol,
-        price: json.data.statistics.price,
-        timestamp: json.status.timestamp,
-    })
-}
+    // round to the nearest 3 decimal places
+    let price = (json.data.statistics.price * 100.0).round() / 100.0;
+    // timestamp is 2025-04-30T19:59:44.161Z, becomes 2025-04-30T19:59:44
+    let timestamp = json.status.timestamp.split('.').next().unwrap_or("");
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct PriceFeedData {
-    symbol: String,
-    timestamp: String,
-    price: f64,
+    Ok(PriceFeedData { symbol: json.data.symbol, price, timestamp: timestamp.to_string() })
 }
 ```
 
 ## Handling the response
 
-The price data is ready to be passed to the submission contract (also known as the Service Handler), which will verify that the response was sent by an operator before submitting on-chain.
+The processed price data is returned as a `WasmResponse` which contains the response payload. The response is formatted differently based on the destination.
 
-```rust
-// !focus(1:5)
-        let output = match dest {
-            Destination::Ethereum => Some(encode_trigger_output(trigger_id, &res)),
-            Destination::CliOutput => Some(WasmResponse { payload: res.into(), ordering: None }),
-        };
-        Ok(output)
+```rust lib.rs
+let output = match dest {
+    Destination::Ethereum => Some(encode_trigger_output(trigger_id, &res)),
+    Destination::CliOutput => Some(WasmResponse { payload: res.into(), ordering: None }),
+};
+Ok(output)
+```
+- For `Destination::CliOutput`, the raw data is returned directly for local testing and debugging using the `wasi-exec` command.
+- For `Destination::Ethereum`, the data is ABI encoded using `encode_trigger_output`. This ensures that processed data is formatted correctly before being sent to the [submission contract](../handbook/submission).
+
+In `trigger.rs`, the `WasmResponse` struct is used to standardize the format of data returned from components. The `payload` field contains the processed data from the component.
+
+```rust trigger.rs
+pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> WasmResponse {
+    WasmResponse {
+        payload: solidity::DataWithId {
+            triggerId: trigger_id,
+            data: output.as_ref().to_vec().into(),
+        }
+        .abi_encode(),
+        ordering: None,
     }
 }
 ```
 
-## Logging for development
+For more information on component outputs, visit the [Component page](../handbook/components/component#component-output). To learn more about submission logic, visit the [Submission page](../handbook/submission).
 
-<p id="logging"> </p>
-
-When developing your own WASI component, it's helpful to use logging methods in your code. Components write all their standard output and errors (`stdout` or `stderr`) to the host machine.
-
-In this example, `println!()` is used in `fn run()` to debug `input id` and `resp_data` while processing price feed requests asynchronously. This will write to `stdout` and is visible in local development when you run the [`wasi-exec` command](./5-build#testing-and-debugging) in the next section of this guide.
-
-For production, you can use a `host::log()` function which takes a `LogLevel` and writes its output via the tracing mechanism. Along with the string that the developer provides, it attaches additional context such as the `ServiceID`, `WorkflowID`, and component `Digest`.
-
-```rust
-impl Guest for Component {
-    fn run(action: TriggerAction) -> std::result::Result<Option<WasmResponse>, String> {
-        let (trigger_id, req, dest) =
-            decode_trigger_event(action.data).map_err(|e| e.to_string())?;
-
-        // Convert bytes to string and parse first char as u64
-        let input = std::str::from_utf8(&req).map_err(|e| e.to_string())?;
-        // !focus(1)
-        println!("input id: {}", input);
-
-        let id = input.chars().next().ok_or("Empty input")?;
-        let id = id.to_digit(16).ok_or("Invalid hex digit")? as u64;
-
-        let res = block_on(async move {
-            let resp_data = get_price_feed(id).await?;
-             // !focus(1)
-            println!("resp_data: {:?}", resp_data);
-
-            serde_json::to_vec(&resp_data).map_err(|e| e.to_string())
-        })?;
-```
-
-
+The Service handbook contains more detailed information on each part of developing services and components. Visit the [Service handbook overview](../handbook/overview) to learn more.
 
 ## Next steps
 

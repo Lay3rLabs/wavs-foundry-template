@@ -30,11 +30,11 @@ You can stop the services with `ctrl+c`. Some MacOS terminals require pressing t
 </Callout>
 
 
-With the chain and WAVS running, you can deploy and run your service.
+With the chain running, you can deploy and run your service.
 
 ## Create Deployer
 
-An account is required to upload the contracts and be the original admin of them. This script creates a new wallet then sets a balance if using a local deployment, or waits until it has testnet funds before returning.
+An account is required to upload the contracts and to be the original admin of them. The `create-deployer.sh` script creates a new wallet then sets a balance if using a local deployment, or waits until it has testnet funds before returning.
 
 You can skip this step by setting `FUNDED_KEY=` in `.env` to a private key of your choice that has network funds.
 
@@ -42,7 +42,7 @@ You can skip this step by setting `FUNDED_KEY=` in `.env` to a private key of yo
 bash ./script/create-deployer.sh
 ```
 
-## Deploy Eigenlayer Middleware
+## Deploy EigenLayer Middleware
 
 Local deployments use the real testnet contracts via a forked anvil instance. This middleware will setup all the required contracts and configurations for the base of your AVS.
 
@@ -51,6 +51,8 @@ COMMAND=deploy make wavs-middleware
 ```
 
 ## Deploy solidity contracts
+
+The `deploy-contracts.sh` script is used to deploy the trigger and submission solidity contracts to the chain.
 
 ```bash docci-delay-per-cmd=2
 source script/deploy-contracts.sh
@@ -76,8 +78,11 @@ export AGGREGATOR_URL=http://127.0.0.1:8001
 REGISTRY=${REGISTRY} source ./script/build-service.sh
 ```
 
+The build-service.sh script is used to create a service manifest (service.json) with the configuration for the service, including a workflow with the trigger event, component, aggregator, submission logic, and more. Visit the [Service handbook](../handbook/service) for more information on service configuration.
 
 ## Upload to IPFS
+
+The `ipfs-upload.sh` script is used to upload the service manifest to IPFS where it can be referenced by its URI.
 
 ```bash docci-delay-per-cmd=2
 # Upload service.json to IPFS
@@ -85,6 +90,8 @@ SERVICE_FILE=.docker/service.json source ./script/ipfs-upload.sh
 ```
 
 ## Aggregator
+
+Start the [aggregator](../handbook/submission#aggregator) and register the service with the aggregator. The aggregator is used to collect and validate responses from multiple operators before submitting them to the blockchain.
 
 ```bash docci-delay-per-cmd=2
 bash ./script/create-aggregator.sh 1
@@ -94,7 +101,9 @@ IPFS_GATEWAY=${IPFS_GATEWAY} bash ./infra/aggregator-1/start.sh
 wget -q --header="Content-Type: application/json" --post-data="{\"uri\": \"${IPFS_URI}\"}" ${AGGREGATOR_URL}/register-service -O -
 ```
 
-## WAVS
+## Start WAVS
+
+Create an operator and start WAVS. The create-operator.sh script configures the operator's environment and starts running WAVS.
 
 ```bash
 bash ./script/create-operator.sh 1
@@ -108,7 +117,7 @@ WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${IPFS_URI} IPFS_GATEWAY=${IPFS_
 
 ## Register service specific operator
 
-Each service gets its own key path (hd_path). The first service starts at 1 and increments from there. Get the service ID
+Each service gets its own key path (hd_path). The first service starts at 1 and increments from there. The following commands are used to register the operator with the [service manager contract](../handbook/service#service-manager).
 
 ```bash
 SERVICE_INDEX=0 source ./script/avs-signing-key.sh
@@ -123,7 +132,6 @@ COMMAND="register ${OPERATOR_PRIVATE_KEY} ${AVS_SIGNING_ADDRESS} 0.001ether" mak
 COMMAND="list_operator" PAST_BLOCKS=500 make wavs-middleware
 ```
 
-
 ## Trigger the service
 
 Next, use your deployed trigger contract to trigger the oracle to be run. In the following command, you'll specify the `COIN_MARKET_CAP_ID` as `1`, which corresponds to the ID of Bitcoin.
@@ -133,7 +141,7 @@ Running this command will execute [`/script/Trigger.s.sol`](https://github.com/L
 1. The trigger contract will emit an event with the specified ID as its data.
 2. Operators listening for the event will receive the data and run it in the oracle component off-chain.
 3. The oracle component will use the ID to query the price of Bitcoin from the CoinMarketCap API.
-4. The returned data will be signed by operators and passed to the submission contract, which will verify the operator's signature and submit the price of Bitcoin on-chain 🎉
+4. The returned data will be signed by operators and passed to the [aggregator and then the submission contract](../handbook/submission), which will verify the operator's signature and submit the price of Bitcoin on-chain 🎉
 
 
 ```bash docci-delay-per-cmd=2
@@ -158,3 +166,7 @@ TRIGGER_ID=1 RPC_URL=${RPC_URL} make show-result
 ```
 
 Congratulations, you've just made a simple Bitcoin price oracle service using WAVS!
+
+Proceed to the [Prediction Market demo](./7-prediction) to learn how a similar oracle service can be used in a prediction market.
+
+Check out the [Service handbook](../handbook/overview) to learn more about services and creating components.

@@ -87,8 +87,7 @@ contract SimpleSubmit is ITypes, IWavsServiceHandler {
 
 ## Aggregator
 
-{/* todo: link to design page. */}
-The aggregator is used to collect and validate responses from multiple operators before submitting them to the blockchain. It acts as an intermediary that receives signed responses from operators, validates each operator's signature, aggregates signatures when enough operators have responded, and submits the aggregated data to the submission contract. The aggregator supports exact match aggregation, meaning that consensus is reached if a threshold amount of submitted responses from operators are identical.
+The aggregator is used to collect and validate responses from multiple operators before submitting them to the blockchain. It acts as an intermediary that receives signed responses from operators, validates each operator's signature, aggregates signatures when enough operators have responded, and submits the aggregated data to the submission contract. The aggregator supports exact match aggregation, meaning that consensus is reached if a threshold amount of submitted responses from operators are identical. Visit the [design considerations page](/design) for more information on aggregation and service design.
 
 WAVS currently uses ECDSA signatures for aggregation, but will also support BLS signatures in the future.
 

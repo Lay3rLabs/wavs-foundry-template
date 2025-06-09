@@ -9,30 +9,34 @@ docsignore-->
 
 ## Commands
 
+Use `make help` to see all the commands:
+
 ```bash
 make help
 ```
 
+Here are the available makefile commands and their descriptions:
+
 ```bash
-build                     building the project
-wasi-build                building WAVS wasi components | WASI_BUILD_DIR
-wasi-exec                 executing the WAVS wasi component(s) | COMPONENT_FILENAME, COIN_MARKET_CAP_ID
-clean                     cleaning the project files
-clean-docker              remove unused docker containers
-fmt                       formatting solidity and rust code
-test                      running tests
-setup                     install initial dependencies
-start-all-local           starting anvil and core services (like IPFS for example)
-get-trigger-from-deploy   getting the trigger address from the script deploy
-get-submit-from-deploy    getting the submit address from the script deploy
-wavs-cli                  running wavs-cli in docker
-upload-component          uploading the WAVS component | COMPONENT_FILENAME, WAVS_ENDPOINT
-deploy-service            deploying the WAVS component service json | SERVICE_URL, CREDENTIAL, WAVS_ENDPOINT
-get-trigger               get the trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
-show-result               showing the result | SERVICE_SUBMISSION_ADDR, TRIGGER_ID, RPC_URL
-upload-to-ipfs            uploading the a service config to IPFS | SERVICE_FILE, [PINATA_API_KEY]
-operator-list             listing the AVS operators | ENV_FILE
-operator-register         listing the AVS operators | ENV_FILE, AVS_PRIVATE_KEY
-update-submodules         update the git submodules
-check-requirements        verify system requirements are installed
+make build                     building the project
+make wasi-build                building WAVS wasi components | WASI_BUILD_DIR
+make wasi-exec                 executing the WAVS wasi component(s) | COMPONENT_FILENAME, COIN_MARKET_CAP_ID
+make clean                     cleaning the project files
+make clean-docker              remove unused docker containers
+make fmt                       formatting solidity and rust code
+make test                      running tests
+make setup                     install initial dependencies
+make start-all-local           starting anvil and core services (like IPFS for example)
+make get-trigger-from-deploy   getting the trigger address from the script deploy
+make get-submit-from-deploy    getting the submit address from the script deploy
+make wavs-cli                  running wavs-cli in docker
+make upload-component          uploading the WAVS component | COMPONENT_FILENAME, WAVS_ENDPOINT
+make deploy-service            deploying the WAVS component service json | SERVICE_URL, CREDENTIAL, WAVS_ENDPOINT
+make get-trigger               get the trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
+make show-result               showing the result | SERVICE_SUBMISSION_ADDR, TRIGGER_ID, RPC_URL
+make upload-to-ipfs            uploading the a service config to IPFS | SERVICE_FILE, [PINATA_API_KEY]
+make update-submodules         update the git submodules
+make check-requirements        verify system requirements are installed
 ```
+
+For more information on commands when using the template, visit the [WAVS tutorial](/tutorial/1-overview).
