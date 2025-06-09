@@ -1,6 +1,6 @@
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply: true
 ---
 # Makefile Commands for WAVS Development
@@ -11,7 +11,7 @@ This rule summarizes the CLI commands available in the WAVS Makefile for buildin
    - `make help`: Show help information.
    - `build`: Build the project.
    - `wasi-build`: Build WAVS WASI components. Uses `WASI_BUILD_DIR`.
-   - `wasi-exec`: Execute WAVS WASI components. Requires `COMPONENT_FILENAME`, `COIN_MARKET_CAP_ID`.
+   - `wasi-exec`: Execute WAVS WASI components. Requires `COMPONENT_FILENAME`, `INPUT_DATA`.
    - `clean`: Clean project files.
    - `clean-docker`: Remove unused Docker containers.
    - `fmt`: Format Solidity and Rust code.

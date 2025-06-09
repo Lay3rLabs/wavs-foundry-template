@@ -70,7 +70,7 @@ WASI_BUILD_DIR=golang-evm-price-oracle make wasi-build
 Run the component with the `wasi-exec` command in the root of the repo
 
 ```bash docci-output-contains="LTC"
-COMPONENT_FILENAME=golang_evm_price_oracle.wasm COIN_MARKET_CAP_ID=2 make wasi-exec
+COMPONENT_FILENAME=golang_evm_price_oracle.wasm INPUT_DATA=2 make wasi-exec-fixed
 ```
 
 ---
