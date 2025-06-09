@@ -838,18 +838,18 @@ ALL components must pass validation. Review [/test_utils/validate_component.sh](
 EACH ITEM BELOW MUST BE CHECKED:
 
 1. Common errors:
-   - [ ] ✅ ALWAYS use `{ workspace = true }` in your component Cargo.toml. Explicit versions go in the root Cargo.toml.
-   - [ ] ✅ ALWAYS verify API response structures by using curl on the endpoints.
-   - [ ] ✅ ALWAYS Read any documentation given to you in a prompt
-   - [ ] ✅ ALWAYS implement the Guest trait and export your component
-   - [ ] ✅ ALWAYS use `export!(Component with_types_in bindings)`
-   - [ ] ✅ ALWAYS use `clone()` before consuming data to avoid ownership issues
-   - [ ] ✅ ALWAYS derive `Clone` for API response data structures
-   - [ ] ✅ ALWAYS decode ABI data properly, never with `String::from_utf8`
-   - [ ] ✅ ALWAYS use `ok_or_else()` for Option types, `map_err()` for Result types
-   - [ ] ✅ ALWAYS use string parameters for CLI testing (`5` instead of `f(uint256)`)
-   - [ ] ✅ ALWAYS use `.to_string()` to convert string literals (&str) to String types in struct field assignments
-   - [ ] ✅ NEVER edit bindings.rs - it's auto-generated
+   - [ ] ALWAYS use `{ workspace = true }` in your component Cargo.toml. Explicit versions go in the root Cargo.toml.
+   - [ ] ALWAYS verify API response structures by using curl on the endpoints.
+   - [ ] ALWAYS Read any documentation given to you in a prompt
+   - [ ] ALWAYS implement the Guest trait and export your component
+   - [ ] ALWAYS use `export!(Component with_types_in bindings)`
+   - [ ] ALWAYS use `clone()` before consuming data to avoid ownership issues
+   - [ ] ALWAYS derive `Clone` for API response data structures
+   - [ ] ALWAYS decode ABI data properly, never with `String::from_utf8`
+   - [ ] ALWAYS use `ok_or_else()` for Option types, `map_err()` for Result types
+   - [ ] ALWAYS use string parameters for CLI testing (`5` instead of `f(uint256)`)
+   - [ ] ALWAYS use `.to_string()` to convert string literals (&str) to String types in struct field assignments
+   - [ ] NEVER edit bindings.rs - it's auto-generated
 
 2. Component structure:
    - [ ] Implements Guest trait
@@ -904,6 +904,6 @@ EACH ITEM BELOW MUST BE CHECKED:
     - [ ] Uses block_on for async functions
     - [ ] Uses fetch_json with correct headers
     - [ ] ALL API endpoints have been tested with curl and responses are handled correctly in my component.
-    - [ ] Always use #[serde(default)] and Option<T> for fields from external APIs.
+    - [ ] IMPORTANT! Always use #[serde(default)] and Option<T> for fields from external APIs.
 
 With this guide, you should be able to create any WAVS component that passes validation, builds without errors, and executes correctly.
