@@ -341,6 +341,8 @@ use alloy_primitives::{Address, TxKind, U256};
 use alloy_provider::{Provider, RootProvider};
 use alloy_rpc_types::TransactionInput;
 use std::str::FromStr; // Required for parsing addresses
+use crate::bindings::host::get_evm_chain_config;
+use wavs_wasi_utils::evm::new_evm_provider;
 
 async fn query_blockchain(address_str: &str) -> Result<ResponseData, String> {
     // Parse address
@@ -419,6 +421,7 @@ use wstd::runtime::block_on;
 pub mod bindings;
 mod trigger;
 use trigger::{decode_trigger_event, encode_trigger_output, Destination};
+use crate::bindings::host::get_evm_chain_config;
 use crate::bindings::wavs::worker::layer_types::{TriggerData, TriggerDataEvmContractEvent};
 use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
 
@@ -694,6 +697,7 @@ use wstd::runtime::block_on;
 pub mod bindings;
 mod trigger;
 use trigger::{decode_trigger_event, encode_trigger_output, Destination};
+use crate::bindings::host::get_evm_chain_config;
 use crate::bindings::wavs::worker::layer_types::{TriggerData, TriggerDataEvmContractEvent};
 use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
 
