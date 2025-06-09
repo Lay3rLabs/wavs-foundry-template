@@ -68,10 +68,13 @@ IMPORTANT! Always add your component to workspace members in the root Cargo.toml
 ```rust
 mod trigger;
 use trigger::{decode_trigger_event, encode_trigger_output, Destination};
-use wavs_wasi_utils::http::{fetch_json, http_request_get};
+use wavs_wasi_utils::{
+    evm::alloy_primitives::hex,
+    http::{fetch_json, http_request_get},
+};
 pub mod bindings;  // Never edit bindings.rs!
 use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
-use alloy_sol_types::{SolCall, SolValue};
+use alloy_sol_types::SolValue;
 use serde::{Deserialize, Serialize};
 use wstd::{http::HeaderValue, runtime::block_on};
 use anyhow::Result;
@@ -84,26 +87,30 @@ impl Guest for Component {
         let (trigger_id, req, dest) = 
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
             
-        // Clone request data to avoid ownership issues
-        let req_clone = req.clone();
-            
-        // Decode the string using proper ABI decoding
-        let string_data =
-            if let Ok(decoded) = trigger::solidity::submitStringCall::abi_decode(&req_clone) {
-                // If it has a function selector (from cast abi-encode "f(string)" format)
-                decoded.data
+        // Decode trigger data inline - handles hex string input
+        let request_input = {
+            // First, convert the input bytes to a string to check if it's a hex string
+            let input_str = String::from_utf8(req.clone())
+                .map_err(|e| format!("Input is not valid UTF-8: {}", e))?;
+
+            // Check if it's a hex string (starts with "0x")
+            let hex_data = if input_str.starts_with("0x") {
+                // Decode the hex string to bytes
+                hex::decode(&input_str[2..])
+                    .map_err(|e| format!("Failed to decode hex string: {}", e))?
             } else {
-                // Fallback: try decoding just as a string parameter (no function selector)
-                match <String as SolValue>::abi_decode(&req_clone) {
-                    Ok(s) => s,
-                    Err(e) => return Err(format!("Failed to decode input as ABI string: {}", e)),
-                }
+                // If it's not a hex string, assume the input is already binary data
+                req.clone()
             };
 
-        println!("Decoded string input: {}", string_data);
+            // Now ABI decode the binary data as a string parameter
+            <String as SolValue>::abi_decode(&hex_data)
+                .map_err(|e| format!("Failed to decode input as ABI string: {}", e))?
+        };
+        println!("Decoded string input: {}", request_input);
             
         // Process the decoded data here
-        let result = process_data(string_data)?;
+        let result = process_data(request_input)?;
         
         let output = match dest {
             Destination::Ethereum => Some(encode_trigger_output(trigger_id, &result)),
@@ -165,7 +172,7 @@ pub mod solidity {
 
     // Define a simple struct representing the function that encodes string input
     sol! {
-        function submitString(string data) external;
+        function addTrigger(string data) external;
     }
 }
 ```
@@ -180,28 +187,33 @@ NEVER use `String::from_utf8` on ABI-encoded data. This will ALWAYS fail with "i
 // WRONG - Will fail on ABI-encoded data
 let input_string = String::from_utf8(abi_encoded_data)?;
 
-// CORRECT - Use proper ABI decoding
-let req_clone = req.clone(); // Clone first
+// CORRECT - Use proper ABI decoding with hex string support
+let request_input = {
+    // First, convert the input bytes to a string to check if it's a hex string
+    let input_str = String::from_utf8(req.clone())
+        .map_err(|e| format!("Input is not valid UTF-8: {}", e))?;
 
-// IMPORTANT: For consistency, ALWAYS use string inputs in all components,
-// even for numeric, boolean, or other data types. Parse to the required type afterwards.
-
-// Decode the data using proper ABI decoding
-let parameter = 
-    if let Ok(decoded) = YourFunctionCall::abi_decode(&req_clone, false) {
-        // Successfully decoded as function call
-        decoded.parameter
+    // Check if it's a hex string (starts with "0x")
+    let hex_data = if input_str.starts_with("0x") {
+        // Decode the hex string to bytes
+        hex::decode(&input_str[2..])
+            .map_err(|e| format!("Failed to decode hex string: {}", e))?
     } else {
-        // Try decoding just as a string parameter
-        match String::abi_decode(&req_clone, false) {
-            Ok(s) => s,
-            Err(e) => return Err(format!("Failed to decode input as ABI string: {}", e)),
-        }
+        // If it's not a hex string, assume the input is already binary data
+        req.clone()
     };
-    
+
+    // Now ABI decode the binary data as a string parameter
+    <String as SolValue>::abi_decode(&hex_data)
+        .map_err(|e| format!("Failed to decode input as ABI string: {}", e))?
+};
+
 // For numeric parameters, parse from the string
 // Example: When you need a number but input is a string:
-let number = parameter.parse::<u64>().map_err(|e| format!("Invalid number: {}", e))?;
+let number = request_input
+    .trim()
+    .parse::<u64>()
+    .map_err(|_| format!("Invalid number: {}", request_input))?;
 
 // SAFE - Only use String::from_utf8 on data that has already been decoded as a string
 // Example: When handling Raw trigger data that was already decoded as a string
@@ -399,7 +411,9 @@ use alloy_sol_types::{sol, SolCall, SolValue};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-use wavs_wasi_utils::evm::new_evm_provider;
+use wavs_wasi_utils::{
+    evm::{alloy_primitives::hex, new_evm_provider},
+};
 use wstd::runtime::block_on;
 
 pub mod bindings;
@@ -443,21 +457,26 @@ impl Guest for Component {
         let (trigger_id, req, dest) = 
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
         
-        // Clone request data to avoid ownership issues
-        let req_clone = req.clone();
-        
-        // Decode the wallet address string using proper ABI decoding
-        let wallet_address_str = 
-            if let Ok(decoded) = checkTokenBalanceCall::abi_decode(&req_clone, false) {
-                // Successfully decoded as function call
-                decoded.wallet
+        // Decode trigger data inline - handles hex string input
+        let wallet_address_str = {
+            // First, convert the input bytes to a string to check if it's a hex string
+            let input_str = String::from_utf8(req.clone())
+                .map_err(|e| format!("Input is not valid UTF-8: {}", e))?;
+
+            // Check if it's a hex string (starts with "0x")
+            let hex_data = if input_str.starts_with("0x") {
+                // Decode the hex string to bytes
+                hex::decode(&input_str[2..])
+                    .map_err(|e| format!("Failed to decode hex string: {}", e))?
             } else {
-                // Try decoding just as a string parameter
-                match String::abi_decode(&req_clone, false) {
-                    Ok(s) => s,
-                    Err(e) => return Err(format!("Failed to decode input as ABI string: {}", e)),
-                }
+                // If it's not a hex string, assume the input is already binary data
+                req.clone()
             };
+
+            // Now ABI decode the binary data as a string parameter
+            <String as SolValue>::abi_decode(&hex_data)
+                .map_err(|e| format!("Failed to decode input as ABI string: {}", e))?
+        };
         
         // Check token balance
         let res = block_on(async move {
@@ -536,7 +555,10 @@ Important: Always verify API endpoints using curl to examine their response stru
 use alloy_sol_types::{sol, SolCall, SolValue};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use wavs_wasi_utils::http::{fetch_json, http_request_get};
+use wavs_wasi_utils::{
+    evm::alloy_primitives::hex,
+    http::{fetch_json, http_request_get},
+};
 use wstd::{http::HeaderValue, runtime::block_on};
 
 pub mod bindings;
@@ -580,21 +602,26 @@ impl Guest for Component {
         let (trigger_id, req, dest) = 
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
         
-        // Clone request data to avoid ownership issues
-        let req_clone = req.clone();
-        
-        // Decode the parameter string using proper ABI decoding
-        let param = 
-            if let Ok(decoded) = fetchApiDataCall::abi_decode(&req_clone, false) {
-                // Successfully decoded as function call
-                decoded.param
+        // Decode trigger data inline - handles hex string input
+        let param = {
+            // First, convert the input bytes to a string to check if it's a hex string
+            let input_str = String::from_utf8(req.clone())
+                .map_err(|e| format!("Input is not valid UTF-8: {}", e))?;
+
+            // Check if it's a hex string (starts with "0x")
+            let hex_data = if input_str.starts_with("0x") {
+                // Decode the hex string to bytes
+                hex::decode(&input_str[2..])
+                    .map_err(|e| format!("Failed to decode hex string: {}", e))?
             } else {
-                // Try decoding just as a string parameter
-                match String::abi_decode(&req_clone, false) {
-                    Ok(s) => s,
-                    Err(e) => return Err(format!("Failed to decode input as ABI string: {}", e)),
-                }
+                // If it's not a hex string, assume the input is already binary data
+                req.clone()
             };
+
+            // Now ABI decode the binary data as a string parameter
+            <String as SolValue>::abi_decode(&hex_data)
+                .map_err(|e| format!("Failed to decode input as ABI string: {}", e))?
+        };
         
         // Make API request
         let res = block_on(async move {
@@ -659,7 +686,9 @@ use alloy_sol_types::{sol, SolCall, SolValue};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-use wavs_wasi_utils::evm::new_evm_provider;
+use wavs_wasi_utils::{
+    evm::{alloy_primitives::hex, new_evm_provider},
+};
 use wstd::runtime::block_on;
 
 pub mod bindings;
@@ -705,21 +734,26 @@ impl Guest for Component {
         let (trigger_id, req, dest) = 
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
         
-        // Clone request data to avoid ownership issues
-        let req_clone = req.clone();
-        
-        // Decode the wallet address string using proper ABI decoding
-        let wallet_address_str = 
-            if let Ok(decoded) = checkNftOwnershipCall::abi_decode(&req_clone, false) {
-                // Successfully decoded as function call
-                decoded.wallet
+        // Decode trigger data inline - handles hex string input
+        let wallet_address_str = {
+            // First, convert the input bytes to a string to check if it's a hex string
+            let input_str = String::from_utf8(req.clone())
+                .map_err(|e| format!("Input is not valid UTF-8: {}", e))?;
+
+            // Check if it's a hex string (starts with "0x")
+            let hex_data = if input_str.starts_with("0x") {
+                // Decode the hex string to bytes
+                hex::decode(&input_str[2..])
+                    .map_err(|e| format!("Failed to decode hex string: {}", e))?
             } else {
-                // Try decoding just as a string parameter
-                match String::abi_decode(&req_clone, false) {
-                    Ok(s) => s,
-                    Err(e) => return Err(format!("Failed to decode input as ABI string: {}", e)),
-                }
+                // If it's not a hex string, assume the input is already binary data
+                req.clone()
             };
+
+            // Now ABI decode the binary data as a string parameter
+            <String as SolValue>::abi_decode(&hex_data)
+                .map_err(|e| format!("Failed to decode input as ABI string: {}", e))?
+        };
         
         // Check NFT ownership
         let res = block_on(async move {
