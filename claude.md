@@ -27,7 +27,7 @@ repository.workspace = true
 
 [dependencies]
 # Core dependencies (always needed)
-wit-bindgen-rt = {workspace = true}
+wit-bindgen-rt ={ workspace = true}
 wavs-wasi-utils = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
