@@ -1,0 +1,164 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Documentation Check Process
+
+## Overview
+This rule outlines the process for systematically reviewing and updating documentation to ensure accuracy, consistency, and alignment with the codebase, using the EVM Price Oracle component as a reference implementation.
+
+## Prerequisites
+- Access to the repository
+- Basic understanding of Markdown and MDX
+- Familiarity with the EVM Price Oracle component
+- A text editor with spell-check capabilities
+- Access to the linter configuration
+
+## Process
+
+### 1. Initial Implementation Review
+Before reviewing any documentation, first review the actual implementation:
+1. Review `components/evm-price-oracle/src/lib.rs` for core functionality
+2. Review `components/evm-price-oracle/Cargo.toml` for dependencies
+3. Review `components/evm-price-oracle/Makefile` for build commands
+4. Review `components/evm-price-oracle/config.json` for configuration
+5. Document all function names, parameters, and return types
+6. Note all technical terms and their correct spelling
+
+### 2. Create Documentation Checklist
+1. Create a new markdown file named `docs-checklist.md`
+2. List all files in the `/docs` directory and its subdirectories
+3. Format each entry as a checkbox: `- [ ] path/to/file.mdx`
+4. Organize files by their directory structure
+5. Include the full path relative to the repository root
+6. Add verification steps for each file:
+   - Code accuracy verification
+   - Spell check results
+   - Cross-reference validation
+   - Technical accuracy check
+   - Documentation quality assessment
+
+### 3. Systematic Review
+For each file in the checklist:
+
+1. **Code Accuracy Verification**
+   - Compare all code examples with `components/evm-price-oracle/src/lib.rs`
+   - Verify function names match implementation
+   - Check parameter types and names
+   - Validate return types
+   - Ensure example code is complete and runnable
+   - Verify all configuration examples against `config.json`
+   - Check all build commands against `Makefile`
+
+2. **Spelling and Grammar**
+   - Run linter on the entire file
+   - Review for grammatical errors
+   - Check for consistent terminology
+   - Verify proper Markdown/MDX formatting
+   - Maintain a list of technical terms exempt from spell checking:
+     - WAVS
+     - Eigenlayer
+     - Ethereum
+     - WebAssembly
+     - WASI
+     - AVS
+     - Other project-specific terms
+
+3. **Technical Accuracy Review**
+   - Verify all code snippets against implementation
+   - Check function names, parameters, and return types
+   - Ensure interfaces and APIs are correctly referenced
+   - Validate that examples are complete and runnable
+   - Cross-reference with reference implementation
+   - Verify all code paths are documented
+   - Check configuration options are accurate
+
+4. **Documentation Consistency**
+   - Verify that explanations match the actual implementation (verify against `components/evm-price-oracle` or the @README.md or @Makefile)
+   - Check for contradictions with other documentation
+   - Ensure all referenced features exist in the codebase
+   - Validate that configuration examples match current patterns
+
+5. **Cross-References**
+   - Verify that all internal links work
+   - Check that referenced components exist
+   - Ensure consistent naming across documentation
+   - Validate that file paths are correct
+
+6. **Documentation Quality**
+   - Check consistent heading levels
+   - Verify professional section titles
+   - Ensure consistent terminology
+   - Validate clear and concise explanations
+   - Check well-structured lists and examples
+   - Verify proper use of code blocks
+   - Ensure proper formatting of inline code
+
+### 4. Quality Gates
+Documentation cannot be marked as complete until:
+1. All code examples match the actual implementation
+2. All linter errors are fixed
+3. All technical terms are verified
+4. All cross-references are valid
+5. All configuration examples are accurate
+6. All command examples match the Makefile
+7. All API endpoints and parameters are verified
+
+### 5. Common Issues to Check
+1. Function name mismatches
+2. Parameter inconsistencies
+3. Example code that doesn't match implementation
+4. Technical term spelling
+5. Configuration example accuracy
+6. Command example accuracy
+7. API endpoint accuracy
+8. Cross-reference validity
+9. Code block formatting
+10. Inline code formatting
+
+### 6. Making Corrections
+1. Create a branch for documentation updates
+2. For each file that needs changes:
+   - Make necessary corrections
+   - Update the checklist entry to include changes made
+   - Format changes as a bullet list under the file entry
+   - Example:
+     ```markdown
+     - [ ] docs/example.mdx
+       - Fixed typo in "configuration" section
+       - Updated code example to match current implementation
+       - Added missing parameter documentation
+     ```
+
+### 7. Checklist Completion
+1. After reviewing each file:
+   - Mark the checkbox as complete: `- [x]`
+   - Add a brief summary of changes made
+   - Include any notes about follow-up actions needed
+2. For files requiring no changes:
+   - Mark as complete with a note: "No changes needed"
+
+### 8. Final Review
+1. Review all changes for consistency
+2. Ensure all checkboxes are properly marked
+3. Verify that all changes are properly documented
+4. Create a pull request with the documentation updates
+
+## Example Checklist Entry
+```markdown
+- [x] docs/tutorial/1-overview.mdx
+  - Fixed three spelling errors in introduction
+  - Updated code example to match current EVM Price Oracle implementation
+  - Added missing configuration parameters
+  - No further changes needed
+```
+
+## Notes
+- Always maintain a backup of the original documentation
+- Document any major changes that might affect other parts of the documentation
+- Consider creating a separate branch for each major documentation update
+- Keep the checklist updated as new files are added to the documentation
+- Start checking when prompted to read this file
+- Do not stop until all files are checked
+- Never ask if you should continue, just continue until all files are checked, even those in subdirectories
