@@ -369,7 +369,7 @@ async fn query_blockchain(address_str: &str) -> Result<ResponseData, String> {
     };
     
     // Execute call
-    let result = provider.call(&tx).await.map_err(|e| e.to_string())?;
+    let result = provider.call(tx).await.map_err(|e| e.to_string())?;
     let balance: U256 = U256::from_be_slice(&result);
     
     Ok(ResponseData { /* your data here */ })
@@ -521,7 +521,7 @@ async fn get_token_balance(wallet_address_str: &str) -> Result<TokenBalanceData,
         ..Default::default()
     };
     
-    let result = provider.call(&tx).await.map_err(|e| e.to_string())?;
+    let result = provider.call(tx).await.map_err(|e| e.to_string())?;
     let balance_raw: U256 = U256::from_be_slice(&result);
     
     // Get token decimals
@@ -532,7 +532,7 @@ async fn get_token_balance(wallet_address_str: &str) -> Result<TokenBalanceData,
         ..Default::default()
     };
     
-    let result_decimals = provider.call(&tx_decimals).await.map_err(|e| e.to_string())?;
+    let result_decimals = provider.call(tx_decimals).await.map_err(|e| e.to_string())?;
     let decimals: u8 = result_decimals[31]; // Last byte for uint8
     
     // Format balance
@@ -799,7 +799,7 @@ async fn check_nft_ownership(wallet_address_str: &str) -> Result<NftOwnershipDat
         ..Default::default()
     };
     
-    let result = provider.call(&tx).await.map_err(|e| e.to_string())?;
+    let result = provider.call(tx).await.map_err(|e| e.to_string())?;
     let balance: U256 = U256::from_be_slice(&result);
     
     // Determine if wallet owns at least one NFT
