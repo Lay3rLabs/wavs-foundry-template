@@ -39,7 +39,7 @@ wasi-exec: pull-image
 	--component "/data/compiled/$(COMPONENT_FILENAME)" \
 	--input $(shell cast abi-encode "f(string)" "${INPUT_DATA}") \
 
-## wasi-exec-fixed: the same as wasi-exec, except used for Golang and TS components | COMPONENT_FILENAME, INPUT_DATA
+## wasi-exec-fixed: the same as wasi-exec, except uses a fixed input as bytes (used in Go & TS components) | COMPONENT_FILENAME, INPUT_DATA
 wasi-exec-fixed: pull-image
 	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
 	--component "/data/compiled/$(COMPONENT_FILENAME)" \
