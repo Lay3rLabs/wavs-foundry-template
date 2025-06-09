@@ -67,7 +67,7 @@ if [ ! -z "$grep_result" ]; then
       $error_detail"
   else
     add_warning "Found String::from_utf8 usage. Ensure it's not being used on ABI-encoded data.
-      This will likely cause runtime errors if used with encoded data.
+      This can cause runtime errors if used with encoded data. You can ignore this warning if you are using correctly.
       $grep_result"
   fi
 fi
