@@ -108,7 +108,7 @@ print_section "DATA HANDLING CHECKS"
 # 2a. Check for proper Clone derivation on API structs used with network requests
 echo "📝 Checking for Clone derivation on structs..."
 # Look for structs used in HTTP responses
-HTTP_USAGE=$(grep -r "fetch_json" "$COMPONENT_DIR"/src/*.rs > /dev/null || grep -r "http_request_get" "$COMPONENT_DIR"/src/*.rs > /dev/null || echo "0")
+HTTP_USAGE=$(if grep -r "fetch_json\|http_request_get" "$COMPONENT_DIR"/src/*.rs > /dev/null 2>&1; then echo "1"; else echo "0"; fi)
 
 # Find structs with Deserialize but missing Clone
 STRUCTS_WITH_DERIVE=$(grep -r -B 2 "struct" "$COMPONENT_DIR/src" | grep "derive" || true)
@@ -259,7 +259,11 @@ fi
 
 # 4f. Check for HTTP function imports
 if grep -r "http_request_" "$COMPONENT_DIR"/src/*.rs > /dev/null || grep -r "fetch_json" "$COMPONENT_DIR"/src/*.rs > /dev/null; then
-  if ! grep -r "use wavs_wasi_utils::http::" "$COMPONENT_DIR"/src/*.rs > /dev/null; then
+  # Check for both direct import and grouped import patterns
+  DIRECT_HTTP_IMPORT=$(grep -r "use wavs_wasi_utils::http::" "$COMPONENT_DIR"/src/*.rs || true)
+  GROUPED_HTTP_IMPORT=$(grep -r "use wavs_wasi_utils::{.*http::{.*fetch_json\|.*http_request_" "$COMPONENT_DIR"/src/*.rs || true)
+  
+  if [ -z "$DIRECT_HTTP_IMPORT" ] && [ -z "$GROUPED_HTTP_IMPORT" ]; then
     HTTP_USAGE=$(grep -r "http_request_\|fetch_json" "$COMPONENT_DIR"/src/*.rs || true)
     add_error "Found HTTP function usage but wavs_wasi_utils::http is not imported.
       Fix: Add 'use wavs_wasi_utils::http::{fetch_json, http_request_get};' to your imports.
@@ -318,7 +322,7 @@ fi
 # 5e. Check for Guest trait implementation
 if ! grep -r "impl Guest for" "$COMPONENT_DIR"/src/*.rs > /dev/null; then
   add_error "Guest trait implementation not found. Components must implement the Guest trait.
-      Fix: Add 'impl Guest for YourComponent { fn run(trigger: TriggerAction) -> Result<Option<Vec<u8>>, String> { ... } }'"
+      Fix: Add 'impl Guest for YourComponent { fn run(trigger: TriggerAction) -> Result<Option<WasmResponse>, String> { ... } }'"
 fi
 
 # 5f. Check for run function with correct signature - improved to accept variations in naming/qualification
