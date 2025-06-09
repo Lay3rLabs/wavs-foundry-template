@@ -170,7 +170,7 @@ pub mod solidity {
     pub use ITypes::*;
     sol!("../../src/interfaces/ITypes.sol");
 
-    // Define a simple struct representing the function that encodes string input
+    // trigger contract function that encodes string input
     sol! {
         function addTrigger(string data) external;
     }
@@ -220,44 +220,7 @@ let number = request_input
 let input = std::str::from_utf8(&req).map_err(|e| e.to_string())?;
 ```
 
-### 2. Solidity Types Definition
-
-```rust
-// Define Solidity function signature that matches your input format
-sol! {
-    function checkBalance(string wallet) external;
-}
-
-// Define Solidity return structure (if needed)
-sol! {
-    struct BalanceData {
-        address wallet;
-        uint256 balance;
-        string tokenSymbol;
-        bool success;
-    }
-}
-
-// Define Solidity interfaces for contracts
-sol! {
-    interface IERC20 {
-        function balanceOf(address owner) external view returns (uint256);
-        function decimals() external view returns (uint8);
-    }
-}
-
-// Create separate solidity module - IMPORTANT!
-mod solidity {
-    use alloy_sol_macro::sol;
-    pub use ITypes::*;
-
-    sol!("../../src/interfaces/ITypes.sol");
-    
-    // Define your other Solidity types here
-}
-```
-
-### 3. Data Structure Ownership
+### 2. Data Structure Ownership
 
 ALWAYS derive `Clone` for API response data structures. If fields may be missing, also use `Option<T>`, `#[serde(default)]`, and `Default`:
 
@@ -283,7 +246,7 @@ let result = process_data(&data_clone);
 ```
 
 
-### 4. Network Requests
+### 3. Network Requests
 
 ```rust
 use wstd::runtime::block_on;
@@ -318,7 +281,7 @@ fn process_data() -> Result<ApiResponse, String> {
 // For POST requests with JSON data, use http_request_post_json(url, &data) instead of http_request_get
 ```
 
-### 5. Option/Result Handling
+### 4. Option/Result Handling
 
 ```rust
 // WRONG - Option types don't have map_err
@@ -333,7 +296,7 @@ let balance = fetch_balance(address).await
     .map_err(|e| format!("Balance fetch failed: {}", e))?;
 ```
 
-### 6. Blockchain Interactions
+### 5. Blockchain Interactions
 
 ```rust
 use alloy_network::Ethereum;
@@ -376,7 +339,7 @@ async fn query_blockchain(address_str: &str) -> Result<ResponseData, String> {
 }
 ```
 
-### 7. Numeric Type Handling
+### 6. Numeric Type Handling
 
 ```rust
 // WRONG - Using .into() for numeric conversions between types
@@ -433,11 +396,6 @@ sol! {
     }
 }
 
-// INPUT FUNCTION SIGNATURE 
-sol! {
-    function checkTokenBalance(string wallet) external;
-}
-
 // FIXED CONTRACT ADDRESS
 const TOKEN_CONTRACT_ADDRESS: &str = "0x..."; // Your token contract address
 
@@ -448,7 +406,6 @@ pub struct TokenBalanceData {
     balance_raw: String,
     balance_formatted: String,
     token_contract: String,
-    timestamp: String,
 }
 
 // COMPONENT IMPLEMENTATION
@@ -544,7 +501,6 @@ async fn get_token_balance(wallet_address_str: &str) -> Result<TokenBalanceData,
         balance_raw: balance_raw.to_string(),
         balance_formatted: formatted_balance,
         token_contract: TOKEN_CONTRACT_ADDRESS.to_string(),
-        timestamp: get_current_timestamp(),
     })
 }
 ```
@@ -570,11 +526,6 @@ use trigger::{decode_trigger_event, encode_trigger_output, Destination};
 use crate::bindings::wavs::worker::layer_types::{TriggerData, TriggerDataEvmContractEvent};
 use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
 
-// INPUT FUNCTION SIGNATURE
-sol! {
-    function fetchApiData(string param) external;
-}
-
 // RESPONSE STRUCTURE - MUST DERIVE CLONE
 // IMPORTANT: Always Use #[serde(default)] and Option<T> for fields from external APIs. They might be missing or inconsistent
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
@@ -592,7 +543,6 @@ pub struct ApiResponse {
 pub struct ResultData {
     input_param: String,
     result: String,
-    timestamp: String,
 }
 
 // COMPONENT IMPLEMENTATION
@@ -672,7 +622,6 @@ async fn fetch_api_data(param: &str) -> Result<ResultData, String> {
     Ok(ResultData {
         input_param: param.to_string(),
         result: format!("{}: {}", field1, field2),
-        timestamp: get_current_timestamp(),
     })
 }
 ```
@@ -709,11 +658,6 @@ sol! {
     }
 }
 
-// INPUT FUNCTION SIGNATURE
-sol! {
-    function checkNftOwnership(string wallet) external;
-}
-
 // FIXED CONTRACT ADDRESS
 const NFT_CONTRACT_ADDRESS: &str = "0xbd3531da5cf5857e7cfaa92426877b022e612cf8"; // Bored Ape contract
 
@@ -725,7 +669,6 @@ pub struct NftOwnershipData {
     balance: String,
     nft_contract: String,
     contract_name: String,
-    timestamp: String,
 }
 
 // COMPONENT IMPLEMENTATION
@@ -812,7 +755,6 @@ async fn check_nft_ownership(wallet_address_str: &str) -> Result<NftOwnershipDat
         balance: balance.to_string(),
         nft_contract: NFT_CONTRACT_ADDRESS.to_string(),
         contract_name: "BAYC".to_string(),
-        timestamp: get_current_timestamp(),
     })
 }
 ```
