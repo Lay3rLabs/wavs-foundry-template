@@ -278,6 +278,8 @@ source script/upload-to-wasi-registry.sh || true
 # Package not found with wa.dev? -- make sure it is public
 export AGGREGATOR_URL=http://127.0.0.1:8001
 REGISTRY=${REGISTRY} source ./script/build-service.sh
+
+# verify the solidity address code for the services (trigger, submit, etc) are actually on chain
 ```
 
 ## Upload to IPFS
@@ -311,6 +313,7 @@ IPFS_GATEWAY=${IPFS_GATEWAY} bash ./infra/wavs-1/start.sh
 # Deploy the service JSON to WAVS so it now watches and submits.
 # 'opt in' for WAVS to watch (this is before we register to Eigenlayer)
 WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${IPFS_URI} IPFS_GATEWAY=${IPFS_GATEWAY} make deploy-service
+# ^^^ make this a service manager instead of the service url?
 ```
 
 ## Register service specific operator
@@ -324,6 +327,8 @@ SERVICE_INDEX=0 source ./script/avs-signing-key.sh
 
 # TESTNET: set WAVS_SERVICE_MANAGER_ADDRESS
 export WAVS_SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager ./.nodes/avs_deploy.json)
+
+# maybe we just FORCE hd index 1 instead of unique for all? what is the downside?
 COMMAND="register ${OPERATOR_PRIVATE_KEY} ${AVS_SIGNING_ADDRESS} 0.001ether" make wavs-middleware
 
 # Verify registration
