@@ -41,7 +41,7 @@ alloy-primitives = { workspace = true }
 alloy-provider = { workspace = true }
 alloy-rpc-types = { workspace = true }
 alloy-network = { workspace = true }
-alloy-contract = "0.15.10"
+alloy-contract = { workspace = true }
 
 [lib]
 crate-type = ["cdylib"]
