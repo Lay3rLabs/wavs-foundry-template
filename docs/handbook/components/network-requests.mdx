@@ -60,7 +60,7 @@ struct ApiResponse {
 async fn make_request() -> Result<ApiResponse, String> {
     let url = "https://api.example.com/endpoint";
     let mut req = http_request_get(&url).map_err(|e| e.to_string())?;
-    // Set required headers for API requests
+    // Set headers for API requests
     req.headers_mut().insert(
         "Accept",
         HeaderValue::from_static("application/json")
