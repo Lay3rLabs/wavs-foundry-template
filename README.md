@@ -213,7 +213,7 @@ Result (utf8):
 
 ## Start Environment
 
-Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https://www.eigenlayer.xyz/) contracts to the local network.
+Start an Ethereum node (anvil), the WAVS service, and deploy [EigenLayer](https://www.eigenlayer.xyz/) contracts to the local network.
 
 ### Enable Telemetry (optional)
 
@@ -340,10 +340,10 @@ Anyone can now call the [trigger contract](./src/contracts/WavsTrigger.sol) whic
 ```bash
 # Request BTC from CMC
 # rust:
-export COIN_MARKET_CAP_ID=`cast abi-encode "addTrigger(string)" "1"`
+export INPUT_DATA=`cast abi-encode "addTrigger(string)" "1"`
 
 # Golang & Typescript uses the raw value
-# export COIN_MARKET_CAP_ID="1"
+# export INPUT_DATA="1"
 
 # Get the trigger address from previous Deploy forge script
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
@@ -354,7 +354,7 @@ export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 source .env
 export RPC_URL=`sh ./script/get-rpc.sh`
 
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${INPUT_DATA} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast
 ```
 
 ## Show the result
