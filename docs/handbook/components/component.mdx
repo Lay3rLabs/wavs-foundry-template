@@ -32,7 +32,7 @@ When building WASI components, keep in mind that components can receive the [tri
 
 1. **On-chain events**: When triggered by an EVM event, the data comes through the `TriggerAction` with `TriggerData::EvmContractEvent`.
 
-2. **Local testing**: When using `make wasi-exec` command in the template to test a component, the data comes through `TriggerData::Raw`. No abi decoding is required, and the output is returned as raw bytes.
+2. **Local testing**: When using `make wasi-exec` command in the template to test a component, the data comes through `TriggerData::Raw`.
 
 Here's how the example component handles both cases in `trigger.rs`:
 
