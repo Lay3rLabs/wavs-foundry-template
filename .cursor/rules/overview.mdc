@@ -1,49 +1,47 @@
 ---
-description: 
-globs: 
+description: Overview of the WAVS handbook structure and key sections for building WAVS AVS services
+
 alwaysApply: true
 ---
 # WAVS Handbook Overview
 
-This handbook outlines the main sections for building and understanding a WAVS AVS.
+This handbook outlines the structure and contents of the WAVS AVS documentation to guide you in building WAVS services.
 
-1. Follow the [Oracle component tutorial](mdc:tutorial/1-overview) first to learn WAVS service basics.
+1. Follow the [Oracle component tutorial](/tutorial/1-overview) first to learn WAVS basics.
 
-2. Core Concepts:
-   - [How it works](mdc:../how-it-works): Components of a WAVS AVS.
-   - [Design](mdc:../design): Design considerations.
+2. Explore **Core Concepts**:
+   - [How it works](../how-it-works): Components of a WAVS AVS.
+   - [Design](../design): Design considerations.
 
-3. Services:
-   - [Service](mdc:service): Structure and manifest definition.
-   - [Workflows](mdc:workflows): Execution paths, triggers, components, submissions.
-   - [Triggers](mdc:triggers): Types of triggers (EVM, Cosmos, cron, block intervals).
-   - [Submission and Aggregator](mdc:submission): Blockchain result submission.
+3. Understand **Services**:
+   - [Service](./service): Service structure and manifest definition.
+   - [Workflows](./workflows): Execution paths, triggers, components, submissions.
+   - [Triggers](./triggers): Types of triggers (EVM, Cosmos, cron, block intervals).
+   - [Submission and Aggregator](./submission): Blockchain result submission via aggregator and contracts.
 
-4. Components:
-   - [Component Overview](mdc:components/component): Lifecycle and trigger handling.
-   - [Variables](mdc:components/variables): Public and private config variables.
-   - [Utilities and Crates](mdc:components/utilities): Available tools for components.
-   - [Blockchain Interactions](mdc:components/blockchain-interactions): Smart contract and blockchain calls.
-   - [Network Requests](mdc:components/network-requests): HTTP requests to external APIs.
+4. Learn about **Components**:
+   - [Component overview](./components/component): Lifecycle, triggers, data processing.
+   - [Variables](./components/variables): Public and private component variables.
+   - [Blockchain interactions](./components/blockchain-interactions): Interacting with blockchains and smart contracts.
+   - [Network requests](./components/network-requests): Making HTTP requests to external APIs.
 
-5. Development:
-   - [Template](mdc:template): Template structure and customization.
-   - [Makefile Commands](mdc:commands): Build, deploy, and manage commands.
+5. Use **Development** resources:
+   - [Template](./template): WAVS template structure and customization.
+   - [Makefile commands](./commands): Commands to build, deploy, and manage services.
 
-Start with the Service section to grasp basics, then explore others as needed.
+Start with the Service section for foundational knowledge, then explore other sections as needed.
 
 For more information:
-- [Oracle component tutorial](mdc:tutorial/1-overview)
-- [How it works](mdc:../how-it-works)
-- [Design](mdc:../design)
-- [Service](mdc:service)
-- [Workflows](mdc:workflows)
-- [Triggers](mdc:triggers)
-- [Submission and Aggregator](mdc:submission)
-- [Component Overview](mdc:components/component)
-- [Variables](mdc:components/variables)
-- [Utilities and Crates](mdc:components/utilities)
-- [Blockchain Interactions](mdc:components/blockchain-interactions)
-- [Network Requests](mdc:components/network-requests)
-- [Template](mdc:template)
-- [](mdc:commands)
+- [Oracle component tutorial](/tutorial/1-overview) - Start here to learn the basics of building a WAVS service.
+- [How it works](../how-it-works) - Learn about the different parts that make up a WAVS AVS.
+- [Design](../design) - Design considerations for WAVS AVS.
+- [Service](./service) - WAVS service structure and manifest.
+- [Workflows](./workflows) - Defining execution paths.
+- [Triggers](./triggers) - Trigger types.
+- [Submission and Aggregator](./submission) - Blockchain submission process.
+- [Component overview](./components/component) - Component lifecycle and data handling.
+- [Variables](./components/variables) - Configuring component variables.
+- [Blockchain interactions](./components/blockchain-interactions) - Blockchain and smart contract interactions.
+- [Network requests](./components/network-requests) - HTTP requests from components.
+- [Template](./template) - WAVS template and customization.
+- [Makefile commands](./commands) - Build and deploy commands.

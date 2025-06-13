@@ -1,24 +1,24 @@
 ---
-description: 
-globs: 
+description: Overview of WAVS service components, their structure, and usage in Rust and other languages
+
 alwaysApply: true
 ---
 # WAVS Service Components Overview
 
-WAVS components contain the main business logic executed off-chain as WASM bytecode. They can be written in Rust, Go, or TypeScript/JS and compiled to WASM.
+WAVS components contain the main business logic of a service, written in languages compiled to WASM (mainly Rust, also Go and TypeScript/JS). Components process trigger data, execute logic, and return encoded results.
 
 ## Component Structure
 
-A component has three main parts:
+A basic component consists of:
 
-1. **Decode incoming trigger data** (from on-chain events or local testing).
-2. **Process the data** with custom business logic.
-3. **Encode and return the result** for submission or local output.
+1. Decoding incoming [trigger data](../triggers#trigger-lifecycle).
+2. Processing the data (custom business logic).
+3. Encoding and returning results for submission.
 
 ### Trigger Inputs
 
-- **On-chain events:** Use `TriggerData::EvmContractEvent` to decode logs with the contract's ABI.
-- **Local testing:** Use `TriggerData::Raw` for raw bytes, no ABI decoding needed.
+- **On-chain events:** Triggered by EVM events, data arrives as `TriggerData::EvmContractEvent`.
+- **Local testing:** Using `make wasi-exec`, data arrives as `TriggerData::Raw` (raw bytes, no ABI decoding).
 
 Example decoding in `trigger.rs`:
 
@@ -27,7 +27,8 @@ pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, 
     match trigger_data {
         TriggerData::EvmContractEvent(TriggerDataEvmContractEvent { log, .. }) => {
             let event: solidity::NewTrigger = decode_event_log_data!(log)?;
-            let trigger_info = solidity::TriggerInfo::abi_decode(&event._triggerInfo)?;
+            let trigger_info =
+                <solidity::TriggerInfo as SolValue>::abi_decode(&event._triggerInfo)?;
             Ok((trigger_info.triggerId, trigger_info.data.to_vec(), Destination::Ethereum))
         }
         TriggerData::Raw(data) => Ok((0, data.clone(), Destination::CliOutput)),
@@ -35,19 +36,23 @@ pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, 
     }
 }
 
-mod solidity {
+pub mod solidity {
     use alloy_sol_macro::sol;
     pub use ITypes::*;
     sol!("../../src/interfaces/ITypes.sol");
+
+    sol! {
+        function addTrigger(string data) external;
+    }
 }
 ```
 
-- Use `decode_event_log_data!` macro from [`wavs-wasi-utils`](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html).
-- Use `sol!` macro from `alloy-sol-macro` to generate Rust types from Solidity interfaces.
+- Use `decode_event_log_data!` macro from [`wavs-wasi-utils`](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html) for decoding.
+- Use `sol!` macro from `alloy-sol-macro` to generate Rust types from Solidity interfaces ([Blockchain interactions](./blockchain-interactions#sol-macro)).
 
 ### Component Logic
 
-Implement the `Guest` trait with a `run` function as the entry point:
+Implement the `Guest` trait with the `run` function as entry point:
 
 ```rust
 impl Guest for Component {
@@ -70,27 +75,26 @@ impl Guest for Component {
 }
 ```
 
-- Business logic can include blockchain calls, network requests, off-chain computations.
-- See [design considerations](mdc:../../design) for suitable component types.
+Components can include blockchain interactions, network requests, off-chain computations, etc. See [design considerations](../../design) for suitable use cases.
 
 #### Logging
 
-- **Development:** Use `println!()` for stdout/stderr during `make wasi-exec`.
-  
-  ```rust
-  println!("Debug message: {:?}", data);
-  ```
+- **Development:** Use `println!()` for stdout/stderr visible in `make wasi-exec`.
 
-- **Production:** Use `host::log()` with `LogLevel` for structured logging.
+```rust
+println!("Debug message: {:?}", data);
+```
 
-  ```rust
-  use bindings::host::{self, LogLevel};
-  host::log(LogLevel::Info, "Production logging message");
-  ```
+- **Production:** Use `host::log()` with `LogLevel` for structured logging with context.
+
+```rust
+use bindings::host::{self, LogLevel};
+host::log(LogLevel::Info, "Production logging message");
+```
 
 ### Component Output Encoding
 
-Encode output for Ethereum submission using `encode_trigger_output`:
+Encode output for Ethereum submission with `encode_trigger_output`:
 
 ```rust
 pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> WasmResponse {
@@ -105,12 +109,12 @@ pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> WasmR
 }
 ```
 
-- Output is wrapped in `WasmResponse` with encoded payload and optional ordering.
-- WAVS routes the response according to workflow logic.
+- Output is a `WasmResponse` containing encoded payload and optional ordering.
+- WAVS routes the response per workflow submission logic.
 
 ## Component Definition in service.json
 
-Define components in the workflow object:
+Defined under the workflow's `component` object:
 
 ```json
 "component": {
@@ -140,22 +144,26 @@ Define components in the workflow object:
 }
 ```
 
-- `source`: Component bytecode registry info.
-- `permissions`: Access controls (HTTP hosts, filesystem).
-- `fuel_limit` and `time_limit_seconds`: Execution constraints.
-- `config`: Configuration variables.
-- `env_keys`: Secret environment variables accessible by the component.
+- Configure source registry, permissions, limits, config variables, and secret env keys.
+- See [variables](./variables) for details on configuration.
 
-For config and env keys details, see the [variables](mdc:variables) page.
+## Registry Usage
+
+- WAVS stores WASM components in a registry (e.g., [wa.dev](https://wa.dev)) for production.
+- Local development uses a docker-compose emulated registry.
+- Workflow to update registry source:
+
+```bash
+wavs-cli workflow component --id ${WORKFLOW_ID} set-source-registry --domain ${REGISTRY} --package ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION}
+```
 
 ---
 
 For more information:
-- [Go example component](mdc:https:/github.com/Lay3rLabs/wavs-foundry-template/tree/main/components/golang-evm-price-oracle)
-- [TypeScript/JS example component](mdc:https:/github.com/Lay3rLabs/wavs-foundry-template/tree/main/components/js-evm-price-oracle)
-- [`decode_event_log_data!` macro docs](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html)
-- [Utilities and crates (sol! macro)](mdc:utilities#sol-macro)
-- [Design considerations](mdc:../../design)
-- [Variables page](mdc:variables)
-- [Workflows](mdc:../workflows)
-- [](mdc:../service)
+
+- [WAVS Triggers](../triggers#trigger-lifecycle)
+- [Blockchain interactions - sol! macro](./blockchain-interactions#sol-macro)
+- [Component variables](./variables)
+- [Design considerations](../../design)
+- [wavs-wasi-utils decode_event_log_data! macro](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html)
+- [wa.dev Registry](https://wa.dev)

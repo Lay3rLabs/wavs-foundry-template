@@ -1,54 +1,45 @@
 ---
-description:
-globs:
+description: Overview of Makefile commands for WAVS development CLI
+
 alwaysApply: true
 ---
 # Makefile Commands for WAVS Development
 
-This rule summarizes the CLI commands available in the WAVS Makefile for building, testing, deploying, and managing WAVS components and services.
+Use `make help` to list all available commands for building, testing, deploying, and managing WAVS projects.
 
-1. Common commands:
-   - `make help`: Show help information.
-   - `build`: Build the project.
-   - `wasi-build`: Build WAVS WASI components. Uses `WASI_BUILD_DIR`.
-   - `wasi-exec`: Execute WAVS WASI components. Requires `COMPONENT_FILENAME`, `INPUT_DATA`.
-   - `clean`: Clean project files.
-   - `clean-docker`: Remove unused Docker containers.
-   - `fmt`: Format Solidity and Rust code.
-   - `test`: Run tests.
-   - `setup`: Install initial dependencies.
-   - `start-all-local`: Start local services like Anvil and IPFS.
-   - `update-submodules`: Update git submodules.
-   - `check-requirements`: Verify system requirements.
-
-2. Deployment and service management:
-   - `upload-component`: Upload WAVS component. Requires `COMPONENT_FILENAME`, `WAVS_ENDPOINT`.
-   - `deploy-service`: Deploy WAVS component service JSON. Requires `SERVICE_URL`, `CREDENTIAL`, `WAVS_ENDPOINT`.
-   - `get-trigger-from-deploy`: Get trigger address from deploy script.
-   - `get-submit-from-deploy`: Get submit address from deploy script.
-   - `get-trigger`: Get trigger ID. Requires `SERVICE_TRIGGER_ADDR`, `RPC_URL`.
-   - `show-result`: Show result. Requires `SERVICE_SUBMISSION_ADDR`, `TRIGGER_ID`, `RPC_URL`.
-   - `upload-to-ipfs`: Upload service config to IPFS. Requires `SERVICE_FILE`, optional `[PINATA_API_KEY]`.
-
-3. Operator management:
-   - `operator-list`: List AVS operators. Requires `ENV_FILE`.
-   - `operator-register`: Register AVS operators. Requires `ENV_FILE`, `AVS_PRIVATE_KEY`.
-
-Guidelines:
-- Use environment variables as indicated for commands requiring parameters.
-- Run `make help` to see available commands.
-- Use `clean` and `clean-docker` to maintain a clean environment.
-- Format code regularly with `fmt` to maintain consistency.
-- Use `setup` before starting development to install dependencies.
-
-Example usage:
+1. Run `make help` to see all commands:
 ```bash
-make build
-make wasi-build
-make upload-component COMPONENT_FILENAME=component.wasm WAVS_ENDPOINT=https://wavs.example.com
-make operator-register ENV_FILE=.env AVS_PRIVATE_KEY=key123
+make help
 ```
 
+2. Common commands and their purposes:
+```bash
+build                     building the project
+wasi-build                building WAVS wasi components | WASI_BUILD_DIR
+wasi-exec                 executing the WAVS wasi component(s) with ABI function | COMPONENT_FILENAME, INPUT_DATA
+wasi-exec-fixed           same as wasi-exec but uses fixed byte input (for Go & TS components) | COMPONENT_FILENAME, INPUT_DATA
+clean                     cleaning the project files
+clean-docker              remove unused docker containers
+validate-component        validate a WAVS component against best practices
+fmt                       format Solidity and Rust code
+test                      run tests
+setup                     install initial dependencies
+start-all-local           start anvil and core services (e.g., IPFS)
+get-trigger-from-deploy   get trigger address from deployment script
+get-submit-from-deploy    get submit address from deployment script
+wavs-cli                  run wavs-cli in docker
+upload-component          upload WAVS component | COMPONENT_FILENAME, WAVS_ENDPOINT
+deploy-service            deploy WAVS component service JSON | SERVICE_URL, CREDENTIAL, WAVS_ENDPOINT
+get-trigger               get trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
+show-result               show result | SERVICE_SUBMISSION_ADDR, TRIGGER_ID, RPC_URL
+upload-to-ipfs            upload service config to IPFS | SERVICE_FILE, [PINATA_API_KEY]
+update-submodules         update git submodules
+check-requirements        verify system requirements are installed
+```
+
+3. Use the commands with appropriate environment variables or arguments as indicated.
+
+4. Best practice: Use `validate-component` before deployment to ensure compliance with WAVS standards.
+
 For more information:
-- [WAVS Documentation](mdc:https:/docs.wavs.example.com)
-- [](mdc:https:/www.gnu.org/software/make/manual/make.html)
+- [WAVS tutorial](https://docs.wavs.dev/tutorial/1-overview)

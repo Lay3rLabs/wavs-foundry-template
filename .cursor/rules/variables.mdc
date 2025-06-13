@@ -1,17 +1,21 @@
 ---
-description: 
-globs: 
+description: Managing public and private configuration variables in WAVS components
+
 alwaysApply: true
 ---
 # Variables in WAVS Components
 
-WAVS components use two types of configuration variables: public variables set in the service manifest and private environment keys for sensitive data.
+WAVS components use two types of variables for configuration: public variables for non-sensitive data and environment keys for sensitive data.
 
 ## Public Variables
 
-Used for non-sensitive info, stored as strings in the `config` field of the service manifest.
+- Stored as strings in the `config` field of the service manifest.
+- Accessible in components via `host::config_var()`.
+
+### Steps to use public variables:
 
 1. Add variables to `config` in the manifest:
+
 ```json
 "component": {
     "config": {
@@ -20,24 +24,42 @@ Used for non-sensitive info, stored as strings in the `config` field of the serv
     }
 }
 ```
+
 2. Access in Rust component:
+
 ```rust
 let value = host::config_var("api_endpoint");
 ```
 
 ## Environment Keys (Private Variables)
 
-Used for sensitive data, prefixed with `WAVS_ENV_`, set by operators in their environment.
+- Used for sensitive data like API keys.
+- Must be prefixed with `WAVS_ENV_`.
+- Set by operators in their environment; not visible publicly.
+- WAVS validates presence before service runs.
+
+### Steps to use environment keys:
 
 1. Create or copy `.env` file:
+
 ```bash
 cp .env.example .env
 ```
-2. Set environment variables in `.env` or shell config:
+
+2. Set environment variable in `.env` or shell config:
+
 ```bash
 WAVS_ENV_MY_API_KEY=your_secret_key_here
 ```
-3. Add keys to `env_keys` array in manifest:
+
+3. Access in Rust component:
+
+```rust
+let api_key = std::env::var("WAVS_ENV_MY_API_KEY")?;
+```
+
+4. Declare in manifest under `env_keys`:
+
 ```json
 "component": {
     "env_keys": [
@@ -45,18 +67,15 @@ WAVS_ENV_MY_API_KEY=your_secret_key_here
     ]
 }
 ```
-4. Access in Rust component:
-```rust
-let api_key = std::env::var("WAVS_ENV_MY_API_KEY")?;
-```
 
 ## Local Execution
 
-Use `--config` flag with comma-separated `KEY=VALUE` pairs to set public variables locally:
+Use `--config` flag with comma-separated `KEY=VALUE` pairs to set config variables locally:
 
 ```bash
 wavs-cli exec --component <COMPONENT> --input <INPUT> --config api_endpoint=https://api.example.com
 ```
 
 For more information:
-- [](mdc:https:/docs.wavs.com/environment-variables)
+- [WAVS Variables Documentation](https://docs.wavs.example.com/variables)
+- [WAVS CLI Reference](https://docs.wavs.example.com/cli)

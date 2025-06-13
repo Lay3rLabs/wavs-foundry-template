@@ -1,15 +1,13 @@
 ---
-description: 
-globs: 
+description: How to make HTTP requests from WAVS components using wavs-wasi-utils
+
 alwaysApply: true
 ---
 # Network Requests in WAVS Components
 
-Use the [`wavs-wasi-utils`](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/index.html) crate to make HTTP requests from WAVS components. Since WASI runs synchronously, use `block_on` from the `wstd` crate to run async HTTP calls.
+Use the [`wavs-wasi-utils`](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/index.html) crate to make HTTP requests from WAVS components. Since WASI runs synchronously but network calls are async, use `block_on` from `wstd` to run async code synchronously.
 
-### Dependencies
-
-Add these to `Cargo.toml`:
+### 1. Add dependencies to Cargo.toml
 
 ```toml
 [dependencies]
@@ -19,19 +17,21 @@ serde = { version = "1.0.219", features = ["derive"] }  # Serialization
 serde_json = "1.0.140"             # JSON handling
 ```
 
-### HTTP Request Functions
+### 2. HTTP request functions
 
-- `http_request_get(url)` — creates a GET request
-- `http_request_post_json(url, data)` — creates a POST request with JSON body
-- `http_request_post_form(url, data)` — creates a POST request with form data
+```rust
+// Request creators
+http_request_get(url)               // GET request
+http_request_post_json(url, data)  // POST with JSON body
+http_request_post_form(url, data)  // POST with form data
 
-### Response Fetching Functions
+// Response handlers
+fetch_json(request)    // Parse JSON response
+fetch_string(request)  // Get response as string
+fetch_bytes(request)   // Get raw response bytes
+```
 
-- `fetch_json(request)` — fetches and parses JSON response
-- `fetch_string(request)` — fetches response as string
-- `fetch_bytes(request)` — fetches raw response bytes
-
-### Example: GET Request with Custom Headers
+### 3. Example: GET request with custom headers
 
 ```rust
 use wstd::runtime::block_on;
@@ -41,7 +41,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct ApiResponse {
-    // ... your response fields
+    // response fields
 }
 
 async fn make_request() -> Result<ApiResponse, String> {
@@ -59,7 +59,7 @@ fn process_data() -> Result<ApiResponse, String> {
 }
 ```
 
-### Example: POST Request with JSON Data
+### 4. Example: POST request with JSON data
 
 ```rust
 use wstd::runtime::block_on;
@@ -74,18 +74,15 @@ struct PostData {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct PostResponse {
-    // ... response fields
+    // response fields
 }
 
 async fn make_post_request() -> Result<PostResponse, String> {
     let url = "https://api.example.com/endpoint";
-    let post_data = PostData {
-        key1: "value1".to_string(),
-        key2: 42,
-    };
-    let response: PostResponse = fetch_json(
-        http_request_post_json(&url, &post_data)?
-    ).await.map_err(|e| e.to_string())?;
+    let post_data = PostData { key1: "value1".to_string(), key2: 42 };
+    let response: PostResponse = fetch_json(http_request_post_json(&url, &post_data)?)
+        .await
+        .map_err(|e| e.to_string())?;
     Ok(response)
 }
 
@@ -94,15 +91,15 @@ fn process_data() -> Result<PostResponse, String> {
 }
 ```
 
-### Guidelines & Best Practices
+### Guidelines and best practices
 
-1. Use `block_on` to run async HTTP requests in synchronous WASI components.
-2. Use serde derives to serialize/deserialize JSON data automatically.
-3. Set appropriate headers (e.g., `Accept`, `Content-Type`, `User-Agent`) for API requests.
-4. Use `http_request_post_json` for JSON POST requests as it sets headers automatically.
-5. Handle errors by converting them to strings for easier debugging.
+- Use `block_on` to run async HTTP calls synchronously in WASI.
+- Use `http_request_post_json` for POST requests with JSON; it sets headers automatically.
+- Use serde derives to serialize/deserialize request and response data.
+- Set appropriate headers for GET requests manually.
+- Handle errors by converting them to strings for simplicity.
 
 For more information:
-- [wavs-wasi-utils crate documentation](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils)
-- [HTTP module docs](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/http/index.html)
-- [](mdc:variables)
+- [wavs-wasi-utils crate](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/index.html)
+- [HTTP module docs](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/http/index.html)
+- [Variables page](./variables)

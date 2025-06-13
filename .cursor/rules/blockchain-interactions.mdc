@@ -1,18 +1,19 @@
 ---
-description: 
-globs: 
+description: Guide for interacting with Ethereum and EVM-compatible blockchains from WAVS components using Rust crates and configuration.
+
 alwaysApply: true
 ---
 # Blockchain Interactions in WAVS Components
 
-Use the `wavs-wasi-utils` crate and Alloy ecosystem crates to interact with Ethereum and EVM-compatible chains from WAVS components. Configure chains in `wavs.toml` and generate Rust types from Solidity using the `sol!` macro.
+Use the `wavs-wasi-utils` crate and Alloy ecosystem crates to interact with Ethereum and other EVM chains from WAVS components. Define chain configs in `wavs.toml` and generate Rust types from Solidity using the `sol!` macro.
 
-1. **Setup dependencies in Cargo.toml:**
+1. **Setup Dependencies**
+
+Add these to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-wit-bindgen-rt = { version = "0.42.1", features = ["bitflags"] }
-wit-bindgen = "0.42.1"
+wit-bindgen-rt = { workspace = true, features = ["bitflags"] }
 wavs-wasi-utils = "0.4.0-beta.4"
 wstd = "0.5.3"
 
@@ -28,11 +29,11 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 ```
 
-Use `workspace = true` if managing versions centrally.
+2. **Configure Chains**
 
-2. **Configure chains in `wavs.toml`:**
+Define RPC endpoints and chain IDs in `wavs.toml`:
 
-```toml
+```toml wavs.toml
 [default.chains.evm.local]
 chain_id = "31337"
 ws_endpoint = "ws://localhost:8545"
@@ -45,16 +46,18 @@ ws_endpoint = "wss://eth.drpc.org"
 http_endpoint = "https://eth.drpc.org"
 ```
 
-3. **Generate Rust types from Solidity with `sol!` macro:**
+3. **Generate Rust Types from Solidity**
+
+Use the `sol!` macro to parse Solidity interfaces and generate Rust types:
 
 ```rust
 mod solidity {
     use alloy_sol_macro::sol;
 
-    // From Solidity file
+    // From file
     sol!("../../src/interfaces/ITypes.sol");
 
-    // Or inline Solidity definitions
+    // Inline definitions
     sol! {
         struct TriggerInfo {
             uint64 triggerId;
@@ -66,28 +69,49 @@ mod solidity {
 }
 ```
 
-4. **Access chain config and create provider:**
+Example in `trigger.rs`:
 
-```rust
+```rust trigger.rs
+pub mod solidity {
+    use alloy_sol_macro::sol;
+    pub use ITypes::*;
+
+    sol!("../../src/interfaces/ITypes.sol");
+
+    sol! {
+        function addTrigger(string data) external;
+    }
+}
+```
+
+4. **Access Chain Config and Create Provider**
+
+Use WAVS host bindings and `new_evm_provider` to create an RPC provider:
+
+```rust lib.rs
 use crate::bindings::host::get_evm_chain_config;
 use alloy_network::Ethereum;
 use alloy_provider::RootProvider;
 use wavs_wasi_utils::evm::new_evm_provider;
 
 let chain_config = get_evm_chain_config("local").unwrap();
+
 let provider: RootProvider<Ethereum> = new_evm_provider::<Ethereum>(
     chain_config.http_endpoint.unwrap(),
 );
 ```
 
-5. **Example: Query ERC721 NFT balance**
+5. **Example: Query ERC721 NFT Balance**
 
-```rust
+```rust lib.rs
 use crate::bindings::host::get_evm_chain_config;
 use alloy_network::Ethereum;
 use alloy_provider::RootProvider;
 use alloy_sol_types::sol;
-use wavs_wasi_utils::evm::{alloy_primitives::{Address, U256}, new_evm_provider};
+use wavs_wasi_utils::evm::{
+    alloy_primitives::{Address, U256},
+    new_evm_provider,
+};
 use alloy_rpc_types::TransactionInput;
 use wstd::runtime::block_on;
 
@@ -113,41 +137,22 @@ pub fn query_nft_ownership(address: Address, nft_contract: Address) -> Result<bo
         };
 
         let result = provider.call(tx).await.map_err(|e| e.to_string())?;
+
         let balance: U256 = U256::from_be_slice(&result);
         Ok(balance > U256::ZERO)
     })
 }
 ```
 
-6. **Best practices and guidelines:**
+6. **Additional Notes**
 
-- Use `wavs.toml` for chain configuration to avoid hardcoding endpoints.
-- Use `sol!` macro to generate Rust bindings from Solidity interfaces for type safety.
-- Use `new_evm_provider` to create providers from chain config endpoints.
-- Use `block_on` from `wstd` to run async code synchronously in components.
-- Handle errors with `anyhow` or proper error propagation.
-- Rebuild after updating Solidity files to regenerate Rust types.
-
-7. **Useful crates:**
-
-- `wavs-wasi-utils`: HTTP and blockchain interaction utilities, including `decode_event_log_data` macro.
-- Alloy crates (`alloy-primitives`, `alloy-provider`, `alloy-network`, `alloy-sol-types`, `alloy-sol-macro`): Ethereum types, network, ABI handling, and Solidity macro.
-- `wstd`: WASI standard library with async utilities.
-- `serde`/`serde_json`: Serialization and JSON handling.
-- `anyhow`: Error handling.
+- Use `alloy-contract` crate for higher-level contract interactions.
+- The `decode_event_log_data` macro decodes Ethereum event logs from triggers into Rust types implementing `SolEvent`.
+- Re-run `cargo build` after updating Solidity files used with `sol!`.
 
 For more information:
-- [wavs-wasi-utils crate documentation](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/index.html)
-- [Alloy sol! macro documentation](mdc:https:/docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html)
-- [Utilities and crates page](mdc:utilities)
-- [wavs-wasi-utils docs](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils)
-- [Alloy documentation](mdc:https:/docs.rs/alloy/latest/alloy)
-- [Example querying NFT ownership](mdc:https:/github.com/Lay3rLabs/wavs-art/blob/main/components/autonomous-artist/src/evm.rs)
-- [alloy-primitives](mdc:https:/docs.rs/alloy-primitives/latest/alloy_primitives)
-- [alloy-provider](mdc:https:/docs.rs/alloy-provider/latest/alloy_provider)
-- [alloy-network](mdc:https:/docs.rs/alloy-network/latest/alloy_network)
-- [alloy-sol-types](mdc:https:/docs.rs/alloy-sol-types/latest/alloy_sol_types)
-- [wstd](mdc:https:/docs.rs/wstd/latest/wstd)
-- [serde](mdc:https:/docs.rs/serde/latest/serde)
-- [serde_json](mdc:https:/docs.rs/serde_json/latest/serde_json)
-- [](mdc:https:/docs.rs/anyhow/latest/anyhow)
+- [wavs-wasi-utils crate](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/)
+- [Alloy crate ecosystem](https://docs.rs/alloy/latest/alloy/)
+- [sol! macro documentation](https://docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html)
+- [alloy-contract crate](https://crates.io/crates/alloy-contract)
+- [Example NFT query](https://github.com/Lay3rLabs/wavs-art/blob/main/components/autonomous-artist/src/evm.rs)

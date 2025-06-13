@@ -1,23 +1,22 @@
 ---
-description: 
-globs: 
+description: Setup and manage WAVS service triggers for onchain events and scheduled executions
+
 alwaysApply: true
 ---
 # WAVS Service Triggers
 
-Triggers prompt WAVS services to run by listening for onchain events or schedules. Operators detect triggers, verify them, and execute components off-chain.
+Triggers prompt WAVS services to run by listening for onchain events or schedules. Operators verify triggers and execute components off-chain.
 
 ## Trigger Lifecycle
 
-1. Deploy a service with `service.json` manifest containing service, workflow, and trigger info.
-2. Operators maintain lookup maps for triggers by chain, contract, and event IDs.
-3. On trigger detection, verify and create a `TriggerAction` with config and event data.
-4. `TriggerAction` struct:
-
+1. Deploy a service with `service.json` manifest containing service info, workflow, components, triggers, and submission logic.
+2. Operators maintain lookup maps for triggers by chain, contract, and event identifiers.
+3. On trigger detection, operators verify and create a `TriggerAction` with config and event data.
+4. `TriggerAction` structure:
 ```rust
 pub struct TriggerAction {
     pub config: TriggerConfig,  // service_id, workflow_id, trigger type
-    pub data: TriggerData,      // actual trigger data
+    pub data: TriggerData,      // trigger-specific data
 }
 
 pub struct TriggerConfig {
@@ -48,8 +47,7 @@ pub enum TriggerData {
     }
 }
 ```
-
-5. `TriggerAction` is converted to WASI format and passed to the component, which decodes it using the `decode_event_log_data!` macro from [`wavs-wasi-utils`](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html).
+5. `TriggerAction` is converted to WASI format and passed to components, decoded using `decode_event_log_data!` macro from [`wavs-wasi-utils`](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html).
 
 ## Trigger Configuration
 
@@ -57,38 +55,37 @@ Set triggers in the `trigger` field of `service.json`. Each workflow requires on
 
 ### EVM Event Trigger
 
-Listens for specific contract events on EVM chains, passing raw logs to components.
+Listens for specific contract events on EVM chains. Passes raw log data to the component.
 
+Example:
 ```json
 "trigger": {
   "evm_contract_event": {
     "address": "0x00000000219ab540356cbb839cbe05303d7705fa",
-    "chain_name": "ethereum-mainnet",
+    "chain_name": "ethereum",
     "event_hash": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
   }
 }
 ```
 
-Configure EVM chain in `wavs.toml`:
-
+Configure chain in `wavs.toml`:
 ```toml
-[default.chains.evm.local]
-chain_id = "31337"
-ws_endpoint = "ws://localhost:8545"
-http_endpoint = "http://localhost:8545"
-poll_interval_ms = 7000
+[default.chains.evm.ethereum]
+chain_id = "1"
+ws_endpoint = "wss://eth.drpc.org"
+http_endpoint = "https://eth.drpc.org"
 ```
 
 Set EVM credential in `.env`:
-
 ```env
-WAVS_CLI_EVM_CREDENTIAL="0x5ce146f435835b1762ed602088740d201b68fd94bf808f97fd04588f1a63c9ab"
+WAVS_CLI_EVM_CREDENTIAL="0x5ze146f435835b1762ed602088740d201b68fd94bf808f97fd04588f1a63c9ab"
 ```
 
 ### Cosmos Event Trigger
 
-Monitors Cosmos smart contract events, passing emitted contract data to components.
+Monitors Cosmos smart contract events by type and address. Passes emitted contract data to component.
 
+Example:
 ```json
 "trigger": {
   "cosmos_contract_event": {
@@ -104,8 +101,7 @@ Monitors Cosmos smart contract events, passing emitted contract data to componen
 }
 ```
 
-Configure Cosmos chain in `wavs.toml`:
-
+Configure chain in `wavs.toml`:
 ```toml
 [default.chains.cosmos.neutron]
 chain_id = "pion-1"
@@ -117,15 +113,15 @@ gas_denom = "untrn"
 ```
 
 Set Cosmos mnemonic in `.env`:
-
 ```env
 WAVS_CLI_COSMOS_MNEMONIC="large slab plate twenty laundry illegal vacuum phone drum example topic reason"
 ```
 
 ### Cron Trigger
 
-Executes components on a schedule defined by a cron expression with optional start/end times.
+Executes component on a schedule defined by a cron expression with optional start/end times. Passes trigger timestamp.
 
+Example:
 ```json
 "trigger": {
   "cron": {
@@ -136,30 +132,31 @@ Executes components on a schedule defined by a cron expression with optional sta
 }
 ```
 
-Cron expression format:
+Cron format (seconds to day of week):
 
 ```
 * * * * * *
 │ │ │ │ │ └─ Day of week (0-6, Sunday=0)
-│ │ │ │ └─── Month (1-12)
-│ │ │ └───── Day of month (1-31)
-│ │ └─────── Hour (0-23)
-│ └───────── Minute (0-59)
-└─────────── Second (0-59)
+│ │ │ │ └── Month (1-12)
+│ │ │ └─── Day of month (1-31)
+│ │ └──── Hour (0-23)
+│ └───── Minute (0-59)
+└────── Second (0-59)
 ```
 
-Examples:
+Common examples:
 
-- `0 */5 * * * *` — every 5 minutes at 0 seconds
-- `0 0 */6 * * *` — every 6 hours at 0 minutes and seconds
-- `0 0 0 * * *` — daily at midnight
+- `0 */5 * * * *` - Every 5 minutes at 0 seconds
+- `0 0 */6 * * *` - Every 6 hours
+- `0 0 0 * * *` - Daily at midnight
 
-**Note:** Cron triggers may have slight latency due to network and clock drift. Use block triggers for precise timing.
+**Note:** Cron triggers may have latency due to network and clock drift. Use block triggers for precise timing.
 
 ### Block Trigger
 
-Runs components at regular block intervals on EVM or Cosmos chains.
+Runs component at regular block intervals on EVM or Cosmos chains. Passes block height and chain name.
 
+Example:
 ```json
 "trigger": {
   "block_interval": {
@@ -171,11 +168,14 @@ Runs components at regular block intervals on EVM or Cosmos chains.
 }
 ```
 
-Passes block height and chain name to the component.
+## Best Practices
 
----
+- Always configure chain info in `wavs.toml` and credentials in `.env`.
+- Use `decode_event_log_data!` macro in components to decode trigger data.
+- Use cron triggers for non-time-critical tasks; use block triggers for precise scheduling.
+- Maintain accurate lookup maps for trigger verification.
 
 For more information:
-- [WAVS WASI Utils `decode_event_log_data!` Macro](mdc:https:/docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html)
-- [Cron Expression Reference](mdc:https:/crontab.guru)
-- [](mdc:components/component)
+- [WAVS WASI Utils decode_event_log_data!](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html)
+- [Crontab Guru - Cron Expression Tool](https://crontab.guru/)
+- [WAVS Service JSON and Workflow Handbook](https://handbook.layerzero.network/handbook/service)

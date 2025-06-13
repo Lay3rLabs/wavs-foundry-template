@@ -1,16 +1,20 @@
 ---
-description: 
-globs: 
+description: Defines the WAVS service manifest structure and usage with the service manager contract.
+
 alwaysApply: true
 ---
 # Service Manifest and Manager
 
-The service manifest (`service.json`) defines a WAVS service's configuration, including workflows, components, submission, and the service manager contract. It is hosted on IPFS or HTTP(S) and linked via the service manager contract.
+A WAVS service is composed of smart contracts, operators, and offchain components defined in a `service.json` manifest. This manifest configures workflows, components, submission, and the service manager contract. It is hosted on IPFS or HTTP(S) and referenced by the service manager contract.
 
-1. Generate Manifest  
-Use `wavs-cli service` or the provided [build_service.sh](mdc:https:/github.com/Lay3rLabs/wavs-foundry-template/blob/main/script/build_service.sh) script to create a service manifest with one component.
+## Creating the Manifest
 
-2. Manifest Structure Example  
+1. Use `wavs-cli service` or the provided [build_service.sh](https://github.com/Lay3rLabs/wavs-foundry-template/blob/main/script/build_service.sh) script to generate a single-component service manifest.
+2. Define service info, workflows, components, submission, and manager details in `service.json`.
+3. Upload the manifest to IPFS or a publicly accessible server (e.g., Pinata).
+
+## Example Manifest
+
 ```json service.json
 {
     "id": "example-service-123",
@@ -76,33 +80,36 @@ Use `wavs-cli service` or the provided [build_service.sh](mdc:https:/github.com/
 }
 ```
 
-3. Upload Manifest  
-Upload the manifest to IPFS or a publicly accessible HTTP(S) server. For testing, launch a local IPFS node; for production, use services like Pinata.
+## Uploading the Manifest
 
 ```bash
+# Upload manifest to IPFS (local or remote)
 SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs
 
+# Retrieve IPFS gateway URL
 export IPFS_GATEWAY=$(sh script/get-ipfs-gateway.sh)
-curl "${IPFS_GATEWAY}/ipfs/${ipfs_cid}"
 
-cast send ${SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${SERVICE_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
+# Fetch uploaded content
+curl "${IPFS_GATEWAY}${ipfs_cid}"
+
+# Set service URI on service manager contract
+cast send ${WAVS_SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${SERVICE_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
 ```
 
-4. Service Manager Contract  
-- Registers operators with assigned weights to validate result submissions.  
-- Maintains the service URI linking to the manifest.  
-- Validates operator signatures against weights and threshold before processing data.
+## Service Manager Contract
 
-Best Practices:  
-- Ensure the manifest is accessible to all operators.  
-- Use proper permission settings in components.  
-- Keep the service manager contract address updated in the manifest.  
-- Register operators and set appropriate weights to secure submissions.
+- Registers operators with assigned weights; only registered operators can sign submissions.
+- Maintains the service URI linking to the manifest.
+- Validates operator signatures and ensures threshold weights are met before processing data.
+- Ensures operators are sorted correctly for submission validation.
 
-For more details, see:  
-- [Workflows](mdc:workflows)  
-- [Triggers](mdc:triggers)  
-- [Components](mdc:components/component)  
-- [Submission and aggregator](mdc:submission)  
-- [build_service.sh script](mdc:https:/github.com/Lay3rLabs/wavs-foundry-template/blob/main/script/build_service.sh)  
-- [](mdc:https:/app.pinata.cloud/developers/api-keys)
+For more information on manifest parts, see:
+
+- [Workflows](./workflows)
+- [Triggers](./triggers)
+- [Components](./components/component)
+- [Submission and aggregator](./submission)
+
+For more information:
+- [WAVS Foundry Template build_service.sh](https://github.com/Lay3rLabs/wavs-foundry-template/blob/main/script/build_service.sh)
+- [Pinata IPFS Service](https://app.pinata.cloud/developers/api-keys)
