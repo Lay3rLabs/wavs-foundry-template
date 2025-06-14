@@ -276,7 +276,7 @@ source script/upload-to-wasi-registry.sh || true
 
 # Package not found with wa.dev? -- make sure it is public
 export AGGREGATOR_URL=http://127.0.0.1:8001
-REGISTRY=${REGISTRY} source ./script/build-service.sh || true
+REGISTRY=${REGISTRY} source ./script/build-service.sh
 ```
 
 ## Upload to IPFS
