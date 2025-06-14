@@ -53,29 +53,29 @@ fi
 
 TRIGGER_EVENT_HASH=`cast keccak ${TRIGGER_EVENT}`
 
-SERVICE_ID=`$BASE_CMD init --name demo | jq -r .service.id`
+SERVICE_ID=`eval "${BASE_CMD} init --name demo" | jq -r .service.id`
 echo "Service ID: ${SERVICE_ID}"
 
-WORKFLOW_ID=`$BASE_CMD workflow add | jq -r .workflow_id`
+WORKFLOW_ID=`eval "$BASE_CMD workflow add" | jq -r .workflow_id`
 echo "Workflow ID: ${WORKFLOW_ID}"
 
-$BASE_CMD workflow trigger --id ${WORKFLOW_ID} set-evm --address ${TRIGGER_ADDRESS} --chain-name ${TRIGGER_CHAIN} --event-hash ${TRIGGER_EVENT_HASH} > /dev/null
+eval "$BASE_CMD workflow trigger --id ${WORKFLOW_ID} set-evm --address ${TRIGGER_ADDRESS} --chain-name ${TRIGGER_CHAIN} --event-hash ${TRIGGER_EVENT_HASH}" > /dev/null
 
 # If no aggregator is set, use the default
 SUB_CMD="set-evm"
 if [ -n "$AGGREGATOR_URL" ]; then
     SUB_CMD="set-aggregator --url ${AGGREGATOR_URL}"
 fi
-$BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDRESS} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
+eval "$BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDRESS} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS}" > /dev/null
 
-$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --domain ${REGISTRY} --package ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION}
+eval "$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-registry --domain ${REGISTRY} --package ${PKG_NAMESPACE}:${PKG_NAME} --version ${PKG_VERSION}"
 
-$BASE_CMD workflow component --id ${WORKFLOW_ID} permissions --http-hosts '*' --file-system true > /dev/null
-$BASE_CMD workflow component --id ${WORKFLOW_ID} time-limit --seconds 30 > /dev/null
-$BASE_CMD workflow component --id ${WORKFLOW_ID} env --values WAVS_ENV_SOME_SECRET > /dev/null
-$BASE_CMD workflow component --id ${WORKFLOW_ID} config --values 'key=value,key2=value2' > /dev/null
+eval "$BASE_CMD workflow component --id ${WORKFLOW_ID} permissions --http-hosts '*' --file-system true" > /dev/null
+eval "$BASE_CMD workflow component --id ${WORKFLOW_ID} time-limit --seconds 30" > /dev/null
+eval "$BASE_CMD workflow component --id ${WORKFLOW_ID} env --values WAVS_ENV_SOME_SECRET" > /dev/null
+eval "$BASE_CMD workflow component --id ${WORKFLOW_ID} config --values 'key=value,key2=value2'" > /dev/null
 
-$BASE_CMD manager set-evm --chain-name ${SUBMIT_CHAIN} --address `cast --to-checksum ${WAVS_SERVICE_MANAGER_ADDRESS}` > /dev/null
-$BASE_CMD validate > /dev/null
+eval "$BASE_CMD manager set-evm --chain-name ${SUBMIT_CHAIN} --address `cast --to-checksum ${WAVS_SERVICE_MANAGER_ADDRESS}`" > /dev/null
+eval "$BASE_CMD validate" > /dev/null
 
 echo "Configuration file created ${FILE_LOCATION}. Watching events from '${TRIGGER_CHAIN}' & submitting to '${SUBMIT_CHAIN}'."

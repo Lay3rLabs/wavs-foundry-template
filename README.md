@@ -264,7 +264,6 @@ source script/deploy-contracts.sh
 Deploy the compiled component with the contract information from the previous steps. Review the [makefile](./Makefile) for more details and configuration options.`TRIGGER_EVENT` is the event that the trigger contract emits and WAVS watches for. By altering `SERVICE_TRIGGER_ADDR` you can watch events for contracts others have deployed.
 
 ```bash docci-delay-per-cmd=3
-
 export COMPONENT_FILENAME=evm_price_oracle.wasm
 export PKG_NAME="evmrustoracle"
 export PKG_VERSION="0.1.0"
