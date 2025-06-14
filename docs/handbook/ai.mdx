@@ -91,8 +91,6 @@ queries the usdt contract, and returns the balance of that address.
 
 #### Verifiable AI component
 
-This prompt will create a component that takes a prompt as input, sends an api request to OpenAI, and returns the response. This example utilizes the OpenAI API with a seed to make the response more deterministic. Please note that while OpenAI models can use seeds, they are not guaranteed to be 100% deterministic. This example is for demonstration purposes and should not be used in production.
-
 ```
 Please make a component that takes a prompt as input, sends an api request to OpenAI,
 and returns the response.
@@ -120,6 +118,8 @@ cp .env.example .env
 # place your key in .env (must be prefixed with WAVS_ENV_)
 WAVS_ENV_OPENAI_KEY=your_api_key
 ```
+
+This example utilizes the OpenAI API with a [seed](https://platform.openai.com/docs/advanced-usage#reproducible-outputs) to make the response more deterministic. Please note that OpenAI models are not guaranteed to be 100% deterministic. This example is for demonstration purposes and should not be used in production.
 
 ## Component creation process
 
