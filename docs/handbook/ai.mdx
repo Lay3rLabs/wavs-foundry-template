@@ -128,10 +128,10 @@ WAVS_ENV_OPENAI_KEY=your_api_key
 
 4. After receiving the prompt, the agent will start creating your component. Review the agent's work and accept changes carefully. Make sure to double check what the agent is doing and be safe about accepting changes.
 
-5. The agent will start by planning it's component and will create a `plan.md` file. The agent will then make a new component and files according to this plan.
+5. The agent will start by planning its component and will create a `plan.md` file. The agent will then make a new component and files according to this plan.
 
 
-6. The agent will test it's component for errors by running validation tests using `make validate-component COMPONENT=your-component`.
+6. The agent will test its component for errors by running validation tests using `make validate-component COMPONENT=your-component`.
 
 7. The agent may need to make changes after running the Validation tests. After making changes, the agent will build the component using `WASI_BUILD_DIR=components/my-component make wasi-build`.
 
@@ -158,13 +158,13 @@ If you have any questions, join the WAVS DEVS Telegram channel: https://t.me/lay
 
 - While this repo contains rulefiles with enough context for creating simple components, coding agents are unpredictable and may inevitably run into problems.
 - Feel free to update the rulefiles for your specific purposes or if you run into regular errors.
-- Coding agents can sometimes try to over-engineer its fixes for errors. If you feel it is not being productive, it may be beneficial to start fresh. You may need to adjust your prompt.
+- Coding agents can sometimes try to over-engineer their fixes for errors. If you feel it is not being productive, it may be beneficial to start fresh. You may need to adjust your prompt.
 - If you are building a complex component, it may be helpful to have the agent build a simple component first and then expand upon it.
 - The agent may try to fix warnings unnecessarily. You can tell the agent to ignore minor warnings and any errors found in bindings.rs (it is auto-generated).
 
 ### Prompting
 
-This repo is designed to be used with short prompts for simple components. However, often times, coding agents will do better with more context.
+This repo is designed to be used with short prompts for simple components. However, often, coding agents will do better with more context.
 
 When creating a prompt, consider the following:
 
