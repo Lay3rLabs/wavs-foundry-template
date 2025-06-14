@@ -7,27 +7,22 @@ import { Callout } from 'fumadocs-ui/components/callout';
 import { DocsPage } from 'fumadocs-ui/page';
 docsignore-->
 
-The WAVS Foundry Template contains built-in AI rulefiles for creating components with minimal prompting. These rulefiles are an experimental feature and may not work as expected every time. Components created with AI should not be used in production without thorough review and testing.
+The WAVS Foundry Template contains built-in AI rulefiles for creating "one-shot" components with minimal prompting in Cursor or Claude Code.
+
+
+These rulefiles are an experimental feature and may not work as expected every time. Components created with AI should not be used in production without thorough review and testing.
 
 ## Claude Code
 
-Make sure to follow the [Claude Code installation instructions](https://docs.anthropic.com/en/docs/claude-code/getting-started) to install Claude Code and link your account.
-
-The Claude rulefile is `claude.md` and contains instructions for Claude on how to create a component. Learn more about Claude rulefiles: https://docs.anthropic.com/en/docs/claude-code/memory
-
+- Follow the [Claude Code installation instructions](https://docs.anthropic.com/en/docs/claude-code/getting-started) to install Claude Code and link your account.
+- The Claude rulefile is `claude.md` and contains instructions for Claude on how to create a component. Learn more about Claude rulefiles: https://docs.anthropic.com/en/docs/claude-code/memory
 
 ## Cursor
 
-Download Cursor: https://www.cursor.com/downloads
-
-The Cursor rulefiles are located in the `.cursor/rules` directory. When using Cursor, always attach `component-rules.mdc` file to the chat with your prompt.
-
-```sh Chat
-# Attach the rulefile to the chat
-@component-rules.mdc <your prompt>
-```
-
-Learn more about Cursor rulefiles: https://docs.cursor.com/context/rules
+- Download Cursor: https://www.cursor.com/downloads
+- The Cursor rulefiles are located in the `.cursor/rules` directory.
+- When using Cursor, always attach the `component-rules.mdc` file to the chat with your prompt.
+- Learn more about Cursor rulefiles: https://docs.cursor.com/context/rules
 
 ## Using AI to create components
 
@@ -61,16 +56,12 @@ npm run claude-code:unrestricted
 
 3. Enter your prompt in the agent chat. You can use the following examples as a starting point, or you can create your own prompt.
 
-
 <Callout title="Attaching rulefiles" type="warn">
 If you are using cursor, always attach `component-rules.mdc` file to the chat with your prompt.
 
-```sh Chat
-# Attach the rulefile to the chat
+```
 @component-rules.mdc <your prompt>
 ```
-
-While the Cursor agent is supposed to always have the provided rulefiles in context, it sometimes ignores the files unless you attach them to the chat. This is a known issue.
 
 </Callout>
 
@@ -83,7 +74,9 @@ These simple examples are provided to get you started.
 You can make a very simple prompt to create a component that can bring API responses verifiably onchain by including the API endpoint:
 
 ```
-Let's make a component that takes the input of a zip code, queries the openbrewerydb, and returns the breweries in the area.  @https://api.openbrewerydb.org/v1/breweries?by_postal=92101&per_page=3
+Let's make a component that takes the input of a zip code, queries the openbrewerydb, 
+and returns the breweries in the area.
+@https://api.openbrewerydb.org/v1/breweries?by_postal=92101&per_page=3
 ```
 
 #### Contract balance component
@@ -91,7 +84,8 @@ Let's make a component that takes the input of a zip code, queries the openbrewe
 You can also make components that interact with the blockchain:
 
 ```
-I want to build a new component that takes the input of a wallet address, queries the usdt contract, and returns the balance of that address.
+I want to build a new component that takes the input of a wallet address,
+queries the usdt contract, and returns the balance of that address.
 ```
 
 #### Verifiable AI component
@@ -99,7 +93,8 @@ I want to build a new component that takes the input of a wallet address, querie
 This prompt will create a component that takes a prompt as input, sends an api request to OpenAI, and returns the response. This example utilizes the OpenAI API with a seed to make the response more deterministic. Please note that while OpenAI models can use seeds, they are not guaranteed to be 100% deterministic. This example is for demonstration purposes and should not be used in production.
 
 ```
-Please make a component that takes a prompt as input, sends an api request to OpenAI, and returns the response.
+Please make a component that takes a prompt as input, sends an api request to OpenAI,
+and returns the response.
 
   Use this api structure:
   {
@@ -110,7 +105,8 @@ Please make a component that takes a prompt as input, sends an api request to Op
       {"role": "user", "content": "<PROMPT>"}
     ]
   }
- My api key is WAVS_ENV_OPENAI_KEY in my .env file.
+
+My api key is WAVS_ENV_OPENAI_KEY in my .env file.
 ```
 
 You'll need an [OPENAI API account and key](https://platform.openai.com/login) to use this prompt. The agent will include your API key in the component as a [private variable](./components/variables).
@@ -120,7 +116,7 @@ Make sure to include your API key in a `.env` file:
 ```sh
 # copy the .env.example file
 cp .env.example .env
-# place your API key in the .env file (private variables must be prefixed with WAVS_ENV_)
+# place your key in .env (must be prefixed with WAVS_ENV_)
 WAVS_ENV_OPENAI_KEY=your_api_key
 ```
 
@@ -129,7 +125,6 @@ WAVS_ENV_OPENAI_KEY=your_api_key
 4. After receiving the prompt, the agent will start creating your component. Review the agent's work and accept changes carefully. Make sure to double check what the agent is doing and be safe about accepting changes.
 
 5. The agent will start by planning its component and will create a `plan.md` file. The agent will then make a new component and files according to this plan.
-
 
 6. The agent will test its component for errors by running validation tests using `make validate-component COMPONENT=your-component`.
 
@@ -160,7 +155,7 @@ If you have any questions, join the WAVS DEVS Telegram channel: https://t.me/lay
 - Feel free to update the rulefiles for your specific purposes or if you run into regular errors.
 - Coding agents can sometimes try to over-engineer their fixes for errors. If you feel it is not being productive, it may be beneficial to start fresh. You may need to adjust your prompt.
 - If you are building a complex component, it may be helpful to have the agent build a simple component first and then expand upon it.
-- The agent may try to fix warnings unnecessarily. You can tell the agent to ignore minor warnings and any errors found in bindings.rs (it is auto-generated).
+- The agent may try to fix warnings unnecessarily. You can tell the agent to ignore minor warnings and any errors found in `bindings.rs` (it is auto-generated).
 
 ### Prompting
 
@@ -173,6 +168,7 @@ When creating a prompt, consider the following:
 - Provide endpoints.
 - You may need to provide API response structure if the agent is not understanding responses.
 - Be specific about what you want the agent to build.
+- Agents work systematically to build components. For best results, agent should make a plan before they start building.
 - Be patient. Coding agents are not perfect. They may make mistakes.
 
 ## Troubleshooting
