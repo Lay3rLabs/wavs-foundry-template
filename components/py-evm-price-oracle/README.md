@@ -13,7 +13,9 @@ pip install -r requirements.txt
 # initial bindings gen
 make check-package
 make convert-wasm-to-wit
+rm -rf layer_trigger_world wavs_py
 componentize-py --wit-path wavs:worker@0.4.0-beta.4.wit --world wavs:worker/layer-trigger-world bindings .
+
 componentize-py --wit-path wavs:worker@0.4.0-beta.4.wit --world wavs:worker/layer-trigger-world bindings wavs_py
 ```
 
