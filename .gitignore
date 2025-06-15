@@ -19,3 +19,10 @@ infra/*
 
 # Tools
 **/.claude/settings.local.json
+
+## Python
+venv/
+__pycache__/
+# TODO: move wavs_py & layer_trigger_world to its own pip package, similar to how it's done in Go
+wavs_py
+layer_trigger_world/
