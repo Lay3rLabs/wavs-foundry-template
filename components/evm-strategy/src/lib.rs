@@ -1,13 +1,9 @@
 mod trigger;
 use trigger::{decode_trigger_event, encode_trigger_output, Destination};
-use wavs_wasi_utils::http::{fetch_json, http_request_get};
 pub mod bindings;
 use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
 use serde::{Deserialize, Serialize};
-use wstd::{http::HeaderValue, runtime::block_on};
-
-mod vvv;
-use vvv::TokenRebalancer;
+use wstd::runtime::block_on;
 
 struct Component;
 export!(Component with_types_in bindings);
@@ -15,64 +11,34 @@ export!(Component with_types_in bindings);
 
 
 impl Guest for Component {
-    /// Main entry point for the price oracle component.
+    /// Main entry point for the vault lending strategy component.
     /// WAVS is subscribed to watch for events emitted by the blockchain.
     /// When WAVS observes an event is emitted, it will internally route the event and its data to this function (component).
     /// The processing then occurs before the output is returned back to WAVS to be submitted to the blockchain by the operator(s).
     ///
-    /// This is why the `Destination::Ethereum` requires the encoded trigger output, it must be ABI encoded for the solidity contract.
-    /// Failure to do so will result in a failed submission as the signature will not match the saved output.
-    ///
-    /// After the data is properly set by the operator through WAVS, any user can query the price data from the blockchain in the solidity contract.
-    /// You can also return `None` as the output if nothing needs to be saved to the blockchain. (great for performing some off chain action)
-    ///
     /// This function:
     /// 1. Receives a trigger action containing encoded data
-    /// 2. Decodes the input to get a cryptocurrency ID (in hex)
-    /// 3. Fetches current price data from CoinMarketCap
-    /// 4. Returns the encoded response based on the destination
+    /// 2. Decodes the input to get vault strategy parameters
+    /// 3. Calculates optimal lending strategy based on current vault state
+    /// 4. Returns the encoded response for on-chain validation and execution
     fn run(action: TriggerAction) -> std::result::Result<Option<WasmResponse>, String> {
         let (trigger_id, req, dest) =
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
 
-        // Convert bytes to string and parse first char as u64
-        let input = std::str::from_utf8(&req).map_err(|e| e.to_string())?;
-        println!("input id: {}", input);
-
-        let id = input.chars().next().ok_or("Empty input")?;
-        let id = id.to_digit(16).ok_or("Invalid hex digit")? as u64;
+        // Parse strategy parameters from input
+        let strategy_params: StrategyParams = serde_json::from_slice(&req)
+            .map_err(|e| format!("Failed to parse strategy params: {}", e))?;
+        
+        println!("Strategy params: {:?}", strategy_params);
 
         let res = block_on(async move {
-            // TODO: find 2 pools here instead of hardcode
-            let BTC = 1;
-            let LTC = 2;
-            let btc_price_data = get_price_feed(BTC).await?;
-            let btc_price_data = get_price_feed(LTC).await?;
-
-            let mut rebalancer = TokenRebalancer::new();
-
-            println!("Initial state:");
-            rebalancer.print_balances();
-            println!("Last rebalance tick: {}", rebalancer.last_rebalance_tick);
-
-            // Simulate rebalancing
-            let min_tokens_amount = vec![0u128, 0u128]; // No minimum for demo
-            let min_tick_threshold = 50;
-
-            match rebalancer.rebalance_tokens(min_tokens_amount, min_tick_threshold) {
-                Ok(result) => {
-                    println!("\nRebalance successful:");
-                    println!("  Amount in: {}", result.amount_in);
-                    println!("  Token index: {}", result.token_index);
-                    println!("  Amount out: {}", result.amount_out);
-                }
-                Err(e) => {
-                    println!("\nRebalance failed: {}", e);
-                }
-            }
-
-            println!("resp_data: {:?}", btc_price_data);
-            serde_json::to_vec(&btc_price_data).map_err(|e| e.to_string())
+            // Calculate optimal lending strategy
+            let lending_decision = calculate_lending_strategy(&strategy_params).await?;
+            
+            println!("Lending decision: {:?}", lending_decision);
+            
+            // Return the strategy decision for on-chain validation
+            serde_json::to_vec(&lending_decision).map_err(|e| e.to_string())
         })?;
 
         let output = match dest {
@@ -83,110 +49,73 @@ impl Guest for Component {
     }
 }
 
-/// Fetches cryptocurrency price data from CoinMarketCap's API
+/// Calculates the optimal lending strategy based on vault parameters
 ///
 /// # Arguments
-/// * `id` - CoinMarketCap's unique identifier for the cryptocurrency
+/// * `params` - Strategy parameters including vault state and market conditions
 ///
 /// # Returns
-/// * `PriceFeedData` containing:
-///   - symbol: The cryptocurrency's ticker symbol (e.g., "BTC")
-///   - price: Current price in USD
-///   - timestamp: Server timestamp of the price data
-///
-/// # Implementation Details
-/// - Uses CoinMarketCap's v3 API endpoint
-/// - Includes necessary headers to avoid rate limiting:
-///   * User-Agent to mimic a browser
-///   * Random cookie with current timestamp
-///   * JSON content type headers
-///
-/// As of writing (Mar 31, 2025), the CoinMarketCap API is free to use and has no rate limits.
-/// This may change in the future so be aware of issues that you may encounter going forward.
-/// There is a more proper API for pro users that you can use
-/// - <https://coinmarketcap.com/api/documentation/v1/>
-async fn get_price_feed(id: u64) -> Result<PriceFeedData, String> {
-    let url = format!(
-        "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id={}&range=1h",
-        id
-    );
-
-    let current_time = std::time::SystemTime::now().elapsed().unwrap().as_secs();
-
-    let mut req = http_request_get(&url).map_err(|e| e.to_string())?;
-    req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
-    req.headers_mut().insert("Content-Type", HeaderValue::from_static("application/json"));
-    req.headers_mut()
-        .insert("User-Agent", HeaderValue::from_static("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"));
-    req.headers_mut().insert(
-        "Cookie",
-        HeaderValue::from_str(&format!("myrandom_cookie={}", current_time)).unwrap(),
-    );
-
-    let json: Root = fetch_json(req).await.map_err(|e| e.to_string())?;
-
-    // round to the nearest 3 decimal places
-    let price = (json.data.statistics.price * 100.0).round() / 100.0;
-    // timestamp is 2025-04-30T19:59:44.161Z, becomes 2025-04-30T19:59:44
-    let timestamp = json.status.timestamp.split('.').next().unwrap_or("");
-
-    Ok(PriceFeedData { symbol: json.data.symbol, price, timestamp: timestamp.to_string() })
+/// * `LendingDecision` containing:
+///   - action: Whether to lend, recall, or hold
+///   - amount: Amount to lend/recall
+///   - target_ratio: Optimal lending ratio
+///   - confidence: Confidence level of the decision
+async fn calculate_lending_strategy(params: &StrategyParams) -> Result<LendingDecision, String> {
+    // Simple strategy logic - in production this would be more sophisticated
+    let current_utilization = if params.vault_total_assets > 0 {
+        (params.current_lent_amount as f64) / (params.vault_total_assets as f64)
+    } else {
+        0.0
+    };
+    
+    let target_ratio = 0.8; // 80% target lending ratio
+    let tolerance = 0.05; // 5% tolerance
+    
+    let action = if current_utilization < target_ratio - tolerance {
+        "lend".to_string()
+    } else if current_utilization > target_ratio + tolerance {
+        "recall".to_string()
+    } else {
+        "hold".to_string()
+    };
+    
+    let amount = if action == "lend" {
+        ((target_ratio * params.vault_total_assets as f64) - params.current_lent_amount as f64) as u64
+    } else if action == "recall" {
+        (params.current_lent_amount as f64 - (target_ratio * params.vault_total_assets as f64)) as u64
+    } else {
+        0
+    };
+    
+    Ok(LendingDecision {
+        action,
+        amount,
+        target_ratio,
+        confidence: 0.85, // Mock confidence score
+        timestamp: std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
+    })
 }
 
-/// Represents the price feed response data structure
-/// This is the simplified version of the data that will be sent to the blockchain
-/// via the Submission of the operator(s).
+/// Strategy parameters passed to the off-chain compute function
 #[derive(Debug, Serialize, Deserialize)]
-pub struct PriceFeedData {
-    symbol: String,
-    timestamp: String,
-    price: f64,
+pub struct StrategyParams {
+    vault_total_assets: u64,
+    current_lent_amount: u64,
+    lending_protocol_rate: f64,
+    vault_utilization: f64,
+    market_volatility: f64,
 }
 
-/// Root response structure from CoinMarketCap API
-/// Generated from the API response using <https://transform.tools/json-to-rust-serde>
-/// Contains detailed cryptocurrency information including price statistics
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Root {
-    pub data: Data,
-    pub status: Status,
+/// Decision output from the lending strategy calculation
+#[derive(Debug, Serialize, Deserialize)]
+pub struct LendingDecision {
+    action: String, // "lend", "recall", or "hold"
+    amount: u64,
+    target_ratio: f64,
+    confidence: f64,
+    timestamp: u64,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Data {
-    pub id: f64,
-    pub name: String,
-    pub symbol: String,
-    pub statistics: Statistics,
-    pub description: String,
-    pub category: String,
-    pub slug: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Statistics {
-    pub price: f64,
-    #[serde(rename = "totalSupply")]
-    pub total_supply: f64,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct CoinBitesVideo {
-    pub id: String,
-    pub category: String,
-    #[serde(rename = "videoUrl")]
-    pub video_url: String,
-    pub title: String,
-    pub description: String,
-    #[serde(rename = "previewImage")]
-    pub preview_image: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Status {
-    pub timestamp: String,
-    pub error_code: String,
-    pub error_message: String,
-    pub elapsed: String,
-    pub credit_count: f64,
-}
