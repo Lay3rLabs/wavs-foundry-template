@@ -12,7 +12,7 @@ The core logic of the price oracle in this example is located in the [`/evm-pric
 
 ## trigger.rs
 
-The [trigger.rs](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/components/evm-price-oracle/src/trigger.rs) file handles the decoding of incoming trigger data from the trigger event emitted by the trigger contract. The component uses `decode_event_log_data!()` from the [wavs-wasi-utils crate](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/) to decode the event log data and prepares it for processing within the WAVS component. For more information on different trigger types, visit the [Triggers page](../handbook/triggers). To learn more about trigger input handling, visit the [Component page](../handbook/components/component#trigger-inputs).
+The [trigger.rs](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/components/evm-price-oracle/src/trigger.rs) file handles the decoding of incoming trigger data from the trigger event emitted by the trigger contract. The component uses `decode_event_log_data!()` from the [wavs-wasi-utils crate](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/) to decode the event log data and prepares it for processing within the WAVS component. Trigger.rs handles both ABI encoded data for trigger and submission data and raw data for local testing. For more information on different trigger types, visit the [Triggers page](../handbook/triggers). To learn more about trigger input handling, visit the [Component page](../handbook/components/component#trigger-inputs).
 
 ```rust trigger.rs
 use crate::bindings::wavs::worker::layer_types::{
@@ -22,16 +22,22 @@ use alloy_sol_types::SolValue;
 use anyhow::Result;
 use wavs_wasi_utils::decode_event_log_data;
 
+/// Represents the destination where the trigger output should be sent
 pub enum Destination {
     Ethereum,
     CliOutput,
 }
 
+/// Decodes incoming trigger event data into its components
+/// Handles two types of triggers:
+/// 1. EvmContractEvent - Decodes Ethereum event logs using the NewTrigger ABI
+/// 2. Raw - Used for direct CLI testing with no encoding
 pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, Destination)> {
     match trigger_data {
         TriggerData::EvmContractEvent(TriggerDataEvmContractEvent { log, .. }) => {
             let event: solidity::NewTrigger = decode_event_log_data!(log)?;
-            let trigger_info = solidity::TriggerInfo::abi_decode(&event._triggerInfo)?;
+            let trigger_info =
+                <solidity::TriggerInfo as SolValue>::abi_decode(&event._triggerInfo)?;
             Ok((trigger_info.triggerId, trigger_info.data.to_vec(), Destination::Ethereum))
         }
         TriggerData::Raw(data) => Ok((0, data.clone(), Destination::CliOutput)),
@@ -39,6 +45,7 @@ pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, 
     }
 }
 
+/// Encodes the output data for submission back to Ethereum
 pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> WasmResponse {
     WasmResponse {
         payload: solidity::DataWithId {
@@ -50,13 +57,23 @@ pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> WasmR
     }
 }
 
-mod solidity {
+/// The `sol!` macro from alloy_sol_macro reads a Solidity interface file
+/// and generates corresponding Rust types and encoding/decoding functions.
+pub mod solidity {
     use alloy_sol_macro::sol;
     pub use ITypes::*;
 
+    // The objects here will be generated automatically into Rust types.
     sol!("../../src/interfaces/ITypes.sol");
+
+    // Encode string input from the trigger contract function
+    sol! {
+        function addTrigger(string data) external;
+    }
 }
 ```
+
+Visit the [Blockchain interactions page](../handbook/components/blockchain-interactions) for more information on the `sol!` macro and how to use it to generate Rust types from Solidity interfaces.
 
 ## Oracle component logic
 
@@ -65,9 +82,13 @@ The [`lib.rs`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/comp
 ```rust lib.rs
 mod trigger;
 use trigger::{decode_trigger_event, encode_trigger_output, Destination};
-use wavs_wasi_utils::http::{fetch_json, http_request_get};
+use wavs_wasi_utils::{
+    evm::alloy_primitives::hex,
+    http::{fetch_json, http_request_get},
+};
 pub mod bindings;
 use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
+use alloy_sol_types::SolValue;
 use serde::{Deserialize, Serialize};
 use wstd::{http::HeaderValue, runtime::block_on};
 ```
@@ -76,7 +97,7 @@ The `run` function is the main entry point for the price oracle component. WAVS 
 
 This is why the `Destination::Ethereum` requires the encoded trigger output, it must be ABI encoded for the solidity contract.
 
-After the data is properly set by the operator through WAVS, any user can query the price data from the blockchain in the solidity contract. You can also return `None` as the output if nothing needs to be saved to the blockchain. (great for performing some off chain action)
+After the data is submitted to the blockchain, any user can query the price data from the blockchain in the solidity contract. You can also return `None` as the output if nothing needs to be saved to the blockchain (useful for performing some off chain action).
 
 The `run` function:
 
@@ -86,20 +107,43 @@ The `run` function:
 4. Returns the encoded response based on the destination
 
 ```rust lib.rs
+
 struct Component;
 export!(Component with_types_in bindings);
 
 impl Guest for Component {
+
     fn run(action: TriggerAction) -> std::result::Result<Option<WasmResponse>, String> {
         let (trigger_id, req, dest) =
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
 
-        // Convert bytes to string and parse first char as u64
-        let input = std::str::from_utf8(&req).map_err(|e| e.to_string())?;
-        println!("input id: {}", input);
+        // Decode trigger data inline - handles hex string input
+        let request_input = {
+            // First, convert the input bytes to a string to check if it's a hex string
+            let input_str = String::from_utf8(req.clone())
+                .map_err(|e| format!("Input is not valid UTF-8: {}", e))?;
 
-        let id = input.chars().next().ok_or("Empty input")?;
-        let id = id.to_digit(16).ok_or("Invalid hex digit")? as u64;
+            // Check if it's a hex string (starts with "0x")
+            let hex_data = if input_str.starts_with("0x") {
+                // Decode the hex string to bytes
+                hex::decode(&input_str[2..])
+                    .map_err(|e| format!("Failed to decode hex string: {}", e))?
+            } else {
+                // If it's not a hex string, assume the input is already binary data
+                req.clone()
+            };
+
+            // Now ABI decode the binary data as a string parameter
+            <String as SolValue>::abi_decode(&hex_data)
+                .map_err(|e| format!("Failed to decode input as ABI string: {}", e))?
+        };
+        println!("Decoded string input: {}", request_input);
+
+        // Parse the entire string as a number for the ID
+        let id = request_input
+            .trim()
+            .parse::<u64>()
+            .map_err(|_| format!("Invalid number: {}", request_input))?;
 
         let res = block_on(async move {
             let resp_data = get_price_feed(id).await?;

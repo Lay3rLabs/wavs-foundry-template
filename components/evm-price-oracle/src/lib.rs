@@ -1,8 +1,12 @@
 mod trigger;
 use trigger::{decode_trigger_event, encode_trigger_output, Destination};
-use wavs_wasi_utils::http::{fetch_json, http_request_get};
+use wavs_wasi_utils::{
+    evm::alloy_primitives::hex,
+    http::{fetch_json, http_request_get},
+};
 pub mod bindings;
 use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
+use alloy_sol_types::SolValue;
 use serde::{Deserialize, Serialize};
 use wstd::{http::HeaderValue, runtime::block_on};
 
@@ -30,12 +34,33 @@ impl Guest for Component {
         let (trigger_id, req, dest) =
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
 
-        // Convert bytes to string and parse first char as u64
-        let input = std::str::from_utf8(&req).map_err(|e| e.to_string())?;
-        println!("input id: {}", input);
+        // Decode trigger data inline - handles hex string input
+        let request_input = {
+            // First, convert the input bytes to a string to check if it's a hex string
+            let input_str = String::from_utf8(req.clone())
+                .map_err(|e| format!("Input is not valid UTF-8: {}", e))?;
 
-        let id = input.chars().next().ok_or("Empty input")?;
-        let id = id.to_digit(16).ok_or("Invalid hex digit")? as u64;
+            // Check if it's a hex string (starts with "0x")
+            let hex_data = if input_str.starts_with("0x") {
+                // Decode the hex string to bytes
+                hex::decode(&input_str[2..])
+                    .map_err(|e| format!("Failed to decode hex string: {}", e))?
+            } else {
+                // If it's not a hex string, assume the input is already binary data
+                req.clone()
+            };
+
+            // Now ABI decode the binary data as a string parameter
+            <String as SolValue>::abi_decode(&hex_data)
+                .map_err(|e| format!("Failed to decode input as ABI string: {}", e))?
+        };
+        println!("Decoded string input: {}", request_input);
+
+        // Parse the entire string as a number for the ID
+        let id = request_input
+            .trim()
+            .parse::<u64>()
+            .map_err(|_| format!("Invalid number: {}", request_input))?;
 
         let res = block_on(async move {
             let resp_data = get_price_feed(id).await?;

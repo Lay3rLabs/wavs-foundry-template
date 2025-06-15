@@ -13,7 +13,7 @@ The service manifest defines the configuration and different parts of a WAVS ser
 
 ## Generate Manifest
 
-You can create the service.json file using the `wavs-cli service` command. The template provides a script to generate a single-component service with ease, [build_service.sh](https://github.com/Lay3rLabs/wavs-foundry-template/blob/main/script/build_service.sh).
+You can create the service.json file using the `wavs-cli service` command. The template provides a script to generate a single-component service with ease, [build_service.sh](https://github.com/Lay3rLabs/wavs-foundry-template/blob/main/script/build-service.sh).
 
 ## Example Manifest
 
@@ -22,7 +22,6 @@ You can create the service.json file using the `wavs-cli service` command. The t
     // Basic service information
     "id": "example-service-123",
     "name": "Example WAVS Service",
-
     // Workflows define the different execution paths in your service
     "workflows": {
         // Each workflow has a unique ID
@@ -145,4 +144,4 @@ The service manager contract defines the set of registered operators for a servi
 
 The service manager also maintains a service URI that points to the service manifest, connecting the operators to the service.
 
-Signatures are created by operators using their private keys to sign an envelope containing the data, and these signatures are collected by the aggregator which then submits them to the service manager contract for validation. The service manager contract validates that the signatures are from registered operators, checks that their total weight meets the threshold, and ensures the operators are properly sorted before allowing the data to be processed by the service handler contract.
+Signatures are created by operators using their private keys to sign an envelope containing the data, and these signatures are collected by the aggregator which then submits them to the service manager contract for validation. The service manager contract validates that the signatures are from registered operators, checks that their total weight meets the threshold, and ensures the operators are properly sorted before allowing the data to be processed by the [service handler](/handbook/submission) contract.
