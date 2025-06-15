@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "components/evm-price-oracle",
+     "components/evm-strategy",
 ]
 resolver = "2"
 
