@@ -2,7 +2,7 @@
 
 SP=""; if [[ "$(uname)" == *"Darwin"* ]]; then SP=" "; fi
 
-cd $(git rev-parse --show-toplevel) || exit 1
+cd $(git rev-parse --show-toplevel) || return
 
 mkdir -p .docker
 
@@ -10,7 +10,7 @@ mkdir -p .docker
 export OPERATOR_INDEX=${OPERATOR_INDEX:-$1}
 if [ -z "$OPERATOR_INDEX" ]; then
   echo "Please provide an operator index as the first argument or set OPERATOR_INDEX environment variable."
-  exit 1
+  return
 fi
 
 OPERATOR_LOC=infra/wavs-${OPERATOR_INDEX}
@@ -26,7 +26,7 @@ if [ -d "${OPERATOR_LOC}" ] && [ "$(ls -A ${OPERATOR_LOC})" ]; then
     sudo rm -rf ${OPERATOR_LOC}
   else
     echo -e "\nExiting without changes."
-    exit 1
+    return
   fi
 fi
 
@@ -52,7 +52,7 @@ rm ${TEMP_FILENAME}
 # Create startup script
 cat > "${OPERATOR_LOC}/start.sh" << EOF
 #!/bin/bash
-cd \$(dirname "\$0") || exit 1
+cd \$(dirname "\$0") || return
 
 IMAGE=ghcr.io/lay3rlabs/wavs:35c96a4
 WAVS_INSTANCE=wavs-${OPERATOR_INDEX}

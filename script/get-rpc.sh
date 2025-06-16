@@ -10,7 +10,7 @@ elif [ "$DEPLOY_ENV" = "TESTNET" ]; then
     RPC_URL=$(grep "^TESTNET_RPC_URL=" .env)
 else
     echo "Unknown DEPLOY_ENV: $DEPLOY_ENV"
-    exit 1
+    return
 fi
 
 echo "${RPC_URL}" | cut -d '=' -f2

@@ -15,7 +15,7 @@ if [ ! -f .env ]; then
     cp .env.example .env
     if [ $? -ne 0 ]; then
         echo "Failed to copy .env.example to .env"
-        exit 1
+        return
     fi
 fi
 
