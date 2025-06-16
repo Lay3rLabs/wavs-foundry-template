@@ -30,7 +30,7 @@ contract SolidityVault is IERC4626, ERC20 {
         return assets * _totalSupply / _totalAssets;
     }
 
-    function maxDeposit(address) external view returns (uint256) {
+    function maxDeposit(address) external pure returns (uint256) {
         return type(uint256).max;
     }
 
@@ -53,7 +53,7 @@ contract SolidityVault is IERC4626, ERC20 {
         return deposit(assets, msg.sender);
     }
 
-    function maxMint(address receiver) external view returns (uint256) {
+    function maxMint(address) external pure returns (uint256) {
         return type(uint256).max;
     }
 

@@ -29,7 +29,7 @@ contract VaultLendingStrategy {
 
     /// @notice Action types for lending decisions
     enum ActionType { HOLD, LEND, RECALL }
-    
+
     /// @notice Struct to represent lending decision from off-chain compute
     struct LendingDecision {
         ActionType action;      // 0=HOLD, 1=LEND, 2=RECALL
@@ -147,25 +147,25 @@ contract VaultLendingStrategy {
     /// @param amount Amount to recall
     function _recallAssets(uint256 amount) internal {
         if (lentAmount == 0) return; // Nothing to recall
-        
+
         // Simplified: withdraw all assets from protocol (in production, implement partial withdrawals)
         uint256 balanceBefore = asset.balanceOf(address(this));
         lendingProtocol.withdraw();
         uint256 balanceAfter = asset.balanceOf(address(this));
-        
+
         // Safely calculate totalRecalled to avoid underflow
         uint256 totalRecalled = balanceAfter > balanceBefore ? balanceAfter - balanceBefore : 0;
-        
+
         // We withdrew everything, so lentAmount is now 0
         lentAmount = 0;
-        
+
         // Calculate how much to keep vs deposit back to vault
         // We want to keep 'amount' tokens, deposit the rest to vault
         if (totalRecalled > amount) {
             uint256 excessToDeposit = totalRecalled - amount;
             vault.deposit(excessToDeposit, address(this));
         }
-        
+
         emit AssetsRecalled(amount);
     }
 
@@ -184,14 +184,14 @@ contract VaultLendingStrategy {
         uint256 maxWithdrawable = strategyVaultShares > 0 ? vault.convertToAssets(strategyVaultShares) : 0;
         uint256 availableAssets = asset.balanceOf(address(this));
         uint256 totalAvailable = availableAssets + maxWithdrawable;
-        
+
         // Target lend amount based on what we can actually access
         uint256 targetLendAmount = (totalAvailable * lendingRatio) / 10000;
 
         if (targetLendAmount > lentAmount) {
             // Need to lend more
             uint256 toLend = targetLendAmount - lentAmount;
-            
+
             // Make sure we don't try to lend more than we have access to
             if (toLend > totalAvailable) {
                 toLend = totalAvailable;
