@@ -67,7 +67,7 @@ contract MockLendingProtocol {
         depositInfo.principal = 0;
         depositInfo.accruedInterest = 0;
         depositInfo.lastUpdate = 0;
-        
+
         // Safely update totalDeposits to avoid underflow
         if (totalDeposits >= principal) {
             totalDeposits -= principal;
