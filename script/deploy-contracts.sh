@@ -6,7 +6,7 @@ if [ -z "$WAVS_SERVICE_MANAGER_ADDRESS" ]; then
         export WAVS_SERVICE_MANAGER_ADDRESS=$(jq -r '.addresses.WavsServiceManager' .nodes/avs_deploy.json)
     else
         echo "WAVS_SERVICE_MANAGER_ADDRESS is not set."
-        exit 1
+        return
     fi
 fi
 
