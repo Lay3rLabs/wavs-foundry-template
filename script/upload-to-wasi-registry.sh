@@ -2,22 +2,22 @@
 
 export REGISTRY=`bash ./script/get-registry.sh`
 if [ -z "$REGISTRY" ]; then
-    echo "REGISTRY is not set. Please set the REGISTRY environment variable." && exit 1
+    echo "REGISTRY is not set. Please set the REGISTRY environment variable." && return
 fi
 export PKG_NAMESPACE=`bash ./script/get-wasi-namespace.sh`
 if [ -z "$PKG_NAMESPACE" ]; then
-    echo "PKG_NAMESPACE is not set. Please set the PKG_NAMESPACE environment variable." && exit 1
+    echo "PKG_NAMESPACE is not set. Please set the PKG_NAMESPACE environment variable." && return
 fi
 
 
 if [ -z "$PKG_NAME" ]; then
-    echo "PKG_NAME is not set. Please set the PKG_NAME environment variable." && exit 1
+    echo "PKG_NAME is not set. Please set the PKG_NAME environment variable." && return
 fi
 if [ -z "$PKG_VERSION" ]; then
-    echo "PKG_VERSION is not set. Please set the PKG_VERSION environment variable." && exit 1
+    echo "PKG_VERSION is not set. Please set the PKG_VERSION environment variable." && return
 fi
 if [ -z "$COMPONENT_FILENAME" ]; then
-    echo "COMPONENT_FILENAME is not set. Please set the COMPONENT_FILENAME environment variable." && exit 1
+    echo "COMPONENT_FILENAME is not set. Please set the COMPONENT_FILENAME environment variable." && return
 fi
 
 # ===
