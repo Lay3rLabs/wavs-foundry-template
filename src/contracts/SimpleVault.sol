@@ -81,7 +81,7 @@ contract SolidityVault is IERC4626, ERC20 {
         return mint(shares, msg.sender);
     }
 
-    function maxWithdraw(address owner) external view returns (uint256) {
+    function maxWithdraw(address) external pure returns (uint256) {
         return type(uint256).max;
     }
 
@@ -121,7 +121,7 @@ contract SolidityVault is IERC4626, ERC20 {
         return withdraw(assets, msg.sender, msg.sender);
     }
 
-    function maxRedeem(address owner) external view returns (uint256) {
+    function maxRedeem(address) external pure returns (uint256) {
         return type(uint256).max;
     }
 
