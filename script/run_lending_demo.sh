@@ -11,7 +11,7 @@ echo "======================================"
 # Check if required environment variables are set
 if [ -z "$PRIVATE_KEY" ]; then
     echo "❌ Error: PRIVATE_KEY environment variable not set"
-    echo "Please set it with: export PRIVATE_KEY=your_private_key"
+    echo "Please set it with: export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
     exit 1
 fi
 
@@ -35,10 +35,10 @@ else
     echo "   You can also run: anvil --host 0.0.0.0 --port 8545"
     anvil --host 0.0.0.0 --port 8545 &
     ANVIL_PID=$!
-    
+
     # Wait for anvil to start
     sleep 3
-    
+
     # If we started anvil, we should use the default private key
     if [ "$RPC_URL" = "http://localhost:8545" ]; then
         export PRIVATE_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
@@ -125,7 +125,7 @@ if [ ! -z "$ANVIL_PID" ]; then
     echo ""
     echo "⚡ Anvil is running in the background (PID: $ANVIL_PID)"
     echo "   Press Ctrl+C to stop the demo and cleanup"
-    
+
     # Wait for user to stop
     wait $ANVIL_PID
 fi

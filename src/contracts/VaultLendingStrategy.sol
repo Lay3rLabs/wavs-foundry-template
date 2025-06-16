@@ -219,8 +219,6 @@ contract VaultLendingStrategy {
             }
         } else if (targetLendAmount < lentAmount) {
             // Need to recall some assets
-            uint256 toRecall = lentAmount - targetLendAmount;
-
             // This is simplified - in practice, you'd need to handle partial withdrawals
             uint256 balanceBefore = asset.balanceOf(address(this));
             lendingProtocol.withdraw();
