@@ -29,7 +29,6 @@ The `submit` field in a service.json file specifies the submission logic for a s
         }
     ]
 ```
-
 Submit can also be set to `none` if the service does not need to submit results to a contract. The component will still run, but the results will not be submitted.
 
 ## Submission contract
@@ -80,7 +79,6 @@ contract SimpleSubmit is ITypes, IWavsServiceHandler {
         // Decode the payload into your expected data structure
         // The payload format must match what your component outputs
         DataWithId memory dataWithId = abi.decode(envelope.payload, (DataWithId));
-
         // At this point, you can safely process the validated data
         // Add your custom logic here to handle the data
     }

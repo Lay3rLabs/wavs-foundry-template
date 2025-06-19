@@ -5,7 +5,7 @@ SUDO := $(shell if groups | grep -q docker; then echo ''; else echo 'sudo'; fi)
 
 # Define common variables
 CARGO=cargo
-COIN_MARKET_CAP_ID?=1
+INPUT_DATA?=1
 COMPONENT_FILENAME?=evm_price_oracle.wasm
 CREDENTIAL?=""
 DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:35c96a4
@@ -33,11 +33,17 @@ wasi-build:
 	@./script/build_components.sh $(WASI_BUILD_DIR)
 	@echo "✅ WASI build complete"
 
-## wasi-exec: executing the WAVS wasi component(s) | COMPONENT_FILENAME, COIN_MARKET_CAP_ID
+## wasi-exec: executing the WAVS wasi component(s) with ABI function | COMPONENT_FILENAME, INPUT_DATA
 wasi-exec: pull-image
 	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
 	--component "/data/compiled/$(COMPONENT_FILENAME)" \
-	--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)`
+	--input $(shell cast abi-encode "f(string)" "${INPUT_DATA}") \
+
+## wasi-exec-fixed: the same as wasi-exec, except uses a fixed input as bytes (used in Go & TS components) | COMPONENT_FILENAME, INPUT_DATA
+wasi-exec-fixed: pull-image
+	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
+	--component "/data/compiled/$(COMPONENT_FILENAME)" \
+	--input `cast format-bytes32-string $(INPUT_DATA)`
 
 ## clean: cleaning the project files
 clean: clean-docker
@@ -50,6 +56,25 @@ clean: clean-docker
 ## clean-docker: remove unused docker containers
 clean-docker:
 	@$(SUDO) docker rm -v $(shell $(SUDO) docker ps -a --filter status=exited -q) > /dev/null 2>&1 || true
+
+
+## validate-component: validate a WAVS component against best practices
+validate-component:
+	@if [ -z "$(COMPONENT)" ]; then \
+		echo "Usage: make validate-component COMPONENT=your-component-name"; \
+		echo "Example: make validate-component COMPONENT=eth-price-oracle"; \
+		exit 1; \
+	fi
+	@if [ ! -d "./components/$(COMPONENT)" ]; then \
+		echo "Error: Component directory ./components/$(COMPONENT) not found"; \
+		exit 1; \
+	fi
+	@if [ ! -d "./test_utils" ]; then \
+		echo "Error: Test utilities not found. Please ensure test_utils exists."; \
+		exit 1; \
+	fi
+	@cd test_utils && ./validate_component.sh $(COMPONENT)
+
 
 ## fmt: formatting solidity and rust code
 fmt:
