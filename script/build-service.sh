@@ -52,7 +52,7 @@ fi
 
 TRIGGER_EVENT_HASH=`cast keccak ${TRIGGER_EVENT}`
 
-SERVICE_ID=`eval "${BASE_CMD} init --name demo" | jq -r .service.id`
+export SERVICE_ID=`eval "${BASE_CMD} init --name demo" | jq -r .service.id`
 echo "Service ID: ${SERVICE_ID}"
 
 WORKFLOW_ID=`eval "$BASE_CMD workflow add" | jq -r .workflow_id`
