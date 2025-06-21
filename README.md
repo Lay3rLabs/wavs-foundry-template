@@ -314,8 +314,6 @@ WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${IPFS_URI} IPFS_GATEWAY=${IPFS_
 
 ## Register service specific operator
 
-Making test mnemonic: `cast wallet new-mnemonic --json | jq -r .mnemonic`
-
 Each service gets their own key path (hd_path). The first service starts at 1 and increments from there. Get the service ID
 
 ```bash
