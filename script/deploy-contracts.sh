@@ -10,7 +10,7 @@ if [ -z "$WAVS_SERVICE_MANAGER_ADDRESS" ]; then
     fi
 fi
 
-export RPC_URL=`bash ./script/get-rpc.sh`
+
 export DEPLOYER_PK=$(cat .nodes/deployer)
 
 forge create SimpleSubmit --json --broadcast -r ${RPC_URL} --private-key "${DEPLOYER_PK}" --constructor-args "${WAVS_SERVICE_MANAGER_ADDRESS}" > .docker/submit.json
