@@ -6,7 +6,6 @@ if git status --porcelain | grep -q "^.* components/"; then
     WASI_BUILD_DIR=components/evm-price-oracle make wasi-build
 fi
 
-
 ### === Deploy Eigenlayer ===
 
 # local: create deployer & auto fund. testnet: create & iterate check balance
@@ -26,15 +25,39 @@ sleep 1
 
 ### === Deploy Service ===
 export COMPONENT_FILENAME=evm_price_oracle.wasm
+if [ "$(sh ./script/get-deploy-status.sh)" = "TESTNET" ]; then
+    read -p "Enter the component filename (default: ${COMPONENT_FILENAME}): " input_filename
+    if [ -n "$input_filename" ]; then
+        export COMPONENT_FILENAME="$input_filename"
+    fi
+fi
+
 export PKG_NAME="evmrustoracle"
+if [ "$(sh ./script/get-deploy-status.sh)" = "TESTNET" ]; then
+    read -p "Enter the package name (default: ${PKG_NAME}): " input_pkg_name
+    if [ -n "$input_pkg_name" ]; then
+        export PKG_NAME="$input_pkg_name"
+    fi
+fi
+
 export PKG_VERSION="0.1.0"
+if [ "$(sh ./script/get-deploy-status.sh)" = "TESTNET" ]; then
+    read -p "Enter the package version (default: ${PKG_VERSION}): " input_pkg_version
+    if [ -n "$input_pkg_version" ]; then
+        export PKG_VERSION="$input_pkg_version"
+    fi
+fi
+
 # ** Testnet Setup: https://wa.dev/account/credentials/new -> warg login
 source script/upload-to-wasi-registry.sh || true
 sleep 1
 
 # Testnet: set values (default: local if not set)
-# export TRIGGER_CHAIN=holesky
-# export SUBMIT_CHAIN=holesky
+if [ "$(sh ./script/get-deploy-status.sh)" = "TESTNET" ]; then
+    export TRIGGER_CHAIN=holesky
+    export SUBMIT_CHAIN=holesky
+fi
+
 
 # Package not found with wa.dev? -- make sure it is public
 REGISTRY=${REGISTRY} source ./script/build-service.sh
@@ -72,19 +95,7 @@ wget -q --header="Content-Type: application/json" --post-data="{\"uri\": \"${IPF
 ### === Start WAVS ===
 bash ./script/create-operator.sh 1
 IPFS_GATEWAY=${IPFS_GATEWAY} bash ./infra/wavs-1/start.sh
-
-echo "Waiting for http://127.0.0.1:8080/app to be available..."
-timeout=30
-elapsed=0
-while ! curl -s http://127.0.0.1:8080/app > /dev/null; do
-    if [ $elapsed -ge $timeout ]; then
-        echo "❌ Timeout: Server not available after $timeout seconds"
-        return
-    fi
-    echo "Server not ready, waiting 2 seconds... ($elapsed/$timeout)"
-    sleep 2
-    elapsed=$((elapsed + 2))
-done
+sleep 5
 
 # Deploy the service JSON to WAVS so it now watches and submits.
 # 'opt in' for WAVS to watch (this is before we register to Eigenlayer)
@@ -93,9 +104,26 @@ WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${IPFS_URI} IPFS_GATEWAY=${IPFS_
 ### === Register service specific operator ===
 SERVICE_INDEX=0 source ./script/avs-signing-key.sh
 
-# TESTNET: set WAVS_SERVICE_MANAGER_ADDRESS
+# TODO: move this check into the middleware (?)
+# if testnet
+if [ "$(sh ./script/get-deploy-status.sh)" = "TESTNET" ]; then
+    export OPERATOR_ADDRESS=$(cast wallet address --private-key ${OPERATOR_PRIVATE_KEY})
+    while true; do
+        BALANCE=$(cast balance ${OPERATOR_ADDRESS} --rpc-url ${RPC_URL} --ether)
+        if [ "$BALANCE" != "0" ]; then
+            echo "OPERATOR_ADDRESS has balance: $BALANCE"
+            break
+        else
+            echo "Waiting for ${OPERATOR_ADDRESS} (operator) to have a balance..."
+            sleep 5
+        fi
+    done
+fi
+
 export WAVS_SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager ./.nodes/avs_deploy.json)
 COMMAND="register ${OPERATOR_PRIVATE_KEY} ${AVS_SIGNING_ADDRESS} 0.001ether" make wavs-middleware
 
 # Verify registration
 COMMAND="list_operator" PAST_BLOCKS=500 make wavs-middleware
+
+echo "✅ Deployment complete!"
