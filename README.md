@@ -233,6 +233,31 @@ cp .env.example .env
 make start-all-local
 ```
 
+## WAVS Deployment Script
+
+This script automates the complete WAVS deployment process in a single command:
+
+### What It Does
+
+1. **Build Check**: Rebuilds WebAssembly component if changes detected
+2. **Create Deployer**: Sets up and funds deployer account
+3. **Deploy Eigenlayer**: Deploys service manager contract
+4. **Deploy Contracts**: Creates trigger and submission contracts
+5. **Upload Component**: Publishes WebAssembly component to WASI registry
+6. **Build Service**: Creates service configuration
+7. **Upload to IPFS**: Stores service metadata on IPFS
+8. **Set Service URI**: Registers IPFS URI with service manager
+9. **Start Aggregator**: Launches result aggregation service
+10. **Start WAVS**: Launches operator service with readiness check
+11. **Deploy Service**: Configures WAVS to monitor trigger events
+12. **Generate Keys**: Creates operator signing keys
+13. **Register Operator**: Registers with Eigenlayer AVS (0.001 ETH stake)
+14. **Verify Registration**: Confirms operator registration
+
+### Result
+
+A fully operational WAVS service that monitors blockchain events, executes WebAssembly components, and submits verified results on-chain.
+
 ```bash
 export RPC_URL=`bash ./script/get-rpc.sh`
 export AGGREGATOR_URL=http://127.0.0.1:8001
