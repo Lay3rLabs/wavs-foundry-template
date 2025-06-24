@@ -72,7 +72,9 @@ export IPFS_GATEWAY="$(bash script/get-ipfs-gateway.sh)"
 export IPFS_URI="ipfs://${ipfs_cid}"
 IPFS_URL="${IPFS_GATEWAY}${ipfs_cid}"
 echo "IPFS_URL=${IPFS_URL}"
-curl ${IPFS_URL}
+
+echo "Querying to verify IPFS upload... (120 second timeout)"
+curl ${IPFS_URL} --connect-timeout 120 --max-time 120
 
 if [ "$DEPLOYER_PK" ]; then
     echo ""
@@ -105,7 +107,6 @@ WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${IPFS_URI} IPFS_GATEWAY=${IPFS_
 SERVICE_INDEX=0 source ./script/avs-signing-key.sh
 
 # TODO: move this check into the middleware (?)
-# if testnet
 if [ "$(sh ./script/get-deploy-status.sh)" = "TESTNET" ]; then
     export OPERATOR_ADDRESS=$(cast wallet address --private-key ${OPERATOR_PRIVATE_KEY})
     while true; do
