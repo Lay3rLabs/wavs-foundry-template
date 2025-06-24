@@ -58,10 +58,9 @@ if [ "$(sh ./script/get-deploy-status.sh)" = "TESTNET" ]; then
     export SUBMIT_CHAIN=holesky
 fi
 
-
 # Package not found with wa.dev? -- make sure it is public
 REGISTRY=${REGISTRY} source ./script/build-service.sh
-sleep 0.5
+sleep 1
 
 # === Upload service.json to IPFS ===
 # local: 127.0.0.1:5001 | testnet: https://app.pinata.cloud/. set PINATA_API_KEY to JWT token in .env
