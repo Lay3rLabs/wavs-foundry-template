@@ -12,7 +12,7 @@ replace (
 )
 
 require (
-	github.com/Lay3rLabs/wavs-wasi/go v0.4.0-beta.4
+	github.com/Lay3rLabs/wavs-wasi/go v0.4.0
 	github.com/dev-wasm/dev-wasm-go/lib v0.0.0-20240907000152-b653306ed695
 	go.bytecodealliance.org/cm v0.2.2
 )
