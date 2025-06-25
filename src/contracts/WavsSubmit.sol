@@ -60,7 +60,7 @@ contract SimpleSubmit is ITypes, IWavsServiceHandler {
         _data = _datas[_triggerId];
     }
 
-    function getServiceManager() external view override returns (address) {
+    function getServiceManager() external view returns (address) {
         return address(_serviceManager);
     }
 }
