@@ -78,7 +78,7 @@ IPFS_URL="${IPFS_GATEWAY}${ipfs_cid}"
 echo "IPFS_URL=${IPFS_URL}"
 
 echo "Querying to verify IPFS upload... (120 second timeout)"
-curl ${IPFS_URL} --connect-timeout 120 --max-time 120
+curl ${IPFS_URL} --connect-timeout 120 --max-time 120 --show-error --fail
 
 if [ "$DEPLOYER_PK" ]; then
     echo ""
