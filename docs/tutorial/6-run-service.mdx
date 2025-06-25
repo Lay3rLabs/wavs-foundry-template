@@ -29,6 +29,20 @@ You can stop the services with `ctrl+c`. Some MacOS terminals require pressing t
 
 </Callout>
 
+<Callout title="Run super simple" type="info">
+
+You can skip all the setup steps below and just run a single command to deploy and run the entire service setup
+
+```bash
+export RPC_URL=`bash ./script/get-rpc.sh`
+export AGGREGATOR_URL=http://127.0.0.1:8001
+
+bash ./script/deploy-script.sh
+```
+
+This performs all the below steps (with the exception of actually triggering the contract).
+
+</Callout>
 
 With the chain running, you can deploy and run your service.
 
