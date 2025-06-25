@@ -1,6 +1,11 @@
 #!/bin/bash
 # set -e
 
+if [ ! -d compiled/ ] || [ -z "$(find compiled/ -name '*.wasm')" ]; then
+    echo "No WASM files found in compiled/. Building components."
+    make wasi-build
+fi
+
 if git status --porcelain | grep -q "^.* components/"; then
     echo "Found pending changes in components/*, building"
     WASI_BUILD_DIR=components/evm-price-oracle make wasi-build
@@ -103,6 +108,8 @@ sleep 5
 WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${IPFS_URI} IPFS_GATEWAY=${IPFS_GATEWAY} make deploy-service
 
 ### === Register service specific operator ===
+
+# OPERATOR_PRIVATE_KEY, AVS_SIGNING_ADDRESS
 SERVICE_INDEX=0 source ./script/avs-signing-key.sh
 
 # TODO: move this check into the middleware (?)
@@ -124,6 +131,6 @@ export WAVS_SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager ./.nod
 COMMAND="register ${OPERATOR_PRIVATE_KEY} ${AVS_SIGNING_ADDRESS} 0.001ether" make wavs-middleware
 
 # Verify registration
-COMMAND="list_operator" PAST_BLOCKS=500 make wavs-middleware
+COMMAND="list_operators" PAST_BLOCKS=500 make wavs-middleware
 
 echo "✅ Deployment complete!"

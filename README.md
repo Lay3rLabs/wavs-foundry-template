@@ -130,7 +130,7 @@ warg key new
 ```bash docci-ignore
 # if foundry is not installed:
 # `curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup`
-forge init --template Lay3rLabs/wavs-foundry-template my-wavs --branch main
+forge init --template Lay3rLabs/wavs-foundry-template my-wavs --branch 0.4
 ```
 
 > \[!TIP]

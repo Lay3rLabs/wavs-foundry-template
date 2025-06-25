@@ -129,7 +129,7 @@ export WAVS_SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager ./.nod
 COMMAND="register ${OPERATOR_PRIVATE_KEY} ${AVS_SIGNING_ADDRESS} 0.001ether" make wavs-middleware
 
 # Verify registration
-COMMAND="list_operator" PAST_BLOCKS=500 make wavs-middleware
+COMMAND="list_operators" PAST_BLOCKS=500 make wavs-middleware
 ```
 
 ## Trigger the service
