@@ -11,7 +11,7 @@ else
 fi
 
 PORT=8545
-MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.6
+MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0
 FORK_RPC_URL=${FORK_RPC_URL:-"${TESTNET_RPC_URL}"}
 DEPLOY_ENV=$(sh ./script/get-deploy-status.sh)
 

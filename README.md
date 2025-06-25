@@ -120,6 +120,8 @@ cargo binstall cargo-component wasm-tools warg-cli wkg --locked --no-confirm --f
 wkg config --default-registry wa.dev
 
 # Allow publishing to a registry
+#
+# if WSL: `warg config --keyring-backend linux-keyutils`
 warg key new
 ```
 
@@ -130,7 +132,7 @@ warg key new
 ```bash docci-ignore
 # if foundry is not installed:
 # `curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup`
-forge init --template Lay3rLabs/wavs-foundry-template my-wavs --branch main
+forge init --template Lay3rLabs/wavs-foundry-template my-wavs --branch 0.4
 ```
 
 > \[!TIP]

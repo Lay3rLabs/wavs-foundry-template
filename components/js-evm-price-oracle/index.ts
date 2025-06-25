@@ -1,4 +1,4 @@
-import { TriggerAction, WasmResponse } from "./out/wavs:worker@0.4.0-beta.4";
+import { TriggerAction, WasmResponse } from "./out/wavs:worker@0.4.0";
 import { decodeTriggerEvent, encodeOutput, Destination } from "./trigger";
 
 async function run(triggerAction: TriggerAction): Promise<WasmResponse> {

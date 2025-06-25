@@ -10,6 +10,13 @@ if [ -z "$WAVS_SERVICE_MANAGER_ADDRESS" ]; then
     fi
 fi
 
+forge build
+if [ $? -ne 0 ]; then
+    echo "Forge build failed. Running 'npm install' and deleting the 'out/' and 'cache/' directory."
+    npm install
+    rm -rf out/ cache/
+    forge build
+fi
 
 export DEPLOYER_PK=$(cat .nodes/deployer)
 
