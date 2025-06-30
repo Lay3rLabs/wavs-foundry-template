@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-set -e
+
 # set -x
 
 # have an optional argument $1, if set, use it as the agg index
