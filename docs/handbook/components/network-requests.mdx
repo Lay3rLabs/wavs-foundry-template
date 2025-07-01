@@ -60,8 +60,7 @@ struct ApiResponse {
 async fn make_request() -> Result<ApiResponse, String> {
     let url = "https://api.example.com/endpoint";
     let mut req = http_request_get(&url).map_err(|e| e.to_string())?;
-
-    // Set required headers for API requests
+    // Set headers for API requests
     req.headers_mut().insert(
         "Accept",
         HeaderValue::from_static("application/json")
@@ -74,12 +73,10 @@ async fn make_request() -> Result<ApiResponse, String> {
         "User-Agent",
         HeaderValue::from_static("Mozilla/5.0")
     );
-
     // Use fetch_json to automatically parse the response
     let json: ApiResponse = fetch_json(req)
         .await
         .map_err(|e| e.to_string())?;
-
     Ok(json)
 }
 
@@ -118,12 +115,10 @@ async fn make_post_request() -> Result<PostResponse, String> {
         key1: "value1".to_string(),
         key2: 42,
     };
-
     // http_request_post_json automatically sets JSON headers
     let response: PostResponse = fetch_json(
         http_request_post_json(&url, &post_data)?
     ).await.map_err(|e| e.to_string())?;
-
     Ok(response)
 }
 

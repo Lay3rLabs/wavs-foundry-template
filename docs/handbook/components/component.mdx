@@ -32,7 +32,7 @@ When building WASI components, keep in mind that components can receive the [tri
 
 1. **On-chain events**: When triggered by an EVM event, the data comes through the `TriggerAction` with `TriggerData::EvmContractEvent`.
 
-2. **Local testing**: When using `make wasi-exec` command in the template to test a component, the data comes through `TriggerData::Raw`. No abi decoding is required, and the output is returned as raw bytes.
+2. **Local testing**: When using `make wasi-exec` command in the template to test a component, the data comes through `TriggerData::Raw`.
 
 Here's how the example component handles both cases in `trigger.rs`:
 
@@ -47,7 +47,8 @@ pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, 
         TriggerData::EvmContractEvent(TriggerDataEvmContractEvent { log, .. }) => {
             // Decode Ethereum event logs using the `decode_event_log_data!` macro
             let event: solidity::NewTrigger = decode_event_log_data!(log)?;
-            let trigger_info = solidity::TriggerInfo::abi_decode(&event._triggerInfo)?;
+            let trigger_info =
+                <solidity::TriggerInfo as SolValue>::abi_decode(&event._triggerInfo)?;
             Ok((trigger_info.triggerId, trigger_info.data.to_vec(), Destination::Ethereum))
         }
         // Local Testing (wasi-exec)
@@ -58,19 +59,25 @@ pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, 
     }
 }
 
-mod solidity { // Define the Solidity types for the incoming trigger event using the `sol!` macro
+
+pub mod solidity { // Define the Solidity types for the incoming trigger event using the `sol!` macro
     use alloy_sol_macro::sol;
     pub use ITypes::*;
 
     // The objects here will be generated automatically into Rust types.
     // the interface shown here is used in the example trigger contract in the template.
     sol!("../../src/interfaces/ITypes.sol");
+
+    // The addTrigger function from the trigger contract
+    sol! {
+        function addTrigger(string data) external;
+    }
 }
 ```
 
 The component decodes the incoming event trigger data using the `decode_event_log_data!` macro from the [`wavs-wasi-utils` crate](https://docs.rs/wavs-wasi-utils/latest/wavs_wasi_utils/macro.decode_event_log_data.html).
 
-The `sol!` macro from `alloy-sol-macro` is usedto define Solidity types in Rust. This macro reads a Solidity interface file and generates corresponding Rust types and encoding/decoding functions. For more information, visit the [Blockchain interactions page](./blockchain-interactions#sol-macro).
+The `sol!` macro from `alloy-sol-macro` is used to define Solidity types in Rust. This macro reads a Solidity interface file and generates corresponding Rust types and encoding/decoding functions. For more information, visit the [Blockchain interactions page](./blockchain-interactions#sol-macro).
 
 ### Component logic
 
@@ -85,7 +92,6 @@ impl Guest for Component {
     fn run(action: TriggerAction) -> Result<Option<WasmResponse>, String> {
         // 1. Decode the trigger data using the decode_trigger_event function from trigger.rs
         let (trigger_id, req, dest) = decode_trigger_event(action.data)?;
-
         // 2. Process the data (your business logic)
         let res = block_on(async move {
             let resp_data = get_price_feed(id).await?;
@@ -107,7 +113,7 @@ impl Guest for Component {
 }
 ```
 
-Components can contain any compatible logic, including [blockchain interactions](./blockchain-interactions), [network requests](./network-requests) , off-chain computations, and more. To learn about the types of components that WAVS is best suited for, visit the [design considerations](../../design) page.
+Components can contain any compatible logic, including [blockchain interactions](./blockchain-interactions), [network requests](./network-requests), off-chain computations, and more. To learn about the types of components that WAVS is best suited for, visit the [design considerations](../../design) page.
 
 #### Logging in a component
 

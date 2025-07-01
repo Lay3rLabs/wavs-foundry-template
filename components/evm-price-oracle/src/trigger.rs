@@ -35,7 +35,8 @@ pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, 
     match trigger_data {
         TriggerData::EvmContractEvent(TriggerDataEvmContractEvent { log, .. }) => {
             let event: solidity::NewTrigger = decode_event_log_data!(log)?;
-            let trigger_info = solidity::TriggerInfo::abi_decode(&event._triggerInfo)?;
+            let trigger_info =
+                <solidity::TriggerInfo as SolValue>::abi_decode(&event._triggerInfo)?;
             Ok((trigger_info.triggerId, trigger_info.data.to_vec(), Destination::Ethereum))
         }
         TriggerData::Raw(data) => Ok((0, data.clone(), Destination::CliOutput)),
@@ -75,12 +76,16 @@ pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> WasmR
 /// Documentation:
 /// - <https://docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html>
 /// (You can also just sol! arbitrary solidity types like `event` or `struct` too)
-mod solidity {
+pub mod solidity {
     use alloy_sol_macro::sol;
     pub use ITypes::*;
 
     // The objects here will be generated automatically into Rust types.
     // If you update the .sol file, you must re-run `cargo build` to see the changes.
-    // or restart your editor / language server.
     sol!("../../src/interfaces/ITypes.sol");
+
+    // Define a simple struct representing the function that encodes string input
+    sol! {
+        function addTrigger(string data) external;
+    }
 }

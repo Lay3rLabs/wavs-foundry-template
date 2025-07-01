@@ -1,0 +1,115 @@
+---
+description: Defines the WAVS service manifest structure and usage with the service manager contract.
+
+alwaysApply: true
+---
+# Service Manifest and Manager
+
+A WAVS service is composed of smart contracts, operators, and offchain components defined in a `service.json` manifest. This manifest configures workflows, components, submission, and the service manager contract. It is hosted on IPFS or HTTP(S) and referenced by the service manager contract.
+
+## Creating the Manifest
+
+1. Use `wavs-cli service` or the provided [build_service.sh](https://github.com/Lay3rLabs/wavs-foundry-template/blob/main/script/build_service.sh) script to generate a single-component service manifest.
+2. Define service info, workflows, components, submission, and manager details in `service.json`.
+3. Upload the manifest to IPFS or a publicly accessible server (e.g., Pinata).
+
+## Example Manifest
+
+```json service.json
+{
+    "id": "example-service-123",
+    "name": "Example WAVS Service",
+    "workflows": {
+        "default": {
+            "trigger": {
+                "evm_contract_event": {
+                    "chain_name": "ethereum",
+                    "address": "0x1234567890123456789012345678901234567890",
+                    "event_hash": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+                }
+            },
+            "component": {
+                "source": {
+                    "Registry": {
+                        "registry": {
+                            "digest": "882b992af8f78e0aaceaf9609c7ba2ce80a22c521789c94ae1960c43a98295f5",
+                            "domain": "localhost:8090",
+                            "version": "0.1.0",
+                            "package": "example:evmrustoracle"
+                        }
+                    }
+                },
+                "permissions": {
+                    "allowed_http_hosts": "all",
+                    "file_system": true
+                },
+                "fuel_limit": 1000000,
+                "time_limit_seconds": 30,
+                "config": {
+                    "endpoint": "https://api.example.com",
+                    "timeout": "30s"
+                },
+                "env_keys": [
+                    "WAVS_ENV_API_KEY",
+                    "WAVS_ENV_SECRET"
+                ]
+            },
+            "submit": {
+                "aggregator": {
+                    "url": "http://127.0.0.1:8001"
+                }
+            },
+            "aggregators": [
+                {
+                    "evm": {
+                        "chain_name": "ethereum",
+                        "address": "0xfedcba9876543210fedcba9876543210fedcba98",
+                        "max_gas": 1000000
+                    }
+                }
+            ]
+        }
+    },
+    "status": "active",
+    "manager": {
+        "evm": {
+            "chain_name": "ethereum",
+            "address": "0xabcdef1234567890abcdef1234567890abcdef12"
+        }
+    }
+}
+```
+
+## Uploading the Manifest
+
+```bash
+# Upload manifest to IPFS (local or remote)
+SERVICE_FILE=${SERVICE_FILE} make upload-to-ipfs
+
+# Retrieve IPFS gateway URL
+export IPFS_GATEWAY=$(sh script/get-ipfs-gateway.sh)
+
+# Fetch uploaded content
+curl "${IPFS_GATEWAY}${ipfs_cid}"
+
+# Set service URI on service manager contract
+cast send ${WAVS_SERVICE_MANAGER_ADDRESS} 'setServiceURI(string)' "${SERVICE_URI}" -r ${RPC_URL} --private-key ${DEPLOYER_PK}
+```
+
+## Service Manager Contract
+
+- Registers operators with assigned weights; only registered operators can sign submissions.
+- Maintains the service URI linking to the manifest.
+- Validates operator signatures and ensures threshold weights are met before processing data.
+- Ensures operators are sorted correctly for submission validation.
+
+For more information on manifest parts, see:
+
+- [Workflows](./workflows)
+- [Triggers](./triggers)
+- [Components](./components/component)
+- [Submission and aggregator](./submission)
+
+For more information:
+- [WAVS Foundry Template build_service.sh](https://github.com/Lay3rLabs/wavs-foundry-template/blob/main/script/build_service.sh)
+- [Pinata IPFS Service](https://app.pinata.cloud/developers/api-keys)

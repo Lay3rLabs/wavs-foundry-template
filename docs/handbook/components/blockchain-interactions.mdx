@@ -103,13 +103,18 @@ mod solidity {
 In the template, the `sol!` macro is used in the `trigger.rs` component file to generate Rust types from the `ITypes.sol` file.
 
 ```rust trigger.rs
-mod solidity {
+pub mod solidity {
     use alloy_sol_macro::sol;
     pub use ITypes::*;
 
     // The objects here will be generated automatically into Rust types.
     // If you update the .sol file, you must re-run `cargo build` to see the changes.
     sol!("../../src/interfaces/ITypes.sol");
+
+    // Define a simple struct representing the function that encodes string input
+    sol! {
+        function addTrigger(string data) external;
+    }
 }
 ```
 
@@ -165,14 +170,12 @@ sol! {
         function balanceOf(address owner) external view returns (uint256);
     }
 }
-
 // Function to check if an address owns any NFTs from a specific contract
 pub fn query_nft_ownership(address: Address, nft_contract: Address) -> Result<bool, String> {
     // block_on allows us to run async code in a synchronous function
     block_on(async move {
         // Get the chain configuration for the local network
         let chain_config = get_evm_chain_config("local").unwrap();
-
         // Create a provider that will handle RPC communication
         let provider: RootProvider<Ethereum> = new_evm_provider::<Ethereum>(
             chain_config.http_endpoint.unwrap()

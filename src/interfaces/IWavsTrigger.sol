@@ -21,7 +21,7 @@ interface ISimpleTrigger is ITypes {
      * @notice Add a new trigger
      * @param _data The request data (bytes)
      */
-    function addTrigger(bytes memory _data) external;
+    function addTrigger(string memory _data) external;
 
     /**
      * @notice Get a single trigger by triggerId

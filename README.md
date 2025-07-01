@@ -177,7 +177,11 @@ WASI_BUILD_DIR=components/evm-price-oracle make wasi-build
 How to test the component locally for business logic validation before on-chain deployment. An ID of 1 for the oracle component is Bitcoin.
 
 ```bash
-COIN_MARKET_CAP_ID=1 make wasi-exec
+# Rust components
+INPUT_DATA="1" COMPONENT_FILENAME=evm_price_oracle.wasm make wasi-exec
+
+# Golang / Typescript
+INPUT_DATA="1" COMPONENT_FILENAME=golang_evm_price_oracle.wasm make wasi-exec-fixed
 ```
 
 Expected output:
@@ -211,7 +215,7 @@ Result (utf8):
 
 ## Start Environment
 
-Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https://www.eigenlayer.xyz/) contracts to the local network.
+Start an Ethereum node (anvil), the WAVS service, and deploy [EigenLayer](https://www.eigenlayer.xyz/) contracts to the local network.
 
 ### Enable Telemetry (optional)
 
@@ -274,7 +278,12 @@ Anyone can now call the [trigger contract](./src/contracts/WavsTrigger.sol) whic
 
 ```bash
 # Request BTC from CMC
-export COIN_MARKET_CAP_ID=1
+# rust:
+export INPUT_DATA=`cast abi-encode "addTrigger(string)" "1"`
+
+# Golang & Typescript uses the raw value
+# export INPUT_DATA="1"
+
 # Get the trigger address from previous Deploy forge script
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 # Execute on the trigger contract, WAVS will pick this up and submit the result
@@ -282,8 +291,9 @@ export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 
 # uses FUNDED_KEY as the executor (local: anvil account)
 source .env
+export RPC_URL=`sh ./script/get-rpc.sh`
 
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${INPUT_DATA} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast
 ```
 
 ## Show the result
@@ -298,7 +308,11 @@ RPC_URL=${RPC_URL} make get-trigger
 TRIGGER_ID=1 RPC_URL=${RPC_URL} make show-result
 ```
 
-# Claude Code
+## AI Coding Agents
+
+This template contains rulefiles for building components with Claude Code and Cursor. Read the [AI-powered component creation guide](./docs/handbook/ai.mdx) for usage instructions.
+
+### Claude Code
 
 To spin up a sandboxed instance of [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) in a Docker container that only has access to this project's files, run the following command:
 
@@ -307,4 +321,3 @@ npm run claude-code
 # or with no restrictions (--dangerously-skip-permissions)
 npm run claude-code:unrestricted
 ```
-
