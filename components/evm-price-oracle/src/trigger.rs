@@ -86,7 +86,6 @@ pub mod solidity {
 
     // Define a simple struct representing the function that encodes string input
     sol! {
-        // addTriggerCall
         function addTrigger(string data) external;
     }
 }
