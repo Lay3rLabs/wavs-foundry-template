@@ -1,13 +1,14 @@
-import { TriggerAction, WasmResponse } from "./out/wavs:worker@0.4.0";
+import { TriggerAction, WasmResponse,  } from "./out/wavs:worker@0.4.0";
+import { TriggerSource, TriggerSourceManual } from "./out/interfaces/wavs-worker-layer-types";
 import { decodeTriggerEvent, encodeOutput, Destination } from "./trigger";
+import { AbiCoder } from "ethers";
 
 async function run(triggerAction: TriggerAction): Promise<WasmResponse> {
   let event = decodeTriggerEvent(triggerAction.data);
   let triggerId = event[0].triggerId;
 
-  let result = await compute(event[0].data);
-
-
+  let num = processInput(event[0].data, triggerAction.config.triggerSource);
+  let result = await compute(num);
 
   switch (event[1]) {
     case Destination.Cli:
@@ -29,13 +30,54 @@ async function run(triggerAction: TriggerAction): Promise<WasmResponse> {
   );
 }
 
-async function compute(input: Uint8Array): Promise<Uint8Array> {
-  const num = new TextDecoder().decode(input);
-
-  const priceFeed = await fetchCryptoPrice(parseInt(num));
+async function compute(num: number): Promise<Uint8Array> {
+  const priceFeed = await fetchCryptoPrice(num);
   const priceJson = priceFeedToJson(priceFeed);
 
   return new TextEncoder().encode(priceJson);
+}
+
+function processInput(input: Uint8Array, triggerSource: { tag: string }): number {
+  // Prepare the input data based on trigger type
+  const processedInput = prepareInputData(input, triggerSource.tag);
+
+  // Single ABI decoding step
+  const abiCoder = new AbiCoder();
+  const res = abiCoder.decode(["string"], processedInput);
+  const decodedString = res[0] as string;
+
+  console.log("Decoded input:", decodedString, "triggerSource.tag:", triggerSource.tag);
+
+  // Validate the decoded string is a valid number
+  const num = decodedString.trim();
+  if (isNaN(parseInt(num))) {
+    throw new Error(`Input is not a valid number: ${num}`);
+  }
+
+  return parseInt(num); // Return the validated number
+}
+
+
+function prepareInputData(input: Uint8Array, triggerTag: string): Uint8Array {
+  if (triggerTag === "manual") {
+    return input; // Use input directly for manual triggers
+  }
+
+  // For evm-contract-event: handle potential hex string conversion
+  try {
+    const inputStr = new TextDecoder().decode(input);
+    if (!inputStr.startsWith("0x")) {
+      throw new Error("Input is not a valid hex string: " + inputStr);
+    }
+
+    // Convert hex string to bytes
+    const hexString = inputStr.slice(2); // Remove "0x" prefix
+    return new Uint8Array(
+      hexString.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16))
+    );
+  } catch {
+    return input; // If UTF-8 decode fails, assume it's already binary
+  }
 }
 
 // ======================== CMC ========================
