@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z "$REGISTRY" ]; then
-    echo "REGISTRY is not set. Please set the REGISTRY environment variable." && exit 1
+    echo "REGISTRY is not set. Please set the REGISTRY environment variable." && return
 fi
 
 # ===

@@ -20,7 +20,7 @@ fi
 
 SP=""; if [[ "$(uname)" == *"Darwin"* ]]; then SP=" "; fi
 
-cd $(git rev-parse --show-toplevel) || exit 1
+cd $(git rev-parse --show-toplevel) || return
 
 mkdir -p .docker
 
@@ -43,7 +43,7 @@ sed -i${SP}'' -e "s/.%%MNEMONIC_REFERENCE%%$/ $AGG_MNEMONIC/" ${ENV_FILENAME}
 
 cat > "${AGG_LOC}/start.sh" << EOF
 #!/bin/bash
-cd \$(dirname "\$0") || exit 1
+cd \$(dirname "\$0") || return
 
 IMAGE=ghcr.io/lay3rlabs/wavs:35c96a4
 INSTANCE=wavs-aggregator-${AGGREGATOR_INDEX}

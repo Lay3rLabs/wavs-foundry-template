@@ -10,7 +10,7 @@ elif [ "$DEPLOY_ENV" = "TESTNET" ]; then
     IPFS_GATEWAY=https://gateway.pinata.cloud/ipfs/
 else
     echo "Unknown DEPLOY_ENV: $DEPLOY_ENV"
-    exit 1
+    return
 fi
 
 echo "${IPFS_GATEWAY}"

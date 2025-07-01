@@ -10,7 +10,7 @@ elif [ "$DEPLOY_ENV" = "TESTNET" ]; then
     REGISTRY=wa.dev
 else
     echo "Unknown DEPLOY_ENV: $DEPLOY_ENV"
-    exit 1
+    return
 fi
 
 echo "${REGISTRY}"

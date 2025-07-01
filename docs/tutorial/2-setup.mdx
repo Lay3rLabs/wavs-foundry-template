@@ -83,6 +83,8 @@ cargo binstall cargo-component wasm-tools warg-cli wkg --locked --no-confirm --f
 wkg config --default-registry wa.dev
 
 # Allow publishing to a registry
+#
+# if WSL: `warg config --keyring-backend linux-keyutils`
 warg key new
 ```
 

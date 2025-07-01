@@ -10,7 +10,14 @@ if [ -z "$WAVS_SERVICE_MANAGER_ADDRESS" ]; then
     fi
 fi
 
-export RPC_URL=`bash ./script/get-rpc.sh`
+forge build
+if [ $? -ne 0 ]; then
+    echo "Forge build failed. Running 'npm install' and deleting the 'out/' and 'cache/' directory."
+    npm install
+    rm -rf out/ cache/
+    forge build
+fi
+
 export DEPLOYER_PK=$(cat .nodes/deployer)
 
 forge create SimpleSubmit --json --broadcast -r ${RPC_URL} --private-key "${DEPLOYER_PK}" --constructor-args "${WAVS_SERVICE_MANAGER_ADDRESS}" > .docker/submit.json

@@ -1,5 +1,5 @@
-github.com/Lay3rLabs/wavs-wasi/go v0.4.0-beta.4 h1:gAdI6IOn3OtVnR0226XlarZXYSSeNRRJ51o8eGyGOeA=
-github.com/Lay3rLabs/wavs-wasi/go v0.4.0-beta.4/go.mod h1:+YuQa+Asl1vAeeXewN3ZAnLaP19aQMGrQU0bWWmvSpw=
+github.com/Lay3rLabs/wavs-wasi/go v0.4.0 h1:2GFt3coPnonCY7fa5nY5kErZIBKZ725zlXnoH1NVIik=
+github.com/Lay3rLabs/wavs-wasi/go v0.4.0/go.mod h1:+YuQa+Asl1vAeeXewN3ZAnLaP19aQMGrQU0bWWmvSpw=
 github.com/Reecepbcups/dev-wasm-go/lib v1.0.0 h1:wehTQiW+QP71bX24iVZB5xxZdpbg9qcVb81zYvrvf4Y=
 github.com/Reecepbcups/dev-wasm-go/lib v1.0.0/go.mod h1:IAZDQaELmHlCjhQkmfnFesp2pAymqgvlPak5JEdNu4c=
 github.com/Reecepbcups/go-eth v0.7.1 h1:dH1E85arpYZAG33m1FPvFsEClgwPF3qXzWQW3oCmV1I=

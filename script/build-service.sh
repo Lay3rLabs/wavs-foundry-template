@@ -34,7 +34,7 @@ if [ -z "$WAVS_SERVICE_MANAGER_ADDRESS" ]; then
     export WAVS_SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager ./.nodes/avs_deploy.json)
     if [ -z "$WAVS_SERVICE_MANAGER_ADDRESS" ]; then
         echo "WAVS_SERVICE_MANAGER_ADDRESS is not set. Please set it to the address of the service manager."
-        exit 1
+        return
     fi
 fi
 
@@ -52,7 +52,7 @@ fi
 
 TRIGGER_EVENT_HASH=`cast keccak ${TRIGGER_EVENT}`
 
-SERVICE_ID=`eval "${BASE_CMD} init --name demo" | jq -r .service.id`
+export SERVICE_ID=`eval "${BASE_CMD} init --name demo" | jq -r .service.id`
 echo "Service ID: ${SERVICE_ID}"
 
 WORKFLOW_ID=`eval "$BASE_CMD workflow add" | jq -r .workflow_id`
