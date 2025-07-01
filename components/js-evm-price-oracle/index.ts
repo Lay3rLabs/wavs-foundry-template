@@ -7,7 +7,8 @@ async function run(triggerAction: TriggerAction): Promise<WasmResponse> {
   let event = decodeTriggerEvent(triggerAction.data);
   let triggerId = event[0].triggerId;
 
-  let result = await compute(triggerAction.config.triggerSource, event[0].data);
+  let num = processInput(event[0].data, triggerAction.config.triggerSource);
+  let result = await compute(num);
 
   switch (event[1]) {
     case Destination.Cli:
@@ -29,49 +30,54 @@ async function run(triggerAction: TriggerAction): Promise<WasmResponse> {
   );
 }
 
-async function compute(triggerSource: TriggerSource, input: Uint8Array): Promise<Uint8Array> {
-  let num: string;
-  if (triggerSource.tag == "manual") { // wasi-exec
-    let abiCoder = new AbiCoder();
-    let res = abiCoder.decode(["string"], input);
-    console.log("Decoded input:", res, "triggerSource.tag", triggerSource.tag);
-    num = res[0] as string
-  } else { // evm-contract-event
-    // Production: First check if input is a hex string, then decode it
-    let hexData: Uint8Array;
-    try {
-      // Try to decode as UTF-8 string first
-      const inputStr = new TextDecoder().decode(input);
-      if (inputStr.startsWith("0x")) {
-        // It's a hex string, convert to bytes
-        const hexString = inputStr.slice(2); // Remove "0x" prefix
-        hexData = new Uint8Array(hexString.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
-      } else {
-        // It's already binary data
-        hexData = input;
-      }
-    } catch {
-      // If UTF-8 decode fails, assume it's already binary
-      hexData = input;
-    }
-
-    // Now decode the ABI-encoded string
-    let abiCoder = new AbiCoder();
-    let res = abiCoder.decode(["string"], hexData);
-    console.log("Decoded ABI string:", res[0], "triggerSource.tag", triggerSource.tag);
-    num = res[0] as string;
-  }
-
-  // Trim whitespace and parse the number
-  num = num.trim();
-  if (isNaN(parseInt(num))) {
-    throw new Error("Input is not a valid number: " + num);
-  }
-
-  const priceFeed = await fetchCryptoPrice(parseInt(num));
+async function compute(num: number): Promise<Uint8Array> {
+  const priceFeed = await fetchCryptoPrice(num);
   const priceJson = priceFeedToJson(priceFeed);
 
   return new TextEncoder().encode(priceJson);
+}
+
+function processInput(input: Uint8Array, triggerSource: { tag: string }): number {
+  // Prepare the input data based on trigger type
+  const processedInput = prepareInputData(input, triggerSource.tag);
+
+  // Single ABI decoding step
+  const abiCoder = new AbiCoder();
+  const res = abiCoder.decode(["string"], processedInput);
+  const decodedString = res[0] as string;
+
+  console.log("Decoded input:", decodedString, "triggerSource.tag:", triggerSource.tag);
+
+  // Validate the decoded string is a valid number
+  const num = decodedString.trim();
+  if (isNaN(parseInt(num))) {
+    throw new Error(`Input is not a valid number: ${num}`);
+  }
+
+  return parseInt(num); // Return the validated number
+}
+
+
+function prepareInputData(input: Uint8Array, triggerTag: string): Uint8Array {
+  if (triggerTag === "manual") {
+    return input; // Use input directly for manual triggers
+  }
+
+  // For evm-contract-event: handle potential hex string conversion
+  try {
+    const inputStr = new TextDecoder().decode(input);
+    if (!inputStr.startsWith("0x")) {
+      throw new Error("Input is not a valid hex string: " + inputStr);
+    }
+
+    // Convert hex string to bytes
+    const hexString = inputStr.slice(2); // Remove "0x" prefix
+    return new Uint8Array(
+      hexString.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16))
+    );
+  } catch {
+    return input; // If UTF-8 decode fails, assume it's already binary
+  }
 }
 
 // ======================== CMC ========================

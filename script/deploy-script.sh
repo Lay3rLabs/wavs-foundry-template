@@ -12,6 +12,13 @@ if git status --porcelain | grep -q "^.* components/"; then
 fi
 
 ### === Deploy Eigenlayer ===
+# if RPC_URL is not set, use default by calling command
+if [ -z "$RPC_URL" ]; then
+    export RPC_URL=$(bash ./script/get-rpc-url.sh)
+fi
+if [ -z "$AGGREGATOR_URL" ]; then
+    export AGGREGATOR_URL=http://127.0.0.1:8001
+fi
 
 # local: create deployer & auto fund. testnet: create & iterate check balance
 bash ./script/create-deployer.sh

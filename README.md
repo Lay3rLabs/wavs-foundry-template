@@ -277,8 +277,7 @@ bash ./script/deploy-script.sh
 Anyone can now call the [trigger contract](./src/contracts/WavsTrigger.sol) which emits the trigger event WAVS is watching for from the previous step. WAVS then calls the service and saves the result on-chain.
 
 ```bash
-# Request BTC from CMC
-# rust:
+# Rust & Typescript - request BTC from CMC
 export INPUT_DATA=`cast abi-encode "addTrigger(string)" "1"`
 
 # Golang uses the raw value
