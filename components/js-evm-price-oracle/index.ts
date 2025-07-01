@@ -1,13 +1,12 @@
 import { TriggerAction, WasmResponse } from "./out/wavs:worker@0.4.0";
 import { decodeTriggerEvent, encodeOutput, Destination } from "./trigger";
+import { AbiCoder } from "ethers";
 
 async function run(triggerAction: TriggerAction): Promise<WasmResponse> {
   let event = decodeTriggerEvent(triggerAction.data);
   let triggerId = event[0].triggerId;
 
   let result = await compute(event[0].data);
-
-
 
   switch (event[1]) {
     case Destination.Cli:
@@ -30,7 +29,18 @@ async function run(triggerAction: TriggerAction): Promise<WasmResponse> {
 }
 
 async function compute(input: Uint8Array): Promise<Uint8Array> {
-  const num = new TextDecoder().decode(input);
+  // const num = new TextDecoder().decode(input); // prod
+
+  let abiCoder = new AbiCoder();
+  let res = abiCoder.decode(["string"], input); // Validate input
+  console.log("Decoded input:", res);
+
+  let num = res[0] as string;
+  console.log("Input number:", num);
+  // SHOW AS NUM
+  if (isNaN(parseInt(num))) {
+    throw new Error("Input is not a valid number: " + num);
+  }
 
   const priceFeed = await fetchCryptoPrice(parseInt(num));
   const priceJson = priceFeedToJson(priceFeed);
