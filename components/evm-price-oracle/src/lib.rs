@@ -34,33 +34,25 @@ impl Guest for Component {
         let (trigger_id, req, dest) =
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
 
-        // Decode trigger data inline - handles hex string input
-        let request_input = {
-            // First, convert the input bytes to a string to check if it's a hex string
-            let input_str = String::from_utf8(req.clone())
-                .map_err(|e| format!("Input is not valid UTF-8: {}", e))?;
-
-            // Check if it's a hex string (starts with "0x")
-            let hex_data = if input_str.starts_with("0x") {
-                // Decode the hex string to bytes
+        let hex_data = match String::from_utf8(req.clone()) {
+            Ok(input_str) if input_str.starts_with("0x") => {
+                // Local testing: hex string input
                 hex::decode(&input_str[2..])
                     .map_err(|e| format!("Failed to decode hex string: {}", e))?
-            } else {
-                // If it's not a hex string, assume the input is already binary data
+            }
+            _ => {
+                // Production: direct binary ABI input
                 req.clone()
-            };
-
-            // Now ABI decode the binary data as a string parameter
-            <String as SolValue>::abi_decode(&hex_data)
-                .map_err(|e| format!("Failed to decode input as ABI string: {}", e))?
+            }
         };
-        println!("Decoded string input: {}", request_input);
 
-        // Parse the entire string as a number for the ID
-        let id = request_input
-            .trim()
-            .parse::<u64>()
-            .map_err(|_| format!("Invalid number: {}", request_input))?;
+        let decoded = <String as SolValue>::abi_decode(&hex_data)
+            .map_err(|e| format!("Failed to decode ABI string: {}", e))?;
+
+        let id =
+            decoded.trim().parse::<u64>().map_err(|_| format!("Invalid number: {}", decoded))?;
+
+        println!("Decoded crypto ID: {}", id);
 
         let res = block_on(async move {
             let resp_data = get_price_feed(id).await?;
