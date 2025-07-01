@@ -73,6 +73,7 @@ eval "$BASE_CMD workflow component --id ${WORKFLOW_ID} permissions --http-hosts 
 eval "$BASE_CMD workflow component --id ${WORKFLOW_ID} time-limit --seconds 30" > /dev/null
 eval "$BASE_CMD workflow component --id ${WORKFLOW_ID} env --values WAVS_ENV_SOME_SECRET" > /dev/null
 eval "$BASE_CMD workflow component --id ${WORKFLOW_ID} config --values 'key=value,key2=value2'" > /dev/null
+eval "$BASE_CMD workflow component --id ${WORKFLOW_ID} fuel-limit --fuel ${FUEL_LIMIT}" > /dev/null
 
 eval "$BASE_CMD manager set-evm --chain-name ${SUBMIT_CHAIN} --address `cast --to-checksum ${WAVS_SERVICE_MANAGER_ADDRESS}`" > /dev/null
 eval "$BASE_CMD validate" > /dev/null

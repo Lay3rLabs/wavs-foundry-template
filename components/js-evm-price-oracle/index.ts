@@ -1,4 +1,5 @@
-import { TriggerAction, WasmResponse } from "./out/wavs:worker@0.4.0";
+import { TriggerAction, WasmResponse,  } from "./out/wavs:worker@0.4.0";
+import { TriggerSource, TriggerSourceManual } from "./out/interfaces/wavs-worker-layer-types";
 import { decodeTriggerEvent, encodeOutput, Destination } from "./trigger";
 import { AbiCoder } from "ethers";
 
@@ -6,7 +7,7 @@ async function run(triggerAction: TriggerAction): Promise<WasmResponse> {
   let event = decodeTriggerEvent(triggerAction.data);
   let triggerId = event[0].triggerId;
 
-  let result = await compute(event[0].data);
+  let result = await compute(triggerAction.config.triggerSource, event[0].data);
 
   switch (event[1]) {
     case Destination.Cli:
@@ -28,16 +29,41 @@ async function run(triggerAction: TriggerAction): Promise<WasmResponse> {
   );
 }
 
-async function compute(input: Uint8Array): Promise<Uint8Array> {
-  // const num = new TextDecoder().decode(input); // prod
+async function compute(triggerSource: TriggerSource, input: Uint8Array): Promise<Uint8Array> {
+  let num: string;
+  if (triggerSource.tag == "manual") { // wasi-exec
+    let abiCoder = new AbiCoder();
+    let res = abiCoder.decode(["string"], input);
+    console.log("Decoded input:", res, "triggerSource.tag", triggerSource.tag);
+    num = res[0] as string
+  } else { // evm-contract-event
+    // Production: First check if input is a hex string, then decode it
+    let hexData: Uint8Array;
+    try {
+      // Try to decode as UTF-8 string first
+      const inputStr = new TextDecoder().decode(input);
+      if (inputStr.startsWith("0x")) {
+        // It's a hex string, convert to bytes
+        const hexString = inputStr.slice(2); // Remove "0x" prefix
+        hexData = new Uint8Array(hexString.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
+      } else {
+        // It's already binary data
+        hexData = input;
+      }
+    } catch {
+      // If UTF-8 decode fails, assume it's already binary
+      hexData = input;
+    }
 
-  let abiCoder = new AbiCoder();
-  let res = abiCoder.decode(["string"], input); // Validate input
-  console.log("Decoded input:", res);
+    // Now decode the ABI-encoded string
+    let abiCoder = new AbiCoder();
+    let res = abiCoder.decode(["string"], hexData);
+    console.log("Decoded ABI string:", res[0], "triggerSource.tag", triggerSource.tag);
+    num = res[0] as string;
+  }
 
-  let num = res[0] as string;
-  console.log("Input number:", num);
-  // SHOW AS NUM
+  // Trim whitespace and parse the number
+  num = num.trim();
   if (isNaN(parseInt(num))) {
     throw new Error("Input is not a valid number: " + num);
   }
