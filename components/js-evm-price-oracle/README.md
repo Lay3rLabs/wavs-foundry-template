@@ -39,7 +39,7 @@ WASI_BUILD_DIR=js-evm-price-oracle make wasi-build
 Run the component with the `wasi-exec` command in the root of the repo
 
 ```bash docci-output-contains="LTC"
-COMPONENT_FILENAME=js_evm_price_oracle.wasm INPUT_DATA=1 make wasi-exec
+COMPONENT_FILENAME=js_evm_price_oracle.wasm INPUT_DATA=2 make wasi-exec
 ```
 
 ---
