@@ -34,9 +34,6 @@ The `llms-full.txt` format returns all documentation pages as a single text docu
 curl https://docs.wavs.xyz/llms-full.txt
 ```
 
-Returns all documentation pages as a single text document.
-
-
 ## Markdown Format
 
 Get any page as standard Markdown by appending `.md` to its URL.
@@ -49,3 +46,32 @@ Examples:
 - `/overview.md` - Overview page as Markdown
 - `/tutorial/1-overview.md` - Tutorial introduction as Markdown
 - `/handbook/service.md` - Service handbook as Markdown
+
+## WAVS foundry template
+
+An llm-ingestible full markdown version of the [WAVS foundry template](https://github.com/Lay3rLabs/wavs-foundry-template)is available at [https://docs.wavs.xyz/wavs-foundry-template.md](https://docs.wavs.xyz/wavs-foundry-template.md).
+
+```
+curl https://docs.wavs.xyz/wavs-foundry-template.md
+```
+
+## WAVS-WASI-utils crate docs
+
+An llm-ingestible full markdown version of the WAVS-WASI-Utils docs is available at [https://docs.wavs.xyz/wavs-wasi-utils.md](https://docs.wavs.xyz/wavs-wasi-utils.md).
+
+```
+curl https://docs.wavs.xyz/wavs-wasi-utils.md
+```
+
+## Search API
+
+Search the documentation programmatically using the search API endpoint.
+
+```
+curl "https://docs.wavs.xyz/api/search-custom?q=your_query"
+```
+
+Examples:
+- Search for "component": `https://docs.wavs.xyz/api/search-custom?q=component`
+
+The search API returns JSON results with page titles, URLs, and content snippets.
