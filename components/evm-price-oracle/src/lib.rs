@@ -1,8 +1,12 @@
 mod trigger;
 use trigger::{decode_trigger_event, encode_trigger_output, Destination};
-use wavs_wasi_utils::http::{fetch_json, http_request_get};
+use wavs_wasi_utils::{
+    evm::alloy_primitives::hex,
+    http::{fetch_json, http_request_get},
+};
 pub mod bindings;
 use crate::bindings::{export, Guest, TriggerAction, WasmResponse};
+use alloy_sol_types::SolValue;
 use serde::{Deserialize, Serialize};
 use wstd::{http::HeaderValue, runtime::block_on};
 
@@ -30,12 +34,25 @@ impl Guest for Component {
         let (trigger_id, req, dest) =
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
 
-        // Convert bytes to string and parse first char as u64
-        let input = std::str::from_utf8(&req).map_err(|e| e.to_string())?;
-        println!("input id: {}", input);
+        let hex_data = match String::from_utf8(req.clone()) {
+            Ok(input_str) if input_str.starts_with("0x") => {
+                // Local testing: hex string input
+                hex::decode(&input_str[2..])
+                    .map_err(|e| format!("Failed to decode hex string: {}", e))?
+            }
+            _ => {
+                // Production: direct binary ABI input
+                req.clone()
+            }
+        };
 
-        let id = input.chars().next().ok_or("Empty input")?;
-        let id = id.to_digit(16).ok_or("Invalid hex digit")? as u64;
+        let decoded = <String as SolValue>::abi_decode(&hex_data)
+            .map_err(|e| format!("Failed to decode ABI string: {}", e))?;
+
+        let id =
+            decoded.trim().parse::<u64>().map_err(|_| format!("Invalid number: {}", decoded))?;
+
+        println!("Decoded crypto ID: {}", id);
 
         let res = block_on(async move {
             let resp_data = get_price_feed(id).await?;

@@ -148,7 +148,7 @@ COMMAND="list_operators" PAST_BLOCKS=500 make wavs-middleware
 
 ## Trigger the service
 
-Next, use your deployed trigger contract to trigger the oracle to be run. In the following command, you'll specify the `COIN_MARKET_CAP_ID` as `1`, which corresponds to the ID of Bitcoin.
+Next, use your deployed trigger contract to trigger the oracle to be run. In the following command, you'll specify the `INPUT_DATA` as abi encoded `1`, which corresponds to the ID of Bitcoin.
 
 Running this command will execute [`/script/Trigger.s.sol`](https://github.com/Lay3rLabs/wavs-foundry-template/tree/main/script/Trigger.s.sol) and pass the ID to the trigger contract, starting the following chain of events:
 
@@ -160,14 +160,14 @@ Running this command will execute [`/script/Trigger.s.sol`](https://github.com/L
 
 ```bash docci-delay-per-cmd=2
 # Request BTC from CMC
-export COIN_MARKET_CAP_ID=1
+export INPUT_DATA=`cast abi-encode "addTrigger(string)" "1"`
 # Get the trigger address from previous Deploy forge script
 export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
 
 # uses FUNDED_KEY as the executor (local: anvil account)
 source .env
 
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${COIN_MARKET_CAP_ID} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast
+forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${INPUT_DATA} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast
 ```
 
 ## Show the result
