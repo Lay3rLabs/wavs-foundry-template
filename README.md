@@ -52,7 +52,7 @@ If prompted, remove container with `sudo apt remove containerd.io`.
 - **Required Version**: v21+
 - [Installation via NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating)
 
-```bash
+```bash docci-ignore
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 nvm install --lts
 ```
@@ -98,13 +98,13 @@ rustup target add wasm32-wasip2
 
 On Ubuntu LTS, if you later encounter errors like:
 
-```bash
+```bash docci-ignore
 wkg: /lib/x86_64-linux-gnu/libm.so.6: version `GLIBC_2.38' not found (required by wkg)
 wkg: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.39' not found (required by wkg)
 ```
 
 If GLIB is out of date. Consider updating your system using:
-```bash
+```bash docci-ignore
 sudo do-release-upgrade
 ```
 
@@ -179,7 +179,8 @@ How to test the component locally for business logic validation before on-chain 
 ```bash
 # Rust & Typescript components
 INPUT_DATA="1" COMPONENT_FILENAME=evm_price_oracle.wasm make wasi-exec
-INPUT_DATA="1" COMPONENT_FILENAME=js_evm_price_oracle.wasm make wasi-exec
+# TODO:
+# INPUT_DATA="1" COMPONENT_FILENAME=js_evm_price_oracle.wasm make wasi-exec
 
 # Golang
 INPUT_DATA="1" COMPONENT_FILENAME=golang_evm_price_oracle.wasm make wasi-exec-fixed
@@ -265,7 +266,7 @@ This script automates the complete WAVS deployment process in a single command:
 
 A fully operational WAVS service that monitors blockchain events, executes WebAssembly components, and submits verified results on-chain.
 
-```bash
+```bash docci-delay-after=2
 export RPC_URL=`bash ./script/get-rpc.sh`
 export AGGREGATOR_URL=http://127.0.0.1:8001
 

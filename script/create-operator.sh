@@ -17,17 +17,11 @@ OPERATOR_LOC=infra/wavs-${OPERATOR_INDEX}
 
 
 if [ -d "${OPERATOR_LOC}" ] && [ "$(ls -A ${OPERATOR_LOC})" ]; then
-  read -p "Directory ${OPERATOR_LOC} already exists and is not empty. Do you want to remove it? (y/n): " -n 1 -r
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo -e "\nRemoving ${OPERATOR_LOC}"
     docker kill wavs-${OPERATOR_INDEX} > /dev/null 2>&1 || true
 
     echo "Removing dir ${OPERATOR_LOC} ((may prompt for password))"
     sudo rm -rf ${OPERATOR_LOC}
-  else
-    echo -e "\nExiting without changes."
-    return
-  fi
 fi
 
 mkdir -p ${OPERATOR_LOC}
