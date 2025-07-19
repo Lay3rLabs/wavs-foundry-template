@@ -108,4 +108,4 @@ jobs:
 
     # run last since it uses the output for go & ts files within as wasi-exec commands
     - name: Run docci (rust)
-      run: docci run README.md --cleanup-commands="killall anvil"
+      run: docci run README.md --cleanup-commands="killall anvil || true"
