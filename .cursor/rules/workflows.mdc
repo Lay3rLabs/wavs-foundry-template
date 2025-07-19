@@ -47,7 +47,7 @@ Example workflow with a cron trigger and aggregator submission:
     },
     "submit": {
       "aggregator": {
-        "url": "http://127.0.0.1:8001"
+        "url": "http://localhost:8001"
       }
     },
     "aggregators": [

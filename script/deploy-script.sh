@@ -17,7 +17,7 @@ if [ -z "$RPC_URL" ]; then
     export RPC_URL=$(bash ./script/get-rpc-url.sh)
 fi
 if [ -z "$AGGREGATOR_URL" ]; then
-    export AGGREGATOR_URL=http://127.0.0.1:8001
+    export AGGREGATOR_URL=http://localhost:8001
 fi
 
 # local: create deployer & auto fund. testnet: create & iterate check balance
@@ -75,10 +75,10 @@ REGISTRY=${REGISTRY} source ./script/build-service.sh
 sleep 1
 
 # === Upload service.json to IPFS ===
-# local: 127.0.0.1:5001 | testnet: https://app.pinata.cloud/. set PINATA_API_KEY to JWT token in .env
+# local: localhost:5001 | testnet: https://app.pinata.cloud/. set PINATA_API_KEY to JWT token in .env
 echo "Uploading to IPFS..."
 export ipfs_cid=`SERVICE_FILE=.docker/service.json make upload-to-ipfs`
-# LOCAL: http://127.0.0.1:8080 | TESTNET: https://gateway.pinata.cloud/
+# LOCAL: http://localhost:8080 | TESTNET: https://gateway.pinata.cloud/
 export IPFS_GATEWAY="$(bash script/get-ipfs-gateway.sh)"
 export IPFS_URI="ipfs://${ipfs_cid}"
 IPFS_URL="${IPFS_GATEWAY}${ipfs_cid}"
@@ -112,7 +112,7 @@ sleep 5
 
 # Deploy the service JSON to WAVS so it now watches and submits.
 # 'opt in' for WAVS to watch (this is before we register to Eigenlayer)
-WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${IPFS_URI} IPFS_GATEWAY=${IPFS_GATEWAY} make deploy-service
+WAVS_ENDPOINT=http://localhost:8000 SERVICE_URL=${IPFS_URI} IPFS_GATEWAY=${IPFS_GATEWAY} make deploy-service
 
 ### === Register service specific operator ===
 

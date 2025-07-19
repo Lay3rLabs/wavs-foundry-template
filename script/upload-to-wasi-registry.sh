@@ -25,7 +25,7 @@ fi
 cd `git rev-parse --show-toplevel` || exit
 
 PROTOCOL="https"
-if [[ "$REGISTRY" == *"localhost"* ]] || [[ "$REGISTRY" == *"127.0.0.1"* ]]; then
+if [[ "$REGISTRY" == *"localhost"* ]] || [[ "$REGISTRY" == *"localhost"* ]]; then
     PROTOCOL="http"
 fi
 echo "Publishing to registry (${PROTOCOL}://${REGISTRY})..."

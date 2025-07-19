@@ -268,7 +268,7 @@ A fully operational WAVS service that monitors blockchain events, executes WebAs
 
 ```bash docci-delay-after=2
 export RPC_URL=`bash ./script/get-rpc.sh`
-export AGGREGATOR_URL=http://127.0.0.1:8001
+export AGGREGATOR_URL=http://localhost:8001
 
 bash ./script/deploy-script.sh
 ```

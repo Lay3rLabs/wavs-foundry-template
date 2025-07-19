@@ -10,15 +10,15 @@ COMPONENT_FILENAME?=evm_price_oracle.wasm
 CREDENTIAL?=""
 DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:35c96a4
 MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.4.1
-IPFS_ENDPOINT?=http://127.0.0.1:5001
-RPC_URL?=http://127.0.0.1:8545
+IPFS_ENDPOINT?=http://localhost:5001
+RPC_URL?=http://localhost:8545
 SERVICE_FILE?=.docker/service.json
 SERVICE_SUBMISSION_ADDR?=`jq -r .deployedTo .docker/submit.json`
 SERVICE_TRIGGER_ADDR?=`jq -r .deployedTo .docker/trigger.json`
 WASI_BUILD_DIR ?= ""
 ENV_FILE?=.env
 WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f ${ENV_FILE} && echo "--env-file ./${ENV_FILE}") -v $$(pwd):/data ${DOCKER_IMAGE} wavs-cli
-WAVS_ENDPOINT?="http://127.0.0.1:8000"
+WAVS_ENDPOINT?="http://localhost:8000"
 -include ${ENV_FILE}
 
 # Default target is build
@@ -159,7 +159,7 @@ PINATA_API_KEY?=""
 ## upload-to-ipfs: uploading the a service config to IPFS | SERVICE_FILE, [PINATA_API_KEY]
 upload-to-ipfs:
 	@if [ `sh script/get-deploy-status.sh` = "LOCAL" ]; then \
-		curl -X POST "http://127.0.0.1:5001/api/v0/add?pin=true" -H "Content-Type: multipart/form-data" -F file=@${SERVICE_FILE} | jq -r .Hash; \
+		curl -X POST "http://localhost:5001/api/v0/add?pin=true" -H "Content-Type: multipart/form-data" -F file=@${SERVICE_FILE} | jq -r .Hash; \
 	else \
 		if [ -z "${PINATA_API_KEY}" ]; then \
 			echo "Error: PINATA_API_KEY is not set. Please set it to your Pinata API key -- https://app.pinata.cloud/developers/api-keys."; \
