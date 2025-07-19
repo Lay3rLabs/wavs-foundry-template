@@ -91,7 +91,7 @@ jobs:
 
     - name: Install Docci Readme Runner
       run: |
-        VERSION=v0.9.0-alpha.3
+        VERSION=v0.9.0-beta.1
         wget -O docci.tar.gz "https://github.com/Reecepbcups/docci/releases/download/${VERSION}/docci_Linux_x86_64.tar.gz"
         tar -xzf docci.tar.gz
         sudo mv docci /usr/local/bin/docci
