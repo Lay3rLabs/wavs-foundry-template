@@ -1,0 +1,68 @@
+version: "3"
+
+tasks:
+  wallet-address:
+    desc: "Get the wallet address"
+    cmds:
+      - 'echo "{{.WALLET_ADDRESS}}"'
+    silent: true
+
+  funded-key:
+    desc: "Get the funded private key"
+    cmds:
+      - 'echo "{{.FUNDED_KEY}}"'
+    silent: true
+
+  service-manager-address:
+    desc: "Get the WAVS Service Manager address"
+    cmds:
+      - 'echo "{{.WAVS_SERVICE_MANAGER_ADDRESS}}"'
+    silent: true
+
+  service-id:
+    desc: "Get the service ID"
+    cmds:
+      - 'echo "{{.SERVICE_ID}}"'
+    silent: true
+
+vars:
+  # Repository general
+  REPO_ROOT:
+    sh: git rev-parse --show-toplevel
+
+  # Wallet configuration (from .env via Taskfile dotenv)
+  FUNDED_KEY: "{{.FUNDED_KEY}}"
+  WALLET_ADDRESS:
+    sh: test -n "{{.FUNDED_KEY}}" && cast wallet address "{{.FUNDED_KEY}}" 2>/dev/null || echo ""
+
+  # Docker images
+  WAVS_DOCKER_IMAGE: "ghcr.io/lay3rlabs/wavs:1.4.1"
+  MIDDLEWARE_DOCKER_IMAGE: "ghcr.io/lay3rlabs/wavs-middleware:0.5.0-beta.10"
+
+  # Service endpoints
+  IPFS_ENDPOINT: "http://localhost:5001"
+  IPFS_GATEWAY: "http://localhost:8080/ipfs/"
+  RPC_URL: "http://127.0.0.1:8545"
+  WAVS_ENDPOINT: "http://127.0.0.1:8000"
+  AGGREGATOR_URL: "http://localhost:8001"
+
+  # Deployment summary path
+  DEPLOY_SUMMARY: ".docker/deployment_summary.json"
+
+  SERVICE_INDEX: '{{.SERVICE_INDEX | default "0"}}'
+  SERVICE_ID:
+    sh: curl -s http://localhost:8000/services | jq -r ".service_ids[{{.SERVICE_INDEX}}]"
+  WAVS_SERVICE_MANAGER_ADDRESS:
+    sh: |
+      if [ -n "${WAVS_SERVICE_MANAGER_ADDRESS}" ]; then
+        echo "${WAVS_SERVICE_MANAGER_ADDRESS}"
+      else
+        addr=$(jq -r '.addresses.POAStakeRegistry' .nodes/poa_deploy.json 2>/dev/null || echo "")
+        if [ -n "$addr" ] && [ "$addr" != "null" ]; then
+          echo "$addr"
+        else
+          # writes to stderr
+          echo "⚠️ WAVS Service Manager address not found (looked in \$WAVS_SERVICE_MANAGER_ADDRESS env and .nodes/poa_deploy.json file)" 1>&2;
+          echo ""
+        fi
+      fi

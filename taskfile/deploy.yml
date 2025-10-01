@@ -1,0 +1,112 @@
+version: "3"
+
+tasks:
+  full:
+    desc: "Complete WAVS deployment pipeline"
+    vars:
+      PRIVATE_KEY: '{{.PRIVATE_KEY | default "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"}}'
+    cmds:
+      - |
+        echo "🚀 Starting complete WAVS deployment..."
+        export RPC_URL=$(task get-rpc)
+        export AGGREGATOR_URL={{.AGGREGATOR_URL}}
+        bash ./script/deploy-script.sh
+
+  ipfs:
+    desc: "Upload service config to IPFS"
+    vars:
+      SERVICE_FILE: '{{.SERVICE_FILE | default ".docker/service.json"}}'
+      PINATA_API_KEY: "{{.PINATA_API_KEY}}"
+    preconditions:
+      - test -f {{.SERVICE_FILE}}
+    cmds:
+      - |
+        if [ "$(task get-deploy-status)" = "LOCAL" ]; then
+          curl -X POST "http://127.0.0.1:5001/api/v0/add?pin=true" \
+            -H "Content-Type: multipart/form-data" \
+            -F file=@{{.SERVICE_FILE}} | jq -r .Hash
+        else
+          if [ -z "{{.PINATA_API_KEY}}" ]; then
+            echo "Error: PINATA_API_KEY is not set. Please set it to your Pinata API key"
+            echo "Get one at: https://app.pinata.cloud/developers/api-keys"
+            exit 1
+          fi
+          curl -X POST --url https://uploads.pinata.cloud/v3/files \
+            --header "Authorization: Bearer {{.PINATA_API_KEY}}" \
+            --header 'Content-Type: multipart/form-data' \
+            --form file=@{{.SERVICE_FILE}} \
+            --form network=public \
+            --form name=service-$(date +"%b-%d-%Y").json | jq -r .data.cid
+        fi
+
+  component:
+    desc: "Upload WASI component to WAVS endpoint"
+    vars:
+      COMPONENT_FILENAME: '{{.COMPONENT_FILENAME | default "wavs_eas_attest.wasm"}}'
+      WAVS_ENDPOINT: "{{.WAVS_ENDPOINT}}"
+    preconditions:
+      - test -n "{{.COMPONENT_FILENAME}}"
+      - test -f "./compiled/{{.COMPONENT_FILENAME}}"
+    cmds:
+      - |
+        echo "📤 Uploading component: {{.COMPONENT_FILENAME}}..."
+        wget --post-file=./compiled/{{.COMPONENT_FILENAME}} \
+          --header="Content-Type: application/wasm" \
+          -O - {{.WAVS_ENDPOINT}}/components | jq -r .digest
+        echo "✅ Component uploaded successfully"
+
+  service:
+    desc: "Deploy WAVS service from URL"
+    vars:
+      SERVICE_URL: "{{.SERVICE_URL}}"
+      WAVS_ENDPOINT: "{{.WAVS_ENDPOINT}}"
+      IPFS_GATEWAY: "{{.IPFS_GATEWAY}}"
+    preconditions:
+      - test -n "{{.SERVICE_URL}}"
+    cmds:
+      - |
+        if [ -n "{{.WAVS_ENDPOINT}}" ]; then
+          echo "🔍 Checking WAVS service at {{.WAVS_ENDPOINT}}..."
+          if [ "$(curl -s -o /dev/null -w "%{http_code}" {{.WAVS_ENDPOINT}}/info)" != "200" ]; then
+            echo "❌ WAVS service not reachable at {{.WAVS_ENDPOINT}}"
+            echo "💡 Make sure the service is running"
+            exit 1
+          fi
+          echo "✅ WAVS service is running"
+        fi
+        echo "🚀 Deploying service from: {{.SERVICE_URL}}..."
+        {{.DOCKER_SUDO}} docker run --rm --network host \
+          $(test -f .env && echo "--env-file ./.env") \
+          -v $(pwd):/data {{.DOCKER_IMAGE}} wavs-cli \
+          deploy-service --service-url {{.SERVICE_URL}} \
+          --log-level=debug --data /data/.docker --home /data \
+          {{if .WAVS_ENDPOINT}}--wavs-endpoint {{.WAVS_ENDPOINT}}{{end}} \
+          {{if .IPFS_GATEWAY}}--ipfs-gateway {{.IPFS_GATEWAY}}{{end}}
+        echo "✅ Service deployed successfully"
+
+  single-operator-poa-local:
+    desc: "Deploy a single operator with POA"
+    cmds:
+      - |
+        if [ "$(task get-deploy-status)" != "LOCAL" ]; then
+          echo "Not in LOCAL mode, skipping single operator PoA. Register manually in ServiceManager (README_TESTNET.md)."
+          exit 0
+        fi
+
+        echo "Deploying single operator with POA..."
+
+        # Register operator with initial weight using owner operation
+        PRIVATE_KEY=`task config:funded-key` OPERATOR_NUM=1 OPERATOR_WEIGHT=1000 task operator:register
+
+        # Update signing key for the operator
+        OPERATOR_NUM=1 task operator:update-signing-key
+
+        # Verify the registration
+        OPERATOR_NUM=1 task operator:verify
+
+        if [ "$(task get-deploy-status)" = "LOCAL" ]; then
+          echo "Mining 1 block on local network..."
+          cast rpc anvil_mine --rpc-url $(task get-rpc) 2&> /dev/null
+        fi
+
+        echo "✅ Single operator with POA deployed successfully"
