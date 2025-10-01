@@ -316,7 +316,7 @@ RPC_URL=${RPC_URL} forge script ./src/script/ShowResult.s.sol ${SERVICE_TRIGGER_
 
 ```bash docci-delay-per-cmd=2 docci-output-contains="BTC"
 export SERVICE_SUBMIT_ADDR=`jq -r '.evmpriceoracle_submit.deployedTo' .docker/deployment_summary.json`
-RPC_URL=${RPC_URL} forge script ./src/script/ShowResult.s.sol ${SERVICE_SUBMIT_ADDR} 4 --sig 'data(string,uint64)' --rpc-url ${RPC_URL}
+RPC_URL=${RPC_URL} forge script ./src/script/ShowResult.s.sol ${SERVICE_SUBMIT_ADDR} 1 --sig 'data(string,uint64)' --rpc-url ${RPC_URL}
 ```
 
 ## AI Coding Agents
