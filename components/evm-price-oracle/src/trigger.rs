@@ -1,6 +1,6 @@
-use crate::bindings::wavs::worker::layer_types::{
-    TriggerData, TriggerDataEvmContractEvent, WasmResponse,
-};
+use crate::bindings::wavs::types::events::{TriggerData, TriggerDataEvmContractEvent};
+use crate::bindings::WasmResponse;
+use crate::solidity;
 use alloy_sol_types::SolValue;
 use anyhow::Result;
 use wavs_wasi_utils::decode_event_log_data;
@@ -34,7 +34,7 @@ pub enum Destination {
 pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<(u64, Vec<u8>, Destination)> {
     match trigger_data {
         TriggerData::EvmContractEvent(TriggerDataEvmContractEvent { log, .. }) => {
-            let event: solidity::NewTrigger = decode_event_log_data!(log)?;
+            let event: solidity::NewTrigger = decode_event_log_data!(log.data)?;
             let trigger_info =
                 <solidity::TriggerInfo as SolValue>::abi_decode(&event._triggerInfo)?;
             Ok((trigger_info.triggerId, trigger_info.data.to_vec(), Destination::Ethereum))
@@ -60,32 +60,5 @@ pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> WasmR
         }
         .abi_encode(),
         ordering: None,
-    }
-}
-
-/// Private module containing Solidity type definitions
-///
-/// The `sol!` macro from alloy_sol_macro reads a Solidity interface file
-/// and generates corresponding Rust types and encoding/decoding functions.
-///
-/// In this case, it reads "../../src/interfaces/ITypes.sol" which defines:
-/// - NewTrigger event
-/// - TriggerInfo struct
-/// - DataWithId struct
-///
-/// Documentation:
-/// - <https://docs.rs/alloy-sol-macro/latest/alloy_sol_macro/macro.sol.html>
-/// (You can also just sol! arbitrary solidity types like `event` or `struct` too)
-pub mod solidity {
-    use alloy_sol_macro::sol;
-    pub use ITypes::*;
-
-    // The objects here will be generated automatically into Rust types.
-    // If you update the .sol file, you must re-run `cargo build` to see the changes.
-    sol!("../../src/interfaces/ITypes.sol");
-
-    // Define a simple struct representing the function that encodes string input
-    sol! {
-        function addTrigger(string data) external;
     }
 }

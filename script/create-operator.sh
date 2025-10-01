@@ -17,17 +17,17 @@ OPERATOR_LOC=infra/wavs-${OPERATOR_INDEX}
 
 
 if [ -d "${OPERATOR_LOC}" ] && [ "$(ls -A ${OPERATOR_LOC})" ]; then
-  read -p "Directory ${OPERATOR_LOC} already exists and is not empty. Do you want to remove it? (y/n): " -n 1 -r
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
+  # read -p "Directory ${OPERATOR_LOC} already exists and is not empty. Do you want to remove it? (y/n): " -n 1 -r
+  # if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo -e "\nRemoving ${OPERATOR_LOC}"
     docker kill wavs-${OPERATOR_INDEX} > /dev/null 2>&1 || true
 
     echo "Removing dir ${OPERATOR_LOC} ((may prompt for password))"
     sudo rm -rf ${OPERATOR_LOC}
-  else
-    echo -e "\nExiting without changes."
-    return
-  fi
+  # else
+  #   echo -e "\nExiting without changes."
+  #   return
+  # fi
 fi
 
 mkdir -p ${OPERATOR_LOC}
@@ -39,22 +39,34 @@ cp ./script/template/.env.example.operator ${ENV_FILENAME}
 
 TEMP_FILENAME=".docker/tmp.json"
 
+# creates a new wallet no matter what
 cast wallet new-mnemonic --json > ${TEMP_FILENAME}
 export OPERATOR_MNEMONIC=`jq -r .mnemonic ${TEMP_FILENAME}`
 export OPERATOR_PK=`jq -r .accounts[0].private_key ${TEMP_FILENAME}`
+
+# if its not a LOCAL deploy, we will see if the user wants to override. if they do, we do.
+if [ "$(task get-deploy-status)" != "LOCAL" ]; then
+  read -p "Enter operator mnemonic (leave blank to generate a new one): " INPUT_MNEMONIC
+  if [ ! -z "$INPUT_MNEMONIC" ]; then
+    export OPERATOR_MNEMONIC="$INPUT_MNEMONIC"
+  else
+    echo "Generating new mnemonic..."
+  fi
+
+  export OPERATOR_PK=$(cast wallet private-key --mnemonic "$OPERATOR_MNEMONIC")
+fi
 
 sed -i${SP}'' -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$OPERATOR_MNEMONIC\"/" ${ENV_FILENAME}
 sed -i${SP}'' -e "s/^WAVS_CLI_EVM_CREDENTIAL=.*$/WAVS_CLI_EVM_CREDENTIAL=\"$OPERATOR_PK\"/" ${ENV_FILENAME}
 
 rm ${TEMP_FILENAME}
 
-
 # Create startup script
 cat > "${OPERATOR_LOC}/start.sh" << EOF
 #!/bin/bash
 cd \$(dirname "\$0") || return
 
-IMAGE=ghcr.io/lay3rlabs/wavs:35c96a4
+IMAGE=ghcr.io/lay3rlabs/wavs:1.4.1
 WAVS_INSTANCE=wavs-${OPERATOR_INDEX}
 IPFS_GATEWAY=\${IPFS_GATEWAY:-"https://gateway.pinata.cloud/ipfs/"}
 

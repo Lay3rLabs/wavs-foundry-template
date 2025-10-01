@@ -12,10 +12,10 @@ if [ -z "$AGGREGATOR_INDEX" ]; then
 fi
 
 if [ -z "$DEPLOY_ENV" ]; then
-    DEPLOY_ENV=$(sh ./script/get-deploy-status.sh)
+    DEPLOY_ENV=$(task get-deploy-status)
 fi
 if [ -z "$RPC_URL" ]; then
-    RPC_URL=`sh ./script/get-rpc.sh`
+    RPC_URL=`task get-rpc`
 fi
 
 SP=""; if [[ "$(uname)" == *"Darwin"* ]]; then SP=" "; fi
@@ -29,10 +29,29 @@ TEMP_FILENAME=".docker/tmp.json"
 cast wallet new-mnemonic --json > ${TEMP_FILENAME}
 export AGG_MNEMONIC=`jq -r .mnemonic ${TEMP_FILENAME}`
 export AGG_PK=`jq -r .accounts[0].private_key ${TEMP_FILENAME}`
+
+# if its not a LOCAL deploy, we will see if the user wants to override. if they do, we do.
+if [ "$DEPLOY_ENV" != "LOCAL" ]; then
+  read -p "Enter aggregator mnemonic (leave blank to generate a new one): " INPUT_MNEMONIC
+  if [ ! -z "$INPUT_MNEMONIC" ]; then
+    export AGG_MNEMONIC="$INPUT_MNEMONIC"
+  else
+    echo "Generating new mnemonic..."
+  fi
+
+  export AGG_PK=$(cast wallet private-key --mnemonic "$AGG_MNEMONIC")
+fi
 AGGREGATOR_ADDR=`cast wallet address $AGG_PK`
 
 # == infra files ==
 AGG_LOC=infra/aggregator-${AGGREGATOR_INDEX}
+
+if [ -d "${AGG_LOC}" ] && [ "$(ls -A ${AGG_LOC})" ]; then
+    echo -e "\nRemoving ${AGG_LOC}"
+    docker kill wavs-${AGG_LOC} > /dev/null 2>&1 || true
+    echo "Removing dir ${AGG_LOC} ((may prompt for password))"
+    sudo rm -rf ${AGG_LOC}
+fi
 mkdir -p ${AGG_LOC}
 
 ENV_FILENAME="${AGG_LOC}/.env"
@@ -45,14 +64,14 @@ cat > "${AGG_LOC}/start.sh" << EOF
 #!/bin/bash
 cd \$(dirname "\$0") || return
 
-IMAGE=ghcr.io/lay3rlabs/wavs:35c96a4
+IMAGE=ghcr.io/lay3rlabs/wavs:1.4.1
 INSTANCE=wavs-aggregator-${AGGREGATOR_INDEX}
 IPFS_GATEWAY=\${IPFS_GATEWAY:-"https://gateway.pinata.cloud/ipfs/"}
 
 docker kill \${INSTANCE} > /dev/null 2>&1 || true
 docker rm \${INSTANCE} > /dev/null 2>&1 || true
 
-docker run -d --name \${INSTANCE} --network host --stop-signal SIGKILL --env-file .env --user 1000:1000 -v .:/wavs \\
+docker run -d --name \${INSTANCE} --network host --stop-signal SIGKILL --env-file .env -v .:/wavs \\
   \${IMAGE} wavs-aggregator --log-level debug --host 0.0.0.0 --port 8001 --ipfs-gateway \${IPFS_GATEWAY}
 
 # give it a chance to start up

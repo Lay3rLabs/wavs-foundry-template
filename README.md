@@ -144,13 +144,13 @@ Install the required packages to build the Solidity contracts. This project supp
 
 ```bash
 # Install packages (npm & submodules)
-make setup
+task setup
 
 # Build the contracts
-forge build
+task build:forge
 
 # Run the solidity tests
-forge test
+task test
 ```
 
 ## Build WASI components
@@ -169,7 +169,7 @@ Now build the WASI components into the `compiled` output directory.
 
 ```bash
 # Remove `WASI_BUILD_DIR` to build all components.
-WASI_BUILD_DIR=components/evm-price-oracle make wasi-build
+WASI_BUILD_DIR=components/evm-price-oracle task build:wasi
 ```
 
 ## Testing the Price Feed Component Locally
@@ -178,11 +178,11 @@ How to test the component locally for business logic validation before on-chain 
 
 ```bash
 # Rust & Typescript components
-INPUT_DATA="1" COMPONENT_FILENAME=evm_price_oracle.wasm make wasi-exec
-INPUT_DATA="1" COMPONENT_FILENAME=js_evm_price_oracle.wasm make wasi-exec
+INPUT_DATA="1" COMPONENT_FILENAME=evm_price_oracle.wasm task wasi:exec
+INPUT_DATA="1" COMPONENT_FILENAME=js_evm_price_oracle.wasm task wasi:exec
 
 # Golang
-INPUT_DATA="1" COMPONENT_FILENAME=golang_evm_price_oracle.wasm make wasi-exec-fixed
+INPUT_DATA="1" COMPONENT_FILENAME=golang_evm_price_oracle.wasm task wasi:exec-fixed
 ```
 
 Expected output:
@@ -237,7 +237,7 @@ cp .env.example .env
 # update the .env for either LOCAL or TESTNET
 
 # Starts anvil + IPFS, WARG, Jaeger, and prometheus.
-make start-all-local
+task start-all-local
 ```
 
 ## WAVS Deployment Script
@@ -266,10 +266,19 @@ This script automates the complete WAVS deployment process in a single command:
 A fully operational WAVS service that monitors blockchain events, executes WebAssembly components, and submits verified results on-chain.
 
 ```bash
-export RPC_URL=`bash ./script/get-rpc.sh`
+# export RPC_URL=`bash ./script/get-rpc.sh`
+# export AGGREGATOR_URL=http://127.0.0.1:8001
+
+# task deploy:full
+export RPC_URL=$(task get-rpc)
 export AGGREGATOR_URL=http://127.0.0.1:8001
 
-bash ./script/deploy-script.sh
+# TODO: this is merged with deploy-script now
+# bash ./script/deploy-contracts.sh
+
+# deploys contracts & components
+# If you do not set the PoA operator you will get `ServiceManagerValidateAnyRevert("0x3dda1739")`
+bash ./script/deploy-script.sh && task deploy:single-operator-poa-local
 ```
 
 
@@ -285,15 +294,16 @@ export INPUT_DATA=`cast abi-encode "addTrigger(string)" "1"`
 # export INPUT_DATA="1"
 
 # Get the trigger address from previous Deploy forge script
-export SERVICE_TRIGGER_ADDR=`make get-trigger-from-deploy`
+export SERVICE_TRIGGER_ADDR=`jq -r '.evmpriceoracle_trigger.deployedTo' .docker/deployment_summary.json`
 # Execute on the trigger contract, WAVS will pick this up and submit the result
 # on chain via the operators.
 
 # uses FUNDED_KEY as the executor (local: anvil account)
-source .env
-export RPC_URL=`sh ./script/get-rpc.sh`
+# source .env
+export RPC_URL=`task get-rpc`
+export FUNDED_KEY=`task config:funded-key`
 
-forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${INPUT_DATA} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast
+forge script ./src/script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${INPUT_DATA} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast --private-key ${FUNDED_KEY}
 ```
 
 ## Show the result
@@ -301,11 +311,12 @@ forge script ./script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${INPUT_DATA} --sig 
 Query the latest submission contract id from the previous request made.
 
 ```bash docci-delay-per-cmd=2 docci-output-contains="1"
-RPC_URL=${RPC_URL} make get-trigger
+RPC_URL=${RPC_URL} forge script ./src/script/ShowResult.s.sol ${SERVICE_TRIGGER_ADDR} --sig 'trigger(string)' --rpc-url ${RPC_URL}
 ```
 
 ```bash docci-delay-per-cmd=2 docci-output-contains="BTC"
-TRIGGER_ID=1 RPC_URL=${RPC_URL} make show-result
+export SERVICE_SUBMIT_ADDR=`jq -r '.evmpriceoracle_submit.deployedTo' .docker/deployment_summary.json`
+RPC_URL=${RPC_URL} forge script ./src/script/ShowResult.s.sol ${SERVICE_SUBMIT_ADDR} 4 --sig 'data(string,uint64)' --rpc-url ${RPC_URL}
 ```
 
 ## AI Coding Agents

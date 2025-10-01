@@ -28,4 +28,4 @@ lto = true
 
 [package.metadata.component]
 package = "component:evm-price-oracle"
-target = "wavs:worker/layer-trigger-world@0.4.0"
+target = "wavs:operator@=1.2.0"

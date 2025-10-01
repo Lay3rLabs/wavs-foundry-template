@@ -5,20 +5,19 @@ SUDO := $(shell if groups | grep -q docker; then echo ''; else echo 'sudo'; fi)
 
 # Define common variables
 CARGO=cargo
-INPUT_DATA?=1
+INPUT_DATA?=``
 COMPONENT_FILENAME?=evm_price_oracle.wasm
 CREDENTIAL?=""
-DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:35c96a4
-MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.4.1
+DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:1.4.1
+MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.5.0-beta.10
 IPFS_ENDPOINT?=http://127.0.0.1:5001
 RPC_URL?=http://127.0.0.1:8545
 SERVICE_FILE?=.docker/service.json
-SERVICE_SUBMISSION_ADDR?=`jq -r .deployedTo .docker/submit.json`
-SERVICE_TRIGGER_ADDR?=`jq -r .deployedTo .docker/trigger.json`
 WASI_BUILD_DIR ?= ""
 ENV_FILE?=.env
 WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f ${ENV_FILE} && echo "--env-file ./${ENV_FILE}") -v $$(pwd):/data ${DOCKER_IMAGE} wavs-cli
 WAVS_ENDPOINT?="http://127.0.0.1:8000"
+WAVS_SERVICE_MANAGER_ADDRESS?=`task config:service-manager-address`
 -include ${ENV_FILE}
 
 # Default target is build
@@ -30,7 +29,8 @@ build: _build_forge wasi-build
 ## wasi-build: building WAVS wasi components | WASI_BUILD_DIR
 wasi-build:
 	@echo "🔨 Building WASI components..."
-	@./script/build_components.sh $(WASI_BUILD_DIR)
+	@warg reset
+	@task build:wasi WASI_BUILD_DIR=$(WASI_BUILD_DIR)
 	@echo "✅ WASI build complete"
 
 ## wasi-exec: executing the WAVS wasi component(s) with ABI function | COMPONENT_FILENAME, INPUT_DATA
@@ -98,14 +98,6 @@ setup: check-requirements
 start-all-local: clean-docker setup-env
 	@sh ./script/start_all.sh
 
-## get-trigger-from-deploy: getting the trigger address from the script deploy
-get-trigger-from-deploy:
-	@jq -r '.deployedTo' "./.docker/trigger.json"
-
-## get-submit-from-deploy: getting the submit address from the script deploy
-get-submit-from-deploy:
-	@jq -r '.deployedTo' "./.docker/submit.json"
-
 ## wavs-cli: running wavs-cli in docker
 wavs-cli:
 	@$(WAVS_CMD) $(filter-out $@,$(MAKECMDGOALS))
@@ -134,31 +126,34 @@ deploy-service:
 	fi
 	@if [ -n "${WAVS_ENDPOINT}" ]; then \
 		echo "🔍 Checking WAVS service at ${WAVS_ENDPOINT}..."; \
-		if [ "$$(curl -s -o /dev/null -w "%{http_code}" ${WAVS_ENDPOINT}/app)" != "200" ]; then \
-			echo "❌ WAVS service not reachable at ${WAVS_ENDPOINT}"; \
-			echo "💡 Re-try running in 1 second, if not then validate the wavs service is online / started."; \
-			exit 1; \
-		fi; \
-		echo "✅ WAVS service is running"; \
+		attempt=1; \
+		max_attempts=10; \
+		while [ $$attempt -le $$max_attempts ]; do \
+			if [ "$$(curl -s -o /dev/null -w "%{http_code}" ${WAVS_ENDPOINT}/info)" = "200" ]; then \
+				echo "✅ WAVS service is running"; \
+				break; \
+			else \
+				echo "❌ WAVS service not reachable at ${WAVS_ENDPOINT} (attempt $$attempt/$$max_attempts)"; \
+				if [ $$attempt -lt $$max_attempts ]; then \
+					echo "⏳ Retrying in 5 seconds..."; \
+					sleep 5; \
+					attempt=$$((attempt + 1)); \
+				else \
+					echo "❌ Failed after $$max_attempts attempts. Please validate the WAVS service is online/started."; \
+					exit 1; \
+				fi; \
+			fi; \
+		done; \
 	fi
 	@echo "🚀 Deploying service from: ${SERVICE_URL}..."
 	@$(WAVS_CMD) deploy-service --service-url ${SERVICE_URL} --log-level=debug --data /data/.docker --home /data $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),) $(if $(IPFS_GATEWAY),--ipfs-gateway $(IPFS_GATEWAY),)
 	@echo "✅ Service deployed successfully"
 
-## get-trigger: get the trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
-get-trigger:
-	@forge script ./script/ShowResult.s.sol ${SERVICE_TRIGGER_ADDR} --sig 'trigger(string)' --rpc-url $(RPC_URL) --broadcast
-
-TRIGGER_ID?=1
-## show-result: showing the result | SERVICE_SUBMISSION_ADDR, TRIGGER_ID, RPC_URL
-show-result:
-	@forge script ./script/ShowResult.s.sol ${SERVICE_SUBMISSION_ADDR} ${TRIGGER_ID} --sig 'data(string,uint64)' --rpc-url $(RPC_URL) --broadcast
-
-
 PINATA_API_KEY?=""
 ## upload-to-ipfs: uploading the a service config to IPFS | SERVICE_FILE, [PINATA_API_KEY]
 upload-to-ipfs:
-	@if [ `sh script/get-deploy-status.sh` = "LOCAL" ]; then \
+	@DEPLOY_STATUS="$$(task get-deploy-status)"; \
+	if [ "$$DEPLOY_STATUS" = "LOCAL" ]; then \
 		curl -X POST "http://127.0.0.1:5001/api/v0/add?pin=true" -H "Content-Type: multipart/form-data" -F file=@${SERVICE_FILE} | jq -r .Hash; \
 	else \
 		if [ -z "${PINATA_API_KEY}" ]; then \
@@ -173,7 +168,9 @@ PAST_BLOCKS?=500
 wavs-middleware:
 	@docker run --rm --network host --env-file ${ENV_FILE} \
 		$(if ${WAVS_SERVICE_MANAGER_ADDRESS},-e WAVS_SERVICE_MANAGER_ADDRESS=${WAVS_SERVICE_MANAGER_ADDRESS}) \
-		$(if ${PAST_BLOCKS},-e PAST_BLOCKS=${PAST_BLOCKS}) \
+		$(if ${OPERATOR_KEY},-e OPERATOR_KEY=${OPERATOR_KEY}) \
+		$(if ${WAVS_SIGNING_KEY},-e WAVS_SIGNING_KEY=${WAVS_SIGNING_KEY}) \
+		$(if ${WAVS_DELEGATE_AMOUNT},-e WAVS_DELEGATE_AMOUNT=${WAVS_DELEGATE_AMOUNT}) \
 		-v ./.nodes:/root/.nodes ${MIDDLEWARE_DOCKER_IMAGE} ${COMMAND}
 
 ## update-submodules: update the git submodules
