@@ -132,7 +132,7 @@ warg key new
 ```bash docci-ignore
 # if foundry is not installed:
 # `curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup`
-forge init --template Lay3rLabs/wavs-foundry-template my-wavs --branch 0.4
+forge init --template Lay3rLabs/wavs-foundry-template my-wavs --branch main
 ```
 
 > \[!TIP]
@@ -140,7 +140,7 @@ forge init --template Lay3rLabs/wavs-foundry-template my-wavs --branch 0.4
 
 ### Solidity
 
-Install the required packages to build the Solidity contracts. This project supports both [submodules](./.gitmodules) and [npm packages](./package.json).
+Install the required packages to build the Solidity contracts. This project supports [npm packages](./package.json), you can add git submodules if you need.
 
 ```bash
 # Install packages (npm & submodules)
@@ -177,30 +177,29 @@ WASI_BUILD_DIR=components/evm-price-oracle task build:wasi
 How to test the component locally for business logic validation before on-chain deployment. An ID of 1 for the oracle component is Bitcoin.
 
 ```bash
-# Rust & Typescript components
+# Rust components
 INPUT_DATA="1" COMPONENT_FILENAME=evm_price_oracle.wasm task wasi:exec
-INPUT_DATA="1" COMPONENT_FILENAME=js_evm_price_oracle.wasm task wasi:exec
 
-# Golang
-INPUT_DATA="1" COMPONENT_FILENAME=golang_evm_price_oracle.wasm task wasi:exec-fixed
+
+# Golang & JS (re-added in the future since v1 refactor)
+# INPUT_DATA="1" COMPONENT_FILENAME=js_evm_price_oracle.wasm task wasi:exec
+# INPUT_DATA="1" COMPONENT_FILENAME=golang_evm_price_oracle.wasm task wasi:exec-fixed
 ```
 
 Expected output:
 
 ```shell docci-ignore
-input id: 1
-resp_data: PriceFeedData {
-    symbol: "BTC",
-    timestamp: "2025-04-01T00:00:00.000Z",
-    price: 82717.27035239758
-}
-INFO Fuel used: 653415
+Decoded crypto ID: 1
+resp_data: PriceFeedData { symbol: "BTC", timestamp: "2025-10-01T18:12:11", price: 116999.97 }
+INFO Fuel used: 702137
 
-Result (hex encoded):
-7b2273796d626f6c223a22425443222c2274696d657374616d70223a22323032352d30342d30315430303a34...
+Time elapsed (ms): 123
 
-Result (utf8):
-{"symbol":"BTC","timestamp":"2025-04-01T00:00:00.000Z","price":82717.27035239758}
+Result (hex encoded): 7b2273796d626f6c2...
+
+Result (utf8): {"symbol":"BTC","timestamp":"2025-10-01T18:12:11","price":116999.97}
+
+Ordering: 0
 ```
 
 ## WAVS
@@ -266,17 +265,10 @@ This script automates the complete WAVS deployment process in a single command:
 A fully operational WAVS service that monitors blockchain events, executes WebAssembly components, and submits verified results on-chain.
 
 ```bash
-# export RPC_URL=`bash ./script/get-rpc.sh`
-# export AGGREGATOR_URL=http://127.0.0.1:8001
-
-# task deploy:full
 export RPC_URL=$(task get-rpc)
 export AGGREGATOR_URL=http://127.0.0.1:8001
 
-# TODO: this is merged with deploy-script now
-# bash ./script/deploy-contracts.sh
-
-# deploys contracts & components
+# deploys contracts & components (( task deploy:full ))
 # If you do not set the PoA operator you will get `ServiceManagerValidateAnyRevert("0x3dda1739")`
 bash ./script/deploy-script.sh && task deploy:single-operator-poa-local
 ```
@@ -287,21 +279,19 @@ bash ./script/deploy-script.sh && task deploy:single-operator-poa-local
 Anyone can now call the [trigger contract](./src/contracts/WavsTrigger.sol) which emits the trigger event WAVS is watching for from the previous step. WAVS then calls the service and saves the result on-chain.
 
 ```bash
-# Rust & Typescript - request BTC from CMC
-export INPUT_DATA=`cast abi-encode "addTrigger(string)" "1"`
-
-# Golang uses the raw value
-# export INPUT_DATA="1"
-
 # Get the trigger address from previous Deploy forge script
 export SERVICE_TRIGGER_ADDR=`jq -r '.evmpriceoracle_trigger.deployedTo' .docker/deployment_summary.json`
 # Execute on the trigger contract, WAVS will pick this up and submit the result
 # on chain via the operators.
 
-# uses FUNDED_KEY as the executor (local: anvil account)
-# source .env
 export RPC_URL=`task get-rpc`
 export FUNDED_KEY=`task config:funded-key`
+
+# Rust & Typescript - request BTC from CMC
+export INPUT_DATA=`cast abi-encode "addTrigger(string)" "1"`
+
+# Golang uses the raw value (TODO: future)
+# export INPUT_DATA="1"
 
 forge script ./src/script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${INPUT_DATA} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast --private-key ${FUNDED_KEY}
 ```

@@ -17,7 +17,7 @@
     {
       "filename": "aggregator.wasm",
       "package_name": "aggregator",
-      "package_version": "0.3.4",
+      "package_version": "0.1.0",
       "config_values": {
         "timer_delay_secs": "${AGGREGATOR_TIMER_DELAYER_SECS}"
       },
