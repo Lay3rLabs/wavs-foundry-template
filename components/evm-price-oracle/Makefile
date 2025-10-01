@@ -1,5 +1,6 @@
 OUTPUT_DIR?=../../compiled
 
+# WASI_BUILD_DIR=components/evm-price-oracle make wasi-build
 
 ## wasi-build: building the WAVS wasi component(s)
 wasi-build:

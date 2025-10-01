@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.22;
+pragma solidity 0.8.27;
 
 import {ISimpleTrigger} from "interfaces/IWavsTrigger.sol";
 

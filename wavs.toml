@@ -29,67 +29,50 @@ log_level = ["info", "wavs=debug"]
 # Chain configurations
 # ----------------------------
 
-# == Ethereum chains ==
+# Cosmos chains
+# [default.chains.cosmos.layer-local]
+# bech32_prefix = "layer"
+# rpc_endpoint = "http://localhost:26657"
+# grpc_endpoint = "http://localhost:9090"
+# gas_price = 0.025
+# gas_denom = "uslay"
+# faucet_endpoint = "http://localhost:8000"
 
-# Mainnet
-[default.chains.evm.ethereum]
-chain_id = "1"
-ws_endpoint = "wss://eth.drpc.org"
-http_endpoint = "https://eth.drpc.org"
+# [default.chains.cosmos.pion-1]
+# bech32_prefix = "neutron"
+# rpc_endpoint = "https://rpc-falcron.pion-1.ntrn.tech"
+# grpc_endpoint = "http://grpc-falcron.pion-1.ntrn.tech:80"
+# gas_price = 0.0053
+# gas_denom = "untrn"
 
-[default.chains.evm.base]
-chain_id = "8453"
-ws_endpoint = "wss://base.drpc.org"
-http_endpoint = "https://base.drpc.org"
-
-[default.chains.evm.optimism]
-chain_id = "10"
-ws_endpoint = "wss://optimism.drpc.org"
-http_endpoint = "https://optimism.drpc.org"
-
-[default.chains.evm.arbitrum]
-chain_id = "42161"
-ws_endpoint = "wss://arbitrum.drpc.org"
-http_endpoint = "https://arbitrum.drpc.org"
-
-# Local / Testnet
-[default.chains.evm.local]
-chain_id = "31337"
+# EVM chains
+[default.chains.evm.31337] # Local: anvil
 ws_endpoint = "ws://localhost:8545"
 http_endpoint = "http://localhost:8545"
 poll_interval_ms = 7000
 
-[default.chains.evm.local2]
-chain_id = "31338"
-ws_endpoint = "ws://localhost:8645"
-http_endpoint = "http://localhost:8645"
-poll_interval_ms = 7000
+# [default.chains.evm.17000] # Testnet: holesky | https://holesky-faucet.pk910.de/
+# ws_endpoint = "wss://ethereum-holesky-rpc.publicnode.com"
+# http_endpoint = "https://ethereum-holesky-rpc.publicnode.com"
+# poll_interval_ms = 7000
 
-[default.chains.evm.sepolia]
-chain_id = "11155111"
-ws_endpoint = "wss://ethereum-sepolia-rpc.publicnode.com"
-http_endpoint = "https://ethereum-sepolia-rpc.publicnode.com"
+# [default.chains.evm.11155111] # Testnet: Sepolia | https://sepolia-faucet.pk910.de/
+# ws_endpoint = "wss://ethereum-sepolia-rpc.publicnode.com"
+# http_endpoint = "https://ethereum-sepolia-rpc.publicnode.com"
+# poll_interval_ms = 7000
 
-[default.chains.evm.holesky]
-chain_id = "17000"
-ws_endpoint = "wss://ethereum-holesky-rpc.publicnode.com"
-http_endpoint = "https://ethereum-holesky-rpc.publicnode.com"
+# [default.chains.evm.8453] # Base L2 Mainnet | https://superbridge.app/base
+# ws_endpoint = "wss://base-rpc.publicnode.com"
+# http_endpoint = "https://base-rpc.publicnode.com"
+# poll_interval_ms = 7000
+# event_channel_size = 100000
 
-[default.chains.evm.holesky-fork]
-chain_id = "17000"
-ws_endpoint = "ws://localhost:8545"
-http_endpoint = "http://localhost:8545"
-poll_interval_ms = 7000
-
-# == Cosmos chains ==
-
-[default.chains.cosmos.neutron]
-chain_id = "pion-1"
-bech32_prefix = "neutron"
-rpc_endpoint = "https://rpc-falcron.pion-1.ntrn.tech"
-grpc_endpoint = "http://grpc-falcron.pion-1.ntrn.tech:80"
-gas_price = 0.0053
-gas_denom = "untrn"
+# [default.chains.dev.holesky-fork]
+# type = "evm"
+# chain_id = "17000"
+# ws_endpoint = "ws://localhost:8545"
+# http_endpoint = "http://localhost:8545"
+# poll_interval_ms = 7000
 
 # ----------------------------
 # WAVS specific settings
@@ -98,6 +81,11 @@ gas_denom = "untrn"
 
 # The directory to store the data. Default is "/var/wavs"
 data = "~/wavs"
+
+# Optional bearer token to protect mutating HTTP endpoints
+# If set here or via env var `WAVS_BEARER_TOKEN`, POST/DELETE endpoints require `Authorization: Bearer <token>`
+# Generate with `openssl rand -hex 32`
+# bearer_token = "change-me"
 
 cors_allowed_origins = [
     "https://lay3rlabs.github.io/*",
@@ -139,6 +127,11 @@ cors_allowed_origins = [
     "http://localhost:*",
     "http://127.0.0.1:*",
 ]
+
+# Optional bearer token to protect mutating HTTP endpoints
+# If set here or via env var `WAVS_AGGREGATOR_BEARER_TOKEN`, POST endpoints require `Authorization: Bearer <token>`
+# Generate with `openssl rand -hex 32`
+# bearer_token = "change-me"
 
 # Aggregator-specific chain overrides (if needed)
 # Example:

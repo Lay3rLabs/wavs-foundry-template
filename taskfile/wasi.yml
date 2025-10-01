@@ -1,0 +1,83 @@
+version: "3"
+
+tasks:
+  exec:
+    desc: "Execute WASI component locally"
+    vars:
+      COMPONENT_FILENAME: '{{.COMPONENT_FILENAME | default "wavs_eas_attest.wasm"}}'
+      INPUT_DATA: '{{.INPUT_DATA | default ""}}'
+      WAVS_CMD: '{{.DOCKER_SUDO}} docker run --rm --network host $(test -f .env && echo "--env-file ./.env") -v $(pwd):/data {{.DOCKER_IMAGE}} wavs-cli'
+    cmds:
+      - |
+        {{.WAVS_CMD}} exec --log-level=info --data /data/.docker --home /data \
+        --component "/data/compiled/{{.COMPONENT_FILENAME}}" \
+        --input $(cast abi-encode "f(string)" "{{.INPUT_DATA}}")
+
+  exec-fixed:
+    desc: "Execute WASI component with fixed input (for Go/TS components)"
+    vars:
+      COMPONENT_FILENAME: '{{.COMPONENT_FILENAME | default "wavs_eas_attest.wasm"}}'
+      INPUT_DATA: '{{.INPUT_DATA | default ""}}'
+      WAVS_CMD: '{{.DOCKER_SUDO}} docker run --rm --network host $(test -f .env && echo "--env-file ./.env") -v $(pwd):/data {{.DOCKER_IMAGE}} wavs-cli'
+    cmds:
+      - |
+        {{.WAVS_CMD}} exec --log-level=info --data /data/.docker --home /data \
+        --component "/data/compiled/{{.COMPONENT_FILENAME}}" \
+        --input `cast format-bytes32-string {{.INPUT_DATA}}`
+
+  validate:
+    desc: "Validate a WASI component against best practices"
+    vars:
+      COMPONENT: '{{.COMPONENT}}'
+    preconditions:
+      - test -n "{{.COMPONENT}}"
+      - test -d "./components/{{.COMPONENT}}"
+      - test -d "./test_utils"
+    cmds:
+      - cd test_utils && ./validate_component.sh {{.COMPONENT}}
+
+  upload-to-registry:
+    desc: "Upload WASI component to registry"
+    vars:
+      PKG_NAME: '{{.PKG_NAME}}'
+      PKG_VERSION: '{{.PKG_VERSION}}'
+      COMPONENT_FILENAME: '{{.COMPONENT_FILENAME}}'
+    preconditions:
+      - test -n "{{.PKG_NAME}}"
+      - test -n "{{.PKG_VERSION}}"
+      - test -n "{{.COMPONENT_FILENAME}}"
+      - test -f "./compiled/{{.COMPONENT_FILENAME}}"
+    cmds:
+      - |
+        export REGISTRY=`task get-registry`
+        if [ -z "$REGISTRY" ]; then
+            echo "REGISTRY is not set. Please set the REGISTRY environment variable." && exit 1
+        fi
+        export PKG_NAMESPACE=`task get-wasi-namespace REGISTRY=${REGISTRY}`
+        if [ -z "$PKG_NAMESPACE" ]; then
+            echo "PKG_NAMESPACE is not set. Please set the PKG_NAMESPACE environment variable." && exit 1
+        fi
+
+        cd $(git rev-parse --show-toplevel) || exit
+
+        PROTOCOL="https"
+        if [[ "$REGISTRY" == *"localhost"* ]] || [[ "$REGISTRY" == *"127.0.0.1"* ]]; then
+            PROTOCOL="http"
+        fi
+        echo "Publishing to registry (${PROTOCOL}://${REGISTRY})..."
+
+        output=$(warg publish release --registry ${PROTOCOL}://${REGISTRY} --name ${PKG_NAMESPACE}:{{.PKG_NAME}} --version {{.PKG_VERSION}} ./compiled/{{.COMPONENT_FILENAME}})
+        echo "output: ${output}"
+        exit_code=$?
+
+        # Check for specific error conditions in the output
+        if [[ $exit_code -ne 0 ]]; then
+            if [[ "$output" =~ "failed to prove inclusion" ]]; then
+                echo "Package uploaded to local registry successfully..."
+            elif [[ "$output" =~ "error sending request for url" ]]; then
+                echo "NOTE: Check to make sure you are running the registry locally"
+                echo "${output}"
+            else
+                echo "Unknown error occurred ${output}"
+            fi
+        fi

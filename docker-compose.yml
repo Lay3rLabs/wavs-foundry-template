@@ -24,7 +24,7 @@ services:
     command: ["--rm"]
 
   ipfs:
-    image: ipfs/kubo:v0.34.1
+    image: ipfs/kubo:v0.37.0
     container_name: ipfs
     network_mode: host
     ports:

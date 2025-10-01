@@ -4,32 +4,40 @@ resolver = "2"
 
 [workspace.package]
 edition = "2021"
-version = "0.4.0"
+version = "1.0.0"
 license = "MIT"
 authors = ["Lay3r Labs Team"]
 repository = "https://github.com/Lay3rLabs/wavs"
-rust-version = "1.80.0"
+rust-version = "1.87.0"
 
 [workspace.dependencies]
 # WASI
-wit-bindgen-rt = { version = "0.42.1", features = ["bitflags"] }
-wit-bindgen = "0.42.1"
-wstd = "0.5.3"
-wasi = "0.14.1"
-wavs-wasi-utils = "0.4.0"
+wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }
+wit-bindgen = "0.44.0"
+wstd = "0.5.4"
+wasi = "0.14.2"
+wavs-wasi-utils = "=1.0.0"
 
 # Other
+schemars = "1.0.4"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 anyhow = "1.0.98"
+async-trait = "0.1.88"
+inventory = "0.3"
+futures = "0.3.31"
+
 
 ## Alloy
 alloy-sol-macro = { version = "1.0.0", features = ["json"] }
 alloy-sol-types = "1.0.0"
-alloy-network = "0.15.10"
+alloy-dyn-abi = "1.0.0"
+alloy-json-abi = "1.0.0"
 alloy-primitives = "1.0.0"
-alloy-provider = { version = "0.15.10", default-features = false, features = [
+alloy-network = "1.0.0"
+alloy-provider = { version = "1.0.0", default-features = false, features = [
     "rpc-api",
 ] }
-alloy-rpc-types = "0.15.10"
-alloy-contract = "0.15.10"
+alloy-rpc-types = "1.0.0"
+alloy-contract = "1.0.0"
+alloy-transport-http = { version = "1.0.0", default-features = false }

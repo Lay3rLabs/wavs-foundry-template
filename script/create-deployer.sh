@@ -2,12 +2,12 @@
 # set -e
 SP=""; if [[ "$(uname)" == *"Darwin"* ]]; then SP=" "; fi
 
-# if DEPLOY_ENV is not set, grab it from the ./script/get-deploy-status.sh
+# if DEPLOY_ENV is not set, grab it from the `task get-deploy-status`
 if [ -z "$DEPLOY_ENV" ]; then
-    DEPLOY_ENV=$(sh ./script/get-deploy-status.sh)
+    DEPLOY_ENV=$(task get-deploy-status)
 fi
 if [ -z "$RPC_URL" ]; then
-    RPC_URL=`sh ./script/get-rpc.sh`
+    RPC_URL=`task get-rpc`
 fi
 
 if [ ! -f .env ]; then
@@ -21,32 +21,56 @@ fi
 
 mkdir -p .docker
 
-# Create new deployer
-cast wallet new-mnemonic --json > .docker/deployer.json
-export DEPLOYER_PK=`jq -r .accounts[0].private_key .docker/deployer.json`
-export DEPLOYER_ADDRESS=`cast wallet address $DEPLOYER_PK`
-sed -i${SP}'' -e "s/^FUNDED_KEY=.*$/FUNDED_KEY=$DEPLOYER_PK/" .env
+# Create new deployer (if required)
+create_funded_key() {
+    echo "Creating new FUNDED_KEY..."
+    export FUNDED_KEY=$(cast wallet new-mnemonic --json | jq -r '.accounts[0].private_key')
+    sed -i${SP}'' -e "s/^FUNDED_KEY=.*$/FUNDED_KEY=$FUNDED_KEY/" .env
+}
 
-
+# Setup deployer key based on environment
 if [ "$DEPLOY_ENV" = "LOCAL" ]; then
-    # Good DevEx, auto fund the deployer
-    cast rpc anvil_setBalance "${DEPLOYER_ADDRESS}" '15000000000000000000' --rpc-url ${RPC_URL} > /dev/null
-
-    BAL=`cast balance --ether $DEPLOYER_ADDRESS --rpc-url=${RPC_URL}`
-    echo "Local deployer \`${DEPLOYER_ADDRESS}\` funded with ${BAL}ether"
+    echo "Setting up LOCAL environment deployer"
+    create_funded_key
 else
-    # New account on testnet, must be funded externally (i.e. metamask)
-    echo "Fund deployer ${DEPLOYER_ADDRESS} with some ETH, or change this value in the .env"
+    # Check for existing key in non-local environments
+    export FUNDED_KEY=$(task config:funded-key)
+
+    if [ -z "$FUNDED_KEY" ]; then
+        echo "No FUNDED_KEY found in .env, creating new one"
+        create_funded_key
+    else
+        echo "Using existing FUNDED_KEY from .env"
+    fi
+fi
+
+# Get deployer address
+export DEPLOYER_ADDRESS=$(cast wallet address "$FUNDED_KEY")
+
+# Fund deployer based on environment
+if [ "$DEPLOY_ENV" = "LOCAL" ]; then
+    # Auto-fund deployer in local environment
+    echo "Funding local deployer..."
+    cast rpc anvil_setBalance "$DEPLOYER_ADDRESS" '15000000000000000000' --rpc-url "$RPC_URL" > /dev/null
+
+    BALANCE=$(cast balance --ether "$DEPLOYER_ADDRESS" --rpc-url="$RPC_URL")
+    echo "Local deployer $DEPLOYER_ADDRESS funded with ${BALANCE} ETH"
+else
+    # Wait for external funding in testnet/mainnet
+    echo "Please fund deployer $DEPLOYER_ADDRESS with ETH"
+    echo "You can change this address in the .env file if needed"
     sleep 5
 
+    echo "Waiting for funding..."
     while true; do
-        BALANCE=`cast balance --ether $DEPLOYER_ADDRESS --rpc-url=${RPC_URL}`
+        BALANCE=$(cast balance --ether "$DEPLOYER_ADDRESS" --rpc-url="$RPC_URL")
+
         if [ "$BALANCE" != "0.000000000000000000" ]; then
-            echo "Deployer balance is now $BALANCE"
+            echo "Deployer funded! Balance: $BALANCE ETH for $DEPLOYER_ADDRESS"
             break
         fi
-        echo "    [!] Waiting for balance to be funded by another account to this deployer..."
+
+        echo "  [!] Waiting for balance increase $DEPLOYER_ADDRESS... (current: $BALANCE ETH)"
         sleep 5
     done
 fi
-
