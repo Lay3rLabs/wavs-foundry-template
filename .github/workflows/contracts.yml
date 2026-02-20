@@ -18,6 +18,11 @@ jobs:
         with:
           node-version: 21
 
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 10
+
       - name: Install deps
         run: make setup
 

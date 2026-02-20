@@ -91,7 +91,7 @@ setup: check-requirements
 	@echo "  • Installing Forge dependencies..."
 	@forge install > /dev/null 2>&1
 	@echo "  • Installing npm dependencies..."
-	@npm install > /dev/null 2>&1
+	@pnpm install > /dev/null 2>&1
 	@echo "✅ Dependencies installed"
 
 ## start-all-local: starting anvil and core services (like IPFS for example)
