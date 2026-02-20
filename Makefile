@@ -8,7 +8,7 @@ CARGO=cargo
 INPUT_DATA?=``
 COMPONENT_FILENAME?=evm_price_oracle.wasm
 CREDENTIAL?=""
-DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:1.4.1
+DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:1.5.1
 MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.5.0-beta.10
 IPFS_ENDPOINT?=http://127.0.0.1:5001
 RPC_URL?=http://127.0.0.1:8545
@@ -91,7 +91,7 @@ setup: check-requirements
 	@echo "  • Installing Forge dependencies..."
 	@forge install > /dev/null 2>&1
 	@echo "  • Installing npm dependencies..."
-	@npm install > /dev/null 2>&1
+	@pnpm install > /dev/null 2>&1
 	@echo "✅ Dependencies installed"
 
 ## start-all-local: starting anvil and core services (like IPFS for example)

@@ -3,14 +3,8 @@ version: "3"
 tasks:
   full:
     desc: "Complete WAVS deployment pipeline"
-    vars:
-      PRIVATE_KEY: '{{.PRIVATE_KEY | default "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"}}'
     cmds:
-      - |
-        echo "🚀 Starting complete WAVS deployment..."
-        export RPC_URL=$(task get-rpc)
-        export AGGREGATOR_URL={{.AGGREGATOR_URL}}
-        bash ./script/deploy-script.sh
+      - pnpm run deploy:full
 
   ipfs:
     desc: "Upload service config to IPFS"
@@ -78,7 +72,7 @@ tasks:
         {{.DOCKER_SUDO}} docker run --rm --network host \
           $(test -f .env && echo "--env-file ./.env") \
           -v $(pwd):/data {{.DOCKER_IMAGE}} wavs-cli \
-          deploy-service --service-url {{.SERVICE_URL}} \
+          deploy-service --service-uri {{.SERVICE_URL}} \
           --log-level=debug --data /data/.docker --home /data \
           {{if .WAVS_ENDPOINT}}--wavs-endpoint {{.WAVS_ENDPOINT}}{{end}} \
           {{if .IPFS_GATEWAY}}--ipfs-gateway {{.IPFS_GATEWAY}}{{end}}
