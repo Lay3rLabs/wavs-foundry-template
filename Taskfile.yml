@@ -7,19 +7,25 @@ silent: true
 dotenv: [".env"]
 
 includes:
+  # Upstream common taskfiles (from wavs-taskfiles repo)
+  docker: https://raw.githubusercontent.com/Lay3rLabs/wavs-taskfiles/main/base/docker.yml
+  operator: https://raw.githubusercontent.com/Lay3rLabs/wavs-taskfiles/main/base/poa-operator.yml
+  wasi: https://raw.githubusercontent.com/Lay3rLabs/wavs-taskfiles/main/base/wasi.yml
+  core:
+    taskfile: https://raw.githubusercontent.com/Lay3rLabs/wavs-taskfiles/main/base/core.yml
+    flatten: true
+
+  # Project-specific taskfiles (with customizations)
   build: ./taskfile/build.yml
-  wasi: ./taskfile/wasi.yml
-  docker: ./taskfile/docker.yml
   deploy: ./taskfile/deploy.yml
   services: ./taskfile/services.yml
-  operator: ./taskfile/operator.yml
   env:
     taskfile: ./taskfile/env.yml
     flatten: true
 
 vars:
   # Docker configuration
-  DOCKER_IMAGE: '{{.DOCKER_IMAGE | default "ghcr.io/lay3rlabs/wavs:1.4.1"}}'
+  DOCKER_IMAGE: '{{.DOCKER_IMAGE | default "ghcr.io/lay3rlabs/wavs:1.5.1"}}'
   MIDDLEWARE_DOCKER_IMAGE: '{{.MIDDLEWARE_DOCKER_IMAGE | default "ghcr.io/lay3rlabs/wavs-middleware:0.5.0-beta.10"}}'
 
   # Check if user is in docker group to determine if sudo is needed
@@ -29,8 +35,8 @@ vars:
 
   # Default endpoints
   RPC_URL: '{{.RPC_URL | default "http://127.0.0.1:8545"}}'
-  WAVS_ENDPOINT: '{{.WAVS_ENDPOINT | default "http://127.0.0.1:8000"}}'
-  AGGREGATOR_URL: '{{.AGGREGATOR_URL | default "http://localhost:8001"}}'
+  WAVS_ENDPOINT: '{{.WAVS_ENDPOINT | default "http://127.0.0.1:8041"}}'
+  AGGREGATOR_URL: '{{.AGGREGATOR_URL | default "http://127.0.0.1:8040"}}'
   IPFS_ENDPOINT: '{{.IPFS_ENDPOINT | default "http://127.0.0.1:5001"}}'
   IPFS_GATEWAY: '{{.IPFS_GATEWAY | default "http://127.0.0.1:8080/ipfs/"}}'
 
@@ -48,8 +54,8 @@ tasks:
     desc: "Install initial dependencies"
     cmds:
       - |
-        echo "📦 Installing npm dependencies..."
-        npm install
+        echo "📦 Installing pnpm dependencies..."
+        pnpm install
         echo "📦 Installing forge dependencies..."
         forge install
         echo "✅ Dependencies installed"
@@ -63,88 +69,14 @@ tasks:
   deploy-full:
     desc: "Run complete WAVS deployment pipeline"
     cmds:
-      - |
-        export AGGREGATOR_URL={{.AGGREGATOR_URL}}
-        bash ./script/deploy-script.sh
-
-  clean:
-    desc: "Clean up project files"
-    cmds:
-      - forge clean
-      - cargo clean
-      - rm -rf cache out broadcast
-      - task: docker:clean
-
-  test:
-    desc: "Run all tests"
-    cmds:
-      - forge test
-
-  fmt:
-    desc: "Format Solidity and Rust code"
-    cmds:
-      - forge fmt
-      - cargo fmt
+      - pnpm run deploy:full
 
   lint:check:
     desc: "Check linting and formatting"
     cmds:
-      - npm run lint:check
+      - pnpm run lint:check
 
   lint:fix:
     desc: "Fix linting and formatting issues"
     cmds:
-      - npm run lint:fix
-
-  setup-env:
-    desc: "Create .env file from example if it doesn't exist"
-    cmds:
-      - |
-        if [ ! -f .env ]; then
-          if [ -f .env.example ]; then
-            echo "Creating .env file from .env.example..."
-            cp .env.example .env
-            echo ".env file created successfully!"
-          fi
-        fi
-
-  check-requirements:
-    desc: "Verify system requirements are installed"
-    cmds:
-      - |
-        echo "🔍 Validating system requirements..."
-        # Check Node.js
-        if ! command -v node >/dev/null 2>&1; then
-          echo "❌ Node.js not found. Install with: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash && nvm install --lts"
-          exit 1
-        fi
-        NODE_VERSION=$(node --version)
-        MAJOR_VERSION=$(echo $NODE_VERSION | sed 's/^v\([0-9]*\)\..*/\1/')
-        if [ $MAJOR_VERSION -lt 21 ]; then
-          echo "❌ Node.js version $NODE_VERSION is less than required v21"
-          echo "💡 Upgrade with: nvm install --lts"
-          exit 1
-        fi
-        # Check jq
-        if ! command -v jq >/dev/null 2>&1; then
-          echo "❌ jq not found. Install with: brew install jq (macOS) or apt install jq (Linux)"
-          exit 1
-        fi
-        # Check cargo
-        if ! command -v cargo >/dev/null 2>&1; then
-          echo "❌ cargo not found. Install with: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
-          exit 1
-        fi
-        # Check docker
-        if ! command -v docker >/dev/null 2>&1; then
-          echo "❌ docker not found. Visit: https://docs.docker.com/get-docker/"
-          exit 1
-        fi
-        echo "✅ All requirements satisfied"
-
-  dos2unix:
-    desc: "Convert all script files to Unix line endings"
-    cmds:
-      - |
-        find script/ -type f -name "*.sh" -exec dos2unix {} \;
-        find script/ -type f -name "*.env*" -exec dos2unix {} \;
+      - pnpm run lint:fix

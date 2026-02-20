@@ -9,143 +9,24 @@ A template for developing WebAssembly AVS applications using Rust and Solidity, 
  * [Go](./components/golang-evm-price-oracle/README.md)
  * [JS / TS](./components/js-evm-price-oracle/README.md)
 
-## System Requirements
+## Usage
 
-<details>
-<summary>Core (Docker, Compose, Make, JQ, Node v21+, Foundry)</summary>
+### 1. System setup
 
-## Ubuntu Base
-- **Linux**: `sudo apt update && sudo apt install build-essential`
+Follow the instructions in [README_SETUP.md](./README_SETUP.md) to ensure your system is set up with the necessary tools and dependencies.
 
-### Docker
-
-If prompted, remove container with `sudo apt remove containerd.io`.
-
-- **MacOS**: `brew install --cask docker`
-- **Linux**: `sudo apt -y install docker.io`
-- **Windows WSL**: [docker desktop wsl](https://docs.docker.com/desktop/wsl/#turn-on-docker-desktop-wsl-2) & `sudo chmod 666 /var/run/docker.sock`
-- [Docker Documentation](https://docs.docker.com/get-started/get-docker/)
-
-> **Note:** `sudo` is only used for Docker-related commands in this project. If you prefer not to use sudo with Docker, you can add your user to the Docker group with:
-> ```bash
-> sudo groupadd docker && sudo usermod -aG docker $USER
-> ```
-> After adding yourself to the group, log out and back in for changes to take effect.
-
-### Docker Compose
-- **MacOS**: Already installed with Docker installer
-> `sudo apt remove docker-compose-plugin` may be required if you get a `dpkg` error
-- **Linux + Windows WSL**: `sudo apt-get install docker-compose-v2`
-- [Compose Documentation](https://docs.docker.com/compose/)
-
-### Make
-- **MacOS**: `brew install make`
-- **Linux + Windows WSL**: `sudo apt -y install make`
-- [Make Documentation](https://www.gnu.org/software/make/manual/make.html)
-
-### JQ
-- **MacOS**: `brew install jq`
-- **Linux + Windows WSL**: `sudo apt -y install jq`
-- [JQ Documentation](https://jqlang.org/download/)
-
-### Node.js
-- **Required Version**: v21+
-- [Installation via NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating)
+Then install dependencies:
 
 ```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-nvm install --lts
+# Install packages (pnpm & forge submodules)
+task -y setup
 ```
 
-### Foundry
-```bash docci-ignore
-curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup
-```
+### 2. Solidity
 
-</details>
-
-<details>
-
-<summary>Rust v1.85+</summary>
-
-### Rust Installation
-
-```bash docci-ignore
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-rustup toolchain install stable
-rustup target add wasm32-wasip2
-```
-
-### Upgrade Rust
-
-```bash docci-ignore
-# Remove old targets if present
-rustup target remove wasm32-wasi || true
-rustup target remove wasm32-wasip1 || true
-
-# Update and add required target
-rustup update stable
-rustup target add wasm32-wasip2
-```
-
-</details>
-
-<details>
-<summary>Cargo Components</summary>
-
-### Install Cargo Components
-
-On Ubuntu LTS, if you later encounter errors like:
+This project supports [pnpm packages](./package.json), you can add git submodules if you need.
 
 ```bash
-wkg: /lib/x86_64-linux-gnu/libm.so.6: version `GLIBC_2.38' not found (required by wkg)
-wkg: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.39' not found (required by wkg)
-```
-
-If GLIB is out of date. Consider updating your system using:
-```bash
-sudo do-release-upgrade
-```
-
-
-```bash docci-ignore
-# Install required cargo components
-# https://github.com/bytecodealliance/cargo-component#installation
-cargo install cargo-binstall
-cargo binstall cargo-component wasm-tools warg-cli wkg --locked --no-confirm --force
-
-# Configure default registry
-# Found at: $HOME/.config/wasm-pkg/config.toml
-wkg config --default-registry wa.dev
-
-# Allow publishing to a registry
-#
-# if WSL: `warg config --keyring-backend linux-keyutils`
-warg key new
-```
-
-</details>
-
-## Create Project
-
-```bash docci-ignore
-# if foundry is not installed:
-# `curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup`
-forge init --template Lay3rLabs/wavs-foundry-template my-wavs --branch main
-```
-
-> \[!TIP]
-> Run `make help` to see all available commands and environment variable overrides.
-
-### Solidity
-
-Install the required packages to build the Solidity contracts. This project supports [npm packages](./package.json), you can add git submodules if you need.
-
-```bash
-# Install packages (npm & submodules)
-task setup
-
 # Build the contracts
 task build:forge
 
@@ -153,9 +34,9 @@ task build:forge
 task test
 ```
 
-## Build WASI components
+### 3. Build WASI components
 
-Now build the WASI components into the `compiled` output directory.
+Build the WASI components into the `compiled` output directory.
 
 > \[!WARNING]
 > If you get: `error: no registry configured for namespace "wavs"`
@@ -169,21 +50,15 @@ Now build the WASI components into the `compiled` output directory.
 
 ```bash
 # Remove `WASI_BUILD_DIR` to build all components.
-WASI_BUILD_DIR=components/evm-price-oracle task build:wasi
+WASI_BUILD_DIR=components/evm-price-oracle task -y build:wasi
 ```
 
-## Testing the Price Feed Component Locally
+### 4. Test the component locally
 
-How to test the component locally for business logic validation before on-chain deployment. An ID of 1 for the oracle component is Bitcoin.
+Validate business logic before on-chain deployment. An ID of `1` is Bitcoin.
 
 ```bash
-# Rust components
 INPUT_DATA="1" COMPONENT_FILENAME=evm_price_oracle.wasm task wasi:exec
-
-
-# Golang & JS (re-added in the future since v1 refactor)
-# INPUT_DATA="1" COMPONENT_FILENAME=js_evm_price_oracle.wasm task wasi:exec
-# INPUT_DATA="1" COMPONENT_FILENAME=golang_evm_price_oracle.wasm task wasi:exec-fixed
 ```
 
 Expected output:
@@ -202,103 +77,47 @@ Result (utf8): {"symbol":"BTC","timestamp":"2025-10-01T18:12:11","price":116999.
 Ordering: 0
 ```
 
-## WAVS
+### 5. Start backend services
 
-> \[!NOTE]
-> If you are running on a Mac with an ARM chip, you will need to do the following:
-> - Set up Rosetta: `softwareupdate --install-rosetta`
-> - Enable Rosetta (Docker Desktop: Settings -> General -> enable "Use Rosetta for x86_64/amd64 emulation on Apple Silicon")
->
-> Configure one of the following networking:
-> - Docker Desktop: Settings -> Resources -> Network -> 'Enable Host Networking'
-> - `brew install chipmk/tap/docker-mac-net-connect && sudo brew services start chipmk/tap/docker-mac-net-connect`
-
-## Start Environment
-
-Start an Ethereum node (anvil), the WAVS service, and deploy [EigenLayer](https://www.eigenlayer.xyz/) contracts to the local network.
-
-### Enable Telemetry (optional)
-
-Set Log Level:
-  - Open the `.env` file.
-  - Set the `log_level` variable for wavs to debug to ensure detailed logs are captured.
-
-> \[!NOTE]
-To see details on how to access both traces and metrics, please check out [Telemetry Documentation](telemetry/telemetry.md).
-
-### Start the backend
+> [!NOTE]
+> This must remain running in your terminal. Use new terminals to run other commands. You can stop the services with `ctrl+c`. Some terminals require pressing it twice.
 
 ```bash docci-background docci-delay-after=5
-# This must remain running in your terminal. Use another terminal to run other commands.
-# You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
+# Create a .env file from the example
 cp .env.example .env
 
-# update the .env for either LOCAL or TESTNET
-
-# Starts anvil + IPFS, WARG, Jaeger, and prometheus.
-task start-all-local
+# Starts anvil + IPFS and WARG registry.
+task -y start-all-local
 ```
 
-## WAVS Deployment Script
+### 6. Deploy and run WAVS
 
-This script automates the complete WAVS deployment process in a single command:
-
-### What It Does
-
-1. **Build Check**: Rebuilds WebAssembly component if changes detected
-2. **Create Deployer**: Sets up and funds deployer account
-3. **Deploy Eigenlayer**: Deploys service manager contract
-4. **Deploy Contracts**: Creates trigger and submission contracts
-5. **Upload Component**: Publishes WebAssembly component to WASI registry
-6. **Build Service**: Creates service configuration
-7. **Upload to IPFS**: Stores service metadata on IPFS
-8. **Set Service URI**: Registers IPFS URI with service manager
-9. **Start Aggregator**: Launches result aggregation service
-10. **Start WAVS**: Launches operator service with readiness check
-11. **Deploy Service**: Configures WAVS to monitor trigger events
-12. **Generate Keys**: Creates operator signing keys
-13. **Register Operator**: Registers with Eigenlayer AVS (0.001 ETH stake)
-14. **Verify Registration**: Confirms operator registration
-
-### Result
-
-A fully operational WAVS service that monitors blockchain events, executes WebAssembly components, and submits verified results on-chain.
+This script automates the complete WAVS deployment process, including contract deployments, component uploads, and operator registration, in a single command:
 
 ```bash
-export RPC_URL=$(task get-rpc)
-export AGGREGATOR_URL=http://127.0.0.1:8001
-
-# deploys contracts & components (( task deploy:full ))
-# If you do not set the PoA operator you will get `ServiceManagerValidateAnyRevert("0x3dda1739")`
-bash ./script/deploy-script.sh && task deploy:single-operator-poa-local
+task deploy-full
 ```
 
+### 7. Trigger the service
 
-## Trigger the Service
-
-Anyone can now call the [trigger contract](./src/contracts/WavsTrigger.sol) which emits the trigger event WAVS is watching for from the previous step. WAVS then calls the service and saves the result on-chain.
+Anyone can now call the [trigger contract](./src/contracts/WavsTrigger.sol) to emit the trigger event WAVS is watching for. WAVS then calls the service and saves the result on-chain.
 
 ```bash
-# Get the trigger address from previous Deploy forge script
+# Get the trigger address from the deployment summary
 export SERVICE_TRIGGER_ADDR=`jq -r '.evmpriceoracle_trigger.deployedTo' .docker/deployment_summary.json`
-# Execute on the trigger contract, WAVS will pick this up and submit the result
-# on chain via the operators.
 
 export RPC_URL=`task get-rpc`
 export FUNDED_KEY=`task config:funded-key`
 
-# Rust & Typescript - request BTC from CMC
+# Request BTC price from CoinMarketCap (ID=1)
 export INPUT_DATA=`cast abi-encode "addTrigger(string)" "1"`
-
-# Golang uses the raw value (TODO: future)
-# export INPUT_DATA="1"
 
 forge script ./src/script/Trigger.s.sol ${SERVICE_TRIGGER_ADDR} ${INPUT_DATA} --sig 'run(string,string)' --rpc-url ${RPC_URL} --broadcast --private-key ${FUNDED_KEY}
 ```
 
-## Show the result
+### 8. Show the result
 
-Query the latest submission contract id from the previous request made.
+Query the latest submission from the previous request.
 
 ```bash docci-delay-per-cmd=2 docci-output-contains="1"
 RPC_URL=${RPC_URL} forge script ./src/script/ShowResult.s.sol ${SERVICE_TRIGGER_ADDR} --sig 'trigger(string)' --rpc-url ${RPC_URL}
@@ -318,7 +137,7 @@ This template contains rulefiles for building components with Claude Code and Cu
 To spin up a sandboxed instance of [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) in a Docker container that only has access to this project's files, run the following command:
 
 ```bash docci-ignore
-npm run claude-code
+pnpm run claude-code
 # or with no restrictions (--dangerously-skip-permissions)
-npm run claude-code:unrestricted
+pnpm run claude-code:unrestricted
 ```

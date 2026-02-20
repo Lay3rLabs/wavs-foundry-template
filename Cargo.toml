@@ -1,5 +1,5 @@
 [workspace]
-members = ["components/evm-price-oracle"]
+members = ["components/evm-price-oracle", "components/aggregator"]
 resolver = "2"
 
 [workspace.package]

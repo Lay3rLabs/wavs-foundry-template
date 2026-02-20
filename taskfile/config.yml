@@ -36,22 +36,22 @@ vars:
     sh: test -n "{{.FUNDED_KEY}}" && cast wallet address "{{.FUNDED_KEY}}" 2>/dev/null || echo ""
 
   # Docker images
-  WAVS_DOCKER_IMAGE: "ghcr.io/lay3rlabs/wavs:1.4.1"
+  WAVS_DOCKER_IMAGE: "ghcr.io/lay3rlabs/wavs:1.5.1"
   MIDDLEWARE_DOCKER_IMAGE: "ghcr.io/lay3rlabs/wavs-middleware:0.5.0-beta.10"
 
   # Service endpoints
-  IPFS_ENDPOINT: "http://localhost:5001"
-  IPFS_GATEWAY: "http://localhost:8080/ipfs/"
+  IPFS_ENDPOINT: "http://127.0.0.1:5001"
+  IPFS_GATEWAY: "http://127.0.0.1:8080/ipfs/"
   RPC_URL: "http://127.0.0.1:8545"
-  WAVS_ENDPOINT: "http://127.0.0.1:8000"
-  AGGREGATOR_URL: "http://localhost:8001"
+  WAVS_ENDPOINT: "http://127.0.0.1:8041"
+  AGGREGATOR_URL: "http://127.0.0.1:8040"
 
   # Deployment summary path
   DEPLOY_SUMMARY: ".docker/deployment_summary.json"
 
   SERVICE_INDEX: '{{.SERVICE_INDEX | default "0"}}'
   SERVICE_ID:
-    sh: curl -s http://localhost:8000/services | jq -r ".service_ids[{{.SERVICE_INDEX}}]"
+    sh: curl -s http://localhost:8041/services | jq -r ".service_ids[{{.SERVICE_INDEX}}]"
   WAVS_SERVICE_MANAGER_ADDRESS:
     sh: |
       if [ -n "${WAVS_SERVICE_MANAGER_ADDRESS}" ]; then
@@ -61,8 +61,7 @@ vars:
         if [ -n "$addr" ] && [ "$addr" != "null" ]; then
           echo "$addr"
         else
-          # writes to stderr
-          echo "⚠️ WAVS Service Manager address not found (looked in \$WAVS_SERVICE_MANAGER_ADDRESS env and .nodes/poa_deploy.json file)" 1>&2;
+          echo "⚠️ WAVS Service Manager address not found (looked in \$WAVS_SERVICE_MANAGER_ADDRESS env and .nodes/poa_deploy.json file)" >&2
           echo ""
         fi
       fi
