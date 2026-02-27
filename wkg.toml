@@ -1,0 +1,3 @@
+[overrides]
+"wavs:operator" = { path = "./wit" }
+"wavs:aggregator" = { path = "./wit-aggregator" }

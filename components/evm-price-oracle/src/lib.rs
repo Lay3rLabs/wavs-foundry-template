@@ -18,7 +18,7 @@ struct Component;
 export!(Component with_types_in bindings);
 
 impl Guest for Component {
-    fn run(action: TriggerAction) -> Result<Option<WasmResponse>, String> {
+    fn run(action: TriggerAction) -> Result<Vec<WasmResponse>, String> {
         let (trigger_id, req, dest) =
             decode_trigger_event(action.data).map_err(|e| e.to_string())?;
 
@@ -49,8 +49,10 @@ impl Guest for Component {
         })?;
 
         let output = match dest {
-            Destination::Ethereum => Some(encode_trigger_output(trigger_id, &res)),
-            Destination::CliOutput => Some(WasmResponse { payload: res.into(), ordering: None }),
+            Destination::Ethereum => vec![encode_trigger_output(trigger_id, &res)],
+            Destination::CliOutput => {
+                vec![WasmResponse { payload: res.into(), ordering: None, event_id_salt: None }]
+            }
         };
         Ok(output)
     }
