@@ -1,0 +1,63 @@
+interface chain {
+    // A string mostly following the caip-2 format of namespace:reference, e.g. "eip155:1" for Ethereum mainnet or "cosmos:cosmoshub-4" for Cosmos Hub
+    // however, we allow up to 32 characters for the "namespace" part, and we call the "reference" part "chain-id" to confirm with popular usage
+    type chain-key = string;
+    type evm-tx-hash = list<u8>; // 32 bytes, a keccak hash of an RLP encoded signed transaction
+    type cosmos-tx-hash = string;
+
+    variant any-tx-hash {
+        evm(evm-tx-hash),
+        cosmos(cosmos-tx-hash),
+    }
+
+    record cosmos-address {
+        bech32-addr: string,
+        // prefix is the first part of the bech32 address
+        prefix-len: u32
+    }
+
+    record cosmos-event {
+        ty: string,
+        attributes: list<tuple<string, string>>,
+    }
+
+    record cosmos-chain-config {
+        chain-id: string,
+        rpc-endpoint: option<string>,
+        grpc-endpoint: option<string>,
+        grpc-web-endpoint: option<string>,
+        gas-price: f32,
+        gas-denom: string,
+        bech32-prefix: string,
+    }
+
+    record evm-address {
+        raw-bytes: list<u8>
+    }
+
+    // The overall idea is to map alloy_rpc_types_eth::Log<LogData>
+    record evm-event-log {
+        // These two fields are essentially alloy_primitives::Log<LogData>
+        address: evm-address,
+        data: evm-event-log-data,
+        tx-hash: evm-tx-hash,
+        block-number: u64,
+        log-index: u64,
+        block-hash: list<u8>, // 256 bytes
+        block-timestamp: option<u64>,
+        tx-index: u64
+    }
+
+    record evm-event-log-data {
+        // the raw log topics that can be decoded into an event
+        topics: list<list<u8>>,
+        // the raw log data that can be decoded into an event
+        data: list<u8>,
+    }
+
+    record evm-chain-config {
+        chain-id: string,
+        ws-endpoints: list<string>,
+        http-endpoint: option<string>,
+    }
+}

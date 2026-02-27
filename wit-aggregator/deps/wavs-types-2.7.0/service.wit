@@ -1,0 +1,171 @@
+interface service {
+    // Basic types
+    type service-id = string;
+    type workflow-id = string;
+    type package-ref = string;
+    type semver-version = string;
+
+    use core.{digest, timestamp};
+    use chain.{chain-key, evm-address, cosmos-address};
+
+    // Service types
+    record service {
+        name: string,
+        workflows: list<tuple<workflow-id, workflow>>,
+        status: service-status,
+        manager: service-manager,
+    }
+
+    variant service-status {
+        active,
+        paused,
+    }
+
+    variant service-manager {
+        evm(evm-manager),
+        cosmos(cosmos-manager),
+    }
+
+    record evm-manager {
+        chain: chain-key,
+        address: evm-address,
+    }
+
+    record cosmos-manager {
+        chain: chain-key,
+        address: cosmos-address,
+    }
+
+
+    // Workflow types
+    record workflow {
+        trigger: trigger,
+        component: component,
+        submit: submit,
+    }
+
+    // Component types
+    record component {
+        source: component-source,
+        permissions: permissions,
+        fuel-limit: option<u64>,
+        time-limit-seconds: option<u64>,
+        config: list<tuple<string, string>>,
+        env-keys: list<string>,
+    }
+
+    variant component-source {
+        download(component-source-download),
+        registry(registry),
+        digest(digest),
+    }
+
+    record component-source-download {
+        uri: string,
+        digest: digest,
+    }
+
+    record registry {
+        digest: digest,
+        domain: option<string>,
+        version: option<semver-version>,
+        pkg: package-ref,
+    }
+
+    // Permissions types
+    record permissions {
+        allowed-http-hosts: allowed-host-permission,
+        file-system: bool,
+        raw-sockets: bool,
+        dns-resolution: bool
+    }
+
+    variant allowed-host-permission {
+        all,
+        only(list<string>),
+        none,
+    }
+
+    // Trigger types
+    variant trigger {
+        evm-contract-event(trigger-evm-contract-event),
+        cosmos-contract-event(trigger-cosmos-contract-event),
+        block-interval(trigger-block-interval),
+        cron(trigger-cron),
+        atproto-event(trigger-atproto-event),
+        hypercore-append(trigger-hypercore-append),
+        manual
+    }
+
+    record trigger-evm-contract-event {
+        address: evm-address,
+        chain: chain-key,
+        event-hash: list<u8>
+    }
+
+    record trigger-cosmos-contract-event {
+        address: cosmos-address,
+        chain: chain-key,
+        event-type: string
+    }
+
+    record trigger-block-interval {
+        chain: chain-key,
+        n-blocks: u32,
+        start-block: option<u64>,
+        end-block: option<u64>
+    }
+
+    record trigger-cron {
+        schedule: string,
+        start-time: option<timestamp>,
+        end-time: option<timestamp>
+    }
+
+    record trigger-atproto-event {
+        collection: string,
+        repo-did: option<string>,
+        action: option<string>
+    }
+
+    record trigger-hypercore-append {
+        feed-key: string
+    }
+
+
+    // Submit types
+    variant submit {
+        none,
+        aggregator(aggregator-submit),
+    }
+
+    record aggregator-submit {
+        component: component,
+        signature-kind: signature-kind
+    }
+
+    record signature-kind {
+        algorithm: signature-algorithm,
+        prefix: option<signature-prefix>,
+    }
+
+    variant signature-algorithm {
+        secp256k1,
+        // Future: Bls12381, Ed25519, Secp256r1, etc.
+    }
+
+    variant signature-prefix {
+        eip191
+    }
+
+    // Aggregator types
+    record service-and-workflow-id {
+        service: service,
+        workflow-id: workflow-id
+    }
+
+    record workflow-and-workflow-id {
+        workflow: workflow,
+        workflow-id: workflow-id
+    }
+}

@@ -16,7 +16,7 @@ import { Command } from 'commander'
 
 import { DEPLOYMENT_SUMMARY_FILE, POA_MIDDLEWARE_IMAGE } from './constants'
 import { DEFAULT_OPTIONS, initProgram } from './env'
-import { exec, execFull, loadDotenv, readJson, sleep } from './utils'
+import { exec, execFull, execSilently, loadDotenv, readJson, sleep } from './utils'
 
 const program = new Command('deploy-script')
   .description('Deploy the entire WAVS stack.')
@@ -215,6 +215,34 @@ const main = async () => {
     },
   })
   await sleep(3)
+
+  // Fund aggregator account on local network
+  if (envName === 'dev') {
+    console.log(chalk.blueBright('💰 Funding aggregator account on local network...'))
+    const aggAddress = (
+      await execSilently(
+        'cast',
+        'wallet',
+        'address',
+        '--mnemonic',
+        'domain velvet noodle derive dumb table hello prosper crop next unable salt task cement tilt mouse body father renew battle brain try broom trip',
+        '--mnemonic-index',
+        '0'
+      )
+    ).trim()
+    const hexBalance = (
+      await execSilently('cast', 'to-hex', '10000000000000000000')
+    ).trim()
+    await exec(
+      'cast',
+      'rpc',
+      'anvil_setBalance',
+      aggAddress,
+      hexBalance,
+      '--rpc-url',
+      rpcUrl
+    )
+  }
 
   // Deploy the service.json to WAVS
   await execFull({

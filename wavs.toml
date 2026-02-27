@@ -98,7 +98,8 @@ cors_allowed_origins = [
 port = 8041
 
 chain_write_credential = "domain velvet noodle derive dumb table hello prosper crop next unable salt task cement tilt mouse body father renew battle brain try broom trip"
-signing_mnemonic = "domain velvet noodle derive dumb table hello prosper crop next unable salt task cement tilt mouse body father renew battle brain try broom trip"
+# signing_mnemonic is intentionally not set here - it comes from .env (WAVS_SIGNING_MNEMONIC)
+aggregator_evm_credential = "domain velvet noodle derive dumb table hello prosper crop next unable salt task cement tilt mouse body father renew battle brain try broom trip"
 
 # The host to serve on. Default is localhost
 # host = "localhost"

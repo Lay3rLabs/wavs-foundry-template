@@ -6,7 +6,7 @@ export const DEPLOYMENT_SUMMARY_FILE = ".docker/deployment_summary.json";
 /**
  * The WAVS Docker image.
  */
-export const WAVS_DOCKER_IMAGE = "ghcr.io/lay3rlabs/wavs:23fc6ed";
+export const WAVS_DOCKER_IMAGE = "ghcr.io/lay3rlabs/wavs:local";
 
 /**
  * The POA Middleware Docker image.
