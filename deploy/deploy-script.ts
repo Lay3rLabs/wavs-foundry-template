@@ -36,11 +36,6 @@ const program = new Command('deploy-script')
     'http://127.0.0.1:8041'
   )
   .option(
-    '-a, --aggregator-url <aggregatorUrl>',
-    'The aggregator URL for the service',
-    'http://127.0.0.1:8040'
-  )
-  .option(
     '-t, --stake-threshold <stakeThreshold>',
     'The POA stake weight threshold',
     (t) => parseInt(t),
@@ -62,7 +57,6 @@ const main = async () => {
       contractUpload,
       rpcUrl,
       wavsUrl,
-      aggregatorUrl,
       stakeThreshold,
       quorum: _quorum,
     },
@@ -209,37 +203,6 @@ const main = async () => {
   if (!serviceJsonCid) {
     throw new Error(
       `❌ service.json CID not found in ${serviceJsonCidOutputFile}`
-    )
-  }
-
-  // Create and start aggregator
-  await exec('pnpm', 'deploy:create-aggregator', '1', '-f')
-  await execFull({
-    cmd: ['bash', './infra/aggregator-1/start.sh'],
-    env: {
-      IPFS_GATEWAY: env.ipfs.gateway,
-    },
-  })
-  await sleep(3)
-
-  // Register service on aggregator
-  const res = await fetch(aggregatorUrl + '/services', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      service_manager: {
-        evm: {
-          chain: env.submitChain,
-          address: serviceManagerAddress,
-        },
-      },
-    }),
-  })
-  if (!res.ok) {
-    throw new Error(
-      `❌ Failed to register service on aggregator: ${res.statusText} (${(await res.text().catch(() => '<unable to parse response body>')) || '<no body>'})`
     )
   }
 

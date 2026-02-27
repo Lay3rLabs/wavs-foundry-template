@@ -16,7 +16,7 @@ wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }
 wit-bindgen = "0.44.0"
 wstd = "0.5.4"
 wasi = "0.14.2"
-wavs-wasi-utils = "=1.0.0"
+wavs-wasi-utils = "=2.6.0"
 
 # Other
 schemars = "1.0.4"

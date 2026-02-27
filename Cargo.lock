@@ -3646,9 +3646,9 @@ dependencies = [
 
 [[package]]
 name = "wavs-wasi-utils"
-version = "1.0.0"
+version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bcecf1034f84a086b020d9a300d7dd38e4071aa9662371351eb61952a38ddd69"
+checksum = "9d3c5ae2f3e2b699b1ac4fc8bfc52049390a53c7d83c8bd9fae2ddb5381d8aeb"
 dependencies = [
  "alloy-json-rpc",
  "alloy-primitives",
