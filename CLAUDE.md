@@ -56,6 +56,49 @@ task start-all-local
 task deploy-full
 ```
 
+### MCP-Based Deployment (AI agent / WAVS skill flow)
+
+When using the WAVS MCP tools (see the `wavs` Claude Code skill), deploy step-by-step instead of `task deploy-full`. Requires the WAVS node running and MCP registered.
+
+```bash
+# 1. Build the component
+# Use wavs:wavs_build_component(dir="components/evm-price-oracle")
+
+# 2. Deploy the PoA ServiceManager on-chain
+# Use wavs:wavs_deploy_poa_service_manager(rpc_url="http://localhost:8545")
+# → returns POA_ADDRESS
+
+# 3. Deploy Solidity contracts (needs the PoA address from step 2)
+pnpm deploy:contracts --service-manager-address <POA_ADDRESS>
+
+# 4. Upload component, save service, set URI on-chain, deploy to node
+# Use wavs:wavs_upload_component, wavs:wavs_save_service,
+#     wavs:wavs_set_service_uri, wavs:wavs_deploy_service
+
+# 5. Register operator (POA only) — may require manual fallback (see Known Issues below)
+# Use wavs:wavs_register_operator(rpc_url="http://localhost:8545", service_manager_json=...)
+```
+
+**Known issue — `wavs_register_operator` InvalidSignature fallback:**
+If `wavs_register_operator` fails with `0x8baa579f` (InvalidSignature) on the
+`updateOperatorSigningKey` step, call it manually. The contract expects a raw ECDSA
+signature of `keccak256(abi.encode(operatorAddr))` signed by the service signing key:
+
+```bash
+MNEMONIC="<signing_mnemonic from wavs.toml>"
+OPERATOR_ADDR=<HD index 0 address>
+POA=<POA_ADDRESS>
+OPERATOR_PK=$(cast wallet private-key --mnemonic "$MNEMONIC" --mnemonic-derivation-path "m/44'/60'/0'/0/0")
+SIGNING_KEY_PK=$(cast wallet private-key --mnemonic "$MNEMONIC" --mnemonic-derivation-path "m/44'/60'/0'/0/<HD_INDEX>")
+SIGNING_KEY_ADDR=$(cast wallet address $SIGNING_KEY_PK)
+MSG_HASH=$(cast keccak $(cast abi-encode "f(address)" $OPERATOR_ADDR))
+SIG=$(cast wallet sign --no-hash "$MSG_HASH" --private-key "$SIGNING_KEY_PK")
+cast send $POA "updateOperatorSigningKey(address,bytes)" $SIGNING_KEY_ADDR "$SIG" \
+  --private-key "$OPERATOR_PK" --rpc-url http://localhost:8545
+```
+
+Use `wavs:wavs_get_service_signer` to find the HD index for the deployed service.
+
 ### Validate a Component Before Building
 ```bash
 make validate-component COMPONENT=your-component-name
