@@ -36,7 +36,7 @@ vars:
     sh: test -n "{{.FUNDED_KEY}}" && cast wallet address "{{.FUNDED_KEY}}" 2>/dev/null || echo ""
 
   # Docker images
-  WAVS_DOCKER_IMAGE: "ghcr.io/lay3rlabs/wavs:1.5.1"
+  WAVS_DOCKER_IMAGE: "ghcr.io/lay3rlabs/wavs:216aa67"
   MIDDLEWARE_DOCKER_IMAGE: "ghcr.io/lay3rlabs/wavs-middleware:0.5.0-beta.10"
 
   # Service endpoints

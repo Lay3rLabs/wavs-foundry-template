@@ -35,6 +35,15 @@ const program = new Command('deploy-contracts')
     'The RPC URL for the chain (default: $RPC_URL from .env)'
   )
 
+const extractJson = (output: string): string => {
+  const start = output.indexOf('{')
+  const end = output.lastIndexOf('}')
+  if (start === -1 || end === -1) {
+    throw new Error(`No JSON object found in forge output:\n${output}`)
+  }
+  return output.slice(start, end + 1)
+}
+
 const main = async () => {
   const {
     env,
@@ -80,7 +89,7 @@ const main = async () => {
     env: { FUNDED_KEY: fundedKey },
   })
 
-  const submitJson = JSON.parse(submitOutput.trim())
+  const submitJson = JSON.parse(extractJson(submitOutput))
   fs.writeFileSync('.docker/submit.json', JSON.stringify(submitJson, null, 2))
   console.log(
     chalk.greenBright(`✅ SimpleSubmit deployed to ${submitJson.deployedTo}`)
@@ -99,15 +108,13 @@ const main = async () => {
       env.rpcUrl,
       '--private-key',
       '"$FUNDED_KEY"',
-      '--constructor-args',
-      serviceManagerAddress,
     ],
     log: 'cmd',
     shell: true,
     env: { FUNDED_KEY: fundedKey },
   })
 
-  const triggerJson = JSON.parse(triggerOutput.trim())
+  const triggerJson = JSON.parse(extractJson(triggerOutput))
   fs.writeFileSync('.docker/trigger.json', JSON.stringify(triggerJson, null, 2))
   console.log(
     chalk.greenBright(`✅ SimpleTrigger deployed to ${triggerJson.deployedTo}`)

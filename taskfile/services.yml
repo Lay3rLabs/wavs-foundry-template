@@ -38,7 +38,7 @@ tasks:
           FILES="-f docker-compose.yml" # -f telemetry/docker-compose.yml
           docker compose ${FILES} pull
           docker compose ${FILES} up --force-recreate -d
-          trap "docker compose ${FILES} down --remove-orphans && docker kill wavs-1 wavs-aggregator-1 > /dev/null 2>&1 && echo -e '\nKilled IPFS + Local WARG, and wavs instances'" EXIT
+          trap "docker compose ${FILES} down --remove-orphans && docker kill wavs-1 > /dev/null 2>&1 && echo -e '\nKilled IPFS + Local WARG, and wavs instances'" EXIT
 
           echo "Started..."
           wait
@@ -51,6 +51,6 @@ tasks:
         echo "Stopping all services..."
         FILES="-f docker-compose.yml -f telemetry/docker-compose.yml"
         docker compose ${FILES} down --remove-orphans || true
-        docker kill wavs-1 wavs-aggregator-1 > /dev/null 2>&1 || true
+        docker kill wavs-1 > /dev/null 2>&1 || true
         pkill -f anvil || true
         echo "All services stopped"

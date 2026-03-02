@@ -80,7 +80,8 @@ poll_interval_ms = 7000
 [wavs]
 
 # The directory to store the data. Default is "/var/wavs"
-data = "~/wavs"
+data = "~/.wavs/data"
+dev_endpoints_enabled = true
 
 # Optional bearer token to protect mutating HTTP endpoints
 # If set here or via env var `WAVS_BEARER_TOKEN`, POST/DELETE endpoints require `Authorization: Bearer <token>`
@@ -95,6 +96,10 @@ cors_allowed_origins = [
 
 # The port on which the server will listen.
 port = 8041
+
+chain_write_credential = "domain velvet noodle derive dumb table hello prosper crop next unable salt task cement tilt mouse body father renew battle brain try broom trip"
+# signing_mnemonic is intentionally not set here - it comes from .env (WAVS_SIGNING_MNEMONIC)
+aggregator_evm_credential = "domain velvet noodle derive dumb table hello prosper crop next unable salt task cement tilt mouse body father renew battle brain try broom trip"
 
 # The host to serve on. Default is localhost
 # host = "localhost"
