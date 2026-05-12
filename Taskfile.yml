@@ -56,7 +56,23 @@ tasks:
         pnpm install
         echo "📦 Installing forge dependencies..."
         forge install
-        echo "✅ Dependencies installed"
+      - task: wit:fetch
+      - echo "✅ Dependencies installed"
+
+  wit:fetch:
+    desc: "Fetch WIT dependencies into wit/deps and wit-aggregator/deps (requires wkg)"
+    cmds:
+      - |
+        if ! command -v wkg >/dev/null 2>&1; then
+          echo "❌ wkg not found. Install with: cargo binstall wkg --locked --no-confirm --force"
+          echo "   Then: wkg config --default-registry wa.dev"
+          exit 1
+        fi
+        echo "📦 Fetching WIT deps for wit/ (operator world)..."
+        (cd wit && wkg wit fetch)
+        echo "📦 Fetching WIT deps for wit-aggregator/ (aggregator world)..."
+        (cd wit-aggregator && wkg wit fetch)
+        echo "✅ WIT deps fetched"
 
   # Build tasks (formerly taskfile/build.yml)
   build:all:

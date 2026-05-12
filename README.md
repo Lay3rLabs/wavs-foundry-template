@@ -140,9 +140,11 @@ sudo do-release-upgrade
 ### 1. Install dependencies
 
 ```bash
-# Install packages (pnpm & forge submodules)
+# Install packages (pnpm, forge submodules, WIT deps via wkg)
 task -y setup
 ```
+
+`task setup` runs `task wit:fetch` after pnpm/forge install. WIT deps land in `wit/deps/` and `wit-aggregator/deps/` (both gitignored — re-run `task wit:fetch` to refresh).
 
 ### 2. Solidity
 

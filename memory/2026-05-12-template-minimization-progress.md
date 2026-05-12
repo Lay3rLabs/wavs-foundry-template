@@ -12,15 +12,17 @@
 | Consolidated 4 `.solhint.json` files into one with `overrides` (now also covers `src/script/**`) | ba4329c | -3 files |
 | Collapsed `taskfile/` from 6 files to 2 (inlined build.yml + services.yml; merged config.yml into env.yml preserving `config:*` namespace) | 36a980e | -3 files |
 | Staged design memos for `#[wavs_component]` proc-macro and `wavs` CLI | 4c7759f | +3 memos |
-| Dropped dead refs: `deploy:create-aggregator` script, README Go/JS language links, `metadata.json`, `commitlint` + `lint-staged` deps (no husky to run them) | (this commit) | -1 file, -823 LOC lockfile, -3 npm deps |
+| Dropped dead refs: `deploy:create-aggregator` script, README Go/JS language links, `metadata.json`, `commitlint` + `lint-staged` deps (no husky to run them) | 1de16f1 | -1 file, -823 LOC lockfile, -3 npm deps |
+| Stopped vendoring `wit/deps/` + `wit-aggregator/deps/`; added `task wit:fetch` (wkg-driven) wired into `task setup` | (this commit) | -28 .wit files (~316 KB), +1 task recipe |
 
-**Net file delta**: ~11 fewer files at the repo root; ~2,000 fewer LOC. Public task surface preserved (`task build:forge`, `task build:wasi`, `task config:funded-key`, `task config:service-manager-address`, etc.).
+**Net file delta**: ~39 fewer files in tree; ~2,000 fewer LOC + 316 KB of vendored WIT. Public task surface preserved (`task build:forge`, `task build:wasi`, `task config:funded-key`, `task config:service-manager-address`, etc.).
 
 ## Audit corrections (2026-05-09 memo was wrong on these)
 
 1. **`bindings.rs` is NOT 20k+ lines of generated WIT bindings.** The actual file is 8 lines of `wit_bindgen::generate!{ world, path, ... }`. The macro emits bindings at compile time, not into the file. Gitignoring would be incorrect and unnecessary. The audit's "highest-urgency fix" was based on a misread.
 2. **`infra/wavs-1/wavs.toml` is NOT checked-in duplicate config.** `.gitignore:20` has `infra/*`, so the duplication is a working-tree artifact (generated on first run). The audit's "pick one location" recommendation doesn't apply.
 3. **`test_utils/` doesn't exist** in this template. The `make validate-component` recipe in the deleted Makefile pointed at a missing script. Removed both the recipe and the CLAUDE.md reference.
+4. **Template's vendored `wit/deps/` was in *source* form, not *bundle* form.** Upstream WAVS commits its deps as single `package.wit` files per dep (the format `wkg wit fetch` materializes). The template instead vendored the **multi-file source layout** from upstream's `wit-definitions/<pkg>/wit/` directories (e.g. `wavs-types-2.7.0/{chain,core,events,lib,service}.wit`). That's why drift accumulated — upstream evolved the source files while the template's frozen copy didn't. `wkg wit fetch` produces the bundle form, which is more stable and matches upstream's `deps/` convention.
 
 ## Deferred (intentionally not in this PR)
 
@@ -31,7 +33,10 @@
 - Removing `deploy/*.ts` (12 files, 2,304 LOC) → depends on CLI Phase B
 - Removing per-component `Makefile` + `trigger.rs` + `solidity.rs` → depends on proc-macro
 - Removing `components/aggregator/` from template → depends on the framework supplying it as a default workflow (unclear status; needs upstream decision)
-- Publishing `wit/` + `wit-aggregator/` via `wkg` registry → depends on registry workflow stabilization (Lay3rLabs/wavs-taskfiles already publishes via `wkg`; verify channel)
+- **WIT Tier 2** (delete `wit/operator.wit` + `wit-aggregator/aggregator.wit`; reference `wavs:operator/wavs-world@2.7.0` directly) → depends on:
+  - verifying `wavs:types`, `wavs:operator`, `wavs:aggregator` are actually published to `wa.dev` (run `wkg get wavs:operator@2.7.0` against the registry)
+  - upstream CI publishing on `vX.Y.Z` tag push (the `just wit-publish` target exists in `WAVS/justfile:289-292` but isn't wired to CI yet)
+  - confirming `wasi:tls@0.2.0-draft` resolves via the registry (draft packages historically had spotty coverage)
 
 ### Low priority — defer
 - Move `telemetry/` to a docs recipe → already opt-in (commented-out reference in services taskfile), low pressure
@@ -51,6 +56,7 @@ These would compound the gains but require coordination with `/workspace/WAVS/`:
 1. **YAML/task linting in CI**: today there's no `task --dry-run` or equivalent step in CI. After collapsing `taskfile/`, a typo wouldn't be caught until a user ran the command. Worth adding a `task --list-all` smoke test step to `.github/workflows/contracts.yml`?
 2. **Solhint glob coverage**: the consolidated `.solhint.json` uses `src/script/**/*.sol` and `script/**/*.sol`. Verify with `pnpm lint:check` locally that file path matching works as intended.
 3. **`metadata.json` external consumer (now deleted)**: no in-repo consumer was found, so it was removed. If a template directory or registry outside this repo was consuming it, restore from `git show HEAD^^:metadata.json`.
+4. **`task wit:fetch` unverified in container**: `wkg` is not installed in the dev container, so the recipe couldn't be smoke-tested locally. On host: run `task setup` from a clean checkout (or `task wit:fetch` directly) and confirm (a) `wit/deps/` + `wit-aggregator/deps/` get populated, (b) `task build:wasi` succeeds afterwards. If wkg can't resolve `wavs:types@2.7.0` or `wasi:tls@0.2.0-draft` from `wa.dev`, the registry hasn't been populated yet — either run `cd /workspace/WAVS && just wit-publish`, or revert this commit and fall back to committing bundle-form deps (one `package.wit` per dep, matching upstream's `wit-definitions/operator/wit/deps/` layout).
 
 ## Cross-references
 
