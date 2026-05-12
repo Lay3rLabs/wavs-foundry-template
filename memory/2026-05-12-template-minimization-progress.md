@@ -11,9 +11,10 @@
 | Merged `README_SETUP.md` into `README.md` under a "Prerequisites" section | ebb494b | -1 file |
 | Consolidated 4 `.solhint.json` files into one with `overrides` (now also covers `src/script/**`) | ba4329c | -3 files |
 | Collapsed `taskfile/` from 6 files to 2 (inlined build.yml + services.yml; merged config.yml into env.yml preserving `config:*` namespace) | 36a980e | -3 files |
-| Staged design memos for `#[wavs_component]` proc-macro and `wavs` CLI | (this commit) | +3 memos |
+| Staged design memos for `#[wavs_component]` proc-macro and `wavs` CLI | 4c7759f | +3 memos |
+| Dropped dead refs: `deploy:create-aggregator` script, README Go/JS language links, `metadata.json`, `commitlint` + `lint-staged` deps (no husky to run them) | (this commit) | -1 file, -823 LOC lockfile, -3 npm deps |
 
-**Net file delta**: ~10 fewer files at the repo root; ~1,170 fewer LOC. Public task surface preserved (`task build:forge`, `task build:wasi`, `task config:funded-key`, `task config:service-manager-address`, etc.).
+**Net file delta**: ~11 fewer files at the repo root; ~2,000 fewer LOC. Public task surface preserved (`task build:forge`, `task build:wasi`, `task config:funded-key`, `task config:service-manager-address`, etc.).
 
 ## Audit corrections (2026-05-09 memo was wrong on these)
 
@@ -48,8 +49,8 @@ These would compound the gains but require coordination with `/workspace/WAVS/`:
 ## Open questions that emerged from execution
 
 1. **YAML/task linting in CI**: today there's no `task --dry-run` or equivalent step in CI. After collapsing `taskfile/`, a typo wouldn't be caught until a user ran the command. Worth adding a `task --list-all` smoke test step to `.github/workflows/contracts.yml`?
-2. **`pnpm run deploy:create-aggregator`**: `package.json` references `deploy/create-aggregator.ts` which was deleted in commit 4512cf7 ("Clean up?"). That script entry is dead. Worth fixing in a follow-up commit.
-3. **Solhint glob coverage**: the consolidated `.solhint.json` uses `src/script/**/*.sol` and `script/**/*.sol`. Verify with `pnpm lint:check` locally that file path matching works as intended.
+2. **Solhint glob coverage**: the consolidated `.solhint.json` uses `src/script/**/*.sol` and `script/**/*.sol`. Verify with `pnpm lint:check` locally that file path matching works as intended.
+3. **`metadata.json` external consumer (now deleted)**: no in-repo consumer was found, so it was removed. If a template directory or registry outside this repo was consuming it, restore from `git show HEAD^^:metadata.json`.
 
 ## Cross-references
 

@@ -4,10 +4,7 @@
 
 A template for developing WebAssembly AVS applications using Rust and Solidity, configured for Windows *WSL*, Linux, and MacOS. The sample oracle service fetches the current price of a cryptocurrency from [CoinMarketCap](https://coinmarketcap.com) and saves it on chain via the operators.
 
-**Languages**
- * [Rust (this example)](./components/evm-price-oracle/)
- * [Go](./components/golang-evm-price-oracle/README.md)
- * [JS / TS](./components/js-evm-price-oracle/README.md)
+See [`components/evm-price-oracle/`](./components/evm-price-oracle/) for the reference Rust component.
 
 ## Prerequisites
 

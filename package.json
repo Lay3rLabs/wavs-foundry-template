@@ -13,7 +13,6 @@
     "deploy:upload-service": "tsx deploy/upload-service.ts",
     "deploy:create-deployer": "tsx deploy/create-deployer.ts",
     "deploy:create-operator": "tsx deploy/create-operator.ts",
-    "deploy:create-aggregator": "tsx deploy/create-aggregator.ts",
     "lint:check": "pnpm run lint:sol && forge fmt --check",
     "lint:fix": "sort-package-json && forge fmt && pnpm run lint:sol -- --fix",
     "lint:natspec": "npx @defi-wonderland/natspec-smells --config natspec-smells.config.js",
@@ -24,14 +23,7 @@
     "claude-code": "docker compose -f .claude/docker-compose.claude.yml run --rm --remove-orphans -it claude-code-sandbox bash -c 'claude; exec'",
     "claude-code:unrestricted": "docker compose -f .claude/docker-compose.claude.yml run --rm --remove-orphans -it claude-code-sandbox bash -c 'claude --dangerously-skip-permissions; exec'"
   },
-  "lint-staged": {
-    "*.{js,css,md,ts,sol}": "forge fmt",
-    "(src|test|script)/**/*.sol": "pnpm run lint:sol",
-    "package.json": "sort-package-json"
-  },
   "dependencies": {
-    "@commitlint/cli": "19.3.0",
-    "@commitlint/config-conventional": "19.2.2",
     "@defi-wonderland/natspec-smells": "1.1.6",
     "@noble/hashes": "^2.0.1",
     "@openzeppelin/contracts": "^5.2.0",
@@ -40,7 +32,6 @@
     "commander": "^14.0.2",
     "dotenv": "^17.2.3",
     "forge-std": "github:foundry-rs/forge-std#v1.9.6",
-    "lint-staged": ">=10",
     "solhint-community": "4.0.0",
     "sort-package-json": "2.10.0",
     "tsx": "^4.20.6",
