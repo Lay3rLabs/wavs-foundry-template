@@ -22,7 +22,9 @@ jobs:
         name: Install pnpm
 
       - name: Install deps
-        run: make setup
+        run: |
+          pnpm install
+          forge install
 
       - name: Run forge build
         run: forge build -vvv

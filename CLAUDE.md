@@ -99,11 +99,6 @@ cast send $POA "updateOperatorSigningKey(address,bytes)" $SIGNING_KEY_ADDR "$SIG
 
 Use `wavs:wavs_get_service_signer` to find the HD index for the deployed service.
 
-### Validate a Component Before Building
-```bash
-make validate-component COMPONENT=your-component-name
-```
-
 ## Architecture
 
 ### Data Flow
