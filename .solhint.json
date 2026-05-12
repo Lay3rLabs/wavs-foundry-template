@@ -10,5 +10,45 @@
     "ordering": "warn",
     "avoid-low-level-calls": "off",
     "named-parameters-mapping": "warn"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["test/**/*.sol"],
+      "rules": {
+        "style-guide-casing": [
+          "warn",
+          {
+            "ignorePublicFunctions": true,
+            "ignoreExternalFunctions": true,
+            "ignoreContracts": true
+          }
+        ],
+        "no-global-import": "off",
+        "max-states-count": "off",
+        "ordering": "off",
+        "one-contract-per-file": "off"
+      }
+    },
+    {
+      "files": ["src/interfaces/**/*.sol"],
+      "rules": {
+        "ordering": "warn",
+        "style-guide-casing": [
+          "warn",
+          {
+            "ignoreExternalFunctions": true
+          }
+        ]
+      }
+    },
+    {
+      "files": ["script/**/*.sol", "src/script/**/*.sol"],
+      "rules": {
+        "ordering": "off",
+        "one-contract-per-file": "off",
+        "no-console": "off",
+        "style-guide-casing": "off"
+      }
+    }
+  ]
 }
