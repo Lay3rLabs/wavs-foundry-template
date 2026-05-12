@@ -15,10 +15,8 @@ includes:
     taskfile: https://raw.githubusercontent.com/Lay3rLabs/wavs-taskfiles/main/base/core.yml
     flatten: true
 
-  # Project-specific taskfiles (with customizations)
-  build: ./taskfile/build.yml
+  # Project-specific taskfiles
   deploy: ./taskfile/deploy.yml
-  services: ./taskfile/services.yml
   env:
     taskfile: ./taskfile/env.yml
     flatten: true
@@ -60,11 +58,91 @@ tasks:
         forge install
         echo "✅ Dependencies installed"
 
+  # Build tasks (formerly taskfile/build.yml)
+  build:all:
+    desc: "Build everything (Solidity + WASI components)"
+    cmds:
+      - task: build:forge
+      - task: build:wasi
+
+  build:forge:
+    desc: "Build Solidity contracts"
+    cmds:
+      - forge build
+
+  build:wasi:
+    desc: "Build WASI components (all or specific one via WASI_BUILD_DIR)"
+    vars:
+      WASI_BUILD_DIR: '{{.WASI_BUILD_DIR | default ""}}'
+    cmds:
+      - |
+        warg reset || echo "warg reset failed (warg server not started), continuing..."
+        RECIPE="wasi-build"
+        MAKEFILE_DIRS=$(find components/* -maxdepth 1 -name "Makefile" -o -name "makefile")
+
+        for makefile_path in $MAKEFILE_DIRS; do
+            if grep -q "^${RECIPE}:" "$makefile_path" 2>/dev/null; then
+                if [ "{{.WASI_BUILD_DIR}}" == "" ] || [[ "$makefile_path" == *"{{.WASI_BUILD_DIR}}"* ]]; then
+                    parent_dir=$(dirname "$makefile_path")
+                    make -s -C "$parent_dir" $RECIPE
+                fi
+            else
+                echo "Recipe '$RECIPE' not found in $makefile_path"
+            fi
+        done
+
+  # Local services (formerly taskfile/services.yml)
   start-all-local:
     desc: "Start all local services (anvil, IPFS, WARG, Jaeger, prometheus)"
     deps: [setup-env]
     cmds:
       - task: services:start-all
+
+  services:start-all:
+    desc: "Start all local services (anvil, IPFS, WARG, Jaeger, prometheus)"
+    cmds:
+      - |
+        set -e
+
+        PORT=8545
+        FORK_RPC_URL=${FORK_RPC_URL:-"${TESTNET_RPC_URL}"}
+        DEPLOY_ENV=$(task get-deploy-status)
+
+        ## == Base Anvil Testnet Fork ==
+        if [ "$DEPLOY_ENV" = "TESTNET" ]; then
+          echo "Running in testnet mode, nothing to do"
+          exit 0
+        fi
+
+        if [ "$DEPLOY_ENV" = "LOCAL" ]; then
+          # anvil --fork-url ${FORK_RPC_URL} --port ${PORT} &
+          # removed the fork-url since this moved off of eigen and does not need (constantly hitting a Error: Failed to send transaction Context: - server returned an error response: error code -32003: Insufficient funds for gas * price + value)
+          anvil --port $PORT &
+          trap "killall anvil && echo -e '\nKilled anvil'" EXIT
+          while ! cast block-number --rpc-url http://localhost:${PORT} > /dev/null 2>&1
+          do
+            sleep 0.25
+          done
+
+          FILES="-f docker-compose.yml" # -f telemetry/docker-compose.yml
+          docker compose ${FILES} pull
+          docker compose ${FILES} up --force-recreate -d
+          trap "docker compose ${FILES} down --remove-orphans && docker kill wavs-1 > /dev/null 2>&1 && echo -e '\nKilled IPFS + Local WARG, and wavs instances'" EXIT
+
+          echo "Started..."
+          wait
+        fi
+
+  services:stop-all:
+    desc: "Stop all local services"
+    cmds:
+      - |
+        echo "Stopping all services..."
+        FILES="-f docker-compose.yml -f telemetry/docker-compose.yml"
+        docker compose ${FILES} down --remove-orphans || true
+        docker kill wavs-1 > /dev/null 2>&1 || true
+        pkill -f anvil || true
+        echo "All services stopped"
 
   deploy-full:
     desc: "Run complete WAVS deployment pipeline"
