@@ -16,7 +16,7 @@ import { Command } from 'commander'
 
 import { DEPLOYMENT_SUMMARY_FILE, POA_MIDDLEWARE_IMAGE } from './constants'
 import { DEFAULT_OPTIONS, initProgram } from './env'
-import { exec, execFull, loadDotenv, readJson, sleep } from './utils'
+import { exec, execFull, execSilently, loadDotenv, readJson, sleep } from './utils'
 
 const program = new Command('deploy-script')
   .description('Deploy the entire WAVS stack.')
@@ -34,11 +34,6 @@ const program = new Command('deploy-script')
     '-w, --wavs-url <wavsUrl>',
     'The WAVS operator URL for the service',
     'http://127.0.0.1:8041'
-  )
-  .option(
-    '-a, --aggregator-url <aggregatorUrl>',
-    'The aggregator URL for the service',
-    'http://127.0.0.1:8040'
   )
   .option(
     '-t, --stake-threshold <stakeThreshold>',
@@ -62,7 +57,6 @@ const main = async () => {
       contractUpload,
       rpcUrl,
       wavsUrl,
-      aggregatorUrl,
       stakeThreshold,
       quorum: _quorum,
     },
@@ -212,37 +206,6 @@ const main = async () => {
     )
   }
 
-  // Create and start aggregator
-  await exec('pnpm', 'deploy:create-aggregator', '1', '-f')
-  await execFull({
-    cmd: ['bash', './infra/aggregator-1/start.sh'],
-    env: {
-      IPFS_GATEWAY: env.ipfs.gateway,
-    },
-  })
-  await sleep(3)
-
-  // Register service on aggregator
-  const res = await fetch(aggregatorUrl + '/services', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      service_manager: {
-        evm: {
-          chain: env.submitChain,
-          address: serviceManagerAddress,
-        },
-      },
-    }),
-  })
-  if (!res.ok) {
-    throw new Error(
-      `❌ Failed to register service on aggregator: ${res.statusText} (${(await res.text().catch(() => '<unable to parse response body>')) || '<no body>'})`
-    )
-  }
-
   // Create and start operator
   await exec('pnpm', 'deploy:create-operator', '1', '-f')
   await execFull({
@@ -252,6 +215,34 @@ const main = async () => {
     },
   })
   await sleep(3)
+
+  // Fund aggregator account on local network
+  if (envName === 'dev') {
+    console.log(chalk.blueBright('💰 Funding aggregator account on local network...'))
+    const aggAddress = (
+      await execSilently(
+        'cast',
+        'wallet',
+        'address',
+        '--mnemonic',
+        'domain velvet noodle derive dumb table hello prosper crop next unable salt task cement tilt mouse body father renew battle brain try broom trip',
+        '--mnemonic-index',
+        '0'
+      )
+    ).trim()
+    const hexBalance = (
+      await execSilently('cast', 'to-hex', '10000000000000000000')
+    ).trim()
+    await exec(
+      'cast',
+      'rpc',
+      'anvil_setBalance',
+      aggAddress,
+      hexBalance,
+      '--rpc-url',
+      rpcUrl
+    )
+  }
 
   // Deploy the service.json to WAVS
   await execFull({

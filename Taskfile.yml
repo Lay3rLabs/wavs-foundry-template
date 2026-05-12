@@ -9,23 +9,21 @@ dotenv: [".env"]
 includes:
   # Upstream common taskfiles (from wavs-taskfiles repo)
   docker: https://raw.githubusercontent.com/Lay3rLabs/wavs-taskfiles/main/base/docker.yml
-  operator: https://raw.githubusercontent.com/Lay3rLabs/wavs-taskfiles/main/base/poa-operator.yml
+  operator: ./taskfile/poa-operator.yml
   wasi: https://raw.githubusercontent.com/Lay3rLabs/wavs-taskfiles/main/base/wasi.yml
   core:
     taskfile: https://raw.githubusercontent.com/Lay3rLabs/wavs-taskfiles/main/base/core.yml
     flatten: true
 
-  # Project-specific taskfiles (with customizations)
-  build: ./taskfile/build.yml
+  # Project-specific taskfiles
   deploy: ./taskfile/deploy.yml
-  services: ./taskfile/services.yml
   env:
     taskfile: ./taskfile/env.yml
     flatten: true
 
 vars:
   # Docker configuration
-  DOCKER_IMAGE: '{{.DOCKER_IMAGE | default "ghcr.io/lay3rlabs/wavs:1.5.1"}}'
+  DOCKER_IMAGE: '{{.DOCKER_IMAGE | default "ghcr.io/lay3rlabs/wavs:216aa67"}}'
   MIDDLEWARE_DOCKER_IMAGE: '{{.MIDDLEWARE_DOCKER_IMAGE | default "ghcr.io/lay3rlabs/wavs-middleware:0.5.0-beta.10"}}'
 
   # Check if user is in docker group to determine if sudo is needed
@@ -58,13 +56,109 @@ tasks:
         pnpm install
         echo "📦 Installing forge dependencies..."
         forge install
-        echo "✅ Dependencies installed"
+      - task: wit:fetch
+      - echo "✅ Dependencies installed"
 
+  wit:fetch:
+    desc: "Fetch WIT dependencies into wit/deps and wit-aggregator/deps (requires wkg)"
+    cmds:
+      - |
+        if ! command -v wkg >/dev/null 2>&1; then
+          echo "❌ wkg not found. Install with: cargo binstall wkg --locked --no-confirm --force"
+          echo "   Then: wkg config --default-registry wa.dev"
+          exit 1
+        fi
+        echo "📦 Fetching WIT deps for wit/ (operator world)..."
+        wkg wit fetch --wit-dir wit
+        echo "📦 Fetching WIT deps for wit-aggregator/ (aggregator world)..."
+        wkg wit fetch --wit-dir wit-aggregator
+        echo "✅ WIT deps fetched"
+
+  # Build tasks (formerly taskfile/build.yml)
+  build:all:
+    desc: "Build everything (Solidity + WASI components)"
+    cmds:
+      - task: build:forge
+      - task: build:wasi
+
+  build:forge:
+    desc: "Build Solidity contracts"
+    cmds:
+      - forge build
+
+  build:wasi:
+    desc: "Build WASI components (all or specific one via WASI_BUILD_DIR)"
+    vars:
+      WASI_BUILD_DIR: '{{.WASI_BUILD_DIR | default ""}}'
+    cmds:
+      - |
+        warg reset || echo "warg reset failed (warg server not started), continuing..."
+        RECIPE="wasi-build"
+        MAKEFILE_DIRS=$(find components/* -maxdepth 1 -name "Makefile" -o -name "makefile")
+
+        for makefile_path in $MAKEFILE_DIRS; do
+            if grep -q "^${RECIPE}:" "$makefile_path" 2>/dev/null; then
+                if [ "{{.WASI_BUILD_DIR}}" == "" ] || [[ "$makefile_path" == *"{{.WASI_BUILD_DIR}}"* ]]; then
+                    parent_dir=$(dirname "$makefile_path")
+                    make -s -C "$parent_dir" $RECIPE
+                fi
+            else
+                echo "Recipe '$RECIPE' not found in $makefile_path"
+            fi
+        done
+
+  # Local services (formerly taskfile/services.yml)
   start-all-local:
     desc: "Start all local services (anvil, IPFS, WARG, Jaeger, prometheus)"
     deps: [setup-env]
     cmds:
       - task: services:start-all
+
+  services:start-all:
+    desc: "Start all local services (anvil, IPFS, WARG, Jaeger, prometheus)"
+    cmds:
+      - |
+        set -e
+
+        PORT=8545
+        FORK_RPC_URL=${FORK_RPC_URL:-"${TESTNET_RPC_URL}"}
+        DEPLOY_ENV=$(task get-deploy-status)
+
+        ## == Base Anvil Testnet Fork ==
+        if [ "$DEPLOY_ENV" = "TESTNET" ]; then
+          echo "Running in testnet mode, nothing to do"
+          exit 0
+        fi
+
+        if [ "$DEPLOY_ENV" = "LOCAL" ]; then
+          # anvil --fork-url ${FORK_RPC_URL} --port ${PORT} &
+          # removed the fork-url since this moved off of eigen and does not need (constantly hitting a Error: Failed to send transaction Context: - server returned an error response: error code -32003: Insufficient funds for gas * price + value)
+          anvil --port $PORT &
+          trap "killall anvil && echo -e '\nKilled anvil'" EXIT
+          while ! cast block-number --rpc-url http://localhost:${PORT} > /dev/null 2>&1
+          do
+            sleep 0.25
+          done
+
+          FILES="-f docker-compose.yml" # -f telemetry/docker-compose.yml
+          docker compose ${FILES} pull
+          docker compose ${FILES} up --force-recreate -d
+          trap "docker compose ${FILES} down --remove-orphans && docker kill wavs-1 > /dev/null 2>&1 && echo -e '\nKilled IPFS + Local WARG, and wavs instances'" EXIT
+
+          echo "Started..."
+          wait
+        fi
+
+  services:stop-all:
+    desc: "Stop all local services"
+    cmds:
+      - |
+        echo "Stopping all services..."
+        FILES="-f docker-compose.yml -f telemetry/docker-compose.yml"
+        docker compose ${FILES} down --remove-orphans || true
+        docker kill wavs-1 > /dev/null 2>&1 || true
+        pkill -f anvil || true
+        echo "All services stopped"
 
   deploy-full:
     desc: "Run complete WAVS deployment pipeline"

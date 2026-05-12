@@ -56,11 +56,6 @@ const program = new Command('build-service')
     'The WAVS service manager address (defaults to addresses.POAStakeRegistry from .nodes/poa_deploy.json)'
   )
   .option(
-    '-a, --aggregator-url <aggregatorUrl>',
-    'The aggregator URL for the service',
-    'http://127.0.0.1:8040'
-  )
-  .option(
     '--fuel-limit <fuelLimit>',
     'The fuel limit for the service',
     '1000000000000'
@@ -73,7 +68,6 @@ const main = async () => {
       componentConfigFile,
       output,
       serviceManagerAddress,
-      aggregatorUrl,
       fuelLimit,
     },
   } = initProgram(program)
@@ -322,12 +316,8 @@ const main = async () => {
       'submit',
       '--id',
       workflowId,
-      'set-aggregator',
-      '--url',
-      aggregatorUrl
+      'set-aggregator'
     )
-
-    console.log(chalk.greenBright(`  Aggregator URL: ${aggregatorUrl}`))
 
     await execSilently(
       ...BASE_CMD,

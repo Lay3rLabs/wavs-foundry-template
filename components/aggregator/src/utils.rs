@@ -5,7 +5,7 @@ use wstd::runtime::block_on;
 
 use crate::bindings::{
     host,
-    wavs::{aggregator::aggregator::TriggerData, types::events::TriggerDataEvmContractEvent},
+    wavs::types::events::{TriggerData, TriggerDataEvmContractEvent},
 };
 
 pub fn is_valid_tx(trigger_data: TriggerData) -> Result<bool, String> {

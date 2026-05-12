@@ -60,5 +60,6 @@ pub fn encode_trigger_output(trigger_id: u64, output: impl AsRef<[u8]>) -> WasmR
         }
         .abi_encode(),
         ordering: None,
+        event_id_salt: None,
     }
 }

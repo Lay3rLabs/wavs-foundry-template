@@ -9,14 +9,20 @@ node_modules/
 .env
 !compiled/aggregator.wasm
 compiled/*.wasm
-.docker/*.json
-.docker/*.log
+.docker/*
+!.docker/.gitkeep
 wavs:worker*.wit
 wavs:worker*.wasm
 
 # WAVS infra
 .nodes
 infra/*
+
+# WIT deps (materialized by `task wit:fetch` via wkg)
+wit/deps/
+wit-aggregator/deps/
+# Stray root wkg.lock until registry-fetch path is finalized; real lockfiles will live next to wit/ + wit-aggregator/
+/wkg.lock
 
 # Tools
 **/.claude/settings.local.json
