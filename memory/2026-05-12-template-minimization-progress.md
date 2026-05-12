@@ -56,7 +56,7 @@ These would compound the gains but require coordination with `/workspace/WAVS/`:
 1. **YAML/task linting in CI**: today there's no `task --dry-run` or equivalent step in CI. After collapsing `taskfile/`, a typo wouldn't be caught until a user ran the command. Worth adding a `task --list-all` smoke test step to `.github/workflows/contracts.yml`?
 2. **Solhint glob coverage**: the consolidated `.solhint.json` uses `src/script/**/*.sol` and `script/**/*.sol`. Verify with `pnpm lint:check` locally that file path matching works as intended.
 3. **`metadata.json` external consumer (now deleted)**: no in-repo consumer was found, so it was removed. If a template directory or registry outside this repo was consuming it, restore from `git show HEAD^^:metadata.json`.
-4. **`task wit:fetch` unverified in container**: `wkg` is not installed in the dev container, so the recipe couldn't be smoke-tested locally. On host: run `task setup` from a clean checkout (or `task wit:fetch` directly) and confirm (a) `wit/deps/` + `wit-aggregator/deps/` get populated, (b) `task build:wasi` succeeds afterwards. If wkg can't resolve `wavs:types@2.7.0` or `wasi:tls@0.2.0-draft` from `wa.dev`, the registry hasn't been populated yet — either run `cd /workspace/WAVS && just wit-publish`, or revert this commit and fall back to committing bundle-form deps (one `package.wit` per dep, matching upstream's `wit-definitions/operator/wit/deps/` layout).
+4. **`task wit:fetch` blocked on registry — `wavs:types@2.7.0` not published.** Confirmed on host 2026-05-12: `wkg wit fetch --wit-dir wit` fails with `no release matching version requirement =2.7.0`. Resolution path documented in `2026-05-12-wit-publish-blocker.md` — Option B (roll upstream to 2.8.0 + publish + bump template's world files). Blocked on coordination with WAVS devs (publish creds + version-bump timing). Option C fallback (commit bundle-form deps from `/workspace/WAVS/wit-definitions/`) available if the publish path drags.
 
 ## Cross-references
 
@@ -67,6 +67,7 @@ These would compound the gains but require coordination with `/workspace/WAVS/`:
 - `/workspace/memory/wavs-component-patterns.md` — 14 security/design rules
 - `./2026-05-12-component-proc-macro-spec.md` — proc-macro contract
 - `./2026-05-12-wavs-cli-spec.md` — CLI surface
+- `./2026-05-12-wit-publish-blocker.md` — WIT registry publish: pending dev confirmation, full resume plan
 
 ## What "done" looks like
 

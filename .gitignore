@@ -21,6 +21,8 @@ infra/*
 # WIT deps (materialized by `task wit:fetch` via wkg)
 wit/deps/
 wit-aggregator/deps/
+# Stray root wkg.lock until registry-fetch path is finalized; real lockfiles will live next to wit/ + wit-aggregator/
+/wkg.lock
 
 # Tools
 **/.claude/settings.local.json

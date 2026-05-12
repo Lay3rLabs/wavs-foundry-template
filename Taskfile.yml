@@ -69,9 +69,9 @@ tasks:
           exit 1
         fi
         echo "📦 Fetching WIT deps for wit/ (operator world)..."
-        (cd wit && wkg wit fetch)
+        wkg wit fetch --wit-dir wit
         echo "📦 Fetching WIT deps for wit-aggregator/ (aggregator world)..."
-        (cd wit-aggregator && wkg wit fetch)
+        wkg wit fetch --wit-dir wit-aggregator
         echo "✅ WIT deps fetched"
 
   # Build tasks (formerly taskfile/build.yml)
